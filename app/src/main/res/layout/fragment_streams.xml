@@ -1,0 +1,73 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <import type="com.tajmoti.tulip.ui.streams.StreamsViewModel" />
+
+        <import type="com.tajmoti.tulip.ui.streams.StreamsViewModel.State" />
+
+
+        <import type="android.view.View" />
+
+        <variable
+            name="viewModel"
+            type="StreamsViewModel" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?colorPrimary"
+            android:drawableStart="@drawable/ic_baseline_play_circle_filled_24"
+            android:drawablePadding="@dimen/list_item_icon_padding"
+            android:drawableTint="?colorOnPrimary"
+            android:ellipsize="end"
+            android:gravity="center_vertical"
+            android:maxLines="1"
+            android:padding="@dimen/activity_vertical_margin"
+            android:text="@{viewModel.streamableName}"
+            android:textAllCaps="true"
+            android:textColor="?colorOnPrimary"
+            android:textSize="20sp" />
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:visibility="@{viewModel.loadingDirectLink ? View.VISIBLE : View.INVISIBLE}" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="@dimen/streams_error_margin"
+                android:text="@string/no_results"
+                android:visibility="@{viewModel.noResults ? View.VISIBLE : View.GONE}" />
+
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="@dimen/streams_error_margin"
+                android:indeterminate="true"
+                android:visibility="@{viewModel.loading ? View.VISIBLE : View.GONE}" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_search"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="@{viewModel.streamLoadingState.success ? View.VISIBLE : View.GONE}"
+                app:layoutManager="LinearLayoutManager" />
+        </FrameLayout>
+    </LinearLayout>
+</layout>

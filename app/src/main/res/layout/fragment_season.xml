@@ -1,0 +1,36 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <import type="com.tajmoti.tulip.ui.season.SeasonViewModel" />
+
+        <import type="com.tajmoti.tulip.ui.season.SeasonViewModel.State" />
+
+
+        <import type="android.view.View" />
+
+        <variable
+            name="viewModel"
+            type="SeasonViewModel" />
+    </data>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@{viewModel.stateText}"
+            android:visibility="@{viewModel.state.success ? View.GONE : View.VISIBLE}" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_search"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="@{viewModel.state.success ? View.VISIBLE : View.GONE}"
+            app:layoutManager="LinearLayoutManager" />
+    </FrameLayout>
+</layout>

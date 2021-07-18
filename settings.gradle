@@ -1,0 +1,6 @@
+rootProject.name = "Tulip"
+include ':app'
+include ':libtvprovider'
+include ':libprimewiretvprovider'
+include ':libwebviewpageloader'
+include ':libtvvideoextractor'
