@@ -3,7 +3,7 @@ package com.tajmoti.tulip.ui.streams
 import androidx.lifecycle.*
 import com.tajmoti.libtvprovider.TvProvider
 import com.tajmoti.libtvprovider.stream.VideoStreamRef
-import com.tajmoti.libtvvideoextractor.LinkExtractor
+import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -13,7 +13,7 @@ import javax.inject.Inject
 @HiltViewModel
 class StreamsViewModel @Inject constructor(
     private val tvProvider: TvProvider,
-    private val linkExtractor: LinkExtractor
+    private val linkExtractor: VideoLinkExtractor
 ) : ViewModel() {
     private val _state = MutableLiveData<State>(State.Idle)
     private val _streamableName = MutableLiveData<String?>()
@@ -75,7 +75,7 @@ class StreamsViewModel @Inject constructor(
             return
         _directLoadingState.value = DirectStreamLoading.Loading(ref)
         viewModelScope.launch {
-            val link = linkExtractor.tryExtractLink(ref.url)
+            val link = linkExtractor.extractVideoLink(ref.url)
             link.onSuccess { _directLoadingState.value = DirectStreamLoading.Success(ref, it) }
             link.onFailure { _directLoadingState.value = DirectStreamLoading.Failed(ref, it) }
         }

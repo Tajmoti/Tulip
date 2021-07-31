@@ -32,6 +32,8 @@ android {
 }
 
 dependencies {
+    api project(':libwebdriver')
+
     // Kotlin
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutines_version"
 

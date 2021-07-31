@@ -64,7 +64,8 @@ dependencies {
 
     // Business logic libs
     implementation project(':libtvprovider')
-    implementation project(':libprimewiretvprovider')
-    implementation project(':libwebviewpageloader')
+    implementation project(':libtvprovider-primewire')
+    implementation project(':libwebdriver-android')
+    implementation project(':libwebdriver')
     implementation project(':libtvvideoextractor')
 }

@@ -11,7 +11,7 @@ data class PrimewireShow(
     override val name: String,
     private val baseUrl: String,
     private val showUrl: String,
-    private val pageLoader: suspend (url: String) -> String
+    private val pageLoader: SimplePageSourceLoader
 ) : TvItem.Show {
     override val key = PrimewireTvShowId(name, showUrl)
 

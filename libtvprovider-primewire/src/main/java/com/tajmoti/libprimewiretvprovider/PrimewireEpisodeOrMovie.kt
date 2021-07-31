@@ -12,13 +12,14 @@ data class PrimewireEpisodeOrMovie(
     override val name: String,
     private val baseUrl: String,
     internal val episodeUrl: String,
-    private val pageLoader: suspend (url: String) -> String
+    private val pageLoader: SimplePageSourceLoader
 ) : Episode, TvItem.Movie {
     override val key: Serializable
         get() = PrimewireStreamableId(name, episodeUrl)
 
     override suspend fun loadSources(): Result<List<VideoStreamRef>> {
         val html = pageLoader.invoke(baseUrl + episodeUrl)
+            .getOrElse { return Result.failure(it) }
         return withContext(Dispatchers.IO) {
             return@withContext getVideoStreams(html)
         }

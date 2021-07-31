@@ -13,16 +13,9 @@ import java.net.URLEncoder
 
 class PrimewireTvProvider(
     /**
-     * Loads the page with the provided URL including
-     * running JS on it, and returns the resulting HTML.
-     *
-     * The urlBlocker function is a predicate, which can be used to
-     * stop useless requests (e.g. scripts and images).
-     * Return true to allow the request, false to block it.
-     *
-     * This allows encoded and obfuscated stream URLs to be accessed.
+     * Loads web pages into a real browser to run any JS loading obfuscated data.
      */
-    private val pageLoader: suspend (url: String, urlBlocker: (String) -> Boolean) -> String,
+    private val pageLoader: PageSourceLoader,
     /**
      * Base URL of the primewire domain, in case it changes.
      */
@@ -97,7 +90,7 @@ class PrimewireTvProvider(
         return "$baseUrl?s=$encoded&t=y&m=m&w=q"
     }
 
-    private suspend fun loadHtmlFromUrl(url: String): String {
+    private suspend fun loadHtmlFromUrl(url: String): Result<String> {
         return pageLoader.invoke(url, this::shouldAllowUrl)
     }
 

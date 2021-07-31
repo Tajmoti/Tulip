@@ -4,8 +4,9 @@ import android.content.Context
 import android.os.Handler
 import com.tajmoti.libprimewiretvprovider.PrimewireTvProvider
 import com.tajmoti.libtvprovider.TvProvider
-import com.tajmoti.libtvvideoextractor.LinkExtractor
-import com.tajmoti.libtvvideoextractor.LinkExtractorImpl
+import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
+import com.tajmoti.libwebdriver.WebDriver
+import com.tajmoti.libwebdriver.WebViewWebDriver
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,24 +20,26 @@ object Provider {
 
     @Provides
     @Singleton
-    fun providePageLoader(@ApplicationContext app: Context): PageLoader {
+    fun provideWebDriver(@ApplicationContext app: Context): WebDriver {
         val mainHandler = Handler(app.mainLooper)
-        return WebViewPageLoader(app, mainHandler, blockImages = true)
+        return WebViewWebDriver(app, mainHandler, blockImages = true)
     }
 
     @Provides
     @Singleton
-    fun provideTvProvider(pageLoader: PageLoader): TvProvider {
-        return PrimewireTvProvider({ a, b ->
-            pageLoader.getPageHtml(a, 30000, b, 1).getOrThrow() // TODO
+    fun provideTvProvider(webDriver: WebDriver): TvProvider {
+        return PrimewireTvProvider({ url, urlFilter ->
+            val params = WebDriver.Params(urlFilter = urlFilter)
+            webDriver.getPageHtml(url, params)
         })
     }
 
     @Provides
     @Singleton
-    fun provideLinkExtractor(pageLoader: PageLoader): LinkExtractor {
-        return LinkExtractorImpl { url, count, urlBlocker ->
-            pageLoader.getPageHtml(url, 30000, urlBlocker, count).getOrThrow() // TODO
-        }
+    fun provideLinkExtractor(webDriver: WebDriver): VideoLinkExtractor {
+        return VideoLinkExtractor({ url, count, urlBlocker ->
+            val params = WebDriver.Params(urlFilter = urlBlocker, count = count)
+            webDriver.getPageHtml(url, params)
+        })
     }
 }

@@ -1,10 +1,15 @@
-package com.tajmoti.libtvvideoextractor
+package com.tajmoti.libprimewiretvprovider
 
 
 /**
  * A function, which loads the provided URL into a real web browser and returns the page HTML source.
  */
-typealias PageSourceLoader = suspend (url: String, count: Int, urlBlocker: UrlBlocker) -> Result<String>
+typealias PageSourceLoader = suspend (url: String, urlBlocker: UrlBlocker) -> Result<String>
+
+/**
+ * Same as [PageSourceLoader], but without the URL blocker.
+ */
+typealias SimplePageSourceLoader = suspend (url: String) -> Result<String>
 
 /**
  * A predicate, which decides whether the provided URL should be loaded or not.
