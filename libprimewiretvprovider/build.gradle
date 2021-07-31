@@ -12,8 +12,13 @@ dependencies {
     // Kotlin
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutines_version"
 
-    api project(':libtvprovider')
+    // Logging
+    implementation "org.slf4j:slf4j-api:$slf4j_version"
 
     // Business logic libs
     implementation "org.jsoup:jsoup:$jsoup_version"
+    api project(':libtvprovider')
+
+    // Utils
+    api project(':commonutils')
 }

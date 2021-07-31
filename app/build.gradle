@@ -58,6 +58,10 @@ dependencies {
     kapt "com.google.dagger:hilt-android-compiler:$hilt_version"
     implementation "androidx.hilt:hilt-navigation-fragment:1.0.0"
 
+    // Logging
+    implementation "org.slf4j:slf4j-api:$slf4j_version"
+    implementation 'com.github.tony19:logback-android:2.0.0'
+
     // Business logic libs
     implementation project(':libtvprovider')
     implementation project(':libprimewiretvprovider')

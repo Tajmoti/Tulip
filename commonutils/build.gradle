@@ -9,9 +9,6 @@ java {
 }
 
 dependencies {
-    // Kotlin
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutines_version"
-
     // Logging
     implementation "org.slf4j:slf4j-api:$slf4j_version"
 }
