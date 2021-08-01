@@ -7,7 +7,15 @@ sealed interface TvItem : Marshallable, NamedItem {
 
     interface Show : TvItem {
         suspend fun fetchSeasons(): Result<List<Season>>
+
+        data class Info(
+            val name: String
+        )
     }
 
-    interface Movie : TvItem, Streamable
+    interface Movie : TvItem, Streamable {
+        data class Info(
+            val name: String
+        )
+    }
 }

@@ -2,11 +2,13 @@ package com.tajmoti.tulip.di
 
 import android.content.Context
 import android.os.Handler
+import androidx.room.Room
 import com.tajmoti.libprimewiretvprovider.PrimewireTvProvider
 import com.tajmoti.libtvprovider.TvProvider
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
 import com.tajmoti.libwebdriver.WebDriver
 import com.tajmoti.libwebdriver.WebViewWebDriver
+import com.tajmoti.tulip.db.AppDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -41,5 +43,11 @@ object Provider {
             val params = WebDriver.Params(urlFilter = urlBlocker, count = count)
             webDriver.getPageHtml(url, params)
         })
+    }
+
+    @Provides
+    @Singleton
+    fun provideDb(@ApplicationContext app: Context): AppDatabase {
+        return Room.databaseBuilder(app, AppDatabase::class.java, "tulip").build()
     }
 }

@@ -2,13 +2,13 @@ package com.tajmoti.libprimewiretvprovider
 
 import com.tajmoti.libtvprovider.TvItem
 import com.tajmoti.libtvprovider.TvProvider
+import com.tajmoti.libtvprovider.show.Episode
 import com.tajmoti.libtvprovider.show.Season
 import com.tajmoti.libtvprovider.stream.Streamable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
-import java.io.Serializable
 import java.net.URLEncoder
 
 class PrimewireTvProvider(
@@ -28,33 +28,27 @@ class PrimewireTvProvider(
         }
     }
 
-    override suspend fun getShow(key: Serializable): Result<TvItem.Show> {
-        if (key !is PrimewireTvShowId)
-            return Result.failure(ClassCastException("Primewire show ID must be of type PrimewireItemId"))
-        val show = PrimewireShow(key.name, baseUrl, key.url, this::loadHtmlFromUrl)
+    override suspend fun getShow(key: String, info: TvItem.Show.Info): Result<TvItem.Show> {
+        val show = PrimewireShow(info.name, baseUrl, key, this::loadHtmlFromUrl)
         return Result.success(show)
     }
 
-    override suspend fun getSeason(key: Serializable): Result<Season> {
-        if (key !is PrimewireSeasonId)
-            return Result.failure(ClassCastException("Primewire season ID must be of type PrimewireItemId"))
-        val episodes = key.episodes.map(this::serializedEpToEp)
-        val show = PrimewireSeason(key.number, episodes)
+    override suspend fun getSeason(key: String, info: Season.Info): Result<Season> {
+        val episodes = info.episodeInfo.map(this::serializedEpToEp)
+        val show = PrimewireSeason(info.number, episodes)
         return Result.success(show)
     }
 
-    override suspend fun getStreamable(key: Serializable): Result<Streamable> {
-        if (key !is PrimewireStreamableId)
-            return Result.failure(ClassCastException("Primewire streamable ID must be of type PrimewireStreamableId"))
-        val name = key.name
-        val url = key.streamPageUrl
+    override suspend fun getStreamable(key: String, info: Streamable.Info): Result<Streamable> {
+        val name = info.name
+        val url = key
         val result = PrimewireEpisodeOrMovie(name, baseUrl, url, this::loadHtmlFromUrl)
         // TODO This can also be a movie
         return Result.success(result)
     }
 
-    private fun serializedEpToEp(it: PrimewireSeasonId.EpisodeInfo): PrimewireEpisodeOrMovie {
-        return PrimewireEpisodeOrMovie(it.name, baseUrl, it.url, this::loadHtmlFromUrl)
+    private fun serializedEpToEp(it: Episode.Info): PrimewireEpisodeOrMovie {
+        return PrimewireEpisodeOrMovie(it.name, baseUrl, it.key, this::loadHtmlFromUrl)
     }
 
     private fun searchBlocking(query: String): Result<List<TvItem>> {

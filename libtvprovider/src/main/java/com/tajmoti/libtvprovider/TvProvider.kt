@@ -2,7 +2,6 @@ package com.tajmoti.libtvprovider
 
 import com.tajmoti.libtvprovider.show.Season
 import com.tajmoti.libtvprovider.stream.Streamable
-import java.io.Serializable
 
 interface TvProvider {
 
@@ -14,15 +13,15 @@ interface TvProvider {
     /**
      * Retrieves a show by its key.
      */
-    suspend fun getShow(key: Serializable): Result<TvItem.Show>
+    suspend fun getShow(key: String, info: TvItem.Show.Info): Result<TvItem.Show>
 
     /**
      * Retrieves a TV show season by its key.
      */
-    suspend fun getSeason(key: Serializable): Result<Season>
+    suspend fun getSeason(key: String, info: Season.Info): Result<Season>
 
     /**
      * Retrieves a streamable item by its key.
      */
-    suspend fun getStreamable(key: Serializable): Result<Streamable>
+    suspend fun getStreamable(key: String, info: Streamable.Info): Result<Streamable>
 }

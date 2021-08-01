@@ -8,12 +8,13 @@ import com.tajmoti.tulip.ui.season.SeasonFragment
 
 class SectionsPagerAdapter(
     private val seasons: List<Season>,
-    fm: FragmentManager
+    fm: FragmentManager,
+    private val tvShowId: String
 ) : FragmentPagerAdapter(fm) {
 
     override fun getItem(position: Int): Fragment {
         val season = seasons[position]
-        return SeasonFragment.newInstance(season.key)
+        return SeasonFragment.newInstance(tvShowId, season.key)
     }
 
     override fun getPageTitle(position: Int): CharSequence {

@@ -6,8 +6,5 @@ data class PrimewireSeason(
     override val number: Int,
     override val episodes: List<PrimewireEpisodeOrMovie>
 ) : Season {
-    override val key = PrimewireSeasonId(
-        number,
-        episodes.map { PrimewireSeasonId.EpisodeInfo(it.name, it.episodeUrl) }
-    )
+    override val key = number.toString()
 }

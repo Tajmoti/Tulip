@@ -2,18 +2,21 @@ package com.tajmoti.tulip.ui.streams
 
 import androidx.lifecycle.*
 import com.tajmoti.libtvprovider.TvProvider
+import com.tajmoti.libtvprovider.stream.Streamable
 import com.tajmoti.libtvprovider.stream.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
+import com.tajmoti.tulip.db.AppDatabase
+import com.tajmoti.tulip.model.StreamingService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
-import java.io.Serializable
 import javax.inject.Inject
 
 @HiltViewModel
 class StreamsViewModel @Inject constructor(
     private val tvProvider: TvProvider,
-    private val linkExtractor: VideoLinkExtractor
+    private val linkExtractor: VideoLinkExtractor,
+    private val db: AppDatabase
 ) : ViewModel() {
     private val _state = MutableLiveData<State>(State.Idle)
     private val _streamableName = MutableLiveData<String?>()
@@ -57,12 +60,12 @@ class StreamsViewModel @Inject constructor(
     /**
      * Search for a TV show or a movie.
      */
-    fun fetchStreams(streamableId: Serializable) {
+    fun fetchStreams(service: StreamingService, info: StreamInfo) {
         if (_state.value is State.Loading)
             return
         _state.value = State.Loading
         viewModelScope.launch {
-            fetchStreamsAsync(streamableId)
+            fetchStreamsAsync(service, info)
         }
     }
 
@@ -81,20 +84,37 @@ class StreamsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun fetchStreamsAsync(streamableId: Serializable) {
+    private suspend fun fetchStreamsAsync(service: StreamingService, item: StreamInfo) {
         try {
-            val streamableResult = tvProvider.getStreamable(streamableId)
-            streamableResult.onFailure {
+            val (key, name) = getItemKeyAndName(service, item) ?: TODO()
+            _streamableName.value = name
+            val streamable = tvProvider.getStreamable(key, Streamable.Info(name)).getOrElse {
                 _state.value = State.Error(it.message ?: it.javaClass.name)
                 return
             }
-            val streamable = streamableResult.getOrThrow()
-            _streamableName.value = streamable.name
-            val result = streamable.loadSources()
-            result.onSuccess { _state.value = State.Success(mapAndSortLinksByRelevance(it)) }
-            result.onFailure { _state.value = State.Error(it.message ?: it.javaClass.name) }
+            val result = streamable.loadSources().getOrElse {
+                _state.value = State.Error(it.message ?: it.javaClass.name)
+                return
+            }
+            _state.value = State.Success(mapAndSortLinksByRelevance(result))
         } catch (e: CancellationException) {
             _state.value = State.Idle
+        }
+    }
+
+    private suspend fun getItemKeyAndName(
+        service: StreamingService,
+        xx: StreamInfo
+    ): Pair<String, String>? {
+        return when (xx) {
+            is StreamInfo.TvShow -> {
+                val episode = db.episodeDao().getByKey(service, xx.tvShow, xx.season, xx.key)
+                episode?.let { it.key to it.name }
+            }
+            is StreamInfo.Movie -> {
+                val movie = db.movieDao().getByKey(service, xx.key)
+                movie?.let { it.key to it.name }
+            }
         }
     }
 
@@ -135,5 +155,10 @@ class StreamsViewModel @Inject constructor(
             override val video: VideoStreamRef,
             val error: Throwable
         ) : DirectStreamLoading()
+    }
+
+    sealed class StreamInfo {
+        class Movie(val key: String) : StreamInfo()
+        class TvShow(val tvShow: String, val season: String, val key: String) : StreamInfo()
     }
 }

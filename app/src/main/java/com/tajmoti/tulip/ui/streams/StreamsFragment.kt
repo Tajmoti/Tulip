@@ -7,9 +7,9 @@ import android.view.View
 import androidx.fragment.app.viewModels
 import com.tajmoti.tulip.BaseFragment
 import com.tajmoti.tulip.databinding.FragmentStreamsBinding
+import com.tajmoti.tulip.model.StreamingService
 import com.tajmoti.tulip.ui.setupWithAdapterAndDivider
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.Serializable
 
 @AndroidEntryPoint
 class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
@@ -29,7 +29,18 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
             )
         }
         viewModel.directStreamLoadingState.observe(viewLifecycleOwner) { onDirectLoadingChanged(it) }
-        viewModel.fetchStreams(requireArguments().getSerializable(ARG_STREAMABLE_ID)!!)
+        val args = requireArguments()
+
+        val streamInfo = if (args.containsKey(ARG_TV_SHOW_ID)) {
+            val tvShow = requireArguments().getString(ARG_TV_SHOW_ID)!!
+            val season = requireArguments().getString(ARG_SEASON_ID)!!
+            val episode = requireArguments().getString(ARG_EPISODE_ID)!!
+            StreamsViewModel.StreamInfo.TvShow(tvShow, season, episode)
+        } else {
+            val movie = args.getString(ARG_MOVIE_ID)!!
+            StreamsViewModel.StreamInfo.Movie(movie)
+        }
+        viewModel.fetchStreams(StreamingService.PRIMEWIRE, streamInfo)
     }
 
     private fun onStreamLoadingStateChanged(it: StreamsViewModel.State, adapter: StreamsAdapter) {
@@ -66,12 +77,26 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
     }
 
     companion object {
-        private const val ARG_STREAMABLE_ID = "id"
+        private const val ARG_MOVIE_ID = "movie"
+        private const val ARG_TV_SHOW_ID = "tv_show"
+        private const val ARG_SEASON_ID = "season"
+        private const val ARG_EPISODE_ID = "episode"
 
         @JvmStatic
-        fun newInstance(key: Serializable): StreamsFragment {
+        fun newInstance(tvShow: String, season: String, key: String): StreamsFragment {
             val args = Bundle()
-            args.putSerializable(ARG_STREAMABLE_ID, key)
+            args.putString(ARG_TV_SHOW_ID, tvShow)
+            args.putString(ARG_SEASON_ID, season)
+            args.putString(ARG_EPISODE_ID, key)
+            val fragment = StreamsFragment()
+            fragment.arguments = args
+            return fragment
+        }
+
+        @JvmStatic
+        fun newInstance(key: String): StreamsFragment {
+            val args = Bundle()
+            args.putString(ARG_MOVIE_ID, key)
             val fragment = StreamsFragment()
             fragment.arguments = args
             return fragment

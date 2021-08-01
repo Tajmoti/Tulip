@@ -13,7 +13,7 @@ data class PrimewireShow(
     private val showUrl: String,
     private val pageLoader: SimplePageSourceLoader
 ) : TvItem.Show {
-    override val key = PrimewireTvShowId(name, showUrl)
+    override val key = showUrl
 
     override suspend fun fetchSeasons(): Result<List<Season>> {
         return withContext(Dispatchers.IO) {

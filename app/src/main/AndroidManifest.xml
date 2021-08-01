@@ -17,7 +17,6 @@
         android:usesCleartextTraffic="true"
         tools:ignore="UnusedAttribute">
         <activity android:name=".ui.show.TabbedTvShowActivity" />
-        <activity android:name=".ui.streams.StreamsActivity" />
         <activity
             android:name=".MainActivity"
             android:windowSoftInputMode="adjustResize">

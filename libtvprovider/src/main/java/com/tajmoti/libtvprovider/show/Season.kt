@@ -5,6 +5,7 @@ import com.tajmoti.libtvprovider.stream.VideoStreamRef
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import java.io.Serializable
 
 interface Season: Marshallable {
     /**
@@ -21,4 +22,12 @@ interface Season: Marshallable {
             awaitAll(*coroutines.toTypedArray())
         }
     }
+
+    data class Info(
+        /**
+         * One-based season number
+         */
+        val number: Int,
+        val episodeInfo: List<Episode.Info>
+    ): Serializable
 }

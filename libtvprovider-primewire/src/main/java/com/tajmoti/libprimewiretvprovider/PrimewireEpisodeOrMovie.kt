@@ -6,7 +6,6 @@ import com.tajmoti.libtvprovider.stream.VideoStreamRef
 import kotlinx.coroutines.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
-import java.io.Serializable
 
 data class PrimewireEpisodeOrMovie(
     override val name: String,
@@ -14,8 +13,7 @@ data class PrimewireEpisodeOrMovie(
     internal val episodeUrl: String,
     private val pageLoader: SimplePageSourceLoader
 ) : Episode, TvItem.Movie {
-    override val key: Serializable
-        get() = PrimewireStreamableId(name, episodeUrl)
+    override val key = episodeUrl
 
     override suspend fun loadSources(): Result<List<VideoStreamRef>> {
         val html = pageLoader.invoke(baseUrl + episodeUrl)

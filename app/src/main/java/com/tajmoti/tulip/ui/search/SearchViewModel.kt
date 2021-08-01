@@ -1,8 +1,13 @@
 package com.tajmoti.tulip.ui.search
 
 import androidx.lifecycle.*
+import androidx.room.withTransaction
 import com.tajmoti.libtvprovider.TvItem
 import com.tajmoti.libtvprovider.TvProvider
+import com.tajmoti.tulip.db.AppDatabase
+import com.tajmoti.tulip.model.DbMovie
+import com.tajmoti.tulip.model.DbTvShow
+import com.tajmoti.tulip.model.StreamingService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -10,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val tvProvider: TvProvider
+    private val tvProvider: TvProvider,
+    private val db: AppDatabase
 ) : ViewModel() {
     private val _state = MutableLiveData<State>(State.Idle)
     val state: LiveData<State> = _state
@@ -31,11 +37,28 @@ class SearchViewModel @Inject constructor(
 
     private suspend fun startFetchEpisodesAsync(query: String) {
         try {
-            val result = tvProvider.search(query)
-            result.onSuccess { _state.value = State.Success(it) }
-            result.onFailure { _state.value = State.Error(it.message ?: it.javaClass.name) }
+            val result = tvProvider.search(query).getOrElse {
+                _state.value = State.Error(it.message ?: it.javaClass.name)
+                return
+            }
+            insertToDb(result)
+            _state.value = State.Success(result)
         } catch (e: CancellationException) {
             _state.value = State.Idle
+        }
+    }
+
+    private suspend fun insertToDb(result: List<TvItem>) {
+        db.withTransaction {
+            for (item in result) {
+                if (item is TvItem.Show) {
+                    val dbItem = DbTvShow(StreamingService.PRIMEWIRE, item.key, item.name)
+                    db.tvShowDao().insert(dbItem)
+                } else {
+                    val dbItem = DbMovie(StreamingService.PRIMEWIRE, item.key, item.name)
+                    db.movieDao().insert(dbItem)
+                }
+            }
         }
     }
 

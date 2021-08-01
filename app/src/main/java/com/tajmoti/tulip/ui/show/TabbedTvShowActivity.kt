@@ -7,6 +7,7 @@ import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
 import com.tajmoti.tulip.BaseActivity
 import com.tajmoti.tulip.databinding.ActivityTabbedTvShowBinding
+import com.tajmoti.tulip.model.StreamingService
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -18,9 +19,9 @@ class TabbedTvShowActivity : BaseActivity<ActivityTabbedTvShowBinding>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val tvShowId = intent.getSerializableExtra(ARG_TV_SHOW_ID)!!
+        val tvShowId = intent.getStringExtra(ARG_TV_SHOW_ID)!!
         viewModel.state.observe(this, this::onStateChanged)
-        viewModel.fetchEpisodes(tvShowId)
+        viewModel.fetchEpisodes(StreamingService.PRIMEWIRE, tvShowId)
     }
 
     private fun onStateChanged(state: TvShowViewModel.State) {
@@ -32,7 +33,9 @@ class TabbedTvShowActivity : BaseActivity<ActivityTabbedTvShowBinding>() {
     private fun onLoadingFinished(state: TvShowViewModel.State.Success) {
         val result = state.items
         title = result.first.name
-        val sectionsPagerAdapter = SectionsPagerAdapter(result.second, supportFragmentManager)
+        val tvShowId = intent.getStringExtra(ARG_TV_SHOW_ID)!!
+        val sectionsPagerAdapter =
+            SectionsPagerAdapter(result.second, supportFragmentManager, tvShowId)
         val viewPager: ViewPager = binding.viewPager
         viewPager.adapter = sectionsPagerAdapter
         val tabs: TabLayout = binding.tabs
