@@ -9,13 +9,15 @@ import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ItemSearchBinding
 
 
-class StreamsAdapter :
-    BaseAdapter<UnloadedVideoStreamRef, ItemSearchBinding>(ItemSearchBinding::inflate) {
+class StreamsAdapter(
+    val downloadCallback: (UnloadedVideoStreamRef) -> Unit
+) : BaseAdapter<UnloadedVideoStreamRef, ItemSearchBinding>(ItemSearchBinding::inflate) {
 
     override fun onBindViewHolder(vh: Holder<ItemSearchBinding>, item: UnloadedVideoStreamRef) {
         val string = "#${vh.adapterPosition + 1}: ${item.info.serviceName}"
         setTextConsiderBrokenLink(item.info.working, vh, string)
         vh.binding.root.setCompoundDrawablesRelativeWithIntrinsicBounds(getDrawable(item), 0, 0, 0)
+        vh.binding.root.setOnLongClickListener { downloadCallback(item); true }
     }
 
     private fun setTextConsiderBrokenLink(working: Boolean, vh: Holder<ItemSearchBinding>, string: String) {

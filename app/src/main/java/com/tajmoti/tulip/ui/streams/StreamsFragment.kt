@@ -1,15 +1,22 @@
 package com.tajmoti.tulip.ui.streams
 
+import android.app.DownloadManager
+import android.content.Context.DOWNLOAD_SERVICE
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.view.View
+import android.widget.Toast
 import androidx.fragment.app.viewModels
 import com.tajmoti.tulip.BaseFragment
+import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentStreamsBinding
 import com.tajmoti.tulip.model.StreamingService
 import com.tajmoti.tulip.ui.setupWithAdapterAndDivider
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.*
+
 
 @AndroidEntryPoint
 class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
@@ -18,15 +25,12 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
     override val viewModel: StreamsViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val adapter = StreamsAdapter()
+        val adapter = StreamsAdapter(this::onStreamDownloadRequested)
         adapter.callback = this::onStreamClicked
         binding.viewModel = viewModel
         binding.recyclerSearch.setupWithAdapterAndDivider(adapter)
         viewModel.streamLoadingState.observe(viewLifecycleOwner) {
-            onStreamLoadingStateChanged(
-                it,
-                adapter
-            )
+            onStreamLoadingStateChanged(it, adapter)
         }
         viewModel.directStreamLoadingState.observe(viewLifecycleOwner) { onDirectLoadingChanged(it) }
         val args = requireArguments()
@@ -51,7 +55,11 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
     private fun onDirectLoadingChanged(it: StreamsViewModel.DirectStreamLoading?) {
         it ?: return
         if (it is StreamsViewModel.DirectStreamLoading.Success) {
-            startVideo(it.directLink, true)
+            if (it.download) {
+                downloadVideo(it.directLink)
+            } else {
+                startVideo(it.directLink, true)
+            }
         } else if (it is StreamsViewModel.DirectStreamLoading.Failed) {
             startVideo(it.video.url, false)
         }
@@ -59,9 +67,18 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
 
     private fun onStreamClicked(stream: UnloadedVideoStreamRef) {
         if (stream.linkExtractionSupported) {
-            viewModel.fetchStreamDirect(stream.info)
+            viewModel.fetchStreamDirect(stream.info, false)
         } else {
             startVideo(stream.info.url, false)
+        }
+    }
+
+    private fun onStreamDownloadRequested(stream: UnloadedVideoStreamRef) {
+        if (stream.linkExtractionSupported) {
+            viewModel.fetchStreamDirect(stream.info, true)
+        } else {
+            Toast.makeText(requireContext(), R.string.stream_not_downloadable, Toast.LENGTH_SHORT)
+                .show()
         }
     }
 
@@ -74,6 +91,24 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
             intent.setData(Uri.parse(url))
         }
         startActivity(intent)
+    }
+
+    private fun downloadVideo(url: String) {
+        downloadFileToFiles(Uri.parse(url))
+    }
+
+    private fun downloadFileToFiles(uri: Uri): Long {
+        val downloadManager = requireContext().getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+        val request = DownloadManager.Request(uri)
+        request.setTitle("Image Download")
+            .setDescription("Image download using DownloadManager.")
+            .setDestinationInExternalPublicDir(
+                Environment.DIRECTORY_MOVIES,
+                UUID.randomUUID().toString()
+            )
+            .allowScanningByMediaScanner()
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+        return downloadManager.enqueue(request)
     }
 
     companion object {

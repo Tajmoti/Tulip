@@ -72,14 +72,14 @@ class StreamsViewModel @Inject constructor(
     /**
      * Try to get direct link to video.
      */
-    fun fetchStreamDirect(ref: VideoStreamRef) {
+    fun fetchStreamDirect(ref: VideoStreamRef, download: Boolean) {
         val value = directStreamLoadingState.value
         if (value != null && value is DirectStreamLoading.Loading)
             return
-        _directLoadingState.value = DirectStreamLoading.Loading(ref)
+        _directLoadingState.value = DirectStreamLoading.Loading(ref, download)
         viewModelScope.launch {
             val link = linkExtractor.extractVideoLink(ref.url)
-            link.onSuccess { _directLoadingState.value = DirectStreamLoading.Success(ref, it) }
+            link.onSuccess { _directLoadingState.value = DirectStreamLoading.Success(ref, download, it) }
             link.onFailure { _directLoadingState.value = DirectStreamLoading.Failed(ref, it) }
         }
     }
@@ -143,11 +143,13 @@ class StreamsViewModel @Inject constructor(
         abstract val video: VideoStreamRef
 
         data class Loading(
-            override val video: VideoStreamRef
+            override val video: VideoStreamRef,
+            val download: Boolean
         ) : DirectStreamLoading()
 
         data class Success(
             override val video: VideoStreamRef,
+            val download: Boolean,
             val directLink: String
         ) : DirectStreamLoading()
 

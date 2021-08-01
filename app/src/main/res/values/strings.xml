@@ -7,4 +7,5 @@
     <string name="no_results">No results</string>
     <string name="title_activity_tabbed_tv_show">TabbedTvShowActivity</string>
     <string name="stream_links">Stream links</string>
+    <string name="stream_not_downloadable">This stream can not be downloaded</string>
 </resources>
