@@ -12,6 +12,7 @@ import com.tajmoti.libtvprovider.TvItem
 import com.tajmoti.tulip.BaseFragment
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentSearchBinding
+import com.tajmoti.tulip.model.StreamingService
 import com.tajmoti.tulip.ui.setupWithAdapterAndDivider
 import com.tajmoti.tulip.ui.show.TabbedTvShowActivity
 import com.tajmoti.tulip.ui.streams.StreamsFragment
@@ -41,13 +42,14 @@ class SearchFragment : BaseFragment<FragmentSearchBinding, SearchViewModel>(
             adapter.items = it.items
     }
 
-    private fun goToTvShowScreen(it: TvItem) {
-        if (it is TvItem.Show) {
+    private fun goToTvShowScreen(it: Pair<StreamingService, TvItem>) {
+        if (it.second is TvItem.Show) {
             val intent = Intent(requireContext(), TabbedTvShowActivity::class.java)
-                .putExtra(TabbedTvShowActivity.ARG_TV_SHOW_ID, it.key)
+                .putExtra(TabbedTvShowActivity.ARG_SERVICE, it.first)
+                .putExtra(TabbedTvShowActivity.ARG_TV_SHOW_ID, it.second.key)
             startActivity(intent)
         } else {
-            StreamsFragment.newInstance(it.key)
+            StreamsFragment.newInstance(it.first, it.second.key)
                 .show(childFragmentManager, "streams")
         }
     }

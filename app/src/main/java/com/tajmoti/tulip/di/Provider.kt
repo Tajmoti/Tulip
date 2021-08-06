@@ -4,11 +4,13 @@ import android.content.Context
 import android.os.Handler
 import androidx.room.Room
 import com.tajmoti.libprimewiretvprovider.PrimewireTvProvider
-import com.tajmoti.libtvprovider.TvProvider
+import com.tajmoti.libtvprovider.MultiTvProvider
+import com.tajmoti.libtvprovider.kinox.KinoxTvProvider
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
 import com.tajmoti.libwebdriver.WebDriver
 import com.tajmoti.libwebdriver.WebViewWebDriver
 import com.tajmoti.tulip.db.AppDatabase
+import com.tajmoti.tulip.model.StreamingService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,11 +31,18 @@ object Provider {
 
     @Provides
     @Singleton
-    fun provideTvProvider(webDriver: WebDriver): TvProvider {
-        return PrimewireTvProvider({ url, urlFilter ->
+    fun provideMultiTvProvider(webDriver: WebDriver): MultiTvProvider<StreamingService> {
+        val primewire = PrimewireTvProvider({ url, urlFilter ->
             val params = WebDriver.Params(urlFilter = urlFilter)
             webDriver.getPageHtml(url, params)
         })
+        val kinox = KinoxTvProvider()
+        return MultiTvProvider(
+            mapOf(
+                StreamingService.PRIMEWIRE to primewire,
+                StreamingService.KINOX to kinox
+            )
+        )
     }
 
     @Provides

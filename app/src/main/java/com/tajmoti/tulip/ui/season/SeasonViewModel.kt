@@ -1,7 +1,7 @@
 package com.tajmoti.tulip.ui.season
 
 import androidx.lifecycle.*
-import com.tajmoti.libtvprovider.TvProvider
+import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.show.Episode
 import com.tajmoti.libtvprovider.show.Season
 import com.tajmoti.tulip.db.AppDatabase
@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SeasonViewModel @Inject constructor(
-    private val tvProvider: TvProvider,
+    private val tvProvider: MultiTvProvider<StreamingService>,
     private val db: AppDatabase
 ) : ViewModel() {
     private val _state = MutableLiveData<State>(State.Idle)
@@ -41,7 +41,7 @@ class SeasonViewModel @Inject constructor(
             val dbEpisodes = db.episodeDao().getForSeason(service, tvShowId, seasonId)
             val epInfoList = dbEpisodes.map { Episode.Info(it.key, it.name) }
             val info = Season.Info(dbSeason.number, epInfoList)
-            val season = tvProvider.getSeason(seasonId, info).getOrElse {
+            val season = tvProvider.getSeason(service, seasonId, info).getOrElse {
                 _state.value = State.Error(it.message ?: it.javaClass.name)
                 return
             }

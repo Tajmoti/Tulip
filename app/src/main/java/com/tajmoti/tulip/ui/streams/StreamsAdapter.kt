@@ -6,21 +6,25 @@ import android.text.style.StrikethroughSpan
 import android.widget.TextView
 import com.tajmoti.tulip.BaseAdapter
 import com.tajmoti.tulip.R
-import com.tajmoti.tulip.databinding.ItemSearchBinding
+import com.tajmoti.tulip.databinding.ItemStreamBinding
 
 
 class StreamsAdapter(
     val downloadCallback: (UnloadedVideoStreamRef) -> Unit
-) : BaseAdapter<UnloadedVideoStreamRef, ItemSearchBinding>(ItemSearchBinding::inflate) {
+) : BaseAdapter<UnloadedVideoStreamRef, ItemStreamBinding>(ItemStreamBinding::inflate) {
 
-    override fun onBindViewHolder(vh: Holder<ItemSearchBinding>, item: UnloadedVideoStreamRef) {
+    override fun onBindViewHolder(vh: Holder<ItemStreamBinding>, item: UnloadedVideoStreamRef) {
         val string = "#${vh.adapterPosition + 1}: ${item.info.serviceName}"
         setTextConsiderBrokenLink(item.info.working, vh, string)
         vh.binding.root.setCompoundDrawablesRelativeWithIntrinsicBounds(getDrawable(item), 0, 0, 0)
         vh.binding.root.setOnLongClickListener { downloadCallback(item); true }
     }
 
-    private fun setTextConsiderBrokenLink(working: Boolean, vh: Holder<ItemSearchBinding>, string: String) {
+    private fun setTextConsiderBrokenLink(
+        working: Boolean,
+        vh: Holder<ItemStreamBinding>,
+        string: String
+    ) {
         if (working) {
             vh.binding.root.text = string
         } else {

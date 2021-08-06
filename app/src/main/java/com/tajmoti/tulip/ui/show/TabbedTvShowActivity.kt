@@ -21,7 +21,8 @@ class TabbedTvShowActivity : BaseActivity<ActivityTabbedTvShowBinding>() {
         super.onCreate(savedInstanceState)
         val tvShowId = intent.getStringExtra(ARG_TV_SHOW_ID)!!
         viewModel.state.observe(this, this::onStateChanged)
-        viewModel.fetchEpisodes(StreamingService.PRIMEWIRE, tvShowId)
+        val service = intent.getSerializableExtra(ARG_SERVICE) as StreamingService
+        viewModel.fetchEpisodes(service, tvShowId)
     }
 
     private fun onStateChanged(state: TvShowViewModel.State) {
@@ -33,9 +34,14 @@ class TabbedTvShowActivity : BaseActivity<ActivityTabbedTvShowBinding>() {
     private fun onLoadingFinished(state: TvShowViewModel.State.Success) {
         val result = state.items
         title = result.first.name
+        val service = intent.getSerializableExtra(ARG_SERVICE) as StreamingService
         val tvShowId = intent.getStringExtra(ARG_TV_SHOW_ID)!!
-        val sectionsPagerAdapter =
-            SectionsPagerAdapter(result.second, supportFragmentManager, tvShowId)
+        val sectionsPagerAdapter = SectionsPagerAdapter(
+            result.second,
+            supportFragmentManager,
+            service,
+            tvShowId
+        )
         val viewPager: ViewPager = binding.viewPager
         viewPager.adapter = sectionsPagerAdapter
         val tabs: TabLayout = binding.tabs
@@ -43,6 +49,7 @@ class TabbedTvShowActivity : BaseActivity<ActivityTabbedTvShowBinding>() {
     }
 
     companion object {
+        const val ARG_SERVICE = "service"
         const val ARG_TV_SHOW_ID = "tv_show_id"
     }
 }

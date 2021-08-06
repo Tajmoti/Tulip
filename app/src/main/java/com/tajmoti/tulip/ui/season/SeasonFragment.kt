@@ -27,26 +27,32 @@ class SeasonFragment : BaseFragment<FragmentSeasonBinding, SeasonViewModel>(
             if (it is SeasonViewModel.State.Success)
                 adapter.items = it.season.episodes
         }
-        val tvShowKey = requireArguments().getString(ARG_TV_SHOW_KEY)!!
-        val seasonKey = requireArguments().getString(ARG_SEASON_KEY)!!
-        viewModel.fetchEpisodes(StreamingService.PRIMEWIRE, tvShowKey, seasonKey)
+        val args = requireArguments()
+        val service = args.getSerializable(ARG_SERVICE) as StreamingService
+        val tvShowKey = args.getString(ARG_TV_SHOW_KEY)!!
+        val seasonKey = args.getString(ARG_SEASON_KEY)!!
+        viewModel.fetchEpisodes(service, tvShowKey, seasonKey)
     }
 
     private fun goToStreamsScreen(episode: Episode) {
-        val tvShowKey = requireArguments().getString(ARG_TV_SHOW_KEY)!!
-        val seasonKey = requireArguments().getString(ARG_SEASON_KEY)!!
+        val args = requireArguments()
+        val service = args.getSerializable(ARG_SERVICE) as StreamingService
+        val tvShowKey = args.getString(ARG_TV_SHOW_KEY)!!
+        val seasonKey = args.getString(ARG_SEASON_KEY)!!
         val streamableId = episode.key
-        val frag = StreamsFragment.newInstance(tvShowKey, seasonKey, streamableId)
+        val frag = StreamsFragment.newInstance(service, tvShowKey, seasonKey, streamableId)
         frag.show(childFragmentManager, "Streams")
     }
 
     companion object {
+        private const val ARG_SERVICE = "service"
         private const val ARG_TV_SHOW_KEY = "tv_show"
         private const val ARG_SEASON_KEY = "season"
 
         @JvmStatic
-        fun newInstance(tvShow: String, season: String): SeasonFragment {
+        fun newInstance(service: StreamingService, tvShow: String, season: String): SeasonFragment {
             val args = Bundle()
+            args.putSerializable(ARG_SERVICE, service)
             args.putSerializable(ARG_TV_SHOW_KEY, tvShow)
             args.putSerializable(ARG_SEASON_KEY, season)
             val fragment = SeasonFragment()

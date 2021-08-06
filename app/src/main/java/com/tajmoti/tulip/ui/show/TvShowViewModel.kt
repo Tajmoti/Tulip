@@ -5,8 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.withTransaction
+import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.TvItem
-import com.tajmoti.libtvprovider.TvProvider
 import com.tajmoti.libtvprovider.show.Season
 import com.tajmoti.tulip.db.AppDatabase
 import com.tajmoti.tulip.model.DbEpisode
@@ -21,7 +21,7 @@ typealias TvShowWithEpisodes = Pair<TvItem.Show, List<Season>>
 
 @HiltViewModel
 class TvShowViewModel @Inject constructor(
-    private val tvProvider: TvProvider,
+    private val tvProvider: MultiTvProvider<StreamingService>,
     private val db: AppDatabase
 ) : ViewModel() {
     private val _state = MutableLiveData<State>(State.Idle)
@@ -42,7 +42,7 @@ class TvShowViewModel @Inject constructor(
     private suspend fun startFetchEpisodesAsync(service: StreamingService, key: String) {
         try {
             val info = db.tvShowDao().getByKey(service, key) ?: TODO()
-            val show = tvProvider.getShow(key, TvItem.Show.Info(info.name)).getOrElse {
+            val show = tvProvider.getShow(service, key, TvItem.Show.Info(info.name)).getOrElse {
                 _state.value = State.Error(it.message ?: it.javaClass.name)
                 return
             }

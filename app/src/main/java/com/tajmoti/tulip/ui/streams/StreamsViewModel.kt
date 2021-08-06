@@ -1,7 +1,7 @@
 package com.tajmoti.tulip.ui.streams
 
 import androidx.lifecycle.*
-import com.tajmoti.libtvprovider.TvProvider
+import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.stream.Streamable
 import com.tajmoti.libtvprovider.stream.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class StreamsViewModel @Inject constructor(
-    private val tvProvider: TvProvider,
+    private val tvProvider: MultiTvProvider<StreamingService>,
     private val linkExtractor: VideoLinkExtractor,
     private val db: AppDatabase
 ) : ViewModel() {
@@ -79,7 +79,9 @@ class StreamsViewModel @Inject constructor(
         _directLoadingState.value = DirectStreamLoading.Loading(ref, download)
         viewModelScope.launch {
             val link = linkExtractor.extractVideoLink(ref.url)
-            link.onSuccess { _directLoadingState.value = DirectStreamLoading.Success(ref, download, it) }
+            link.onSuccess {
+                _directLoadingState.value = DirectStreamLoading.Success(ref, download, it)
+            }
             link.onFailure { _directLoadingState.value = DirectStreamLoading.Failed(ref, it) }
         }
     }
@@ -88,7 +90,7 @@ class StreamsViewModel @Inject constructor(
         try {
             val (key, name) = getItemKeyAndName(service, item) ?: TODO()
             _streamableName.value = name
-            val streamable = tvProvider.getStreamable(key, Streamable.Info(name)).getOrElse {
+            val streamable = tvProvider.getStreamable(service, key, Streamable.Info(name)).getOrElse {
                 _state.value = State.Error(it.message ?: it.javaClass.name)
                 return
             }

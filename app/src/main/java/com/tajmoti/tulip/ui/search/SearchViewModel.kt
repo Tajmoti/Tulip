@@ -2,8 +2,8 @@ package com.tajmoti.tulip.ui.search
 
 import androidx.lifecycle.*
 import androidx.room.withTransaction
+import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.TvItem
-import com.tajmoti.libtvprovider.TvProvider
 import com.tajmoti.tulip.db.AppDatabase
 import com.tajmoti.tulip.model.DbMovie
 import com.tajmoti.tulip.model.DbTvShow
@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val tvProvider: TvProvider,
+    private val tvProvider: MultiTvProvider<StreamingService>,
     private val db: AppDatabase
 ) : ViewModel() {
     private val _state = MutableLiveData<State>(State.Idle)
@@ -37,25 +37,31 @@ class SearchViewModel @Inject constructor(
 
     private suspend fun startFetchEpisodesAsync(query: String) {
         try {
-            val result = tvProvider.search(query).getOrElse {
-                _state.value = State.Error(it.message ?: it.javaClass.name)
-                return
+            val searchResult = tvProvider.search(query)
+            for ((service, result) in searchResult) {
+                val successfulResult = result.getOrNull() ?: continue
+                insertToDb(service, successfulResult)
             }
-            insertToDb(result)
-            _state.value = State.Success(result)
+            val successfulItems = searchResult
+                .mapNotNull {
+                    val res = it.second.getOrNull() ?: return@mapNotNull null
+                    it.first to res
+                }
+                .flatMap { a -> a.second.map { a.first to it } }
+            _state.value = State.Success(successfulItems)
         } catch (e: CancellationException) {
             _state.value = State.Idle
         }
     }
 
-    private suspend fun insertToDb(result: List<TvItem>) {
+    private suspend fun insertToDb(streamingService: StreamingService, result: List<TvItem>) {
         db.withTransaction {
             for (item in result) {
                 if (item is TvItem.Show) {
-                    val dbItem = DbTvShow(StreamingService.PRIMEWIRE, item.key, item.name)
+                    val dbItem = DbTvShow(streamingService, item.key, item.name)
                     db.tvShowDao().insert(dbItem)
                 } else {
-                    val dbItem = DbMovie(StreamingService.PRIMEWIRE, item.key, item.name)
+                    val dbItem = DbMovie(streamingService, item.key, item.name)
                     db.movieDao().insert(dbItem)
                 }
             }
@@ -65,7 +71,7 @@ class SearchViewModel @Inject constructor(
     sealed class State {
         object Idle : State()
         object Searching : State()
-        data class Success(val items: List<TvItem>) : State()
+        data class Success(val items: List<Pair<StreamingService, TvItem>>) : State()
         data class Error(val message: String) : State()
 
         val success: Boolean
