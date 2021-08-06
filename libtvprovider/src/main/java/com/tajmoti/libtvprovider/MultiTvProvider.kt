@@ -1,7 +1,7 @@
 package com.tajmoti.libtvprovider
 
+import com.tajmoti.libtvprovider.show.Episode
 import com.tajmoti.libtvprovider.show.Season
-import com.tajmoti.libtvprovider.stream.Streamable
 
 class MultiTvProvider<ID>(
     private val providers: Map<ID, TvProvider>
@@ -10,15 +10,19 @@ class MultiTvProvider<ID>(
         return providers.map { it.key to it.value.search(query) }
     }
 
-    suspend fun getShow(service: ID, key: String, info: TvItem.Show.Info): Result<TvItem.Show> {
-        return providers[service]!!.getShow(key, info)
+    suspend fun getShow(service: ID, info: TvItem.Show.Info): Result<TvItem.Show> {
+        return providers[service]!!.getShow(info)
     }
 
-    suspend fun getSeason(service: ID, key: String, info: Season.Info): Result<Season> {
-        return providers[service]!!.getSeason(key, info)
+    suspend fun getSeason(service: ID, info: Season.Info): Result<Season> {
+        return providers[service]!!.getSeason(info)
     }
 
-    suspend fun getStreamable(service: ID, key: String, info: Streamable.Info): Result<Streamable> {
-        return providers[service]!!.getStreamable(key, info)
+    suspend fun getEpisode(service: ID, info: Episode.Info): Result<Episode> {
+        return providers[service]!!.getEpisode(info)
+    }
+
+    suspend fun getMovie(service: ID, info: TvItem.Movie.Info): Result<TvItem.Movie> {
+        return providers[service]!!.getMovie(info)
     }
 }

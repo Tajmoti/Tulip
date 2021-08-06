@@ -1,11 +1,28 @@
 package com.tajmoti.libtvprovider.show
 
-import com.tajmoti.libtvprovider.NamedItem
+import com.tajmoti.libtvprovider.Marshallable
 import com.tajmoti.libtvprovider.stream.Streamable
 
-interface Episode: NamedItem, Streamable {
+interface Episode : Streamable, Comparable<Episode> {
+    /**
+     * Episode number or null if it's a special
+     */
+    val number: Int?
+
+    /**
+     * Name of the episode or null in case it's unknown
+     */
+    val name: String?
+
     data class Info(
-        val key: String,
-        val name: String
-    )
+        override val key: String,
+        val number: Int?,
+        val name: String?
+    ) : Marshallable
+
+    override fun compareTo(other: Episode): Int {
+        val otherNum = other.number
+        otherNum ?: return 0
+        return number?.compareTo(otherNum) ?: 0
+    }
 }

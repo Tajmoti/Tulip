@@ -18,6 +18,8 @@ class SearchAdapter : BaseAdapter<Pair<StreamingService, TvItem>, ItemSearchBind
         val icon = getDrawableByType(item.second)
         vh.binding.searchResultName.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, 0, 0, 0)
         vh.binding.searchResultService.text = item.first.name
+        val langIcon = languageToIcon(item.second.language)
+        vh.binding.imageLanguageIcon.setImageResource(langIcon ?: 0)
     }
 
     private fun getDrawableByType(item: TvItem): Int {
@@ -25,5 +27,13 @@ class SearchAdapter : BaseAdapter<Pair<StreamingService, TvItem>, ItemSearchBind
             R.drawable.ic_baseline_live_tv_24
         else
             R.drawable.ic_baseline_local_movies_24
+    }
+
+    private fun languageToIcon(language: String): Int? {
+        return when (language) {
+            "en" -> R.drawable.ic_flag_uk
+            "de" -> R.drawable.ic_flag_de
+            else -> null
+        }
     }
 }

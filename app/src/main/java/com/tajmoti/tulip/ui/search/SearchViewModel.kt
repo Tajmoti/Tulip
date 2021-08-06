@@ -42,6 +42,9 @@ class SearchViewModel @Inject constructor(
                 val successfulResult = result.getOrNull() ?: continue
                 insertToDb(service, successfulResult)
             }
+            if (searchResult.none { it.second.isSuccess }) {
+                _state.value = State.Error("All searches have failed!")
+            }
             val successfulItems = searchResult
                 .mapNotNull {
                     val res = it.second.getOrNull() ?: return@mapNotNull null
@@ -54,15 +57,18 @@ class SearchViewModel @Inject constructor(
         }
     }
 
-    private suspend fun insertToDb(streamingService: StreamingService, result: List<TvItem>) {
+    private suspend fun insertToDb(service: StreamingService, result: List<TvItem>) {
         db.withTransaction {
             for (item in result) {
-                if (item is TvItem.Show) {
-                    val dbItem = DbTvShow(streamingService, item.key, item.name)
-                    db.tvShowDao().insert(dbItem)
-                } else {
-                    val dbItem = DbMovie(streamingService, item.key, item.name)
-                    db.movieDao().insert(dbItem)
+                when (item) {
+                    is TvItem.Show -> {
+                        val dbItem = DbTvShow(service, item)
+                        db.tvShowDao().insert(dbItem)
+                    }
+                    is TvItem.Movie -> {
+                        val dbItem = DbMovie(service, item)
+                        db.movieDao().insert(dbItem)
+                    }
                 }
             }
         }

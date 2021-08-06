@@ -4,7 +4,6 @@ import com.tajmoti.libtvprovider.TvItem
 import com.tajmoti.libtvprovider.TvProvider
 import com.tajmoti.libtvprovider.show.Episode
 import com.tajmoti.libtvprovider.show.Season
-import com.tajmoti.libtvprovider.stream.Streamable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -21,27 +20,27 @@ class KinoxTvProvider(
         }
     }
 
-    override suspend fun getShow(key: String, info: TvItem.Show.Info): Result<TvItem.Show> {
-        val show = KinoxShow(info.name, baseUrl, key)
+    override suspend fun getShow(info: TvItem.Show.Info): Result<TvItem.Show> {
+        val show = KinoxShow(info.name, info.name, baseUrl, info.key)
         return Result.success(show)
     }
 
-    override suspend fun getSeason(key: String, info: Season.Info): Result<Season> {
-        val episodes = info.episodeInfo.map(this::serializedEpToEp)
+    override suspend fun getSeason(info: Season.Info): Result<Season> {
+        val episodes = info.episodes.map(this::serializedEpToEp).sorted()
         val show = KinoxSeason(info.number, episodes)
         return Result.success(show)
     }
 
-    override suspend fun getStreamable(key: String, info: Streamable.Info): Result<Streamable> {
-        val name = info.name
-        val url = key
-        val result = KinoxEpisode(name, baseUrl, url)
-        // TODO This can also be a movie
-        return Result.success(result)
+    override suspend fun getEpisode(info: Episode.Info): Result<Episode> {
+        return Result.success(serializedEpToEp(info))
+    }
+
+    override suspend fun getMovie(info: TvItem.Movie.Info): Result<TvItem.Movie> {
+        TODO()
     }
 
     private fun serializedEpToEp(it: Episode.Info): KinoxEpisode {
-        return KinoxEpisode(it.name, baseUrl, it.key)
+        return KinoxEpisode(it.number, it.name, baseUrl, it.key)
     }
 
     private fun searchBlocking(query: String): Result<List<TvItem>> {
@@ -65,15 +64,28 @@ class KinoxTvProvider(
     }
 
     private fun elemToTvItem(element: Element): TvItem? {
-        // val langIcon = element.child(0).child(0).attr("src") TODO multiple languages
+        val langIcon = element.child(0).child(0).attr("src")
+        val languageNumber = langIcon
+            .removeSuffix(".png")
+            .replaceBeforeLast("/", "")
+            .substring(1)
+            .toInt()
+        val language = languageNumberToLanguageCode(languageNumber)
         val type = element.child(1).child(0).attr("title")
         val titleElem = element.child(2).child(0)
         val title = titleElem.text()
         val link = titleElem.attr("href")
         return when (type) {
-            "series" -> KinoxShow(title, baseUrl, link)
+            "series" -> KinoxShow(title, language, baseUrl, link)
             "movie" -> null // TODO movies
             else -> null
+        }
+    }
+
+    private fun languageNumberToLanguageCode(number: Int): String {
+        return when (number) {
+            1 -> "de"
+            else -> "en"
         }
     }
 }

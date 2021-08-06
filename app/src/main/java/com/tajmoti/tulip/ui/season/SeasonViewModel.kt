@@ -2,7 +2,6 @@ package com.tajmoti.tulip.ui.season
 
 import androidx.lifecycle.*
 import com.tajmoti.libtvprovider.MultiTvProvider
-import com.tajmoti.libtvprovider.show.Episode
 import com.tajmoti.libtvprovider.show.Season
 import com.tajmoti.tulip.db.AppDatabase
 import com.tajmoti.tulip.model.StreamingService
@@ -36,12 +35,10 @@ class SeasonViewModel @Inject constructor(
         seasonId: String
     ) {
         try {
-            val dbSeason = db.seasonDao().getForShow(service, tvShowId, seasonId)
-                ?: TODO()
+            val dbSeason = db.seasonDao().getForShow(service, tvShowId, seasonId) ?: TODO()
             val dbEpisodes = db.episodeDao().getForSeason(service, tvShowId, seasonId)
-            val epInfoList = dbEpisodes.map { Episode.Info(it.key, it.name) }
-            val info = Season.Info(dbSeason.number, epInfoList)
-            val season = tvProvider.getSeason(service, seasonId, info).getOrElse {
+            val info = dbSeason.toApiInfo(dbEpisodes)
+            val season = tvProvider.getSeason(service, info).getOrElse {
                 _state.value = State.Error(it.message ?: it.javaClass.name)
                 return
             }

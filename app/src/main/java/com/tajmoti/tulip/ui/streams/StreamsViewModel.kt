@@ -88,12 +88,11 @@ class StreamsViewModel @Inject constructor(
 
     private suspend fun fetchStreamsAsync(service: StreamingService, item: StreamInfo) {
         try {
-            val (key, name) = getItemKeyAndName(service, item) ?: TODO()
-            _streamableName.value = name
-            val streamable = tvProvider.getStreamable(service, key, Streamable.Info(name)).getOrElse {
+            val (streamable, name) = getStreamableAndNameByInfo(service, item).getOrElse {
                 _state.value = State.Error(it.message ?: it.javaClass.name)
                 return
             }
+            _streamableName.value = name
             val result = streamable.loadSources().getOrElse {
                 _state.value = State.Error(it.message ?: it.javaClass.name)
                 return
@@ -104,18 +103,22 @@ class StreamsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getItemKeyAndName(
+    private suspend fun getStreamableAndNameByInfo(
         service: StreamingService,
-        xx: StreamInfo
-    ): Pair<String, String>? {
-        return when (xx) {
+        item: StreamInfo
+    ): Result<Pair<Streamable, String>> {
+        return when (item) {
             is StreamInfo.TvShow -> {
-                val episode = db.episodeDao().getByKey(service, xx.tvShow, xx.season, xx.key)
-                episode?.let { it.key to it.name }
+                val dbEpisode = db.episodeDao()
+                    .getByKey(service, item.tvShow, item.season, item.key) ?: TODO()
+                tvProvider.getEpisode(service, dbEpisode.apiInfo)
+                    .map { it to (it.name ?: it.number.toString()) }
             }
             is StreamInfo.Movie -> {
-                val movie = db.movieDao().getByKey(service, xx.key)
-                movie?.let { it.key to it.name }
+                val dbMovie = db.movieDao()
+                    .getByKey(service, item.key) ?: TODO()
+                tvProvider.getMovie(service, dbMovie.apiInfo)
+                    .map { it to it.name }
             }
         }
     }

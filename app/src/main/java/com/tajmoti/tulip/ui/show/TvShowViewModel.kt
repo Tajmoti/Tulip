@@ -41,8 +41,8 @@ class TvShowViewModel @Inject constructor(
 
     private suspend fun startFetchEpisodesAsync(service: StreamingService, key: String) {
         try {
-            val info = db.tvShowDao().getByKey(service, key) ?: TODO()
-            val show = tvProvider.getShow(service, key, TvItem.Show.Info(info.name)).getOrElse {
+            val dbInfo = db.tvShowDao().getByKey(service, key) ?: TODO()
+            val show = tvProvider.getShow(service, dbInfo.apiInfo).getOrElse {
                 _state.value = State.Error(it.message ?: it.javaClass.name)
                 return
             }
@@ -64,10 +64,10 @@ class TvShowViewModel @Inject constructor(
     ) {
         db.withTransaction {
             for (season in result) {
-                db.seasonDao().insert(DbSeason(service, key, season.key, season.number))
+                db.seasonDao().insert(DbSeason(service, key, season))
                 for (episode in season.episodes) {
-                    db.episodeDao()
-                        .insert(DbEpisode(service, key, season.key, episode.key, episode.name))
+                    val dbEpisode = DbEpisode(service, key, season.key, episode)
+                    db.episodeDao().insert(dbEpisode)
                 }
             }
         }

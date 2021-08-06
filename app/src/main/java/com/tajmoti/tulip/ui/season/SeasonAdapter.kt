@@ -8,6 +8,9 @@ class SeasonAdapter :
     BaseAdapter<Episode, ItemEpisodeBinding>(ItemEpisodeBinding::inflate) {
 
     override fun onBindViewHolder(vh: Holder<ItemEpisodeBinding>, item: Episode) {
-        vh.binding.textEpisodeTitle.text = "Episode ${vh.adapterPosition + 1}: ${item.name}" // TODO
+        var label = "Episode ${item.number}"
+        if (item.name != null)
+            label += ": ${item.name}"
+        vh.binding.textEpisodeTitle.text = label // TODO
     }
 }

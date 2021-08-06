@@ -13,6 +13,7 @@ data class PrimewireShow(
     private val showUrl: String,
     private val pageLoader: SimplePageSourceLoader
 ) : TvItem.Show {
+    override val language = "en"
     override val key = showUrl
 
     override suspend fun fetchSeasons(): Result<List<Season>> {
@@ -48,7 +49,17 @@ data class PrimewireShow(
         return PrimewireSeason(number, episodes)
     }
 
-    private fun elemToEpisode(element: Element): PrimewireEpisodeOrMovie {
+    private fun elemToEpisode(element: Element): PrimewireEpisode {
+        val elemText = element.text()
+        val number = if (elemText.startsWith("Special")) {
+            null
+        } else {
+            elemText.replaceAfter(" ", "")
+                .substringBefore(" ")
+                .replaceFirst("E", "")
+                .toInt()
+        }
+
         val name = element
             .getElementsByClass("tv_episode_name")
             .text()
@@ -57,6 +68,6 @@ data class PrimewireShow(
             .getElementsByTag("a")
             .first()!!
             .attr("href")
-        return PrimewireEpisodeOrMovie(name, baseUrl, url, pageLoader)
+        return PrimewireEpisode(number, name, baseUrl, url, pageLoader)
     }
 }

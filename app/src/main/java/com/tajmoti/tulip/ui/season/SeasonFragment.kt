@@ -10,7 +10,6 @@ import com.tajmoti.tulip.model.StreamingService
 import com.tajmoti.tulip.ui.setupWithAdapterAndDivider
 import com.tajmoti.tulip.ui.streams.StreamsFragment
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.Serializable
 
 @AndroidEntryPoint
 class SeasonFragment : BaseFragment<FragmentSeasonBinding, SeasonViewModel>(

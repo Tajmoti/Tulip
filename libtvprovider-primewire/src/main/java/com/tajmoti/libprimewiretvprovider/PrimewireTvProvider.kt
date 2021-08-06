@@ -4,7 +4,6 @@ import com.tajmoti.libtvprovider.TvItem
 import com.tajmoti.libtvprovider.TvProvider
 import com.tajmoti.libtvprovider.show.Episode
 import com.tajmoti.libtvprovider.show.Season
-import com.tajmoti.libtvprovider.stream.Streamable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -28,27 +27,28 @@ class PrimewireTvProvider(
         }
     }
 
-    override suspend fun getShow(key: String, info: TvItem.Show.Info): Result<TvItem.Show> {
-        val show = PrimewireShow(info.name, baseUrl, key, this::loadHtmlFromUrl)
+    override suspend fun getShow(info: TvItem.Show.Info): Result<TvItem.Show> {
+        val show = PrimewireShow(info.name, baseUrl, info.key, this::loadHtmlFromUrl)
         return Result.success(show)
     }
 
-    override suspend fun getSeason(key: String, info: Season.Info): Result<Season> {
-        val episodes = info.episodeInfo.map(this::serializedEpToEp)
-        val show = PrimewireSeason(info.number, episodes)
+    override suspend fun getSeason(info: Season.Info): Result<Season> {
+        val primewireEpisodes = info.episodes.map(this::serializedEpToEp).sorted()
+        val show = PrimewireSeason(info.number, primewireEpisodes)
         return Result.success(show)
     }
 
-    override suspend fun getStreamable(key: String, info: Streamable.Info): Result<Streamable> {
-        val name = info.name
-        val url = key
-        val result = PrimewireEpisodeOrMovie(name, baseUrl, url, this::loadHtmlFromUrl)
-        // TODO This can also be a movie
+    override suspend fun getEpisode(info: Episode.Info): Result<Episode> {
+        return Result.success(serializedEpToEp(info))
+    }
+
+    override suspend fun getMovie(info: TvItem.Movie.Info): Result<TvItem.Movie> {
+        val result = PrimewireMovie(info.name, baseUrl, info.key, this::loadHtmlFromUrl)
         return Result.success(result)
     }
 
-    private fun serializedEpToEp(it: Episode.Info): PrimewireEpisodeOrMovie {
-        return PrimewireEpisodeOrMovie(it.name, baseUrl, it.key, this::loadHtmlFromUrl)
+    private fun serializedEpToEp(it: Episode.Info): PrimewireEpisode {
+        return PrimewireEpisode(it.number, it.name, baseUrl, it.key, this::loadHtmlFromUrl)
     }
 
     private fun searchBlocking(query: String): Result<List<TvItem>> {
@@ -75,7 +75,7 @@ class PrimewireTvProvider(
         return if (isShow) {
             PrimewireShow(name, baseUrl, itemUrl, this::loadHtmlFromUrl)
         } else {
-            PrimewireEpisodeOrMovie(name, baseUrl, itemUrl, this::loadHtmlFromUrl)
+            PrimewireMovie(name, baseUrl, itemUrl, this::loadHtmlFromUrl)
         }
     }
 

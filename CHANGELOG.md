@@ -2,6 +2,8 @@
 ### Added
 - Video downloading
 - Kinox.to support
+- Support for multiple content languages
+- Support for episode numbers including specials
 
 ## [0.1.0] - 2021-07-30
 ### Added

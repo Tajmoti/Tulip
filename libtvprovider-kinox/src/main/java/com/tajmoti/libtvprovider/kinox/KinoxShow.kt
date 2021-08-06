@@ -9,6 +9,7 @@ import org.jsoup.nodes.Element
 
 data class KinoxShow(
     override val name: String,
+    override val language: String,
     private val baseUrl: String,
     private val showUrl: String
 ) : TvItem.Show {
@@ -46,6 +47,6 @@ data class KinoxShow(
 
     private fun episodeNumToEpisode(episode: Int, season: Int, rel: String): KinoxEpisode {
         val episodeUrl = "/aGET/MirrorByEpisode/$rel&Season=$season&Episode=$episode"
-        return KinoxEpisode("Episode $episode", baseUrl, episodeUrl)
+        return KinoxEpisode(episode, null, baseUrl, episodeUrl)
     }
 }

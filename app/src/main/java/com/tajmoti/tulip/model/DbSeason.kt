@@ -2,6 +2,7 @@ package com.tajmoti.tulip.model
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import com.tajmoti.libtvprovider.show.Season
 
 @Entity(
     primaryKeys = ["service", "tvShowKey", "key"],
@@ -17,4 +18,12 @@ data class DbSeason(
     val tvShowKey: String,
     val key: String,
     val number: Int
-)
+) {
+    constructor(service: StreamingService, tvShowKey: String, season: Season)
+            : this(service, tvShowKey, season.key, season.number)
+
+    fun toApiInfo(dbEpisodes: List<DbEpisode>): Season.Info {
+        val epInfoList = dbEpisodes.map { it.apiInfo }
+        return Season.Info(key, number, epInfoList)
+    }
+}

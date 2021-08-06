@@ -1,6 +1,5 @@
 package com.tajmoti.libtvprovider.kinox
 
-import com.tajmoti.libtvprovider.TvItem
 import com.tajmoti.libtvprovider.show.Episode
 import com.tajmoti.libtvprovider.stream.VideoStreamRef
 import kotlinx.coroutines.*
@@ -8,10 +7,11 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 
 data class KinoxEpisode(
-    override val name: String,
+    override val number: Int?,
+    override val name: String?,
     private val baseUrl: String,
     internal val episodeUrl: String
-) : Episode, TvItem.Movie {
+) : Episode {
     override val key = episodeUrl
 
     override suspend fun loadSources(): Result<List<VideoStreamRef>> {

@@ -1,7 +1,7 @@
 package com.tajmoti.libtvprovider
 
+import com.tajmoti.libtvprovider.show.Episode
 import com.tajmoti.libtvprovider.show.Season
-import com.tajmoti.libtvprovider.stream.Streamable
 
 interface TvProvider {
 
@@ -11,17 +11,22 @@ interface TvProvider {
     suspend fun search(query: String): Result<List<TvItem>>
 
     /**
-     * Retrieves a show by its key.
+     * Retrieves a show by its information.
      */
-    suspend fun getShow(key: String, info: TvItem.Show.Info): Result<TvItem.Show>
+    suspend fun getShow(info: TvItem.Show.Info): Result<TvItem.Show>
 
     /**
-     * Retrieves a TV show season by its key.
+     * Retrieves a TV show season by its information.
      */
-    suspend fun getSeason(key: String, info: Season.Info): Result<Season>
+    suspend fun getSeason(info: Season.Info): Result<Season>
 
     /**
-     * Retrieves a streamable item by its key.
+     * Retrieves an episode by its information.
      */
-    suspend fun getStreamable(key: String, info: Streamable.Info): Result<Streamable>
+    suspend fun getEpisode(info: Episode.Info): Result<Episode>
+
+    /**
+     * Retrieves a movie by its information.
+     */
+    suspend fun getMovie(info: TvItem.Movie.Info): Result<TvItem.Movie>
 }
