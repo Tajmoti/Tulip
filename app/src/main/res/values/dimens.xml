@@ -4,4 +4,5 @@
     <dimen name="list_item_padding">16dp</dimen>
     <dimen name="list_item_icon_padding">8dp</dimen>
     <dimen name="streams_error_margin">64dp</dimen>
+    <dimen name="item_content_margin">6sp</dimen>
 </resources>

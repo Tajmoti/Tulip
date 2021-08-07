@@ -3,6 +3,7 @@
     android:id="@+id/text_stream_title"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
     android:drawablePadding="@dimen/list_item_icon_padding"
     android:gravity="center_vertical"
     android:padding="@dimen/list_item_padding" />
