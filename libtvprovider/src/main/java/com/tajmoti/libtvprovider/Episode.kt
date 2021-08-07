@@ -1,7 +1,4 @@
-package com.tajmoti.libtvprovider.show
-
-import com.tajmoti.libtvprovider.Marshallable
-import com.tajmoti.libtvprovider.stream.Streamable
+package com.tajmoti.libtvprovider
 
 interface Episode : Streamable, Comparable<Episode> {
     /**

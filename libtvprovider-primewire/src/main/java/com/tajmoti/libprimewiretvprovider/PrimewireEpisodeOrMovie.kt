@@ -1,7 +1,6 @@
 package com.tajmoti.libprimewiretvprovider
 
-import com.tajmoti.libtvprovider.stream.Streamable
-import com.tajmoti.libtvprovider.stream.VideoStreamRef
+import com.tajmoti.libtvprovider.VideoStreamRef
 import kotlinx.coroutines.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
@@ -10,10 +9,10 @@ abstract class PrimewireEpisodeOrMovie(
     private val baseUrl: String,
     internal val episodeUrl: String,
     private val pageLoader: SimplePageSourceLoader
-) : Streamable {
-    override val key = episodeUrl
+) {
+    val key = episodeUrl
 
-    override suspend fun loadSources(): Result<List<VideoStreamRef>> {
+    suspend fun loadSources(): Result<List<VideoStreamRef>> {
         val html = pageLoader.invoke(baseUrl + episodeUrl)
             .getOrElse { return Result.failure(it) }
         return withContext(Dispatchers.IO) {

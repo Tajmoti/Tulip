@@ -1,8 +1,5 @@
 package com.tajmoti.libtvprovider
 
-import com.tajmoti.libtvprovider.show.Episode
-import com.tajmoti.libtvprovider.show.Season
-
 interface TvProvider {
 
     /**

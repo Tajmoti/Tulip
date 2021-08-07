@@ -1,7 +1,7 @@
 package com.tajmoti.libprimewiretvprovider
 
 import com.tajmoti.libtvprovider.TvItem
-import com.tajmoti.libtvprovider.show.Season
+import com.tajmoti.libtvprovider.Season
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup

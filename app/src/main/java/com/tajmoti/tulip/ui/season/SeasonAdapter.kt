@@ -1,6 +1,6 @@
 package com.tajmoti.tulip.ui.season
 
-import com.tajmoti.libtvprovider.show.Episode
+import com.tajmoti.libtvprovider.Episode
 import com.tajmoti.tulip.BaseAdapter
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ItemEpisodeBinding

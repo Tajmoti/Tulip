@@ -1,4 +1,4 @@
-package com.tajmoti.libtvprovider.stream
+package com.tajmoti.libtvprovider
 
 data class VideoStreamRef(
     val serviceName: String,

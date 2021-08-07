@@ -1,7 +1,7 @@
 package com.tajmoti.libtvprovider.kinox
 
-import com.tajmoti.libtvprovider.show.Episode
-import com.tajmoti.libtvprovider.stream.VideoStreamRef
+import com.tajmoti.libtvprovider.Episode
+import com.tajmoti.libtvprovider.VideoStreamRef
 import kotlinx.coroutines.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element

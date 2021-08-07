@@ -1,8 +1,5 @@
 package com.tajmoti.libtvprovider
 
-import com.tajmoti.libtvprovider.show.Season
-import com.tajmoti.libtvprovider.stream.Streamable
-
 sealed interface TvItem : Marshallable, NamedItem {
     /**
      * ISO 639-1 language code

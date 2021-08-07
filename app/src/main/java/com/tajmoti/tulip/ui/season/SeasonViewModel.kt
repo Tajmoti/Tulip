@@ -2,7 +2,7 @@ package com.tajmoti.tulip.ui.season
 
 import androidx.lifecycle.*
 import com.tajmoti.libtvprovider.MultiTvProvider
-import com.tajmoti.libtvprovider.show.Season
+import com.tajmoti.libtvprovider.Season
 import com.tajmoti.tulip.db.AppDatabase
 import com.tajmoti.tulip.model.StreamingService
 import dagger.hilt.android.lifecycle.HiltViewModel

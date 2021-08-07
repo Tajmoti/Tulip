@@ -1,6 +1,6 @@
 package com.tajmoti.libprimewiretvprovider
 
-import com.tajmoti.libtvprovider.show.Season
+import com.tajmoti.libtvprovider.Season
 
 data class PrimewireSeason(
     override val number: Int,

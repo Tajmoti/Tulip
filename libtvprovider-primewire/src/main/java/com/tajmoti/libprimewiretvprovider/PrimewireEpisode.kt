@@ -1,6 +1,6 @@
 package com.tajmoti.libprimewiretvprovider
 
-import com.tajmoti.libtvprovider.show.Episode
+import com.tajmoti.libtvprovider.Episode
 
 class PrimewireEpisode(
     override val number: Int?,

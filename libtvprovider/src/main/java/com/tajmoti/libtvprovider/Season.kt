@@ -1,6 +1,4 @@
-package com.tajmoti.libtvprovider.show
-
-import com.tajmoti.libtvprovider.Marshallable
+package com.tajmoti.libtvprovider
 
 interface Season : Marshallable {
     /**

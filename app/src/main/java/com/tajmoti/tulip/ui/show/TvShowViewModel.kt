@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.room.withTransaction
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.TvItem
-import com.tajmoti.libtvprovider.show.Season
+import com.tajmoti.libtvprovider.Season
 import com.tajmoti.tulip.db.AppDatabase
 import com.tajmoti.tulip.model.DbEpisode
 import com.tajmoti.tulip.model.DbSeason
