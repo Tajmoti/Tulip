@@ -50,7 +50,7 @@ class DownloadManagerVideoDownloadService(
     private fun getSavePath(item: StreamableInfo): String {
         val path = when (item) {
             is StreamableInfo.TvShow -> showToSavePath(item)
-            is StreamableInfo.Movie -> item.movie.name
+            is StreamableInfo.Movie -> normalize(item.movie.name)
         }
         return context.getString(R.string.app_name) + File.separator + path + FILE_EXTENSION
     }
@@ -59,7 +59,7 @@ class DownloadManagerVideoDownloadService(
         val sep = File.separator
         val ss = pad(item.season.number)
         val ep = item.episode.number
-        val prefix = "${norm(item.show.name)}$sep$SEASON_DIRECTORY_NAME $ss$sep"
+        val prefix = "${normalize(item.show.name)}$sep$SEASON_DIRECTORY_NAME $ss$sep"
         val epName = if (ep != null) {
             var fileName = pad(ep)
             val epName = item.episode.name
@@ -67,12 +67,12 @@ class DownloadManagerVideoDownloadService(
                 fileName += " - $epName"
             fileName
         } else {
-            norm(item.episode.name!!)
+            normalize(item.episode.name!!)
         }
         return prefix + epName
     }
 
-    private fun norm(name: String): String {
+    private fun normalize(name: String): String {
         return name.replace(File.separator, "").replace(File.pathSeparator, "-")
     }
 
