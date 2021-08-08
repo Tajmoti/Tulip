@@ -1,12 +1,15 @@
 package com.tajmoti.tulip.ui.streams
 
+import android.net.Uri
 import androidx.lifecycle.*
 import com.tajmoti.libtvprovider.*
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
 import com.tajmoti.tulip.db.AppDatabase
-import com.tajmoti.tulip.model.DbSeason
-import com.tajmoti.tulip.model.DbTvShow
+import com.tajmoti.tulip.model.StreamableIdentifier
+import com.tajmoti.tulip.model.StreamableInfo
 import com.tajmoti.tulip.model.StreamingService
+import com.tajmoti.tulip.service.StreamExtractorService
+import com.tajmoti.tulip.service.VideoDownloadService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -16,7 +19,9 @@ import javax.inject.Inject
 class StreamsViewModel @Inject constructor(
     private val tvProvider: MultiTvProvider<StreamingService>,
     private val linkExtractor: VideoLinkExtractor,
-    private val db: AppDatabase
+    private val db: AppDatabase,
+    private val downloadService: VideoDownloadService,
+    private val extractionService: StreamExtractorService
 ) : ViewModel() {
     private val _state = MutableLiveData<State>(State.Idle)
     private val _streamableName = MutableLiveData<String?>()
@@ -60,12 +65,12 @@ class StreamsViewModel @Inject constructor(
     /**
      * Search for a TV show or a movie.
      */
-    fun fetchStreams(service: StreamingService, info: StreamInfo) {
+    fun fetchStreams(info: StreamableIdentifier) {
         if (_state.value is State.Loading)
             return
         _state.value = State.Loading
         viewModelScope.launch {
-            fetchStreamsAsync(service, info)
+            fetchStreamsAsync(info)
         }
     }
 
@@ -78,37 +83,47 @@ class StreamsViewModel @Inject constructor(
             return
         _directLoadingState.value = DirectStreamLoading.Loading(ref, download)
         viewModelScope.launch {
-            val link = linkExtractor.extractVideoLink(ref.url)
-            link.onSuccess {
+            val result = linkExtractor.extractVideoLink(ref.url)
+            result.onFailure {
+                _directLoadingState.value = DirectStreamLoading.Failed(ref, it)
+            }
+            result.onSuccess {
                 _directLoadingState.value = DirectStreamLoading.Success(ref, download, it)
             }
-            link.onFailure { _directLoadingState.value = DirectStreamLoading.Failed(ref, it) }
         }
     }
 
-    private suspend fun fetchStreamsAsync(service: StreamingService, item: StreamInfo) {
+
+    /**
+     * Download the video from the URL.
+     */
+    fun downloadVideo(link: String) {
+        val state = streamLoadingState.value as State.Success
+        downloadService.downloadFileToFiles(Uri.parse(link), state.streamable)
+    }
+
+    private suspend fun fetchStreamsAsync(info: StreamableIdentifier) {
         try {
-            val (streamable, name) = getStreamableAndNameByInfo(service, item).getOrElse {
+            val streamable = getStreamableByInfo(info).getOrElse {
                 _state.value = State.Error(it.message ?: it.javaClass.name)
                 return
             }
-            _streamableName.value = name
-            val result = streamable.streamable.loadSources().getOrElse {
-                _state.value = State.Error(it.message ?: it.javaClass.name)
-                return
+            _streamableName.value = streamableToName(streamable.streamable)
+            val result = extractionService.fetchStreams(streamable)
+            result.onFailure { _state.value = State.Error(it.message ?: it.javaClass.name) }
+            result.onSuccess {
+                _streamableName.value = streamableToName(it.info.streamable)
+                _state.value = State.Success(it.info, it.streams)
             }
-            _state.value = State.Success(streamable, mapAndSortLinksByRelevance(result))
         } catch (e: CancellationException) {
             _state.value = State.Idle
         }
     }
 
-    private suspend fun getStreamableAndNameByInfo(
-        service: StreamingService,
-        item: StreamInfo
-    ): Result<Pair<FullStreamableInfo, String>> {
+    private suspend fun getStreamableByInfo(item: StreamableIdentifier): Result<StreamableInfo> {
+        val service = item.service
         return when (item) {
-            is StreamInfo.TvShow -> {
+            is StreamableIdentifier.TvShow -> {
                 val dbShow = db.tvShowDao().getByKey(service, item.tvShow)
                     ?: TODO()
                 val dbSeason = db.seasonDao().getForShow(service, item.tvShow, item.season)
@@ -117,36 +132,30 @@ class StreamsViewModel @Inject constructor(
                     .getByKey(service, item.tvShow, item.season, item.key)
                     ?: TODO()
                 tvProvider.getEpisode(service, dbEpisode.apiInfo)
-                    .map {
-                        val fullInfo = FullStreamableInfo.TvShow(dbShow, dbSeason, it)
-                        fullInfo to (it.name ?: it.number.toString())
-                    }
+                    .map { StreamableInfo.TvShow(dbShow, dbSeason, it) }
             }
-            is StreamInfo.Movie -> {
+            is StreamableIdentifier.Movie -> {
                 val dbMovie = db.movieDao()
                     .getByKey(service, item.key) ?: TODO()
                 tvProvider.getMovie(service, dbMovie.apiInfo)
-                    .map { FullStreamableInfo.Movie(it) to it.name }
+                    .map { StreamableInfo.Movie(it) }
             }
         }
     }
 
-    private fun mapAndSortLinksByRelevance(it: List<VideoStreamRef>): List<UnloadedVideoStreamRef> {
-        val mapped = it.map { UnloadedVideoStreamRef(it, linkExtractor.canExtractLink(it.url)) }
-        val working = mapped.filter { it.info.working }
-        val broken = mapped.filterNot { it.info.working }
-        val extractable = working.filter { it.linkExtractionSupported }
-        val notExtractable = working.filterNot { it.linkExtractionSupported }
-        val badExtractable = broken.filter { it.linkExtractionSupported }
-        val badNotExtractor = broken.filterNot { it.linkExtractionSupported }
-        return extractable + notExtractable + badExtractable + badNotExtractor
+
+    private fun streamableToName(streamable: Streamable): String {
+        return when (streamable) {
+            is Episode -> (streamable.name ?: streamable.number.toString())
+            is TvItem.Movie -> streamable.name
+        }
     }
 
     sealed class State {
         object Idle : State()
         object Loading : State()
         data class Success(
-            val streamable: FullStreamableInfo,
+            val streamable: StreamableInfo,
             val streams: List<UnloadedVideoStreamRef>
         ) : State()
 
@@ -154,21 +163,6 @@ class StreamsViewModel @Inject constructor(
 
         val success: Boolean
             get() = this is Success
-    }
-
-    sealed class FullStreamableInfo(
-        val streamable: Streamable
-    ) {
-
-        data class TvShow(
-            val show: DbTvShow,
-            val season: DbSeason,
-            val episode: Episode
-        ) : FullStreamableInfo(episode)
-
-        data class Movie(
-            val movie: TvItem.Movie
-        ) : FullStreamableInfo(movie)
     }
 
     sealed class DirectStreamLoading {
@@ -189,10 +183,5 @@ class StreamsViewModel @Inject constructor(
             override val video: VideoStreamRef,
             val error: Throwable
         ) : DirectStreamLoading()
-    }
-
-    sealed class StreamInfo {
-        class Movie(val key: String) : StreamInfo()
-        class TvShow(val tvShow: String, val season: String, val key: String) : StreamInfo()
     }
 }
