@@ -15,7 +15,7 @@ import com.tajmoti.tulip.databinding.FragmentStreamsBinding
 import com.tajmoti.tulip.model.StreamingService
 import com.tajmoti.tulip.ui.setupWithAdapterAndDivider
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.*
+import java.io.File
 
 
 @AndroidEntryPoint
@@ -34,8 +34,13 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
         }
         viewModel.directStreamLoadingState.observe(viewLifecycleOwner) { onDirectLoadingChanged(it) }
         val args = requireArguments()
+        val streamInfo = getStreamInfo(args)
+        val service = args.getSerializable(ARG_SERVICE) as StreamingService
+        viewModel.fetchStreams(service, streamInfo)
+    }
 
-        val streamInfo = if (args.containsKey(ARG_TV_SHOW_ID)) {
+    private fun getStreamInfo(args: Bundle): StreamsViewModel.StreamInfo {
+        return if (args.containsKey(ARG_TV_SHOW_ID)) {
             val tvShow = args.getString(ARG_TV_SHOW_ID)!!
             val season = args.getString(ARG_SEASON_ID)!!
             val episode = args.getString(ARG_EPISODE_ID)!!
@@ -44,8 +49,6 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
             val movie = args.getString(ARG_MOVIE_ID)!!
             StreamsViewModel.StreamInfo.Movie(movie)
         }
-        val service = args.getSerializable(ARG_SERVICE) as StreamingService
-        viewModel.fetchStreams(service, streamInfo)
     }
 
     private fun onStreamLoadingStateChanged(it: StreamsViewModel.State, adapter: StreamsAdapter) {
@@ -101,18 +104,78 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
     private fun downloadFileToFiles(uri: Uri): Long {
         val downloadManager = requireContext().getSystemService(DOWNLOAD_SERVICE) as DownloadManager
         val request = DownloadManager.Request(uri)
-        request.setTitle("Image Download")
-            .setDescription("Image download using DownloadManager.")
-            .setDestinationInExternalPublicDir(
-                Environment.DIRECTORY_MOVIES,
-                UUID.randomUUID().toString()
-            )
+        val state = viewModel.streamLoadingState.value as StreamsViewModel.State.Success
+        val savePath = getSavePath(state.streamable)
+        request.setTitle(getDisplayName(state.streamable))
+            .setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, savePath)
             .allowScanningByMediaScanner()
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
         return downloadManager.enqueue(request)
     }
 
+    private fun getDisplayName(item: StreamsViewModel.FullStreamableInfo): String {
+        return when (item) {
+            is StreamsViewModel.FullStreamableInfo.TvShow -> {
+                showToDownloadName(item)
+            }
+            is StreamsViewModel.FullStreamableInfo.Movie -> {
+                item.movie.name
+            }
+        }
+    }
+
+    private fun showToDownloadName(item: StreamsViewModel.FullStreamableInfo.TvShow): String {
+        val episode = item.episode.number
+        val prefix = "${item.show.name} S${pad(item.season.number)}"
+        val name = if (episode != null) {
+            "E${pad(episode)}"
+        } else {
+            item.episode.name!!
+        }
+        return prefix + name
+    }
+
+    private fun getSavePath(item: StreamsViewModel.FullStreamableInfo): String {
+        val path = when (item) {
+            is StreamsViewModel.FullStreamableInfo.TvShow -> {
+                showToSavePath(item)
+            }
+            is StreamsViewModel.FullStreamableInfo.Movie -> {
+                item.movie.name
+            }
+        }
+        return getString(R.string.app_name) + File.separator + path + FILE_EXTENSION
+    }
+
+    private fun showToSavePath(item: StreamsViewModel.FullStreamableInfo.TvShow): String {
+        val sep = File.separator
+        val ss = pad(item.season.number)
+        val ep = item.episode.number
+        val prefix = "${norm(item.show.name)}$sep$SEASON_DIRECTORY_NAME $ss$sep"
+        val epName = if (ep != null) {
+            var fileName = pad(ep)
+            val epName = item.episode.name
+            if (epName != null)
+                fileName += " - $epName"
+            fileName
+        } else {
+            norm(item.episode.name!!)
+        }
+        return prefix + epName
+    }
+
+    private fun norm(name: String): String {
+        return name.replace(File.separator, "").replace(File.pathSeparator, "-")
+    }
+
+    private fun pad(name: Int): String {
+        return name.toString().padStart(2, '0')
+    }
+
     companion object {
+        private const val SEASON_DIRECTORY_NAME = "Season"
+        private const val FILE_EXTENSION = ".mp4"
+
         private const val ARG_SERVICE = "service"
         private const val ARG_MOVIE_ID = "movie"
         private const val ARG_TV_SHOW_ID = "tv_show"

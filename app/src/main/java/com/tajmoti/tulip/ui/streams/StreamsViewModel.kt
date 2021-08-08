@@ -1,11 +1,11 @@
 package com.tajmoti.tulip.ui.streams
 
 import androidx.lifecycle.*
-import com.tajmoti.libtvprovider.MultiTvProvider
-import com.tajmoti.libtvprovider.stream.Streamable
-import com.tajmoti.libtvprovider.stream.VideoStreamRef
+import com.tajmoti.libtvprovider.*
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
 import com.tajmoti.tulip.db.AppDatabase
+import com.tajmoti.tulip.model.DbSeason
+import com.tajmoti.tulip.model.DbTvShow
 import com.tajmoti.tulip.model.StreamingService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -93,11 +93,11 @@ class StreamsViewModel @Inject constructor(
                 return
             }
             _streamableName.value = name
-            val result = streamable.loadSources().getOrElse {
+            val result = streamable.streamable.loadSources().getOrElse {
                 _state.value = State.Error(it.message ?: it.javaClass.name)
                 return
             }
-            _state.value = State.Success(mapAndSortLinksByRelevance(result))
+            _state.value = State.Success(streamable, mapAndSortLinksByRelevance(result))
         } catch (e: CancellationException) {
             _state.value = State.Idle
         }
@@ -106,19 +106,27 @@ class StreamsViewModel @Inject constructor(
     private suspend fun getStreamableAndNameByInfo(
         service: StreamingService,
         item: StreamInfo
-    ): Result<Pair<Streamable, String>> {
+    ): Result<Pair<FullStreamableInfo, String>> {
         return when (item) {
             is StreamInfo.TvShow -> {
+                val dbShow = db.tvShowDao().getByKey(service, item.tvShow)
+                    ?: TODO()
+                val dbSeason = db.seasonDao().getForShow(service, item.tvShow, item.season)
+                    ?: TODO()
                 val dbEpisode = db.episodeDao()
-                    .getByKey(service, item.tvShow, item.season, item.key) ?: TODO()
+                    .getByKey(service, item.tvShow, item.season, item.key)
+                    ?: TODO()
                 tvProvider.getEpisode(service, dbEpisode.apiInfo)
-                    .map { it to (it.name ?: it.number.toString()) }
+                    .map {
+                        val fullInfo = FullStreamableInfo.TvShow(dbShow, dbSeason, it)
+                        fullInfo to (it.name ?: it.number.toString())
+                    }
             }
             is StreamInfo.Movie -> {
                 val dbMovie = db.movieDao()
                     .getByKey(service, item.key) ?: TODO()
                 tvProvider.getMovie(service, dbMovie.apiInfo)
-                    .map { it to it.name }
+                    .map { FullStreamableInfo.Movie(it) to it.name }
             }
         }
     }
@@ -137,11 +145,30 @@ class StreamsViewModel @Inject constructor(
     sealed class State {
         object Idle : State()
         object Loading : State()
-        data class Success(val streams: List<UnloadedVideoStreamRef>) : State()
+        data class Success(
+            val streamable: FullStreamableInfo,
+            val streams: List<UnloadedVideoStreamRef>
+        ) : State()
+
         data class Error(val message: String) : State()
 
         val success: Boolean
             get() = this is Success
+    }
+
+    sealed class FullStreamableInfo(
+        val streamable: Streamable
+    ) {
+
+        data class TvShow(
+            val show: DbTvShow,
+            val season: DbSeason,
+            val episode: Episode
+        ) : FullStreamableInfo(episode)
+
+        data class Movie(
+            val movie: TvItem.Movie
+        ) : FullStreamableInfo(movie)
     }
 
     sealed class DirectStreamLoading {
