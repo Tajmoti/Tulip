@@ -1,6 +1,7 @@
 ## [Unreleased]
 ### Changed
 - Fix black text on dark background when dark mode is used
+- Fix searching from multiple sources being performed serially
 
 ## [0.2.0] - 2021-08-08
 ### Added

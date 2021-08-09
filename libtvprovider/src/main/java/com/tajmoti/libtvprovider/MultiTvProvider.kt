@@ -1,10 +1,19 @@
 package com.tajmoti.libtvprovider
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+
 class MultiTvProvider<ID>(
     private val providers: Map<ID, TvProvider>
 ) {
     suspend fun search(query: String): List<Pair<ID, Result<List<TvItem>>>> {
-        return providers.map { it.key to it.value.search(query) }
+        val coroutines = coroutineScope {
+            providers.map { async { it.value.search(query) } }
+        }
+        val ids = providers.map { it.key }
+        val results = awaitAll(*coroutines.toTypedArray())
+        return ids.zip(results)
     }
 
     suspend fun getShow(service: ID, info: TvItem.Show.Info): Result<TvItem.Show> {
