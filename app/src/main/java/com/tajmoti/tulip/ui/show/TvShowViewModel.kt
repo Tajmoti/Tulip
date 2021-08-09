@@ -6,8 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.withTransaction
 import com.tajmoti.libtvprovider.MultiTvProvider
-import com.tajmoti.libtvprovider.TvItem
 import com.tajmoti.libtvprovider.Season
+import com.tajmoti.libtvprovider.TvItem
 import com.tajmoti.tulip.db.AppDatabase
 import com.tajmoti.tulip.model.DbEpisode
 import com.tajmoti.tulip.model.DbSeason
@@ -25,6 +25,16 @@ class TvShowViewModel @Inject constructor(
     private val db: AppDatabase
 ) : ViewModel() {
     private val _state = MutableLiveData<State>(State.Idle)
+    private val _name = MutableLiveData<String?>()
+
+    /**
+     * Name of the TV show
+     */
+    val name: LiveData<String?> = _name
+
+    /**
+     * Data loading state
+     */
     val state: LiveData<State> = _state
 
     /**
@@ -46,6 +56,7 @@ class TvShowViewModel @Inject constructor(
                 _state.value = State.Error(it.message ?: it.javaClass.name)
                 return
             }
+            _name.value = show.name
             val result = show.fetchSeasons().getOrElse {
                 _state.value = State.Error(it.message ?: it.javaClass.name)
                 return

@@ -20,6 +20,12 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
 ) {
     override val viewModel: StreamsViewModel by viewModels()
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val streamInfo = getStreamInfo()
+        viewModel.fetchStreams(streamInfo)
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val adapter = StreamsAdapter(this::onStreamDownloadRequested)
         adapter.callback = this::onStreamClicked
@@ -29,8 +35,6 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
             onStreamLoadingStateChanged(it, adapter)
         }
         viewModel.directStreamLoadingState.observe(viewLifecycleOwner) { onDirectLoadingChanged(it) }
-        val streamInfo = getStreamInfo()
-        viewModel.fetchStreams(streamInfo)
     }
 
     private fun getStreamInfo(): StreamableIdentifier {

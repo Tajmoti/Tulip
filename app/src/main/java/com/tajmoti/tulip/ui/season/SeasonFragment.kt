@@ -17,6 +17,11 @@ class SeasonFragment : BaseFragment<FragmentSeasonBinding, SeasonViewModel>(
 ) {
     override val viewModel: SeasonViewModel by viewModels()
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        startEpFetching()
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val adapter = SeasonAdapter()
         adapter.callback = this::goToStreamsScreen
@@ -26,6 +31,9 @@ class SeasonFragment : BaseFragment<FragmentSeasonBinding, SeasonViewModel>(
             if (it is SeasonViewModel.State.Success)
                 adapter.items = it.season.episodes
         }
+    }
+
+    private fun startEpFetching() {
         val args = requireArguments()
         val service = args.getSerializable(ARG_SERVICE) as StreamingService
         val tvShowKey = args.getString(ARG_TV_SHOW_KEY)!!

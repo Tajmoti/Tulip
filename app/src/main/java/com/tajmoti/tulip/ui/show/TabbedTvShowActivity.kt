@@ -3,8 +3,6 @@ package com.tajmoti.tulip.ui.show
 import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.activity.viewModels
-import androidx.viewpager.widget.ViewPager
-import com.google.android.material.tabs.TabLayout
 import com.tajmoti.tulip.BaseActivity
 import com.tajmoti.tulip.databinding.ActivityTabbedTvShowBinding
 import com.tajmoti.tulip.model.StreamingService
@@ -19,8 +17,10 @@ class TabbedTvShowActivity : BaseActivity<ActivityTabbedTvShowBinding>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val tvShowId = intent.getStringExtra(ARG_TV_SHOW_ID)!!
+        binding.tabs.setupWithViewPager(binding.viewPager)
+        viewModel.name.observe(this, this::onNameChanged)
         viewModel.state.observe(this, this::onStateChanged)
+        val tvShowId = intent.getStringExtra(ARG_TV_SHOW_ID)!!
         val service = intent.getSerializableExtra(ARG_SERVICE) as StreamingService
         viewModel.fetchEpisodes(service, tvShowId)
     }
@@ -31,21 +31,22 @@ class TabbedTvShowActivity : BaseActivity<ActivityTabbedTvShowBinding>() {
         onLoadingFinished(state)
     }
 
+    private fun onNameChanged(name: String?) {
+        if (name == null)
+            return
+        title = name
+    }
+
     private fun onLoadingFinished(state: TvShowViewModel.State.Success) {
-        val result = state.items
-        title = result.first.name
         val service = intent.getSerializableExtra(ARG_SERVICE) as StreamingService
         val tvShowId = intent.getStringExtra(ARG_TV_SHOW_ID)!!
         val sectionsPagerAdapter = SectionsPagerAdapter(
-            result.second,
+            state.items.second,
             supportFragmentManager,
             service,
             tvShowId
         )
-        val viewPager: ViewPager = binding.viewPager
-        viewPager.adapter = sectionsPagerAdapter
-        val tabs: TabLayout = binding.tabs
-        tabs.setupWithViewPager(viewPager)
+        binding.viewPager.adapter = sectionsPagerAdapter
     }
 
     companion object {
