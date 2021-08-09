@@ -20,5 +20,5 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/item_content_margin"
         android:gravity="center_vertical"
-        android:textColor="@color/black" />
+        android:textColor="?android:textColorPrimary" />
 </LinearLayout>

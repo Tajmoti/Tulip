@@ -16,7 +16,7 @@
         android:drawablePadding="@dimen/list_item_icon_padding"
         android:gravity="center_vertical"
         android:maxLines="1"
-        android:textColor="@color/black" />
+        android:textColor="?android:textColorPrimary" />
 
     <TextView
         android:id="@+id/search_result_service"
