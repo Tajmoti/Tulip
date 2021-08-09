@@ -5,12 +5,19 @@ import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewbinding.ViewBinding
 
-abstract class BaseActivity<B : ViewBinding> : AppCompatActivity() {
+abstract class BaseActivity<B : ViewBinding>(
+    private val bindingInflater: (LayoutInflater) -> B
+) : AppCompatActivity() {
+    /**
+     * View binding belonging to this activity
+     */
     protected lateinit var binding: B
 
-    abstract val bindingInflater: (LayoutInflater) -> B
-
+    /**
+     * Controls whether the back button will be shown
+     */
     open val shouldShowBackButton = true
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

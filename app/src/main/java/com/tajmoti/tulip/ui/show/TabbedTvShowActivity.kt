@@ -1,7 +1,6 @@
 package com.tajmoti.tulip.ui.show
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import androidx.activity.viewModels
 import com.tajmoti.tulip.BaseActivity
 import com.tajmoti.tulip.databinding.ActivityTabbedTvShowBinding
@@ -9,11 +8,10 @@ import com.tajmoti.tulip.model.StreamingService
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class TabbedTvShowActivity : BaseActivity<ActivityTabbedTvShowBinding>() {
+class TabbedTvShowActivity : BaseActivity<ActivityTabbedTvShowBinding>(
+    ActivityTabbedTvShowBinding::inflate
+) {
     private val viewModel: TvShowViewModel by viewModels()
-    override val bindingInflater: (LayoutInflater) -> ActivityTabbedTvShowBinding =
-        ActivityTabbedTvShowBinding::inflate
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
