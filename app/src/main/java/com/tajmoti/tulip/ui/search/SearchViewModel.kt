@@ -24,7 +24,7 @@ class SearchViewModel @Inject constructor(
         /**
          * How often a new search query will be started
          */
-        private const val DEBOUNCE_INTERVAL_MS = 1000L
+        private const val DEBOUNCE_INTERVAL_MS = 500L
     }
 
     private val _state = MutableLiveData<State>(State.Idle)
