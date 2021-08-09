@@ -112,7 +112,6 @@ class StreamsViewModel @Inject constructor(
             val result = extractionService.fetchStreams(streamable)
             result.onFailure { _state.value = State.Error(it.message ?: it.javaClass.name) }
             result.onSuccess {
-                _streamableName.value = streamableToName(it.info.streamable)
                 _state.value = State.Success(it.info, it.streams)
             }
         } catch (e: CancellationException) {
