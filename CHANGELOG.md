@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [0.3.0] - 2021-08-09
 ### Changed
 - Fix black text on dark background when dark mode is used
 - Fix searching from multiple sources being performed serially
@@ -18,5 +20,6 @@
 - Support for primewire.ag
 
 [Unreleased]: https://github.com/Tajmoti/Tulip/tree/main
+[0.3.0]: https://github.com/Tajmoti/Tulip/tree/v0.3.0
 [0.2.0]: https://github.com/Tajmoti/Tulip/tree/v0.2.0
 [0.1.0]: https://github.com/Tajmoti/Tulip/tree/v0.1.0
