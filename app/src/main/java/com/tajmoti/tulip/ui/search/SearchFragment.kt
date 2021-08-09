@@ -56,17 +56,17 @@ class SearchFragment : BaseFragment<FragmentSearchBinding, SearchViewModel>(
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         requireActivity().menuInflater.inflate(R.menu.menu_main, menu)
-        val myActionMenuItem: MenuItem = menu.findItem(R.id.action_search)
-        val searchView: SearchView = myActionMenuItem.actionView as SearchView
+        val myActionMenuItem = menu.findItem(R.id.action_search)
+        val searchView = myActionMenuItem.actionView as SearchView
         searchView.setOnQueryTextListener(this)
     }
 
     override fun onQueryTextSubmit(query: String): Boolean {
-        viewModel.search(query)
         return true
     }
 
     override fun onQueryTextChange(newText: String): Boolean {
-        return false
+        viewModel.submitNewText(newText)
+        return true
     }
 }

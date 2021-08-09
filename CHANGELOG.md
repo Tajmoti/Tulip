@@ -3,6 +3,7 @@
 - Fix black text on dark background when dark mode is used
 - Fix searching from multiple sources being performed serially
 - UI loading speed improvements
+- Searching is now done as the user types
 
 ## [0.2.0] - 2021-08-08
 ### Added

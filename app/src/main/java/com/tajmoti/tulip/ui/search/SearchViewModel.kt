@@ -10,6 +10,8 @@ import com.tajmoti.tulip.model.DbTvShow
 import com.tajmoti.tulip.model.StreamingService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,21 +20,64 @@ class SearchViewModel @Inject constructor(
     private val tvProvider: MultiTvProvider<StreamingService>,
     private val db: AppDatabase
 ) : ViewModel() {
+    companion object {
+        /**
+         * How often a new search query will be started
+         */
+        private const val DEBOUNCE_INTERVAL_MS = 1000L
+    }
+
     private val _state = MutableLiveData<State>(State.Idle)
     val state: LiveData<State> = _state
-    val idle = Transformations.map(state) { it is State.Idle }
-    val loading = Transformations.map(state) { it is State.Searching }
-    val noResults = Transformations.map(state) { it is State.Success && it.items.isEmpty() }
-
 
     /**
-     * Search for a TV show or a movie.
+     * True if nothing was ever searched
      */
-    fun search(query: String) {
-        if (_state.value is State.Searching)
-            return
-        _state.value = State.Searching
-        viewModelScope.launch { startFetchEpisodesAsync(query) }
+    val idle = Transformations.map(state) { it is State.Idle }
+
+    /**
+     * True if currently searching a query
+     */
+    val loading = Transformations.map(state) { it is State.Searching }
+
+    /**
+     * True if the search is finished and no results were returned
+     */
+    val noResults = Transformations.map(state) { it is State.Success && it.items.isEmpty() }
+
+    /**
+     * Flow containing (even partial) queries entered in the search view
+     */
+    private val searchFlow = MutableStateFlow<String?>(null)
+
+    /**
+     * The currently active search, will be replaced when a new query is submitted
+     */
+    private var searchJob: Job? = null
+
+    init {
+        searchFlow
+            .debounce { if (it.isNullOrBlank()) 0L else DEBOUNCE_INTERVAL_MS }
+            .onEach { onNewSearchQuery(it) }
+            .launchIn(viewModelScope)
+    }
+
+    /**
+     * Submit a new query to be searched
+     */
+    fun submitNewText(query: String) {
+        val queryNullable = query.takeIf { it.isNotBlank() }
+        viewModelScope.launch { searchFlow.emit(queryNullable) }
+    }
+
+    private fun onNewSearchQuery(it: String?) {
+        searchJob?.cancel()
+        if (it == null) {
+            _state.value = State.Idle
+        } else {
+            _state.value = State.Searching
+            searchJob = viewModelScope.launch { startFetchEpisodesAsync(it) }
+        }
     }
 
     private suspend fun startFetchEpisodesAsync(query: String) {
