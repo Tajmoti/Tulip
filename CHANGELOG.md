@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [0.4.0] - 2021-08-10
 ### Changed
 - Decrease the delay from typing a letter to search start to 500ms
 ### Added
@@ -24,6 +26,7 @@
 - Support for primewire.ag
 
 [Unreleased]: https://github.com/Tajmoti/Tulip/tree/main
+[0.4.0]: https://github.com/Tajmoti/Tulip/tree/v0.4.0
 [0.3.0]: https://github.com/Tajmoti/Tulip/tree/v0.3.0
 [0.2.0]: https://github.com/Tajmoti/Tulip/tree/v0.2.0
 [0.1.0]: https://github.com/Tajmoti/Tulip/tree/v0.1.0
