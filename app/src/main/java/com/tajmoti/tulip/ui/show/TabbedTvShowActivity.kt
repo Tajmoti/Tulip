@@ -3,18 +3,20 @@ package com.tajmoti.tulip.ui.show
 import android.os.Bundle
 import androidx.activity.viewModels
 import com.tajmoti.tulip.BaseActivity
+import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ActivityTabbedTvShowBinding
 import com.tajmoti.tulip.model.StreamingService
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class TabbedTvShowActivity : BaseActivity<ActivityTabbedTvShowBinding>(
-    ActivityTabbedTvShowBinding::inflate
+    R.layout.activity_tabbed_tv_show
 ) {
     private val viewModel: TvShowViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        binding.viewModel = viewModel
         binding.tabs.setupWithViewPager(binding.viewPager)
         viewModel.name.observe(this, this::onNameChanged)
         viewModel.state.observe(this, this::onStateChanged)

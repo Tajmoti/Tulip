@@ -1,9 +1,6 @@
 package com.tajmoti.tulip.ui.show
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import androidx.room.withTransaction
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.Season
@@ -38,15 +35,34 @@ class TvShowViewModel @Inject constructor(
     val state: LiveData<State> = _state
 
     /**
-     * Search for a TV show or a movie.
+     * True if an error occurred during show loading
+     */
+    val error = Transformations.map(state) { it is State.Error }
+
+    /**
+     * The last submitted fetch episode request - used for retry
+     */
+    private var lastKey: TvShowKey? = null
+
+    /**
+     * Search for a TV show or a movie
      */
     fun fetchEpisodes(service: StreamingService, key: String) {
+        lastKey = TvShowKey(service, key)
         if (_state.value is State.Loading)
             return
         _state.value = State.Loading
         viewModelScope.launch {
             startFetchEpisodesAsync(service, key)
         }
+    }
+
+    /**
+     * Retries the last fetching request
+     */
+    fun retryFetchEpisodes() {
+        val lastKey = lastKey!!
+        fetchEpisodes(lastKey.service, lastKey.key)
     }
 
     private suspend fun startFetchEpisodesAsync(service: StreamingService, key: String) {
@@ -93,4 +109,9 @@ class TvShowViewModel @Inject constructor(
         val success: Boolean
             get() = this is Success
     }
+
+    private data class TvShowKey(
+        val service: StreamingService,
+        val key: String
+    )
 }

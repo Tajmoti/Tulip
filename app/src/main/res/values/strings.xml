@@ -10,4 +10,7 @@
     <string name="stream_not_downloadable">This stream can not be downloaded</string>
     <string name="episode_number">Ep. %d</string>
     <string name="episode_special">Special</string>
+    <string name="something_went_wrong">Something went wrong</string>
+    <string name="retry">Retry</string>
+    <string name="empty" />
 </resources>

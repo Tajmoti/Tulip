@@ -1,12 +1,14 @@
 package com.tajmoti.tulip
 
 import android.os.Bundle
-import android.view.LayoutInflater
+import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AppCompatActivity
-import androidx.viewbinding.ViewBinding
+import androidx.databinding.DataBindingUtil
+import androidx.databinding.ViewDataBinding
 
-abstract class BaseActivity<B : ViewBinding>(
-    private val bindingInflater: (LayoutInflater) -> B
+abstract class BaseActivity<B : ViewDataBinding>(
+    @LayoutRes
+    private val bindingInflater: Int
 ) : AppCompatActivity() {
     /**
      * View binding belonging to this activity
@@ -23,8 +25,8 @@ abstract class BaseActivity<B : ViewBinding>(
         super.onCreate(savedInstanceState)
         if (shouldShowBackButton)
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        binding = bindingInflater(layoutInflater)
-        setContentView(binding.root)
+        binding = DataBindingUtil.setContentView(this, bindingInflater)
+        binding.lifecycleOwner = this
     }
 
     override fun onSupportNavigateUp(): Boolean {

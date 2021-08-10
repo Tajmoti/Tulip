@@ -1,6 +1,8 @@
 ## [Unreleased]
 ### Changed
 - Decrease the delay from typing a letter to search start to 500ms
+### Added
+- Better error handling UI including a retry option
 
 ## [0.3.0] - 2021-08-09
 ### Changed

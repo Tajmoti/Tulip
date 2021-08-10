@@ -10,7 +10,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : BaseActivity<ActivityMainBinding>(
-    ActivityMainBinding::inflate
+    R.layout.activity_main
 ) {
     override val shouldShowBackButton = false
 

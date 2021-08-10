@@ -3,6 +3,7 @@ package com.tajmoti.tulip.ui.season
 import androidx.lifecycle.*
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.Season
+import com.tajmoti.tulip.R
 import com.tajmoti.tulip.db.AppDatabase
 import com.tajmoti.tulip.model.StreamingService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,8 +17,21 @@ class SeasonViewModel @Inject constructor(
     private val db: AppDatabase
 ) : ViewModel() {
     private val _state = MutableLiveData<State>(State.Idle)
+
+    /**
+     * State of this ViewModel represented as values of [State]
+     */
     val state: LiveData<State> = _state
-    val stateText: LiveData<String> = Transformations.map(state) { it.toString() }
+
+    /**
+     * Text to be shown in case of error or null
+     */
+    val statusText = Transformations.map(state) {
+        when (it) {
+            is State.Error -> R.string.something_went_wrong
+            else -> null
+        }
+    }
 
 
     fun fetchEpisodes(service: StreamingService, tvShowId: String, seasonId: String) {

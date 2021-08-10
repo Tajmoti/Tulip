@@ -3,10 +3,11 @@
 
     <data>
 
+        <import type="com.tajmoti.tulip.R" />
+
         <import type="com.tajmoti.tulip.ui.season.SeasonViewModel" />
 
         <import type="com.tajmoti.tulip.ui.season.SeasonViewModel.State" />
-
 
         <import type="android.view.View" />
 
@@ -22,9 +23,8 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="@{viewModel.stateText}"
-            android:visibility="@{viewModel.state.success ? View.GONE : View.VISIBLE}" />
+            android:text="@{viewModel.statusText ?? R.string.empty}"
+            android:visibility="@{viewModel.statusText != null ? View.VISIBLE : View.GONE}" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_search"

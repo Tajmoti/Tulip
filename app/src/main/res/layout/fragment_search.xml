@@ -7,6 +7,8 @@
 
         <import type="android.view.View" />
 
+        <import type="com.tajmoti.tulip.R" />
+
         <variable
             name="viewModel"
             type="com.tajmoti.tulip.ui.search.SearchViewModel" />
@@ -16,19 +18,34 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TextView
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="@string/search_hint"
-            android:visibility="@{viewModel.idle ? View.VISIBLE : View.GONE}" />
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="@string/no_results"
-            android:visibility="@{viewModel.noResults ? View.VISIBLE : View.GONE}" />
+            <ImageView
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginBottom="@dimen/activity_vertical_margin"
+                android:src="@{viewModel.statusImage ?? 0}"
+                android:visibility="@{viewModel.statusImage != null ? View.VISIBLE : View.GONE}" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/activity_vertical_margin"
+                android:text="@{viewModel.statusText ?? R.string.empty}"
+                android:visibility="@{viewModel.statusText != null ? View.VISIBLE : View.GONE}" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="@{(v) -> viewModel.resubmitText()}"
+                android:text="@string/retry"
+                android:visibility="@{viewModel.canTryAgain ? View.VISIBLE : View.GONE}" />
+        </LinearLayout>
 
         <ProgressBar
             android:layout_width="wrap_content"

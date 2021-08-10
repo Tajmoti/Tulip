@@ -4,6 +4,7 @@ import androidx.lifecycle.*
 import androidx.room.withTransaction
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.TvItem
+import com.tajmoti.tulip.R
 import com.tajmoti.tulip.db.AppDatabase
 import com.tajmoti.tulip.model.DbMovie
 import com.tajmoti.tulip.model.DbTvShow
@@ -31,19 +32,38 @@ class SearchViewModel @Inject constructor(
     val state: LiveData<State> = _state
 
     /**
-     * True if nothing was ever searched
-     */
-    val idle = Transformations.map(state) { it is State.Idle }
-
-    /**
      * True if currently searching a query
      */
     val loading = Transformations.map(state) { it is State.Searching }
 
     /**
-     * True if the search is finished and no results were returned
+     * Contains the text that should be shown or null if none
      */
-    val noResults = Transformations.map(state) { it is State.Success && it.items.isEmpty() }
+    val statusText = Transformations.map(state) {
+        when {
+            it is State.Idle -> R.string.search_hint
+            it is State.Success && it.items.isEmpty() -> R.string.no_results
+            it is State.Error -> R.string.something_went_wrong
+            else -> null
+        }
+    }
+
+    /**
+     * A status icon shown above the status text
+     */
+    val statusImage = Transformations.map(state) {
+        when {
+            it is State.Idle -> R.drawable.ic_search_24
+            it is State.Success && it.items.isEmpty() -> R.drawable.ic_sad_24
+            it is State.Error -> R.drawable.ic_sad_24
+            else -> null
+        }
+    }
+
+    /**
+     * True if the retry button should be shown
+     */
+    val canTryAgain = Transformations.map(state) { it is State.Error }
 
     /**
      * Flow containing (even partial) queries entered in the search view
@@ -70,17 +90,24 @@ class SearchViewModel @Inject constructor(
         viewModelScope.launch { searchFlow.emit(queryNullable) }
     }
 
+    /**
+     * Submits an already submitted text again
+     */
+    fun resubmitText() {
+        onNewSearchQuery(searchFlow.value ?: "")
+    }
+
     private fun onNewSearchQuery(it: String?) {
         searchJob?.cancel()
         if (it == null) {
             _state.value = State.Idle
         } else {
             _state.value = State.Searching
-            searchJob = viewModelScope.launch { startFetchEpisodesAsync(it) }
+            searchJob = viewModelScope.launch { startSearchAsync(it) }
         }
     }
 
-    private suspend fun startFetchEpisodesAsync(query: String) {
+    private suspend fun startSearchAsync(query: String) {
         try {
             val searchResult = tvProvider.search(query)
             for ((service, result) in searchResult) {
@@ -88,7 +115,8 @@ class SearchViewModel @Inject constructor(
                 insertToDb(service, successfulResult)
             }
             if (searchResult.none { it.second.isSuccess }) {
-                _state.value = State.Error("All searches have failed!")
+                _state.value = State.Error
+                return
             }
             val successfulItems = searchResult
                 .mapNotNull {
@@ -123,7 +151,7 @@ class SearchViewModel @Inject constructor(
         object Idle : State()
         object Searching : State()
         data class Success(val items: List<Pair<StreamingService, TvItem>>) : State()
-        data class Error(val message: String) : State()
+        object Error : State()
 
         val success: Boolean
             get() = this is Success
