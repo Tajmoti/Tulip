@@ -1,16 +1,12 @@
 package com.tajmoti.tulip.ui.search
 
 import androidx.lifecycle.*
-import androidx.room.withTransaction
-import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.TvItem
 import com.tajmoti.tulip.R
-import com.tajmoti.tulip.db.AppDatabase
-import com.tajmoti.tulip.model.DbMovie
-import com.tajmoti.tulip.model.DbTvShow
 import com.tajmoti.tulip.model.StreamingService
+import com.tajmoti.tulip.service.TvDataService
+import com.tajmoti.tulip.ui.runWithOnCancel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -18,8 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val tvProvider: MultiTvProvider<StreamingService>,
-    private val db: AppDatabase
+    private val service: TvDataService
 ) : ViewModel() {
     companion object {
         /**
@@ -103,47 +98,15 @@ class SearchViewModel @Inject constructor(
             _state.value = State.Idle
         } else {
             _state.value = State.Searching
-            searchJob = viewModelScope.launch { startSearchAsync(it) }
+            searchJob = viewModelScope.launch { _state.value = startSearchAsync(it) }
         }
     }
 
-    private suspend fun startSearchAsync(query: String) {
-        try {
-            val searchResult = tvProvider.search(query)
-            for ((service, result) in searchResult) {
-                val successfulResult = result.getOrNull() ?: continue
-                insertToDb(service, successfulResult)
-            }
-            if (searchResult.none { it.second.isSuccess }) {
-                _state.value = State.Error
-                return
-            }
-            val successfulItems = searchResult
-                .mapNotNull {
-                    val res = it.second.getOrNull() ?: return@mapNotNull null
-                    it.first to res
-                }
-                .flatMap { a -> a.second.map { a.first to it } }
-            _state.value = State.Success(successfulItems)
-        } catch (e: CancellationException) {
-            _state.value = State.Idle
-        }
-    }
-
-    private suspend fun insertToDb(service: StreamingService, result: List<TvItem>) {
-        db.withTransaction {
-            for (item in result) {
-                when (item) {
-                    is TvItem.Show -> {
-                        val dbItem = DbTvShow(service, item)
-                        db.tvShowDao().insert(dbItem)
-                    }
-                    is TvItem.Movie -> {
-                        val dbItem = DbMovie(service, item)
-                        db.movieDao().insert(dbItem)
-                    }
-                }
-            }
+    private suspend fun startSearchAsync(query: String): State {
+        return runWithOnCancel(State.Idle) {
+            val successfulItems = service.searchAndSaveItems(query)
+                .getOrElse { return@runWithOnCancel State.Error }
+            State.Success(successfulItems)
         }
     }
 

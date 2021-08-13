@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.tajmoti.tulip.model.DbSeason
+import com.tajmoti.tulip.model.key.SeasonKey
 import com.tajmoti.tulip.model.StreamingService
 
 @Dao
@@ -15,6 +16,10 @@ interface SeasonDao {
         tvShowKey: String,
         key: String
     ): DbSeason?
+
+    suspend fun getSeason(key: SeasonKey): DbSeason? {
+        return getForShow(key.service, key.tvShowId, key.seasonId)
+    }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(episode: DbSeason)

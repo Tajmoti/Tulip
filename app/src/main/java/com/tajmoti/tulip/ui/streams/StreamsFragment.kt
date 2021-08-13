@@ -9,7 +9,9 @@ import androidx.fragment.app.viewModels
 import com.tajmoti.tulip.BaseFragment
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentStreamsBinding
-import com.tajmoti.tulip.model.StreamableIdentifier
+import com.tajmoti.tulip.model.key.EpisodeKey
+import com.tajmoti.tulip.model.key.MovieKey
+import com.tajmoti.tulip.model.key.StreamableKey
 import com.tajmoti.tulip.model.StreamingService
 import com.tajmoti.tulip.ui.setupWithAdapterAndDivider
 import dagger.hilt.android.AndroidEntryPoint
@@ -37,17 +39,17 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
         viewModel.directStreamLoadingState.observe(viewLifecycleOwner) { onDirectLoadingChanged(it) }
     }
 
-    private fun getStreamInfo(): StreamableIdentifier {
+    private fun getStreamInfo(): StreamableKey {
         val args = requireArguments()
         val service = args.getSerializable(ARG_SERVICE) as StreamingService
         return if (args.containsKey(ARG_TV_SHOW_ID)) {
             val tvShow = args.getString(ARG_TV_SHOW_ID)!!
             val season = args.getString(ARG_SEASON_ID)!!
             val episode = args.getString(ARG_EPISODE_ID)!!
-            StreamableIdentifier.TvShow(service, tvShow, season, episode)
+            EpisodeKey(service, tvShow, season, episode)
         } else {
             val movie = args.getString(ARG_MOVIE_ID)!!
-            StreamableIdentifier.Movie(service, movie)
+            MovieKey(service, movie)
         }
     }
 

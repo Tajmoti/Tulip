@@ -1,20 +1,18 @@
 package com.tajmoti.tulip.ui.season
 
 import androidx.lifecycle.*
-import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.Season
 import com.tajmoti.tulip.R
-import com.tajmoti.tulip.db.AppDatabase
+import com.tajmoti.tulip.model.key.SeasonKey
 import com.tajmoti.tulip.model.StreamingService
+import com.tajmoti.tulip.service.TvDataService
+import com.tajmoti.tulip.ui.performStatefulOneshotOperation
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SeasonViewModel @Inject constructor(
-    private val tvProvider: MultiTvProvider<StreamingService>,
-    private val db: AppDatabase
+    private val tvDataService: TvDataService
 ) : ViewModel() {
     private val _state = MutableLiveData<State>(State.Idle)
 
@@ -35,31 +33,16 @@ class SeasonViewModel @Inject constructor(
 
 
     fun fetchEpisodes(service: StreamingService, tvShowId: String, seasonId: String) {
-        if (_state.value is State.Loading)
-            return
-        _state.value = State.Loading
-        viewModelScope.launch {
-            startFetchEpisodesAsync(service, tvShowId, seasonId)
+        val key = SeasonKey(service, tvShowId, seasonId)
+        performStatefulOneshotOperation(_state, State.Loading, State.Idle) {
+            fetchEpisodesToState(key)
         }
     }
 
-    private suspend fun startFetchEpisodesAsync(
-        service: StreamingService,
-        tvShowId: String,
-        seasonId: String
-    ) {
-        try {
-            val dbSeason = db.seasonDao().getForShow(service, tvShowId, seasonId) ?: TODO()
-            val dbEpisodes = db.episodeDao().getForSeason(service, tvShowId, seasonId)
-            val info = dbSeason.toApiInfo(dbEpisodes)
-            val season = tvProvider.getSeason(service, info).getOrElse {
-                _state.value = State.Error(it.message ?: it.javaClass.name)
-                return
-            }
-            _state.value = State.Success(season)
-        } catch (e: CancellationException) {
-            _state.value = State.Idle
-        }
+    private suspend fun fetchEpisodesToState(key: SeasonKey): State {
+        val seasons = tvDataService.getSeason(key)
+            .getOrElse { return State.Error(it.message ?: it.javaClass.name) }
+        return State.Success(seasons)
     }
 
     sealed class State {

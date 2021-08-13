@@ -1,25 +1,28 @@
 package com.tajmoti.tulip.ui.streams
 
 import android.net.Uri
-import androidx.lifecycle.*
-import com.tajmoti.libtvprovider.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations
+import androidx.lifecycle.ViewModel
+import com.tajmoti.libtvprovider.Episode
+import com.tajmoti.libtvprovider.Streamable
+import com.tajmoti.libtvprovider.TvItem
+import com.tajmoti.libtvprovider.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
-import com.tajmoti.tulip.db.AppDatabase
-import com.tajmoti.tulip.model.StreamableIdentifier
 import com.tajmoti.tulip.model.StreamableInfo
-import com.tajmoti.tulip.model.StreamingService
+import com.tajmoti.tulip.model.key.StreamableKey
 import com.tajmoti.tulip.service.StreamExtractorService
+import com.tajmoti.tulip.service.TvDataService
 import com.tajmoti.tulip.service.VideoDownloadService
+import com.tajmoti.tulip.ui.performStatefulOneshotOperation
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class StreamsViewModel @Inject constructor(
-    private val tvProvider: MultiTvProvider<StreamingService>,
+    private val tvDataService: TvDataService,
     private val linkExtractor: VideoLinkExtractor,
-    private val db: AppDatabase,
     private val downloadService: VideoDownloadService,
     private val extractionService: StreamExtractorService
 ) : ViewModel() {
@@ -65,12 +68,9 @@ class StreamsViewModel @Inject constructor(
     /**
      * Search for a TV show or a movie.
      */
-    fun fetchStreams(info: StreamableIdentifier) {
-        if (_state.value is State.Loading)
-            return
-        _state.value = State.Loading
-        viewModelScope.launch {
-            fetchStreamsAsync(info)
+    fun fetchStreams(info: StreamableKey) {
+        performStatefulOneshotOperation(_state, State.Loading, State.Idle) {
+            fetchStreamsToState(info)
         }
     }
 
@@ -78,19 +78,20 @@ class StreamsViewModel @Inject constructor(
      * Try to get direct link to video.
      */
     fun fetchStreamDirect(ref: VideoStreamRef, download: Boolean) {
-        val value = directStreamLoadingState.value
-        if (value != null && value is DirectStreamLoading.Loading)
-            return
-        _directLoadingState.value = DirectStreamLoading.Loading(ref, download)
-        viewModelScope.launch {
-            val result = linkExtractor.extractVideoLink(ref.url)
-            result.onFailure {
-                _directLoadingState.value = DirectStreamLoading.Failed(ref, it)
-            }
-            result.onSuccess {
-                _directLoadingState.value = DirectStreamLoading.Success(ref, download, it)
-            }
-        }
+        performStatefulOneshotOperation(
+            _directLoadingState,
+            DirectStreamLoading.Loading(ref, download),
+            null
+        ) { fetchStreamsToResult(ref, download) }
+    }
+
+    private suspend fun fetchStreamsToResult(
+        ref: VideoStreamRef,
+        download: Boolean
+    ): DirectStreamLoading {
+        val result = linkExtractor.extractVideoLink(ref.url)
+            .getOrElse { return DirectStreamLoading.Failed(ref, it) }
+        return DirectStreamLoading.Success(ref, download, result)
     }
 
 
@@ -102,46 +103,14 @@ class StreamsViewModel @Inject constructor(
         downloadService.downloadFileToFiles(Uri.parse(link), state.streamable)
     }
 
-    private suspend fun fetchStreamsAsync(info: StreamableIdentifier) {
-        try {
-            val streamable = getStreamableByInfo(info).getOrElse {
-                _state.value = State.Error(it.message ?: it.javaClass.name)
-                return
-            }
-            _streamableName.value = streamableToName(streamable.streamable)
-            val result = extractionService.fetchStreams(streamable)
-            result.onFailure { _state.value = State.Error(it.message ?: it.javaClass.name) }
-            result.onSuccess {
-                _state.value = State.Success(it.info, it.streams)
-            }
-        } catch (e: CancellationException) {
-            _state.value = State.Idle
-        }
+    private suspend fun fetchStreamsToState(info: StreamableKey): State {
+        val streamable = tvDataService.getStreamable(info)
+            .getOrElse { return State.Error }
+        _streamableName.value = streamableToName(streamable.streamable)
+        val result = extractionService.fetchStreams(streamable)
+            .getOrElse { return State.Error }
+        return State.Success(result.info, result.streams)
     }
-
-    private suspend fun getStreamableByInfo(item: StreamableIdentifier): Result<StreamableInfo> {
-        val service = item.service
-        return when (item) {
-            is StreamableIdentifier.TvShow -> {
-                val dbShow = db.tvShowDao().getByKey(service, item.tvShow)
-                    ?: TODO()
-                val dbSeason = db.seasonDao().getForShow(service, item.tvShow, item.season)
-                    ?: TODO()
-                val dbEpisode = db.episodeDao()
-                    .getByKey(service, item.tvShow, item.season, item.key)
-                    ?: TODO()
-                tvProvider.getEpisode(service, dbEpisode.apiInfo)
-                    .map { StreamableInfo.TvShow(dbShow, dbSeason, it) }
-            }
-            is StreamableIdentifier.Movie -> {
-                val dbMovie = db.movieDao()
-                    .getByKey(service, item.key) ?: TODO()
-                tvProvider.getMovie(service, dbMovie.apiInfo)
-                    .map { StreamableInfo.Movie(it) }
-            }
-        }
-    }
-
 
     private fun streamableToName(streamable: Streamable): String {
         return when (streamable) {
@@ -158,7 +127,7 @@ class StreamsViewModel @Inject constructor(
             val streams: List<UnloadedVideoStreamRef>
         ) : State()
 
-        data class Error(val message: String) : State()
+        object Error : State()
 
         val success: Boolean
             get() = this is Success

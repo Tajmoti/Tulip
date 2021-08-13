@@ -41,7 +41,7 @@ class TabbedTvShowActivity : BaseActivity<ActivityTabbedTvShowBinding>(
         val service = intent.getSerializableExtra(ARG_SERVICE) as StreamingService
         val tvShowId = intent.getStringExtra(ARG_TV_SHOW_ID)!!
         val sectionsPagerAdapter = SectionsPagerAdapter(
-            state.items.second,
+            state.seasons,
             supportFragmentManager,
             service,
             tvShowId

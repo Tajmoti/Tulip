@@ -11,10 +11,6 @@ import com.tajmoti.libwebdriver.WebDriver
 import com.tajmoti.libwebdriver.WebViewWebDriver
 import com.tajmoti.tulip.db.AppDatabase
 import com.tajmoti.tulip.model.StreamingService
-import com.tajmoti.tulip.service.StreamExtractorService
-import com.tajmoti.tulip.service.VideoDownloadService
-import com.tajmoti.tulip.service.impl.DownloadManagerVideoDownloadService
-import com.tajmoti.tulip.service.impl.StreamsExtractionServiceImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -62,17 +58,5 @@ object Provider {
     @Singleton
     fun provideDb(@ApplicationContext app: Context): AppDatabase {
         return Room.databaseBuilder(app, AppDatabase::class.java, "tulip").build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideVideoDownloader(@ApplicationContext app: Context): VideoDownloadService {
-        return DownloadManagerVideoDownloadService(app)
-    }
-
-    @Provides
-    @Singleton
-    fun provideExtractionService(linkExtractor: VideoLinkExtractor): StreamExtractorService {
-        return StreamsExtractionServiceImpl(linkExtractor)
     }
 }
