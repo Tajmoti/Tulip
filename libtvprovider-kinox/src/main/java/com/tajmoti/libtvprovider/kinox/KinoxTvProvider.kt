@@ -1,9 +1,10 @@
 package com.tajmoti.libtvprovider.kinox
 
-import com.tajmoti.libtvprovider.TvItem
-import com.tajmoti.libtvprovider.TvProvider
+import com.tajmoti.commonutils.logger
 import com.tajmoti.libtvprovider.Episode
 import com.tajmoti.libtvprovider.Season
+import com.tajmoti.libtvprovider.TvItem
+import com.tajmoti.libtvprovider.TvProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -11,17 +12,20 @@ import org.jsoup.nodes.Element
 import java.net.URLEncoder
 
 class KinoxTvProvider(
-    private val baseUrl: String = "https://kinox.to"
+    private val httpLoader: SimplePageSourceLoader,
+    private val baseUrl: String = "https://kinox.to",
 ) : TvProvider {
 
     override suspend fun search(query: String): Result<List<TvItem>> {
-        return withContext(Dispatchers.IO) {
-            return@withContext searchBlocking(query)
+        val pageSource = httpLoader(queryToSearchUrl(query))
+            .getOrElse { return Result.failure(it) }
+        return withContext(Dispatchers.Default) {
+            parseSearchResultPageBlocking(pageSource)
         }
     }
 
     override suspend fun getShow(info: TvItem.Show.Info): Result<TvItem.Show> {
-        val show = KinoxShow(info.name, info.name, baseUrl, info.key)
+        val show = KinoxShow(info.name, info.name, baseUrl, info.key, httpLoader)
         return Result.success(show)
     }
 
@@ -40,20 +44,19 @@ class KinoxTvProvider(
     }
 
     private fun serializedEpToEp(it: Episode.Info): KinoxEpisode {
-        return KinoxEpisode(it.number, it.name, baseUrl, it.key)
+        return KinoxEpisode(it.number, it.name, baseUrl, it.key, httpLoader)
     }
 
-    private fun searchBlocking(query: String): Result<List<TvItem>> {
+    private fun parseSearchResultPageBlocking(pageSource: String): Result<List<TvItem>> {
         return try {
-            val items = Jsoup.connect(queryToSearchUrl(query))
-                .userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6")
-                .get()
+            val items = Jsoup.parse(pageSource)
                 .select("#RsltTableStatic > tbody:nth-child(2)")
                 .first()!!
                 .children()
                 .mapNotNull(this::elemToTvItem)
             Result.success(items)
         } catch (e: Throwable) {
+            logger.warn("Request failed", e)
             Result.failure(e)
         }
     }
@@ -76,7 +79,7 @@ class KinoxTvProvider(
         val title = titleElem.text()
         val link = titleElem.attr("href")
         return when (type) {
-            "series" -> KinoxShow(title, language, baseUrl, link)
+            "series" -> KinoxShow(title, language, baseUrl, link, httpLoader)
             "movie" -> null // TODO movies
             else -> null
         }

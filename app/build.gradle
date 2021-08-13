@@ -64,6 +64,11 @@ dependencies {
     implementation "androidx.room:room-ktx:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
 
+    // Ktor
+    def ktor_version = '1.6.2'
+
+    implementation "io.ktor:ktor-client-android:$ktor_version"
+
     // Logging
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation 'com.github.tony19:logback-android:2.0.0'

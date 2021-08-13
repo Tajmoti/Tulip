@@ -1,9 +1,10 @@
 package com.tajmoti.libprimewiretvprovider
 
-import com.tajmoti.libtvprovider.TvItem
-import com.tajmoti.libtvprovider.TvProvider
+import com.tajmoti.commonutils.logger
 import com.tajmoti.libtvprovider.Episode
 import com.tajmoti.libtvprovider.Season
+import com.tajmoti.libtvprovider.TvItem
+import com.tajmoti.libtvprovider.TvProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -16,19 +17,25 @@ class PrimewireTvProvider(
      */
     private val pageLoader: PageSourceLoader,
     /**
+     * Only performs a GET request, does not run any JS.
+     */
+    private val httpLoader: SimplePageSourceLoader,
+    /**
      * Base URL of the primewire domain, in case it changes.
      */
     private val baseUrl: String = "https://www.primewire.li"
 ) : TvProvider {
 
     override suspend fun search(query: String): Result<List<TvItem>> {
-        return withContext(Dispatchers.IO) {
-            return@withContext searchBlocking(query)
+        val pageSource = httpLoader(queryToSearchUrl(query))
+            .getOrElse { return Result.failure(it) }
+        return withContext(Dispatchers.Default) {
+            parseSearchResultPageBlocking(pageSource)
         }
     }
 
     override suspend fun getShow(info: TvItem.Show.Info): Result<TvItem.Show> {
-        val show = PrimewireShow(info.name, baseUrl, info.key, this::loadHtmlFromUrl)
+        val show = PrimewireShow(info.name, baseUrl, info.key, this::loadHtmlFromUrl, httpLoader)
         return Result.success(show)
     }
 
@@ -51,14 +58,14 @@ class PrimewireTvProvider(
         return PrimewireEpisode(it.number, it.name, baseUrl, it.key, this::loadHtmlFromUrl)
     }
 
-    private fun searchBlocking(query: String): Result<List<TvItem>> {
+    private fun parseSearchResultPageBlocking(pageSource: String): Result<List<TvItem>> {
         return try {
-            val items = Jsoup.connect(queryToSearchUrl(query))
-                .get()
+            val items = Jsoup.parse(pageSource)
                 .getElementsByClass("index_item")
                 .map(this::elemToTvItem)
             Result.success(items)
         } catch (e: Throwable) {
+            logger.warn("Request failed", e)
             Result.failure(e)
         }
     }
@@ -73,7 +80,7 @@ class PrimewireTvProvider(
         val isShow = itemUrl
             .startsWith("/tv/")
         return if (isShow) {
-            PrimewireShow(name, baseUrl, itemUrl, this::loadHtmlFromUrl)
+            PrimewireShow(name, baseUrl, itemUrl, this::loadHtmlFromUrl, httpLoader)
         } else {
             PrimewireMovie(name, baseUrl, itemUrl, this::loadHtmlFromUrl)
         }

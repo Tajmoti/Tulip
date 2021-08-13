@@ -1,14 +1,15 @@
 package com.tajmoti.libtvvideoextractor.module
 
+import com.tajmoti.commonutils.logger
 import com.tajmoti.libtvvideoextractor.ExtractorModule
-import com.tajmoti.libtvvideoextractor.PageSourceLoader
+import com.tajmoti.libtvvideoextractor.PageSourceLoaderWithLoadCount
 import org.jsoup.Jsoup
 
 class StreamzzTo : ExtractorModule {
     override val supportedUrls = listOf("streamzz.to")
 
 
-    override suspend fun extractVideoUrl(url: String, loader: PageSourceLoader): Result<String> {
+    override suspend fun extractVideoUrl(url: String, loader: PageSourceLoaderWithLoadCount): Result<String> {
         val source = loader(url, 2, this::checkUrl)
             .getOrElse { return Result.failure(it) }
         return try {
@@ -18,6 +19,7 @@ class StreamzzTo : ExtractorModule {
                 .attr("src")
             Result.success(src)
         } catch (e: Throwable) {
+            logger.warn("Request failed", e)
             Result.failure(e)
         }
     }

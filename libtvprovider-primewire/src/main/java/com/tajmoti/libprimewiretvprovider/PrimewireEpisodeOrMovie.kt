@@ -1,5 +1,6 @@
 package com.tajmoti.libprimewiretvprovider
 
+import com.tajmoti.commonutils.logger
 import com.tajmoti.libtvprovider.VideoStreamRef
 import kotlinx.coroutines.*
 import org.jsoup.Jsoup
@@ -15,8 +16,8 @@ abstract class PrimewireEpisodeOrMovie(
     suspend fun loadSources(): Result<List<VideoStreamRef>> {
         val html = pageLoader.invoke(baseUrl + episodeUrl)
             .getOrElse { return Result.failure(it) }
-        return withContext(Dispatchers.IO) {
-            return@withContext getVideoStreams(html)
+        return withContext(Dispatchers.Default) {
+            getVideoStreams(html)
         }
     }
 
@@ -26,15 +27,16 @@ abstract class PrimewireEpisodeOrMovie(
                 Jsoup.parse(html)
                     .getElementsByClass("movie_version")
                     .filterNot(this@PrimewireEpisodeOrMovie::isAd)
-                    .map { async { itemToStreamRef(it) } }
+                    .map { async(Dispatchers.Default) { itemToStreamRefBlocking(it) } }
             }
             Result.success(awaitAll(*coroutines.toTypedArray()))
         } catch (e: Throwable) {
+            logger.warn("Request failed", e)
             Result.failure(e)
         }
     }
 
-    private fun itemToStreamRef(element: Element): VideoStreamRef {
+    private suspend fun itemToStreamRefBlocking(element: Element): VideoStreamRef {
         val link = element
             .getElementsByClass("movie_version_link")
             .first()!!
@@ -44,14 +46,17 @@ abstract class PrimewireEpisodeOrMovie(
             .getElementsByClass("version-host")
             .text()
         val redirectUrl = baseUrl + link
-        val hostingUrl = getVideoHostingUrl(redirectUrl)
+        val hostingUrl = getVideoHostingUrlBlocking(redirectUrl)
         return VideoStreamRef(name, hostingUrl ?: redirectUrl, hostingUrl != null)
     }
 
-    private fun getVideoHostingUrl(redirectUrl: String): String? {
+    private suspend fun getVideoHostingUrlBlocking(redirectUrl: String): String? {
         return try {
-            Jsoup.connect(redirectUrl).get().baseUri()
+            withContext(Dispatchers.IO) {
+                Jsoup.connect(redirectUrl).get().baseUri()
+            }
         } catch (e: Throwable) {
+            logger.warn("Request failed", e)
             return null
         }
     }

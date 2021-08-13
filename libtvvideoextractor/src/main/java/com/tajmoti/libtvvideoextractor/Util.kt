@@ -4,7 +4,7 @@ package com.tajmoti.libtvvideoextractor
 /**
  * A function, which loads the provided URL into a real web browser and returns the page HTML source.
  */
-typealias PageSourceLoader = suspend (url: String, count: Int, urlBlocker: UrlBlocker) -> Result<String>
+typealias PageSourceLoaderWithLoadCount = suspend (url: String, count: Int, urlBlocker: UrlBlocker) -> Result<String>
 
 /**
  * A predicate, which decides whether the provided URL should be loaded or not.

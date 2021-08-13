@@ -1,7 +1,8 @@
 package com.tajmoti.libprimewiretvprovider
 
-import com.tajmoti.libtvprovider.TvItem
+import com.tajmoti.commonutils.logger
 import com.tajmoti.libtvprovider.Season
+import com.tajmoti.libtvprovider.TvItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -11,25 +12,28 @@ data class PrimewireShow(
     override val name: String,
     private val baseUrl: String,
     private val showUrl: String,
-    private val pageLoader: SimplePageSourceLoader
+    private val pageLoader: SimplePageSourceLoader,
+    private val httpLoader: SimplePageSourceLoader
 ) : TvItem.Show {
     override val language = "en"
     override val key = showUrl
 
     override suspend fun fetchSeasons(): Result<List<Season>> {
-        return withContext(Dispatchers.IO) {
-            return@withContext searchBlocking()
+        val pageSource = httpLoader(baseUrl + showUrl)
+            .getOrElse { return Result.failure(it) }
+        return withContext(Dispatchers.Default) {
+            parseSearchResultPageBlocking(pageSource)
         }
     }
 
-    private fun searchBlocking(): Result<List<Season>> {
+    private fun parseSearchResultPageBlocking(pageSource: String): Result<List<Season>> {
         return try {
-            val items = Jsoup.connect(baseUrl + showUrl)
-                .get()
+            val items = Jsoup.parse(pageSource)
                 .getElementsByClass("show_season")
                 .map(this::elemToSeason)
             Result.success(items)
         } catch (e: Throwable) {
+            logger.warn("Request failed", e)
             Result.failure(e)
         }
     }

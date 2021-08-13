@@ -1,8 +1,10 @@
 package com.tajmoti.libtvprovider.kinox
 
+import com.tajmoti.commonutils.logger
 import com.tajmoti.libtvprovider.Episode
 import com.tajmoti.libtvprovider.VideoStreamRef
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 
@@ -10,35 +12,39 @@ data class KinoxEpisode(
     override val number: Int?,
     override val name: String?,
     private val baseUrl: String,
-    internal val episodeUrl: String
+    internal val episodeUrl: String,
+    private val httpLoader: SimplePageSourceLoader
 ) : Episode {
     override val key = episodeUrl
 
     override suspend fun loadSources(): Result<List<VideoStreamRef>> {
-        return withContext(Dispatchers.IO) {
-            return@withContext fetchSourcesBlocking()
+        val page = httpLoader(baseUrl + episodeUrl)
+            .getOrElse { return Result.failure(it) }
+        return withContext(Dispatchers.Default) {
+            fetchSources(page)
         }
     }
 
-    private fun fetchSourcesBlocking(): Result<List<VideoStreamRef>> {
+    private suspend fun fetchSources(pageSource: String): Result<List<VideoStreamRef>> {
         return try {
-            val links = Jsoup.connect(baseUrl + episodeUrl)
-                .get()
+            val links = Jsoup.parse(pageSource)
                 .getElementsByTag("ul")
                 .first()!!
                 .children()
-                .mapNotNull(this::elementToStream)
+                .mapNotNull { elementToStream(it) }
             Result.success(links)
         } catch (e: Exception) {
+            logger.warn("Request failed", e)
             Result.failure(e)
         }
     }
 
-    private fun elementToStream(li: Element): VideoStreamRef? {
+    private suspend fun elementToStream(li: Element): VideoStreamRef? {
         val hoster = li.attr("rel")
         val url = "$baseUrl/aGET/Mirror/$hoster"
-        val json = Jsoup.connect(url)
-            .get()
+        val pageSource = httpLoader(url)
+            .getOrElse { return null }
+        val json = Jsoup.parse(pageSource)
             .body()
             .html()
             .replace("&quot;", "")
@@ -50,7 +56,9 @@ data class KinoxEpisode(
         val name = REGEX_NAME.find(json)
             ?.groupValues
             ?.get(1)
-        val realUrl = Jsoup.connect(redirectUrl).get().baseUri()
+        val realUrl = withContext(Dispatchers.IO) {
+            Jsoup.connect(redirectUrl).get().baseUri()
+        }
         return VideoStreamRef(name ?: "Unknown", realUrl, true)
     }
 
