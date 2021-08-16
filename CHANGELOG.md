@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [0.5.0] - 2021-08-17
 ### Changed
 - Speed up video link loading by loading video links on demand
 
@@ -28,6 +30,7 @@
 - Support for primewire.ag
 
 [Unreleased]: https://github.com/Tajmoti/Tulip/tree/main
+[0.5.0]: https://github.com/Tajmoti/Tulip/tree/v0.5.0
 [0.4.0]: https://github.com/Tajmoti/Tulip/tree/v0.4.0
 [0.3.0]: https://github.com/Tajmoti/Tulip/tree/v0.3.0
 [0.2.0]: https://github.com/Tajmoti/Tulip/tree/v0.2.0
