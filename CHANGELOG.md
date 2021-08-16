@@ -1,6 +1,6 @@
 ## [Unreleased]
 ### Changed
-- Speed up video link loading by avoiding useless redirects
+- Speed up video link loading by loading video links on demand
 
 ## [0.4.0] - 2021-08-10
 ### Changed

@@ -6,11 +6,19 @@ import com.tajmoti.tulip.model.StreamableInfo
 import com.tajmoti.tulip.model.StreamableInfoWithLinks
 import com.tajmoti.tulip.service.StreamExtractorService
 import com.tajmoti.tulip.ui.streams.UnloadedVideoStreamRef
+import io.ktor.client.*
+import io.ktor.client.engine.android.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import javax.inject.Inject
 
 class StreamsExtractionServiceImpl @Inject constructor(
     private val linkExtractor: VideoLinkExtractor
 ) : StreamExtractorService {
+    private val httpClient = HttpClient(Android) {
+        followRedirects = false
+        expectSuccess = false
+    }
 
     override suspend fun fetchStreams(streamable: StreamableInfo): Result<StreamableInfoWithLinks> {
         val result = streamable.streamable.loadSources().getOrElse {
@@ -21,13 +29,36 @@ class StreamsExtractionServiceImpl @Inject constructor(
     }
 
     private fun mapAndSortLinksByRelevance(it: List<VideoStreamRef>): List<UnloadedVideoStreamRef> {
-        val mapped = it.map { UnloadedVideoStreamRef(it, linkExtractor.canExtractLink(it.url)) }
-        val working = mapped.filter { it.info.working }
-        val broken = mapped.filterNot { it.info.working }
-        val extractable = working.filter { it.linkExtractionSupported }
-        val notExtractable = working.filterNot { it.linkExtractionSupported }
-        val badExtractable = broken.filter { it.linkExtractionSupported }
-        val badNotExtractor = broken.filterNot { it.linkExtractionSupported }
-        return extractable + notExtractable + badExtractable + badNotExtractor
+        val links = it.map { UnloadedVideoStreamRef(it, canExtractFromService(it)) }
+        val extractable = links.filter { it.linkExtractionSupported }
+        val notExtractable = links.filterNot { it.linkExtractionSupported }
+        return extractable + notExtractable
+    }
+
+    private fun canExtractFromService(ref: VideoStreamRef): Boolean {
+        return linkExtractor.canExtractUrl(ref.url)
+                || linkExtractor.canExtractService(ref.serviceName)
+    }
+
+    override suspend fun resolveStream(ref: VideoStreamRef.Unresolved): Result<VideoStreamRef.Resolved> {
+        val realUrl = resolveRedirects(ref.url)
+            .getOrElse { return Result.failure(it) }
+        // If there were no redirects, assume that the link already points to the streaming page
+        return Result.success(ref.asResolved(realUrl ?: ref.url))
+    }
+
+    /**
+     * Performs a GET request to the [url] and returns the value of the `location` response header.
+     * If the header is missing, returns null.
+     */
+    private suspend fun resolveRedirects(url: String): Result<String?> {
+        return runCatching {
+            val response: HttpResponse = httpClient.request(url)
+            response.headers["location"]
+        }
+    }
+
+    override suspend fun extractVideoLink(info: VideoStreamRef.Resolved): Result<String> {
+        return linkExtractor.extractVideoLink(info.url, info.serviceName)
     }
 }

@@ -19,6 +19,11 @@ interface ExtractorModule {
      */
     val supportedUrls: List<String>
 
+    /**
+     * List of streaming service names supported by this module.
+     */
+    val supportedServiceNames: List<String>
+
 
     suspend fun extractVideoUrl(url: String, loader: PageSourceLoaderWithLoadCount): Result<String>
 }

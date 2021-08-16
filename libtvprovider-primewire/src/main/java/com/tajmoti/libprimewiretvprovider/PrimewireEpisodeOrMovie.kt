@@ -2,14 +2,13 @@ package com.tajmoti.libprimewiretvprovider
 
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtvprovider.VideoStreamRef
-import com.tajmoti.libtvprovider.resolveRedirects
 import kotlinx.coroutines.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 
 abstract class PrimewireEpisodeOrMovie(
     private val baseUrl: String,
-    internal val episodeUrl: String,
+    private val episodeUrl: String,
     private val pageLoader: SimplePageSourceLoader
 ) {
     val key = episodeUrl
@@ -18,26 +17,24 @@ abstract class PrimewireEpisodeOrMovie(
         val html = pageLoader.invoke(baseUrl + episodeUrl)
             .getOrElse { return Result.failure(it) }
         return withContext(Dispatchers.Default) {
-            getVideoStreams(html)
+            getVideoStreamsBlocking(html)
         }
     }
 
-    private suspend fun getVideoStreams(html: String): Result<List<VideoStreamRef>> {
+    private fun getVideoStreamsBlocking(html: String): Result<List<VideoStreamRef>> {
         return try {
-            val coroutines = coroutineScope {
-                Jsoup.parse(html)
-                    .getElementsByClass("movie_version")
-                    .filterNot(this@PrimewireEpisodeOrMovie::isAd)
-                    .map { async(Dispatchers.Default) { itemToStreamRefBlocking(it) } }
-            }
-            Result.success(awaitAll(*coroutines.toTypedArray()))
+            val streams = Jsoup.parse(html)
+                .getElementsByClass("movie_version")
+                .filterNot(this@PrimewireEpisodeOrMovie::isAd)
+                .map { itemToStreamRef(it) }
+            Result.success(streams)
         } catch (e: Throwable) {
             logger.warn("Request failed", e)
             Result.failure(e)
         }
     }
 
-    private suspend fun itemToStreamRefBlocking(element: Element): VideoStreamRef {
+    private fun itemToStreamRef(element: Element): VideoStreamRef {
         val link = element
             .getElementsByClass("movie_version_link")
             .first()!!
@@ -47,17 +44,7 @@ abstract class PrimewireEpisodeOrMovie(
             .getElementsByClass("version-host")
             .text()
         val redirectUrl = baseUrl + link
-        val hostingUrl = getVideoHostingUrlBlocking(redirectUrl)
-        return VideoStreamRef(name, hostingUrl ?: redirectUrl, hostingUrl != null)
-    }
-
-    private suspend fun getVideoHostingUrlBlocking(redirectUrl: String): String? {
-        return try {
-            resolveRedirects(redirectUrl).getOrThrow()
-        } catch (e: Throwable) {
-            logger.warn("Request failed", e)
-            return null
-        }
+        return VideoStreamRef.Unresolved(name, redirectUrl)
     }
 
     private fun isAd(element: Element): Boolean {

@@ -40,7 +40,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:indeterminate="true"
-            android:visibility="@{viewModel.loadingDirectLink ? View.VISIBLE : View.INVISIBLE}" />
+            android:visibility="@{viewModel.loadingStreamOrDirectLink ? View.VISIBLE : View.INVISIBLE}" />
 
         <FrameLayout
             android:layout_width="match_parent"

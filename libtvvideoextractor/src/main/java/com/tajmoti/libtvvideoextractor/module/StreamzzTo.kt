@@ -7,9 +7,13 @@ import org.jsoup.Jsoup
 
 class StreamzzTo : ExtractorModule {
     override val supportedUrls = listOf("streamzz.to")
+    override val supportedServiceNames = listOf("streamzz.to", "streamz.cc")
 
 
-    override suspend fun extractVideoUrl(url: String, loader: PageSourceLoaderWithLoadCount): Result<String> {
+    override suspend fun extractVideoUrl(
+        url: String,
+        loader: PageSourceLoaderWithLoadCount
+    ): Result<String> {
         val source = loader(url, 2, this::checkUrl)
             .getOrElse { return Result.failure(it) }
         return try {

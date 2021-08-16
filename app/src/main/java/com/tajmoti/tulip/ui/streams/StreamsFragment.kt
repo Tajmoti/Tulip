@@ -9,10 +9,10 @@ import androidx.fragment.app.viewModels
 import com.tajmoti.tulip.BaseFragment
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentStreamsBinding
+import com.tajmoti.tulip.model.StreamingService
 import com.tajmoti.tulip.model.key.EpisodeKey
 import com.tajmoti.tulip.model.key.MovieKey
 import com.tajmoti.tulip.model.key.StreamableKey
-import com.tajmoti.tulip.model.StreamingService
 import com.tajmoti.tulip.ui.setupWithAdapterAndDivider
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -29,14 +29,16 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val adapter = StreamsAdapter(this::onStreamDownloadRequested)
-        adapter.callback = this::onStreamClicked
+        val adapter = StreamsAdapter(this::onStreamClickedDownload)
+        adapter.callback = this::onStreamClickedPlay
         binding.viewModel = viewModel
         binding.recyclerSearch.setupWithAdapterAndDivider(adapter)
         viewModel.streamLoadingState.observe(viewLifecycleOwner) {
             onStreamLoadingStateChanged(it, adapter)
         }
-        viewModel.directStreamLoadingState.observe(viewLifecycleOwner) { onDirectLoadingChanged(it) }
+        viewModel.linkLoadingState.observe(viewLifecycleOwner) {
+            onDirectLoadingChanged(it)
+        }
     }
 
     private fun getStreamInfo(): StreamableKey {
@@ -58,34 +60,36 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
             adapter.items = it.streams
     }
 
-    private fun onDirectLoadingChanged(it: StreamsViewModel.DirectStreamLoading?) {
+    private fun onDirectLoadingChanged(it: StreamsViewModel.LinkLoadingState?) {
         it ?: return
-        if (it is StreamsViewModel.DirectStreamLoading.Success) {
-            if (it.download) {
-                viewModel.downloadVideo(it.directLink)
-            } else {
-                startVideo(it.directLink, true)
-            }
-        } else if (it is StreamsViewModel.DirectStreamLoading.Failed) {
-            startVideo(it.video.url, false)
+        if (it is StreamsViewModel.LinkLoadingState.LoadedDirect) {
+            onDirectLinkLoaded(it)
+        } else if (it is StreamsViewModel.LinkLoadingState.DirectLinkUnsupported) {
+            onDirectLinkUnsupported(it)
         }
     }
 
-    private fun onStreamClicked(stream: UnloadedVideoStreamRef) {
-        if (stream.linkExtractionSupported) {
-            viewModel.fetchStreamDirect(stream.info, false)
-        } else {
-            startVideo(stream.info.url, false)
+    private fun onDirectLinkLoaded(it: StreamsViewModel.LinkLoadingState.LoadedDirect) {
+        if (!it.download) {
+            startVideo(it.directLink, true)
         }
     }
 
-    private fun onStreamDownloadRequested(stream: UnloadedVideoStreamRef) {
-        if (stream.linkExtractionSupported) {
-            viewModel.fetchStreamDirect(stream.info, true)
+    private fun onDirectLinkUnsupported(it: StreamsViewModel.LinkLoadingState.DirectLinkUnsupported) {
+        if (!it.download) {
+            startVideo(it.stream.url, false)
         } else {
             Toast.makeText(requireContext(), R.string.stream_not_downloadable, Toast.LENGTH_SHORT)
                 .show()
         }
+    }
+
+    private fun onStreamClickedPlay(stream: UnloadedVideoStreamRef) {
+        viewModel.onStreamClicked(stream, false)
+    }
+
+    private fun onStreamClickedDownload(stream: UnloadedVideoStreamRef) {
+        viewModel.onStreamClicked(stream, true)
     }
 
     private fun startVideo(url: String, direct: Boolean) {

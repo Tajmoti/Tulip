@@ -3,7 +3,6 @@ package com.tajmoti.libtvprovider.kinox
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtvprovider.Episode
 import com.tajmoti.libtvprovider.VideoStreamRef
-import com.tajmoti.libtvprovider.resolveRedirects
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -57,9 +56,7 @@ data class KinoxEpisode(
         val name = REGEX_NAME.find(json)
             ?.groupValues
             ?.get(1)
-        val realUrl = resolveRedirects(redirectUrl).getOrThrow()
-            ?: return null
-        return VideoStreamRef(name ?: "Unknown", realUrl, true)
+        return VideoStreamRef.Unresolved(name ?: "Unknown", redirectUrl)
     }
 
     companion object {
