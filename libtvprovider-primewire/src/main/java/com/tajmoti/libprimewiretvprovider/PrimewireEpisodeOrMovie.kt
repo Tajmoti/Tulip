@@ -2,6 +2,7 @@ package com.tajmoti.libprimewiretvprovider
 
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtvprovider.VideoStreamRef
+import com.tajmoti.libtvprovider.resolveRedirects
 import kotlinx.coroutines.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
@@ -52,9 +53,7 @@ abstract class PrimewireEpisodeOrMovie(
 
     private suspend fun getVideoHostingUrlBlocking(redirectUrl: String): String? {
         return try {
-            withContext(Dispatchers.IO) {
-                Jsoup.connect(redirectUrl).get().baseUri()
-            }
+            resolveRedirects(redirectUrl).getOrThrow()
         } catch (e: Throwable) {
             logger.warn("Request failed", e)
             return null
