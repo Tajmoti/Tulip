@@ -3,8 +3,10 @@ package com.tajmoti.libwebdriver
 import android.annotation.TargetApi
 import android.content.Context
 import android.net.http.SslError
+import android.os.Build
 import android.os.Handler
 import android.webkit.*
+import com.tajmoti.commonutils.logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeoutException
@@ -60,6 +62,7 @@ class WebViewWebDriver(
                 mainHandler.post { submitOnce(wv, Result.success(html)) }
             },
             { wv, error ->
+                logger.warn("WebView returned error {}", error)
                 val throwable = Exception("Received error '$error'")
                 mainHandler.post { submitOnce(wv, Result.failure(throwable)) }
             })
@@ -115,18 +118,25 @@ class WebViewWebDriver(
             return WebResourceResponse("", "", null)
         }
 
+        @TargetApi(Build.VERSION_CODES.M)
         override fun onReceivedError(vw: WebView, r: WebResourceRequest, err: WebResourceError) {
             if (r.isForMainFrame)
-                onError(vw, err)
+                onError(
+                    vw,
+                    "onReceivedError url='${r.url}', errorCode='${err.errorCode}', description='${err.description}'"
+                )
         }
 
         override fun onReceivedHttpError(
             view: WebView,
-            request: WebResourceRequest,
+            r: WebResourceRequest,
             errorResponse: WebResourceResponse
         ) {
-            if (request.isForMainFrame)
-                onError(view, errorResponse)
+            if (r.isForMainFrame)
+                onError(
+                    view,
+                    "onReceivedHttpError url='${r.url}', statusCode='${errorResponse.statusCode}', reasonPhrase='${errorResponse.reasonPhrase}'"
+                )
         }
 
         override fun onReceivedHttpAuthRequest(
