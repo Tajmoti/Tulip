@@ -12,6 +12,7 @@ data class PrimewireShow(
     override val name: String,
     private val baseUrl: String,
     private val showUrl: String,
+    override val firstAirDateYear: Int?,
     private val pageLoader: SimplePageSourceLoader,
     private val httpLoader: SimplePageSourceLoader
 ) : TvItem.Show {

@@ -7,13 +7,13 @@ import kotlinx.coroutines.coroutineScope
 class MultiTvProvider<ID>(
     private val providers: Map<ID, TvProvider>
 ) {
-    suspend fun search(query: String): List<Pair<ID, Result<List<TvItem>>>> {
+    suspend fun search(query: String): Map<ID, Result<List<TvItem>>> {
         val coroutines = coroutineScope {
             providers.map { async { it.value.search(query) } }
         }
         val ids = providers.map { it.key }
         val results = awaitAll(*coroutines.toTypedArray())
-        return ids.zip(results)
+        return ids.zip(results).toMap()
     }
 
     suspend fun getShow(service: ID, info: TvItem.Show.Info): Result<TvItem.Show> {

@@ -35,7 +35,14 @@ class PrimewireTvProvider(
     }
 
     override suspend fun getShow(info: TvItem.Show.Info): Result<TvItem.Show> {
-        val show = PrimewireShow(info.name, baseUrl, info.key, this::loadHtmlFromUrl, httpLoader)
+        val show = PrimewireShow(
+            info.name,
+            baseUrl,
+            info.key,
+            info.firstAirDateYear,
+            this::loadHtmlFromUrl,
+            httpLoader
+        )
         return Result.success(show)
     }
 
@@ -50,7 +57,13 @@ class PrimewireTvProvider(
     }
 
     override suspend fun getMovie(info: TvItem.Movie.Info): Result<TvItem.Movie> {
-        val result = PrimewireMovie(info.name, baseUrl, info.key, this::loadHtmlFromUrl)
+        val result = PrimewireMovie(
+            info.name,
+            baseUrl,
+            info.key,
+            info.firstAirDateYear,
+            this::loadHtmlFromUrl
+        )
         return Result.success(result)
     }
 
@@ -73,16 +86,22 @@ class PrimewireTvProvider(
     private fun elemToTvItem(element: Element): TvItem {
         val anchor = element.getElementsByTag("a")
             .firstOrNull()!!
-        val name = anchor
-            .attr("title")
         val itemUrl = anchor
             .attr("href")
         val isShow = itemUrl
             .startsWith("/tv/")
+        val nameElem = anchor
+            .getElementsByClass("title-cutoff")
+            .first()!!
+        val name = nameElem.ownText()
+        val yearParen = nameElem.parent()!!
+            .ownText()
+        val year = yearParen.substring(1 until yearParen.length - 1)
+        val yearInt = year.toIntOrNull()
         return if (isShow) {
-            PrimewireShow(name, baseUrl, itemUrl, this::loadHtmlFromUrl, httpLoader)
+            PrimewireShow(name, baseUrl, itemUrl, yearInt, this::loadHtmlFromUrl, httpLoader)
         } else {
-            PrimewireMovie(name, baseUrl, itemUrl, this::loadHtmlFromUrl)
+            PrimewireMovie(name, baseUrl, itemUrl, yearInt, this::loadHtmlFromUrl)
         }
     }
 

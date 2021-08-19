@@ -15,6 +15,7 @@ dependencies {
     implementation project(':libtvprovider-primewire')
     implementation project(':libwebdriver')
     implementation project(':libtvvideoextractor')
+    implementation project(':libtmdb')
 
     // Ktor
     implementation "io.ktor:ktor-client-android:$ktor_version"

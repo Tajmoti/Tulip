@@ -25,7 +25,8 @@ class KinoxTvProvider(
     }
 
     override suspend fun getShow(info: TvItem.Show.Info): Result<TvItem.Show> {
-        val show = KinoxShow(info.name, info.name, baseUrl, info.key, httpLoader)
+        val show =
+            KinoxShow(info.name, info.name, baseUrl, info.key, info.firstAirDateYear, httpLoader)
         return Result.success(show)
     }
 
@@ -78,8 +79,12 @@ class KinoxTvProvider(
         val titleElem = element.child(2).child(0)
         val title = titleElem.text()
         val link = titleElem.attr("href")
+        val firstAirYear = element.getElementsByClass("Year")
+            .first()!!
+            .ownText()
+            .toInt()
         return when (type) {
-            "series" -> KinoxShow(title, language, baseUrl, link, httpLoader)
+            "series" -> KinoxShow(title, language, baseUrl, link, firstAirYear, httpLoader)
             "movie" -> null // TODO movies
             else -> null
         }

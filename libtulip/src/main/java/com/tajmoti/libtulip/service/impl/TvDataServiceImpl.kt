@@ -1,6 +1,7 @@
 package com.tajmoti.libtulip.service.impl
 
 import com.tajmoti.commonutils.logger
+import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtulip.model.*
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.repository.MovieRepository
@@ -12,12 +13,16 @@ import com.tajmoti.libtvprovider.Season
 import com.tajmoti.libtvprovider.TvItem
 import com.tajmoti.tulip.db.MissingEntityException
 import com.tajmoti.tulip.model.NoSuccessfulResultsException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import javax.inject.Inject
 
 class TvDataServiceImpl @Inject constructor(
     private val tvShowRepo: TvShowRepository,
     private val movieRepo: MovieRepository,
-    private val tvProvider: MultiTvProvider<StreamingService>
+    private val tvProvider: MultiTvProvider<StreamingService>,
+    private val tmdbService: TmdbService
 ) : TvDataService {
 
     override suspend fun getTvShow(key: TvShowKey): Result<TvItem.Show> {
@@ -83,48 +88,92 @@ class TvDataServiceImpl @Inject constructor(
             .map { StreamableInfo.TvShow(dbShow, dbSeason, it) }
     }
 
-    override suspend fun searchAndSaveItems(query: String): Result<List<Pair<StreamingService, TvItem>>> {
+    override suspend fun searchAndSaveItems(query: String): Result<List<TulipSearchResult>> {
         logger.debug("Searching '{}'", query)
         val searchResult = tvProvider.search(query)
-        for ((service, result) in searchResult) {
-            val successfulResult = result.getOrNull() ?: continue
-            insertSearchResultsToDb(service, successfulResult)
-        }
-        for ((service, result) in searchResult) {
-            val exception = result.exceptionOrNull() ?: continue
-            logger.warn("{} failed with", service, exception)
-        }
-        if (searchResult.none { it.second.isSuccess }) {
+        if (searchResult.none { it.value.isSuccess }) {
             logger.warn("No successful results!")
             return Result.failure(NoSuccessfulResultsException)
         }
-        val successfulItems = searchResult
-            .mapNotNull {
-                val res = it.second.getOrNull() ?: return@mapNotNull null
-                it.first to res
-            }
-            .flatMap { a -> a.second.map { a.first to it } }
+        logExceptions(searchResult)
+        val successfulItems = flatMapSuccessfulResults(searchResult)
         logger.debug("Found {} results", successfulItems.size)
-        return Result.success(successfulItems)
+        val recognizedItems = zipWithTmdbIds(successfulItems)
+        insertSearchResultsToDb(recognizedItems)
+        return Result.success(recognizedItems)
     }
 
-    private suspend fun insertSearchResultsToDb(service: StreamingService, result: List<TvItem>) {
+    private suspend fun insertSearchResultsToDb(result: List<TulipSearchResult>) {
         // TODO Atomicity
         for (item in result) {
-            insertTvItemIntoDb(item, service)
+            insertTvItemIntoDb(item)
         }
     }
 
-    private suspend fun insertTvItemIntoDb(item: TvItem, service: StreamingService) {
+    private suspend fun insertTvItemIntoDb(item: TulipSearchResult) {
         when (item) {
-            is TvItem.Show -> {
-                val dbItem = TulipTvShow(service, item)
-                tvShowRepo.insertTvShow(dbItem)
+            is TulipTvShow -> tvShowRepo.insertTvShow(item)
+            is TulipMovie -> movieRepo.insertMovie(item)
+        }
+    }
+
+    private suspend fun zipWithTmdbIds(
+        items: List<Pair<StreamingService, TvItem>>
+    ): List<TulipSearchResult> {
+        val results = fetchTmdbIdsParallel(items.map { it.second })
+        return items.zip(results) { s2i, tmdbId ->
+            val (service, item) = s2i
+            when (item) {
+                is TvItem.Show -> TulipTvShow(service, item, tmdbId)
+                is TvItem.Movie -> TulipMovie(service, item, tmdbId)
             }
-            is TvItem.Movie -> {
-                val dbItem = TulipMovie(service, item)
-                movieRepo.insertMovie(dbItem)
+        }
+    }
+
+    private suspend fun fetchTmdbIdsParallel(items: List<TvItem>): List<TmdbId?> {
+        val jobs = coroutineScope {
+            items.map { async { findTmdbId(it) } }
+        }
+        return awaitAll(*jobs.toTypedArray())
+    }
+
+    private suspend fun findTmdbId(item: TvItem): TmdbId? {
+        val foundId = try {
+            when (item) {
+                is TvItem.Show -> tmdbService.searchTv(
+                    item.name,
+                    item.firstAirDateYear
+                ).results.firstOrNull()?.id
+                is TvItem.Movie -> tmdbService.searchMovie(
+                    item.name,
+                    item.firstAirDateYear
+                ).results.firstOrNull()?.id
             }
+        } catch (e: Throwable) {
+            logger.warn("Exception while searching IMDB id for {}", item, e)
+            null
+        }
+        return foundId?.let { TmdbId(it) }
+    }
+
+    private fun flatMapSuccessfulResults(
+        results: Map<StreamingService, Result<List<TvItem>>>
+    ): List<Pair<StreamingService, TvItem>> {
+        return results
+            .mapNotNull { (service, itemListResult) ->
+                val itemList = itemListResult
+                    .getOrElse { return@mapNotNull null }
+                service to itemList
+            }
+            .flatMap { (service, itemListResult) ->
+                itemListResult.map { service to it }
+            }
+    }
+
+    private fun logExceptions(searchResult: Map<StreamingService, Result<List<TvItem>>>) {
+        for ((service, result) in searchResult) {
+            val exception = result.exceptionOrNull() ?: continue
+            logger.warn("{} failed with", service, exception)
         }
     }
 

@@ -8,5 +8,7 @@ data class DbMovie(
     val service: StreamingService,
     val key: String,
     val name: String,
-    val language: String
+    val language: String,
+    val firstAirDateYear: Int?,
+    val tmdbId: Long?
 )

@@ -6,13 +6,19 @@ sealed interface TvItem : Marshallable, NamedItem {
      */
     val language: String
 
+    /**
+     * The year when this show or movie was first aired.
+     */
+    val firstAirDateYear: Int?
+
     interface Show : TvItem {
         suspend fun fetchSeasons(): Result<List<Season>>
 
         data class Info(
             override val key: String,
             override val name: String,
-            override val language: String
+            override val language: String,
+            override val firstAirDateYear: Int?
         ) : TvItem.Info
     }
 
@@ -20,12 +26,14 @@ sealed interface TvItem : Marshallable, NamedItem {
         data class Info(
             override val key: String,
             override val name: String,
-            override val language: String
+            override val language: String,
+            override val firstAirDateYear: Int?
         ) : TvItem.Info
     }
 
     sealed interface Info : Marshallable {
         val name: String
         val language: String
+        val firstAirDateYear: Int?
     }
 }

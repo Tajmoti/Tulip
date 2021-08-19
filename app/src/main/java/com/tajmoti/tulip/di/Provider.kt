@@ -3,20 +3,24 @@ package com.tajmoti.tulip.di
 import android.content.Context
 import android.os.Handler
 import androidx.room.Room
+import com.tajmoti.commonutils.logger
 import com.tajmoti.libprimewiretvprovider.PageSourceLoader
 import com.tajmoti.libprimewiretvprovider.PrimewireTvProvider
+import com.tajmoti.libtmdb.TmdbKeyInterceptor
+import com.tajmoti.libtmdb.TmdbService
+import com.tajmoti.libtulip.model.StreamingService
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.kinox.KinoxTvProvider
 import com.tajmoti.libtvvideoextractor.PageSourceLoaderWithLoadCount
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
 import com.tajmoti.libwebdriver.WebDriver
 import com.tajmoti.libwebdriver.WebViewWebDriver
+import com.tajmoti.tulip.BuildConfig
 import com.tajmoti.tulip.db.AppDatabase
 import com.tajmoti.tulip.db.dao.EpisodeDao
 import com.tajmoti.tulip.db.dao.MovieDao
 import com.tajmoti.tulip.db.dao.SeasonDao
 import com.tajmoti.tulip.db.dao.TvShowDao
-import com.tajmoti.libtulip.model.StreamingService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,6 +29,10 @@ import dagger.hilt.components.SingletonComponent
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.request.*
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
@@ -136,5 +144,31 @@ object Provider {
     @Singleton
     fun provideMovieDao(db: AppDatabase): MovieDao {
         return db.movieDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTmdbService(): TmdbService {
+        return createTmdbRetrofit().create(TmdbService::class.java)
+    }
+
+    private fun createTmdbRetrofit(): Retrofit {
+        val logger = HttpLoggingInterceptor(interceptorLogger)
+            .also { it.level = HttpLoggingInterceptor.Level.BODY }
+        val client = OkHttpClient.Builder()
+            .addInterceptor(TmdbKeyInterceptor(BuildConfig.TMDB_API_KEY))
+            .addInterceptor(logger)
+            .build()
+        return Retrofit.Builder()
+            .client(client)
+            .baseUrl("https://api.themoviedb.org/")
+            .addConverterFactory(MoshiConverterFactory.create())
+            .build()
+    }
+
+    private val interceptorLogger = object : HttpLoggingInterceptor.Logger {
+        override fun log(message: String) {
+            logger.debug(message)
+        }
     }
 }

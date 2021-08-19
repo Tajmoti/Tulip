@@ -5,6 +5,11 @@ plugins {
     id 'dagger.hilt.android.plugin'
 }
 
+// TMDB API key storage
+def props = new Properties()
+new File(rootDir, "tmdb.properties").withInputStream { props.load(it) }
+def tmdbApiKey = props.getProperty("key")
+
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
@@ -15,6 +20,7 @@ android {
         targetSdkVersion 30
         versionCode 5
         versionName "0.5.0"
+        buildConfigField('String', 'TMDB_API_KEY', "\"$tmdbApiKey\"")
     }
 
     buildTypes {
@@ -59,13 +65,17 @@ dependencies {
 
     // DB
     def room_version = "2.3.0"
-
     implementation "androidx.room:room-runtime:$room_version"
     implementation "androidx.room:room-ktx:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
 
     // Ktor
     implementation "io.ktor:ktor-client-android:$ktor_version"
+
+    // Retrofit and Moshi
+    implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
+    implementation "com.squareup.retrofit2:converter-moshi:$retrofit_version"
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.1'
 
     // Logging
     implementation "org.slf4j:slf4j-api:$slf4j_version"
@@ -79,4 +89,5 @@ dependencies {
     implementation project(':libwebdriver-android')
     implementation project(':libwebdriver')
     implementation project(':libtvvideoextractor')
+    implementation project(':libtmdb')
 }

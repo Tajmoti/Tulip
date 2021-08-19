@@ -13,6 +13,7 @@ data class KinoxShow(
     override val language: String,
     private val baseUrl: String,
     private val showUrl: String,
+    override val firstAirDateYear: Int?,
     private val httpLoader: SimplePageSourceLoader
 ) : TvItem.Show {
     override val key = showUrl

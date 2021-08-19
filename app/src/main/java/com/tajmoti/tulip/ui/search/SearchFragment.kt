@@ -7,11 +7,11 @@ import android.view.MenuInflater
 import android.view.View
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.viewModels
-import com.tajmoti.libtvprovider.TvItem
+import com.tajmoti.libtulip.model.TulipSearchResult
+import com.tajmoti.libtulip.model.TulipTvShow
 import com.tajmoti.tulip.BaseFragment
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentSearchBinding
-import com.tajmoti.libtulip.model.StreamingService
 import com.tajmoti.tulip.ui.setupWithAdapterAndDivider
 import com.tajmoti.tulip.ui.show.TabbedTvShowActivity
 import com.tajmoti.tulip.ui.streams.StreamsFragment
@@ -41,14 +41,14 @@ class SearchFragment : BaseFragment<FragmentSearchBinding, SearchViewModel>(
             adapter.items = it.items
     }
 
-    private fun goToTvShowScreen(it: Pair<StreamingService, TvItem>) {
-        if (it.second is TvItem.Show) {
+    private fun goToTvShowScreen(it: TulipSearchResult) {
+        if (it is TulipTvShow) {
             val intent = Intent(requireContext(), TabbedTvShowActivity::class.java)
-                .putExtra(TabbedTvShowActivity.ARG_SERVICE, it.first)
-                .putExtra(TabbedTvShowActivity.ARG_TV_SHOW_ID, it.second.key)
+                .putExtra(TabbedTvShowActivity.ARG_SERVICE, it.service)
+                .putExtra(TabbedTvShowActivity.ARG_TV_SHOW_ID, it.key)
             startActivity(intent)
         } else {
-            StreamsFragment.newInstance(it.first, it.second.key)
+            StreamsFragment.newInstance(it.service, it.key)
                 .show(childFragmentManager, "streams")
         }
     }

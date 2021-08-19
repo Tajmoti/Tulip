@@ -1,7 +1,7 @@
 package com.tajmoti.libtulip.service
 
 import com.tajmoti.libtulip.model.StreamableInfo
-import com.tajmoti.libtulip.model.StreamingService
+import com.tajmoti.libtulip.model.TulipSearchResult
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.key.TvShowKey
@@ -16,7 +16,7 @@ interface TvDataService {
 
     suspend fun getStreamable(key: StreamableKey): Result<StreamableInfo>
 
-    suspend fun searchAndSaveItems(query: String): Result<List<Pair<StreamingService, TvItem>>>
+    suspend fun searchAndSaveItems(query: String): Result<List<TulipSearchResult>>
 
     suspend fun fetchAndSaveSeasons(key: TvShowKey, show: TvItem.Show): Result<List<Season>>
 }

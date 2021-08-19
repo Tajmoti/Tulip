@@ -1,9 +1,6 @@
 package com.tajmoti.tulip.repository.impl
 
-import com.tajmoti.libtulip.model.StreamingService
-import com.tajmoti.libtulip.model.TulipEpisode
-import com.tajmoti.libtulip.model.TulipSeason
-import com.tajmoti.libtulip.model.TulipTvShow
+import com.tajmoti.libtulip.model.*
 import com.tajmoti.libtulip.repository.TvShowRepository
 import com.tajmoti.tulip.db.dao.EpisodeDao
 import com.tajmoti.tulip.db.dao.SeasonDao
@@ -20,11 +17,24 @@ class AndroidTvShowRepository @Inject constructor(
 ) : TvShowRepository {
     override suspend fun getTvShowByKey(service: StreamingService, key: String): TulipTvShow? {
         val db = tvShowDao.getByKey(service, key) ?: return null
-        return TulipTvShow(db.service, db.key, db.name, db.language)
+        return TulipTvShow(
+            db.service,
+            db.key,
+            db.name,
+            db.language,
+            db.firstAirDateYear,
+            db.tmdbId?.let { TmdbId(it) })
     }
 
     override suspend fun insertTvShow(show: TulipTvShow) {
-        val db = DbTvShow(show.service, show.key, show.name, show.language)
+        val db = DbTvShow(
+            show.service,
+            show.key,
+            show.name,
+            show.language,
+            show.firstAirDateYear,
+            show.tmdbId?.id
+        )
         tvShowDao.insert(db)
     }
 
