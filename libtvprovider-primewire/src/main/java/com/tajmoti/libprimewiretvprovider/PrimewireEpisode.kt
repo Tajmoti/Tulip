@@ -8,4 +8,9 @@ class PrimewireEpisode(
     baseUrl: String,
     episodeUrl: String,
     pageLoader: SimplePageSourceLoader
-) : PrimewireEpisodeOrMovie(baseUrl, episodeUrl, pageLoader), Episode
+) : PrimewireEpisodeOrMovie(baseUrl, episodeUrl, pageLoader), Episode {
+
+    override fun toString(): String {
+        return "PrimewireEpisode(number=$number, name=$name)"
+    }
+}

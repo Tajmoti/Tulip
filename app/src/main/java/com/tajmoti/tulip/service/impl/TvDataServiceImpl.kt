@@ -19,18 +19,20 @@ class TvDataServiceImpl @Inject constructor(
 ) : TvDataService {
 
     override suspend fun getTvShow(key: TvShowKey): Result<TvItem.Show> {
+        logger.debug("Retrieving {}", key)
         val dbInfo = db.tvShowDao().getByKey(key)
         if (dbInfo == null) {
-            logger.warn("TV Show {} not found", key)
+            logger.warn("{} not found", key)
             return Result.failure(MissingEntityException)
         }
         return tvProvider.getShow(key.service, dbInfo.apiInfo)
     }
 
     override suspend fun getSeason(key: SeasonKey): Result<Season> {
+        logger.debug("Retrieving {}", key)
         val dbSeason = db.seasonDao().getSeason(key)
         if (dbSeason == null) {
-            logger.warn("Season {} not found", key)
+            logger.warn("{} not found", key)
             return Result.failure(MissingEntityException)
         }
         val dbEpisodes = db.episodeDao().getForSeason(key)
@@ -39,6 +41,7 @@ class TvDataServiceImpl @Inject constructor(
     }
 
     override suspend fun getStreamable(key: StreamableKey): Result<StreamableInfo> {
+        logger.debug("Retrieving {}", key)
         return when (key) {
             is EpisodeKey -> getEpisodeByKey(key)
             is MovieKey -> getMovieByKey(key)
@@ -46,6 +49,7 @@ class TvDataServiceImpl @Inject constructor(
     }
 
     private suspend fun getMovieByKey(key: MovieKey): Result<StreamableInfo.Movie> {
+        logger.debug("Retrieving {}", key)
         val dbMovie = db.movieDao()
             .getByKey(key)
             ?: run {
@@ -57,22 +61,23 @@ class TvDataServiceImpl @Inject constructor(
     }
 
     private suspend fun getEpisodeByKey(key: EpisodeKey): Result<StreamableInfo.TvShow> {
+        logger.debug("Retrieving {}", key)
         val dbShow = db.tvShowDao()
             .getByKey(key.service, key.tvShowId)
             ?: run {
-                logger.warn("Season {} not found", key)
+                logger.warn("{} not found", key)
                 return Result.failure(MissingEntityException)
             }
         val dbSeason = db.seasonDao()
             .getForShow(key.service, key.tvShowId, key.seasonId)
             ?: run {
-                logger.warn("Season {} not found", key)
+                logger.warn("{} not found", key)
                 return Result.failure(MissingEntityException)
             }
         val dbEpisode = db.episodeDao()
             .getByKey(key.service, key.tvShowId, key.seasonId, key.episodeId)
             ?: run {
-                logger.warn("Season {} not found", key)
+                logger.warn("{} not found", key)
                 return Result.failure(MissingEntityException)
             }
         return tvProvider.getEpisode(key.service, dbEpisode.apiInfo)
@@ -80,13 +85,18 @@ class TvDataServiceImpl @Inject constructor(
     }
 
     override suspend fun searchAndSaveItems(query: String): Result<List<Pair<StreamingService, TvItem>>> {
+        logger.debug("Searching '{}'", query)
         val searchResult = tvProvider.search(query)
         for ((service, result) in searchResult) {
             val successfulResult = result.getOrNull() ?: continue
             insertSearchResultsToDb(service, successfulResult)
         }
+        for ((service, result) in searchResult) {
+            val exception = result.exceptionOrNull() ?: continue
+            logger.warn("{} failed with", service, exception)
+        }
         if (searchResult.none { it.second.isSuccess }) {
-            logger.warn("No successful results for query '{}'", query)
+            logger.warn("No successful results!")
             return Result.failure(NoSuccessfulResultsException)
         }
         val successfulItems = searchResult
@@ -95,6 +105,7 @@ class TvDataServiceImpl @Inject constructor(
                 it.first to res
             }
             .flatMap { a -> a.second.map { a.first to it } }
+        logger.debug("Found {} results", successfulItems.size)
         return Result.success(successfulItems)
     }
 
@@ -128,6 +139,7 @@ class TvDataServiceImpl @Inject constructor(
                 logger.warn("Failed to fetch seasons for {}", show)
                 return Result.failure(it)
             }
+        logger.debug("Saving {} seasons of {} {}", result.size, key, show)
         insertSeasonsToDb(key, result)
         return Result.success(result)
     }

@@ -4,6 +4,7 @@ import android.app.DownloadManager
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
+import com.tajmoti.commonutils.logger
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.model.StreamableInfo
 import com.tajmoti.tulip.service.VideoDownloadService
@@ -29,6 +30,7 @@ class DownloadManagerVideoDownloadService @Inject constructor(
             .setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, savePath)
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
             .apply { allowScanningByMediaScanner() }
+        logger.debug("Downloading '{}' as {} to path '{}'", uri, info, savePath)
         return downloadManager.enqueue(request)
     }
 

@@ -8,13 +8,13 @@ sealed class StreamableInfo(
     val streamable: Streamable
 ) {
 
-    class TvShow(
+    data class TvShow(
         val show: DbTvShow,
         val season: DbSeason,
         val episode: Episode,
     ) : StreamableInfo(episode)
 
-    class Movie(
+    data class Movie(
         val movie: TvItem.Movie
     ) : StreamableInfo(movie)
 }
