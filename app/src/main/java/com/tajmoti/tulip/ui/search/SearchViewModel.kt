@@ -105,6 +105,7 @@ class SearchViewModel @Inject constructor(
         return runWithOnCancel(State.Idle) {
             val successfulItems = service.searchAndSaveItems(query)
                 .getOrElse { return@runWithOnCancel State.Error }
+                .sortedWith(compareBy { it.tmdbId == null })
             State.Success(successfulItems)
         }
     }
