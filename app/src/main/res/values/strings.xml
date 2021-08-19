@@ -13,4 +13,7 @@
     <string name="something_went_wrong">Something went wrong</string>
     <string name="retry">Retry</string>
     <string name="empty" />
+    <string name="select_source">Select source</string>
+    <string name="other_results">Other results</string>
+    <string name="back">Back</string>
 </resources>

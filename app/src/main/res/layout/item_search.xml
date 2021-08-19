@@ -17,20 +17,4 @@
         android:gravity="center_vertical"
         android:maxLines="1"
         android:textColor="?android:textColorPrimary" />
-
-    <TextView
-        android:id="@+id/search_result_service"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/item_content_margin"
-        android:ellipsize="end"
-        android:gravity="center_vertical"
-        android:textAllCaps="true"
-        android:textSize="12sp" />
-
-    <ImageView
-        android:id="@+id/image_language_icon"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_marginStart="@dimen/item_content_margin" />
 </LinearLayout>

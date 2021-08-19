@@ -7,6 +7,8 @@ import android.view.MenuInflater
 import android.view.View
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.viewModels
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.tajmoti.libtulip.model.TmdbId
 import com.tajmoti.libtulip.model.TulipSearchResult
 import com.tajmoti.libtulip.model.TulipTvShow
 import com.tajmoti.tulip.BaseFragment
@@ -32,13 +34,29 @@ class SearchFragment : BaseFragment<FragmentSearchBinding, SearchViewModel>(
         val adapter = SearchAdapter()
         binding.viewModel = viewModel
         binding.recyclerSearch.setupWithAdapterAndDivider(adapter)
-        adapter.callback = this::goToTvShowScreen
+        adapter.callback = this::onSearchResultClicked
         viewModel.state.observe(viewLifecycleOwner) { onStateChanged(it, adapter) }
     }
 
     private fun onStateChanged(it: SearchViewModel.State, adapter: SearchAdapter) {
         if (it is SearchViewModel.State.Success)
-            adapter.items = it.items
+            adapter.items = it.items.groupBy { it.tmdbId }.toList()
+    }
+
+    private fun onSearchResultClicked(result: Pair<TmdbId?, List<TulipSearchResult>>) {
+        val variants = result.second
+        if (variants.size == 1) {
+            goToTvShowScreen(variants[0])
+            return
+        }
+        val labels = variants
+            .map { "[${it.language.uppercase()}][${it.service}] ${it.name}" }
+            .toTypedArray()
+        MaterialAlertDialogBuilder(requireContext())
+            .setItems(labels) { _, index -> goToTvShowScreen(variants[index]) }
+            .setTitle(R.string.select_source)
+            .setNeutralButton(R.string.back, null)
+            .show()
     }
 
     private fun goToTvShowScreen(it: TulipSearchResult) {
