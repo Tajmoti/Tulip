@@ -2,10 +2,14 @@ package com.tajmoti.tulip.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.tajmoti.tulip.model.DbEpisode
-import com.tajmoti.tulip.model.DbMovie
-import com.tajmoti.tulip.model.DbSeason
-import com.tajmoti.tulip.model.DbTvShow
+import com.tajmoti.tulip.db.dao.EpisodeDao
+import com.tajmoti.tulip.db.dao.MovieDao
+import com.tajmoti.tulip.db.dao.SeasonDao
+import com.tajmoti.tulip.db.dao.TvShowDao
+import com.tajmoti.tulip.db.entity.DbEpisode
+import com.tajmoti.tulip.db.entity.DbMovie
+import com.tajmoti.tulip.db.entity.DbSeason
+import com.tajmoti.tulip.db.entity.DbTvShow
 
 @Database(
     entities = [

@@ -5,7 +5,7 @@ import androidx.activity.viewModels
 import com.tajmoti.tulip.BaseActivity
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ActivityTabbedTvShowBinding
-import com.tajmoti.tulip.model.StreamingService
+import com.tajmoti.libtulip.model.StreamingService
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

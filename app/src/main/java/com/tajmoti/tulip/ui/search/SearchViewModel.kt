@@ -3,8 +3,8 @@ package com.tajmoti.tulip.ui.search
 import androidx.lifecycle.*
 import com.tajmoti.libtvprovider.TvItem
 import com.tajmoti.tulip.R
-import com.tajmoti.tulip.model.StreamingService
-import com.tajmoti.tulip.service.TvDataService
+import com.tajmoti.libtulip.model.StreamingService
+import com.tajmoti.libtulip.service.TvDataService
 import com.tajmoti.tulip.ui.runWithOnCancel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job

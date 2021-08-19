@@ -5,9 +5,9 @@ import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import com.tajmoti.commonutils.logger
+import com.tajmoti.libtulip.model.StreamableInfo
+import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.tulip.R
-import com.tajmoti.tulip.model.StreamableInfo
-import com.tajmoti.tulip.service.VideoDownloadService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
@@ -21,7 +21,8 @@ class DownloadManagerVideoDownloadService @Inject constructor(
         private const val FILE_EXTENSION = ".mp4"
     }
 
-    override fun downloadFileToFiles(uri: Uri, info: StreamableInfo): Long {
+    override fun downloadFileToFiles(videoUrl: String, info: StreamableInfo): Long {
+        val uri = Uri.parse(videoUrl)
         val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         val displayName = buildDisplayName(info)
         val savePath = getSavePath(info)

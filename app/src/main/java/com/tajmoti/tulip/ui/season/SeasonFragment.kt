@@ -6,7 +6,7 @@ import androidx.fragment.app.viewModels
 import com.tajmoti.libtvprovider.Episode
 import com.tajmoti.tulip.BaseFragment
 import com.tajmoti.tulip.databinding.FragmentSeasonBinding
-import com.tajmoti.tulip.model.StreamingService
+import com.tajmoti.libtulip.model.StreamingService
 import com.tajmoti.tulip.ui.setupWithAdapterAndDivider
 import com.tajmoti.tulip.ui.streams.StreamsFragment
 import dagger.hilt.android.AndroidEntryPoint

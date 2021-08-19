@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.viewModels
@@ -12,7 +11,7 @@ import com.tajmoti.libtvprovider.TvItem
 import com.tajmoti.tulip.BaseFragment
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentSearchBinding
-import com.tajmoti.tulip.model.StreamingService
+import com.tajmoti.libtulip.model.StreamingService
 import com.tajmoti.tulip.ui.setupWithAdapterAndDivider
 import com.tajmoti.tulip.ui.show.TabbedTvShowActivity
 import com.tajmoti.tulip.ui.streams.StreamsFragment

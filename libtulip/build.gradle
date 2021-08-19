@@ -1,0 +1,24 @@
+plugins {
+    id 'java-library'
+    id 'kotlin'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_7
+    targetCompatibility = JavaVersion.VERSION_1_7
+}
+
+dependencies {
+    // Business logic libs
+    implementation project(':libtvprovider')
+    implementation project(':libtvprovider-kinox')
+    implementation project(':libtvprovider-primewire')
+    implementation project(':libwebdriver')
+    implementation project(':libtvvideoextractor')
+
+    // Ktor
+    implementation "io.ktor:ktor-client-android:$ktor_version"
+
+    // DI Annotations
+    implementation 'javax.inject:javax.inject:1'
+}

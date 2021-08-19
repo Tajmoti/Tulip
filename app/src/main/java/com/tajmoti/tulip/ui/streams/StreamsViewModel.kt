@@ -1,16 +1,16 @@
 package com.tajmoti.tulip.ui.streams
 
-import android.net.Uri
 import androidx.lifecycle.*
+import com.tajmoti.libtulip.model.StreamableInfo
+import com.tajmoti.libtulip.model.UnloadedVideoStreamRef
+import com.tajmoti.libtulip.model.key.StreamableKey
+import com.tajmoti.libtulip.service.StreamExtractorService
+import com.tajmoti.libtulip.service.TvDataService
+import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.libtvprovider.Episode
 import com.tajmoti.libtvprovider.Streamable
 import com.tajmoti.libtvprovider.TvItem
 import com.tajmoti.libtvprovider.VideoStreamRef
-import com.tajmoti.tulip.model.StreamableInfo
-import com.tajmoti.tulip.model.key.StreamableKey
-import com.tajmoti.tulip.service.StreamExtractorService
-import com.tajmoti.tulip.service.TvDataService
-import com.tajmoti.tulip.service.VideoDownloadService
 import com.tajmoti.tulip.ui.performStatefulOneshotOperation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -136,7 +136,7 @@ class StreamsViewModel @Inject constructor(
 
     private fun downloadVideo(link: String) {
         val state = streamLoadingState.value as State.Success
-        downloadService.downloadFileToFiles(Uri.parse(link), state.info)
+        downloadService.downloadFileToFiles(link, state.info)
     }
 
     private suspend fun fetchStreamsToState(info: StreamableKey): State {

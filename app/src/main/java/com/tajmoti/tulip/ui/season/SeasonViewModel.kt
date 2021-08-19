@@ -3,9 +3,9 @@ package com.tajmoti.tulip.ui.season
 import androidx.lifecycle.*
 import com.tajmoti.libtvprovider.Season
 import com.tajmoti.tulip.R
-import com.tajmoti.tulip.model.key.SeasonKey
-import com.tajmoti.tulip.model.StreamingService
-import com.tajmoti.tulip.service.TvDataService
+import com.tajmoti.libtulip.model.key.SeasonKey
+import com.tajmoti.libtulip.model.StreamingService
+import com.tajmoti.libtulip.service.TvDataService
 import com.tajmoti.tulip.ui.performStatefulOneshotOperation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject

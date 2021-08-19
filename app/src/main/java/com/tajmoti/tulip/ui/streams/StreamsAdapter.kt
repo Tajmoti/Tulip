@@ -3,6 +3,7 @@ package com.tajmoti.tulip.ui.streams
 import com.tajmoti.tulip.BaseAdapter
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ItemStreamBinding
+import com.tajmoti.libtulip.model.UnloadedVideoStreamRef
 
 class StreamsAdapter(
     val downloadCallback: (UnloadedVideoStreamRef) -> Unit

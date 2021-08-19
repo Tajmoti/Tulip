@@ -4,7 +4,7 @@ import com.tajmoti.libtvprovider.TvItem
 import com.tajmoti.tulip.BaseAdapter
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ItemSearchBinding
-import com.tajmoti.tulip.model.StreamingService
+import com.tajmoti.libtulip.model.StreamingService
 
 class SearchAdapter : BaseAdapter<Pair<StreamingService, TvItem>, ItemSearchBinding>(
     ItemSearchBinding::inflate

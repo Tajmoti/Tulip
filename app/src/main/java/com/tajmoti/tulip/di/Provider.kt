@@ -12,7 +12,11 @@ import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
 import com.tajmoti.libwebdriver.WebDriver
 import com.tajmoti.libwebdriver.WebViewWebDriver
 import com.tajmoti.tulip.db.AppDatabase
-import com.tajmoti.tulip.model.StreamingService
+import com.tajmoti.tulip.db.dao.EpisodeDao
+import com.tajmoti.tulip.db.dao.MovieDao
+import com.tajmoti.tulip.db.dao.SeasonDao
+import com.tajmoti.tulip.db.dao.TvShowDao
+import com.tajmoti.libtulip.model.StreamingService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -77,6 +81,15 @@ object Provider {
 
     @Provides
     @Singleton
+    fun provideHttpClient(): HttpClient {
+        return HttpClient(Android) {
+            followRedirects = false
+            expectSuccess = false
+        }
+    }
+
+    @Provides
+    @Singleton
     fun provideLinkExtractor(webDriver: WebDriver): VideoLinkExtractor {
         val webViewGetter = makeWebViewGetterWithLoadCount(webDriver)
         return VideoLinkExtractor(webViewGetter)
@@ -98,5 +111,30 @@ object Provider {
     @Singleton
     fun provideDb(@ApplicationContext app: Context): AppDatabase {
         return Room.databaseBuilder(app, AppDatabase::class.java, "tulip").build()
+    }
+
+
+    @Provides
+    @Singleton
+    fun provideTvShowDao(db: AppDatabase): TvShowDao {
+        return db.tvShowDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSeasonDao(db: AppDatabase): SeasonDao {
+        return db.seasonDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideEpisodeDao(db: AppDatabase): EpisodeDao {
+        return db.episodeDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideMovieDao(db: AppDatabase): MovieDao {
+        return db.movieDao()
     }
 }
