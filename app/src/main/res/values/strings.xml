@@ -5,8 +5,6 @@
     <string name="title_downloads">Downloads</string>
     <string name="search_hint">Type a TV show or movie name into the field above</string>
     <string name="no_results">No results</string>
-    <string name="title_activity_tabbed_tv_show">TabbedTvShowActivity</string>
-    <string name="stream_links">Stream links</string>
     <string name="stream_not_downloadable">This stream can not be downloaded</string>
     <string name="episode_number">Ep. %d</string>
     <string name="episode_special">Special</string>
