@@ -153,14 +153,15 @@ object Provider {
     }
 
     private fun createTmdbRetrofit(): Retrofit {
-        val logger = HttpLoggingInterceptor(interceptorLogger)
-            .also { it.level = HttpLoggingInterceptor.Level.BODY }
-        val client = OkHttpClient.Builder()
+        val builder = OkHttpClient.Builder()
             .addInterceptor(TmdbKeyInterceptor(BuildConfig.TMDB_API_KEY))
-            .addInterceptor(logger)
-            .build()
+        if (BuildConfig.HTTP_DEBUG) {
+            val logger = HttpLoggingInterceptor(interceptorLogger)
+                .also { it.level = HttpLoggingInterceptor.Level.BODY }
+            builder.addInterceptor(logger)
+        }
         return Retrofit.Builder()
-            .client(client)
+            .client(builder.build())
             .baseUrl("https://api.themoviedb.org/")
             .addConverterFactory(MoshiConverterFactory.create())
             .build()

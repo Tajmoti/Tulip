@@ -10,6 +10,9 @@ def props = new Properties()
 new File(rootDir, "tmdb.properties").withInputStream { props.load(it) }
 def tmdbApiKey = props.getProperty("key")
 
+// Development options
+def HTTP_DEBUG = false
+
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
@@ -27,6 +30,10 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField 'boolean', 'HTTP_DEBUG', "false"
+        }
+        debug {
+            buildConfigField 'boolean', 'HTTP_DEBUG', "${HTTP_DEBUG}"
         }
     }
     compileOptions {
