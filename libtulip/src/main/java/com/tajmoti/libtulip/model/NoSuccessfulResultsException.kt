@@ -1,3 +1,3 @@
-package com.tajmoti.tulip.model
+package com.tajmoti.libtulip.model
 
 object NoSuccessfulResultsException: Exception()

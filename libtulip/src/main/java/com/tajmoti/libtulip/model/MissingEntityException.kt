@@ -1,3 +1,3 @@
-package com.tajmoti.tulip.db
+package com.tajmoti.libtulip.model
 
 object MissingEntityException: Exception()

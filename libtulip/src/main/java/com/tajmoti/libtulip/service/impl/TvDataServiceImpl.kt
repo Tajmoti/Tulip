@@ -11,8 +11,6 @@ import com.tajmoti.libtvprovider.Episode
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.Season
 import com.tajmoti.libtvprovider.TvItem
-import com.tajmoti.tulip.db.MissingEntityException
-import com.tajmoti.tulip.model.NoSuccessfulResultsException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope

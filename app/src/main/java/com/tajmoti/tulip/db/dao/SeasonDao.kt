@@ -4,9 +4,9 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.tajmoti.tulip.db.entity.DbSeason
-import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.StreamingService
+import com.tajmoti.libtulip.model.key.SeasonKey
+import com.tajmoti.tulip.db.entity.DbSeason
 
 @Dao
 interface SeasonDao {

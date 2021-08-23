@@ -6,14 +6,14 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.viewModels
-import com.tajmoti.tulip.BaseFragment
-import com.tajmoti.tulip.R
-import com.tajmoti.tulip.databinding.FragmentStreamsBinding
 import com.tajmoti.libtulip.model.StreamingService
 import com.tajmoti.libtulip.model.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.StreamableKey
+import com.tajmoti.tulip.BaseFragment
+import com.tajmoti.tulip.R
+import com.tajmoti.tulip.databinding.FragmentStreamsBinding
 import com.tajmoti.tulip.ui.setupWithAdapterAndDivider
 import dagger.hilt.android.AndroidEntryPoint
 

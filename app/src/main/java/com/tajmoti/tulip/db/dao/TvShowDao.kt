@@ -4,9 +4,9 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.tajmoti.tulip.db.entity.DbTvShow
 import com.tajmoti.libtulip.model.StreamingService
 import com.tajmoti.libtulip.model.key.TvShowKey
+import com.tajmoti.tulip.db.entity.DbTvShow
 
 @Dao
 interface TvShowDao {

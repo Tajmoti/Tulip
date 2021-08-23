@@ -4,9 +4,9 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.tajmoti.tulip.db.entity.DbMovie
 import com.tajmoti.libtulip.model.StreamingService
 import com.tajmoti.libtulip.model.key.MovieKey
+import com.tajmoti.tulip.db.entity.DbMovie
 
 @Dao
 interface MovieDao {
