@@ -4,10 +4,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
-import com.tajmoti.libtulip.model.StreamingService
+import com.tajmoti.libtulip.model.info.EpisodeInfoWithKey
+import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
+import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.SeasonKey
+import com.tajmoti.libtulip.service.HostedTvDataService
 import com.tajmoti.libtulip.service.TvDataService
-import com.tajmoti.libtvprovider.Season
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.ui.performStatefulOneshotOperation
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,7 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SeasonViewModel @Inject constructor(
-    private val tvDataService: TvDataService
+    private val hostedTvDataService: HostedTvDataService,
+    private val tmdbTvDataService: TvDataService
 ) : ViewModel() {
     private val _state = MutableLiveData<State>(State.Idle)
 
@@ -35,23 +38,45 @@ class SeasonViewModel @Inject constructor(
     }
 
 
-    fun fetchEpisodes(service: StreamingService, tvShowId: String, seasonId: String) {
-        val key = SeasonKey(service, tvShowId, seasonId)
+    fun fetchEpisodes(key: SeasonKey) {
         performStatefulOneshotOperation(_state, State.Loading, State.Idle) {
             fetchEpisodesToState(key)
         }
     }
 
     private suspend fun fetchEpisodesToState(key: SeasonKey): State {
-        val seasons = tvDataService.getSeason(key)
+        return when (key) {
+            is SeasonKey.Hosted -> fetchEpisodesToStateHosted(key)
+            is SeasonKey.Tmdb -> fetchEpisodesToStateTmdb(key)
+        }
+    }
+
+    private suspend fun fetchEpisodesToStateHosted(key: SeasonKey.Hosted): State {
+        val season = hostedTvDataService.getSeason(key)
             .getOrElse { return State.Error(it.message ?: it.javaClass.name) }
-        return State.Success(seasons)
+        val episodes = season.episodes.map {
+            val tmdbKey = EpisodeKey.Hosted(key, it.key)
+            val info = TulipEpisodeInfo(it.number, it.name)
+            info to tmdbKey
+        }
+        return State.Success(episodes)
+    }
+
+    private suspend fun fetchEpisodesToStateTmdb(key: SeasonKey.Tmdb): State {
+        val seasons = tmdbTvDataService.getSeason(key)
+            .getOrElse { return State.Error(it.message ?: it.javaClass.name) }
+        val episodes = seasons.episodes.map {
+            val tmdbKey = EpisodeKey.Tmdb(key, it.episodeNumber)
+            val info = TulipEpisodeInfo(it.episodeNumber, it.name)
+            info to tmdbKey
+        }
+        return State.Success(episodes)
     }
 
     sealed class State {
         object Idle : State()
         object Loading : State()
-        data class Success(val season: Season) : State()
+        data class Success(val episodes: List<EpisodeInfoWithKey>) : State()
         data class Error(val message: String) : State()
 
         val success: Boolean

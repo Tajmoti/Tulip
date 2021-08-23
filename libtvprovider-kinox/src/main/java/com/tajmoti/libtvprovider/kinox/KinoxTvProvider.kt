@@ -1,64 +1,27 @@
 package com.tajmoti.libtvprovider.kinox
 
-import com.tajmoti.commonutils.logger
-import com.tajmoti.libtvprovider.Episode
-import com.tajmoti.libtvprovider.Season
-import com.tajmoti.libtvprovider.TvItem
-import com.tajmoti.libtvprovider.TvProvider
+import com.tajmoti.libtvprovider.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Element
+import org.jsoup.nodes.Document
 import java.net.URLEncoder
 
 class KinoxTvProvider(
     private val httpLoader: SimplePageSourceLoader,
     private val baseUrl: String = "https://kinox.to",
+    /**
+     * Whether search results which don't have a first air year set (it's set to 0)
+     * should be thrown away. This is an optimization to throw away trash results.
+     */
+    private val throwAwayItemsWithNoYear: Boolean = true
 ) : TvProvider {
 
-    override suspend fun search(query: String): Result<List<TvItem>> {
+    override suspend fun search(query: String): Result<List<SearchResult>> {
         val pageSource = httpLoader(queryToSearchUrl(query))
             .getOrElse { return Result.failure(it) }
         return withContext(Dispatchers.Default) {
-            parseSearchResultPageBlocking(pageSource)
-        }
-    }
-
-    override suspend fun getShow(info: TvItem.Show.Info): Result<TvItem.Show> {
-        val show =
-            KinoxShow(info.name, info.name, baseUrl, info.key, info.firstAirDateYear, httpLoader)
-        return Result.success(show)
-    }
-
-    override suspend fun getSeason(info: Season.Info): Result<Season> {
-        val episodes = info.episodes.map(this::serializedEpToEp).sorted()
-        val show = KinoxSeason(info.number, episodes)
-        return Result.success(show)
-    }
-
-    override suspend fun getEpisode(info: Episode.Info): Result<Episode> {
-        return Result.success(serializedEpToEp(info))
-    }
-
-    override suspend fun getMovie(info: TvItem.Movie.Info): Result<TvItem.Movie> {
-        TODO()
-    }
-
-    private fun serializedEpToEp(it: Episode.Info): KinoxEpisode {
-        return KinoxEpisode(it.number, it.name, baseUrl, it.key, httpLoader)
-    }
-
-    private fun parseSearchResultPageBlocking(pageSource: String): Result<List<TvItem>> {
-        return try {
-            val items = Jsoup.parse(pageSource)
-                .select("#RsltTableStatic > tbody:nth-child(2)")
-                .first()!!
-                .children()
-                .mapNotNull(this::elemToTvItem)
-            Result.success(items)
-        } catch (e: Throwable) {
-            logger.warn("Request failed", e)
-            Result.failure(e)
+            parseSearchResultPageBlocking(pageSource, throwAwayItemsWithNoYear)
         }
     }
 
@@ -67,33 +30,41 @@ class KinoxTvProvider(
         return "$baseUrl/Search.html?q=$encoded"
     }
 
-    private fun elemToTvItem(element: Element): TvItem? {
-        val langIcon = element.child(0).child(0).attr("src")
-        val languageNumber = langIcon
+    override suspend fun getTvShow(key: String): Result<TvShowInfo> {
+        val page = httpLoader(baseUrl + key)
+            .getOrElse { return Result.failure(it) }
+        val document = withContext(Dispatchers.Default) { Jsoup.parse(page) }
+        val seasons = parseSeasonsBlocking(key, document)
+            .getOrElse { return Result.failure(it) }
+        val show = TvShowInfo(key, parseTvShowInfo(key, document), seasons)
+        return Result.success(show)
+    }
+
+    private fun parseTvShowInfo(key: String, document: Document): TvItemInfo {
+        val name =
+            document.selectFirst("div.leftOpt:nth-child(3) > h1:nth-child(1) > span:nth-child(1)")!!
+                .ownText()
+        val yearStr = document.selectFirst(".Year")!!
+            .ownText()
+        val year = yearStr.replace("(", "").replace(")", "")
+        val flag = document.select(".Flag > img:nth-child(1)").attr("src")
             .removeSuffix(".png")
             .replaceBeforeLast("/", "")
             .substring(1)
             .toInt()
-        val language = languageNumberToLanguageCode(languageNumber)
-        val type = element.child(1).child(0).attr("title")
-        val titleElem = element.child(2).child(0)
-        val title = titleElem.text()
-        val link = titleElem.attr("href")
-        val firstAirYear = element.getElementsByClass("Year")
-            .first()!!
-            .ownText()
-            .toInt()
-        return when (type) {
-            "series" -> KinoxShow(title, language, baseUrl, link, firstAirYear, httpLoader)
-            "movie" -> null // TODO movies
-            else -> null
-        }
+        return TvItemInfo(key, name, languageNumberToLanguageCode(flag), year.toInt())
     }
 
-    private fun languageNumberToLanguageCode(number: Int): String {
-        return when (number) {
-            1 -> "de"
-            else -> "en"
+
+    override suspend fun getMovie(movieKey: String): Result<MovieInfo> {
+        TODO()
+    }
+
+    override suspend fun getStreamableLinks(episodeOrMovieKey: String): Result<List<VideoStreamRef>> {
+        val page = httpLoader(baseUrl + episodeOrMovieKey)
+            .getOrElse { return Result.failure(it) }
+        return withContext(Dispatchers.Default) {
+            fetchSources(baseUrl, page, httpLoader)
         }
     }
 }

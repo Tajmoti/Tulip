@@ -1,14 +1,14 @@
 package com.tajmoti.tulip.di
 
-import com.tajmoti.libtulip.repository.MovieRepository
-import com.tajmoti.libtulip.repository.TvShowRepository
-import com.tajmoti.libtulip.service.StreamExtractorService
-import com.tajmoti.libtulip.service.TvDataService
-import com.tajmoti.libtulip.service.VideoDownloadService
+import com.tajmoti.libtulip.repository.*
+import com.tajmoti.libtulip.service.*
+import com.tajmoti.libtulip.service.impl.HostedTvDataServiceImpl
+import com.tajmoti.libtulip.service.impl.SearchServiceImpl
 import com.tajmoti.libtulip.service.impl.StreamsExtractionServiceImpl
 import com.tajmoti.libtulip.service.impl.TvDataServiceImpl
-import com.tajmoti.tulip.repository.impl.AndroidMovieRepository
-import com.tajmoti.tulip.repository.impl.AndroidTvShowRepository
+import com.tajmoti.tulip.repository.impl.AndroidHostedMovieRepository
+import com.tajmoti.tulip.repository.impl.AndroidHostedTvShowRepository
+import com.tajmoti.tulip.repository.impl.AndroidTvDataRepositoryImpl
 import com.tajmoti.tulip.service.impl.DownloadManagerVideoDownloadService
 import dagger.Binds
 import dagger.Module
@@ -26,6 +26,10 @@ interface Binder {
 
     @Binds
     @Singleton
+    fun bindHostedTvDataService(s: HostedTvDataServiceImpl): HostedTvDataService
+
+    @Binds
+    @Singleton
     fun provideVideoDownloader(s: DownloadManagerVideoDownloadService): VideoDownloadService
 
     @Binds
@@ -34,9 +38,21 @@ interface Binder {
 
     @Binds
     @Singleton
-    fun provideAndroidTvShowRepository(s: AndroidTvShowRepository): TvShowRepository
+    fun provideSearchService(s: SearchServiceImpl): SearchService
 
     @Binds
     @Singleton
-    fun provideAndroidMovieRepository(s: AndroidMovieRepository): MovieRepository
+    fun provideAndroidTvShowRepository(s: AndroidHostedTvShowRepository): HostedTvShowRepository
+
+    @Binds
+    @Singleton
+    fun provideAndroidMovieRepository(s: AndroidHostedMovieRepository): HostedMovieRepository
+
+    @Binds
+    @Singleton
+    fun provideSearchableTvDataRepository(s: AndroidTvDataRepositoryImpl): WritableTvDataRepository
+
+    @Binds
+    @Singleton
+    fun provideTvDataRepository(s: TvDataRepositoryImpl): SearchableTvDataRepository
 }

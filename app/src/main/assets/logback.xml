@@ -4,7 +4,7 @@
       <pattern>%logger{12}</pattern>
     </tagEncoder>
     <encoder>
-      <pattern>[%thread] %msg</pattern>
+      <pattern>[%thread] %msg %ex{short}</pattern>
     </encoder>
   </appender>
 

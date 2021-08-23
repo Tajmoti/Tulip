@@ -1,9 +1,9 @@
 package com.tajmoti.libtulip.service.impl
 
-import com.tajmoti.libtulip.model.StreamableInfo
-import com.tajmoti.libtulip.model.StreamableInfoWithLinks
-import com.tajmoti.libtulip.model.UnloadedVideoStreamRef
+import com.tajmoti.libtulip.model.hosted.StreamingService
+import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.service.StreamExtractorService
+import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
 import io.ktor.client.*
@@ -13,15 +13,19 @@ import javax.inject.Inject
 
 class StreamsExtractionServiceImpl @Inject constructor(
     private val linkExtractor: VideoLinkExtractor,
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val tvProvider: MultiTvProvider<StreamingService>
 ) : StreamExtractorService {
 
-    override suspend fun fetchStreams(streamable: StreamableInfo): Result<StreamableInfoWithLinks> {
-        val result = streamable.streamable.loadSources().getOrElse {
+    override suspend fun fetchStreams(
+        service: StreamingService,
+        streamableKey: String
+    ): Result<List<UnloadedVideoStreamRef>> {
+        val result = tvProvider.getStreamableLinks(service, streamableKey).getOrElse {
             return Result.failure(it)
         }
         val sorted = mapAndSortLinksByRelevance(result)
-        return Result.success(StreamableInfoWithLinks(streamable, sorted))
+        return Result.success(sorted)
     }
 
     private fun mapAndSortLinksByRelevance(it: List<VideoStreamRef>): List<UnloadedVideoStreamRef> {

@@ -18,7 +18,7 @@ dependencies {
     implementation project(':libtmdb')
 
     // Ktor
-    implementation "io.ktor:ktor-client-android:$ktor_version"
+    implementation "io.ktor:ktor-client-core:$ktor_version"
 
     // DI Annotations
     implementation 'javax.inject:javax.inject:1'

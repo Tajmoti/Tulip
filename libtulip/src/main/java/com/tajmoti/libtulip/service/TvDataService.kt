@@ -1,22 +1,24 @@
 package com.tajmoti.libtulip.service
 
-import com.tajmoti.libtulip.model.StreamableInfo
-import com.tajmoti.libtulip.model.TulipSearchResult
+import com.tajmoti.libtmdb.model.tv.Season
+import com.tajmoti.libtmdb.model.tv.Tv
+import com.tajmoti.libtulip.model.info.StreamableInfo
+import com.tajmoti.libtulip.model.info.TmdbItemId
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtvprovider.Season
-import com.tajmoti.libtvprovider.TvItem
+import com.tajmoti.libtvprovider.SearchResult
+import com.tajmoti.libtvprovider.TvItemInfo
 
 interface TvDataService {
 
-    suspend fun getTvShow(key: TvShowKey): Result<TvItem.Show>
+    suspend fun prefetchTvShowData(key: TvShowKey.Tmdb): Result<Unit>
 
-    suspend fun getSeason(key: SeasonKey): Result<Season>
+    suspend fun getTvShow(key: TvShowKey.Tmdb): Result<Tv>
 
-    suspend fun getStreamable(key: StreamableKey): Result<StreamableInfo>
+    suspend fun getSeason(key: SeasonKey.Tmdb): Result<Season>
 
-    suspend fun searchAndSaveItems(query: String): Result<List<TulipSearchResult>>
+    suspend fun getStreamableInfo(key: StreamableKey.Tmdb): Result<StreamableInfo>
 
-    suspend fun fetchAndSaveSeasons(key: TvShowKey, show: TvItem.Show): Result<List<Season>>
+    suspend fun findTmdbId(type: SearchResult.Type, info: TvItemInfo): TmdbItemId?
 }

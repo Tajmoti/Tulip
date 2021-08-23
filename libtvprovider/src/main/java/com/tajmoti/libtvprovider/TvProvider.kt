@@ -5,25 +5,20 @@ interface TvProvider {
     /**
      * Searches for shows or movies by their name.
      */
-    suspend fun search(query: String): Result<List<TvItem>>
+    suspend fun search(query: String): Result<List<SearchResult>>
 
     /**
-     * Retrieves a show by its information.
+     * Retrieves TV show info by its [key].
      */
-    suspend fun getShow(info: TvItem.Show.Info): Result<TvItem.Show>
-
-    /**
-     * Retrieves a TV show season by its information.
-     */
-    suspend fun getSeason(info: Season.Info): Result<Season>
-
-    /**
-     * Retrieves an episode by its information.
-     */
-    suspend fun getEpisode(info: Episode.Info): Result<Episode>
+    suspend fun getTvShow(key: String): Result<TvShowInfo>
 
     /**
      * Retrieves a movie by its information.
      */
-    suspend fun getMovie(info: TvItem.Movie.Info): Result<TvItem.Movie>
+    suspend fun getMovie(movieKey: String): Result<MovieInfo>
+
+    /**
+     * Returns a list of links for the provided [MovieInfo] or [EpisodeInfo].
+     */
+    suspend fun getStreamableLinks(episodeOrMovieKey: String): Result<List<VideoStreamRef>>
 }

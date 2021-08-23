@@ -1,8 +1,10 @@
 package com.tajmoti.tulip.ui.show
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
-import com.tajmoti.libtulip.model.StreamingService
+import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.tulip.BaseActivity
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ActivityTabbedTvShowBinding
@@ -20,9 +22,8 @@ class TabbedTvShowActivity : BaseActivity<ActivityTabbedTvShowBinding>(
         binding.tabs.setupWithViewPager(binding.viewPager)
         viewModel.name.observe(this, this::onNameChanged)
         viewModel.state.observe(this, this::onStateChanged)
-        val tvShowId = intent.getStringExtra(ARG_TV_SHOW_ID)!!
-        val service = intent.getSerializableExtra(ARG_SERVICE) as StreamingService
-        viewModel.fetchEpisodes(service, tvShowId)
+        val tvShowKey = intent.getSerializableExtra(ARG_TV_SHOW_KEY) as TvShowKey
+        viewModel.fetchTvShowData(tvShowKey)
     }
 
     private fun onStateChanged(state: TvShowViewModel.State) {
@@ -38,19 +39,20 @@ class TabbedTvShowActivity : BaseActivity<ActivityTabbedTvShowBinding>(
     }
 
     private fun onLoadingFinished(state: TvShowViewModel.State.Success) {
-        val service = intent.getSerializableExtra(ARG_SERVICE) as StreamingService
-        val tvShowId = intent.getStringExtra(ARG_TV_SHOW_ID)!!
         val sectionsPagerAdapter = SectionsPagerAdapter(
-            state.seasons,
+            this,
             supportFragmentManager,
-            service,
-            tvShowId
+            state.seasons
         )
         binding.viewPager.adapter = sectionsPagerAdapter
     }
 
     companion object {
-        const val ARG_SERVICE = "service"
-        const val ARG_TV_SHOW_ID = "tv_show_id"
+        private const val ARG_TV_SHOW_KEY = "tv_show_key"
+
+        fun newInstance(context: Context, key: TvShowKey): Intent {
+            return Intent(context, TabbedTvShowActivity::class.java)
+                .putExtra(ARG_TV_SHOW_KEY, key)
+        }
     }
 }

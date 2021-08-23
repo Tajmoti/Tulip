@@ -1,16 +1,13 @@
 package com.tajmoti.libtvprovider
 
-interface Season : Marshallable {
+data class Season(
+    val tvShowKey: String,
     /**
      * One-based season number
      */
-    val number: Int
-
-    val episodes: List<Episode>
-
-    data class Info(
-        override val key: String,
-        val number: Int,
-        val episodes: List<Episode.Info>
-    ) : Marshallable
-}
+    val number: Int,
+    /**
+     * All episodes of this season
+     */
+    val episodes: List<EpisodeInfo>
+)

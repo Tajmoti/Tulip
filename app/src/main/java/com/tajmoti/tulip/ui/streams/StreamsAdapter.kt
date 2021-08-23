@@ -1,18 +1,29 @@
 package com.tajmoti.tulip.ui.streams
 
-import com.tajmoti.libtulip.model.UnloadedVideoStreamRef
+import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
+import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
 import com.tajmoti.tulip.BaseAdapter
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ItemStreamBinding
+import com.tajmoti.tulip.languageToIcon
 
 class StreamsAdapter(
-    val downloadCallback: (UnloadedVideoStreamRef) -> Unit
-) : BaseAdapter<UnloadedVideoStreamRef, ItemStreamBinding>(ItemStreamBinding::inflate) {
+    val downloadCallback: (UnloadedVideoWithLanguage) -> Unit
+) : BaseAdapter<UnloadedVideoWithLanguage, ItemStreamBinding>(ItemStreamBinding::inflate) {
 
-    override fun onBindViewHolder(vh: Holder<ItemStreamBinding>, item: UnloadedVideoStreamRef) {
-        val string = "#${vh.adapterPosition + 1}: ${item.info.serviceName}"
+    override fun onBindViewHolder(
+        vh: Holder<ItemStreamBinding>,
+        item: UnloadedVideoWithLanguage
+    ) {
+        val videoItem = item.video
+        val string = "#${vh.adapterPosition + 1}: ${videoItem.info.serviceName}"
         vh.binding.root.text = string
-        vh.binding.root.setCompoundDrawablesRelativeWithIntrinsicBounds(getDrawable(item), 0, 0, 0)
+        vh.binding.root.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            getDrawable(videoItem),
+            0,
+            languageToIcon(item.language) ?: 0,
+            0
+        )
         vh.binding.root.setOnLongClickListener { downloadCallback(item); true }
     }
 

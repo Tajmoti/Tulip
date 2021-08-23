@@ -1,28 +1,30 @@
 package com.tajmoti.tulip.ui.streams
 
 import androidx.lifecycle.*
-import com.tajmoti.libtulip.model.StreamableInfo
-import com.tajmoti.libtulip.model.UnloadedVideoStreamRef
+import com.tajmoti.commonutils.mapToAsyncJobs
+import com.tajmoti.libtulip.model.info.StreamableInfo
+import com.tajmoti.libtulip.model.key.EpisodeKey
+import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.StreamableKey
+import com.tajmoti.libtulip.model.key.TvShowKey
+import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
+import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
+import com.tajmoti.libtulip.service.HostedTvDataService
 import com.tajmoti.libtulip.service.StreamExtractorService
 import com.tajmoti.libtulip.service.TvDataService
 import com.tajmoti.libtulip.service.VideoDownloadService
-import com.tajmoti.libtvprovider.Episode
-import com.tajmoti.libtvprovider.Streamable
-import com.tajmoti.libtvprovider.TvItem
-import com.tajmoti.libtvprovider.VideoStreamRef
+import com.tajmoti.libtvprovider.*
 import com.tajmoti.tulip.ui.performStatefulOneshotOperation
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import javax.inject.Inject
 
 @HiltViewModel
 class StreamsViewModel @Inject constructor(
-    private val tvDataService: TvDataService,
+    private val hostedTvDataService: HostedTvDataService,
     private val downloadService: VideoDownloadService,
-    private val extractionService: StreamExtractorService
+    private val extractionService: StreamExtractorService,
+    private val tvDataService: TvDataService
 ) : ViewModel() {
     private val _state = MutableLiveData<State>(State.Idle)
     private val _linkLoadingState = MutableLiveData<LinkLoadingState>(LinkLoadingState.Idle)
@@ -37,9 +39,9 @@ class StreamsViewModel @Inject constructor(
      */
     val streamableName: LiveData<String?> = Transformations.map(streamLoadingState) {
         val streamable = when (it) {
-            is State.Loading -> it.info.streamable
-            is State.Success -> it.info.streamable
-            is State.Error -> it.info?.streamable ?: return@map null
+            is State.Loading -> it.info
+            is State.Success -> it.info
+            is State.Error -> it.info ?: return@map null
             else -> return@map null
         }
         streamableToName(streamable)
@@ -140,17 +142,62 @@ class StreamsViewModel @Inject constructor(
     }
 
     private suspend fun fetchStreamsToState(info: StreamableKey): State {
-        val streamable = tvDataService.getStreamable(info)
-            .getOrElse { return State.Error(null) }
-        val result = extractionService.fetchStreams(streamable)
-            .getOrElse { return State.Error(streamable) }
-        return State.Success(result.info, result.streams)
+        return when (info) {
+            is StreamableKey.Hosted -> fetchStreamsToStateHosted(info)
+            is StreamableKey.Tmdb -> fetchStreamsToStateTmdb(info)
+        }
     }
 
-    private fun streamableToName(streamable: Streamable): String {
+    private suspend fun fetchStreams(info: StreamableKey.Hosted): Result<List<UnloadedVideoStreamRef>> {
+        val result = extractionService.fetchStreams(info.streamingService, info.streamableKey)
+            .getOrElse { return Result.failure(it) }
+        return Result.success(result)
+    }
+
+    private suspend fun fetchStreamsToStateHosted(info: StreamableKey.Hosted): State {
+        val newInfo = hostedTvDataService.getStreamableInfo(info)
+            .getOrElse { return State.Error(null) }
+        val result = fetchStreams(info)
+            .getOrElse { return State.Error(newInfo.streamableInfo) }
+            .map { UnloadedVideoWithLanguage(it, newInfo.language) }
+        return State.Success(newInfo.streamableInfo, result)
+    }
+
+    private suspend fun fetchStreamsToStateTmdb(info: StreamableKey.Tmdb): State {
+        val streamableInfo = tvDataService.getStreamableInfo(info)
+            .getOrElse { return State.Error(null) }
+        _state.value = State.Loading(streamableInfo)
+        val streamables = when (info) {
+            is MovieKey.Tmdb -> hostedTvDataService.getMovieByTmdbId(info)
+                .map { it.map { it to it.language } }
+                .getOrElse { return State.Error(null) }
+            is EpisodeKey.Tmdb -> hostedTvDataService.getEpisodeByTmdbId(info)
+                .map {
+                    it.map { ep ->
+                        val hostedKey = TvShowKey.Hosted(ep.service, ep.tvShowKey)
+                        val show = hostedTvDataService.getTvShow(hostedKey)
+                            .getOrElse { return State.Error(streamableInfo) }
+                        ep to show.info.language
+                    }
+                }
+                .getOrElse { return State.Error(null) }
+        }
+        val streams = mapToAsyncJobs(streamables) {
+            fetchStreams(it.first.hostedKey)
+                .getOrNull()
+                ?.let { videos -> videos to it.second }
+        }
+            .filterNotNull()
+            .flatMap { it.first.map { video -> video to it.second } }
+            .map { UnloadedVideoWithLanguage(it.first, it.second) }
+        return State.Success(streamableInfo, streams)
+    }
+
+    private fun streamableToName(streamable: StreamableInfo): String {
         return when (streamable) {
-            is Episode -> (streamable.name ?: streamable.number.toString())
-            is TvItem.Movie -> streamable.name
+            is StreamableInfo.Episode ->
+                streamable.info.name ?: streamable.info.number.toString()
+            is StreamableInfo.Movie -> streamable.name
         }
     }
 
@@ -175,7 +222,7 @@ class StreamsViewModel @Inject constructor(
          */
         data class Success(
             val info: StreamableInfo,
-            val streams: List<UnloadedVideoStreamRef>
+            val streams: List<UnloadedVideoWithLanguage>
         ) : State()
 
         /**

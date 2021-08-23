@@ -14,4 +14,6 @@
     <string name="select_source">Select source</string>
     <string name="other_results">Other results</string>
     <string name="back">Back</string>
+    <string name="season_no">Season %d</string>
+    <string name="season_specials">Specials</string>
 </resources>

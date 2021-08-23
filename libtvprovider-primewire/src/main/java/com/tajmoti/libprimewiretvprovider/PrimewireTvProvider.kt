@@ -1,14 +1,10 @@
 package com.tajmoti.libprimewiretvprovider
 
-import com.tajmoti.commonutils.logger
-import com.tajmoti.libtvprovider.Episode
-import com.tajmoti.libtvprovider.Season
-import com.tajmoti.libtvprovider.TvItem
-import com.tajmoti.libtvprovider.TvProvider
+import com.tajmoti.libtvprovider.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Element
+import org.jsoup.nodes.Document
 import java.net.URLEncoder
 
 class PrimewireTvProvider(
@@ -26,7 +22,7 @@ class PrimewireTvProvider(
     private val baseUrl: String = "https://www.primewire.li"
 ) : TvProvider {
 
-    override suspend fun search(query: String): Result<List<TvItem>> {
+    override suspend fun search(query: String): Result<List<SearchResult>> {
         val pageSource = httpLoader(queryToSearchUrl(query))
             .getOrElse { return Result.failure(it) }
         return withContext(Dispatchers.Default) {
@@ -34,81 +30,47 @@ class PrimewireTvProvider(
         }
     }
 
-    override suspend fun getShow(info: TvItem.Show.Info): Result<TvItem.Show> {
-        val show = PrimewireShow(
-            info.name,
-            baseUrl,
-            info.key,
-            info.firstAirDateYear,
-            this::loadHtmlFromUrl,
-            httpLoader
-        )
-        return Result.success(show)
-    }
-
-    override suspend fun getSeason(info: Season.Info): Result<Season> {
-        val primewireEpisodes = info.episodes.map(this::serializedEpToEp).sorted()
-        val show = PrimewireSeason(info.number, primewireEpisodes)
-        return Result.success(show)
-    }
-
-    override suspend fun getEpisode(info: Episode.Info): Result<Episode> {
-        return Result.success(serializedEpToEp(info))
-    }
-
-    override suspend fun getMovie(info: TvItem.Movie.Info): Result<TvItem.Movie> {
-        val result = PrimewireMovie(
-            info.name,
-            baseUrl,
-            info.key,
-            info.firstAirDateYear,
-            this::loadHtmlFromUrl
-        )
-        return Result.success(result)
-    }
-
-    private fun serializedEpToEp(it: Episode.Info): PrimewireEpisode {
-        return PrimewireEpisode(it.number, it.name, baseUrl, it.key, this::loadHtmlFromUrl)
-    }
-
-    private fun parseSearchResultPageBlocking(pageSource: String): Result<List<TvItem>> {
-        return try {
-            val items = Jsoup.parse(pageSource)
-                .getElementsByClass("index_item")
-                .map(this::elemToTvItem)
-            Result.success(items)
-        } catch (e: Throwable) {
-            logger.warn("Request failed", e)
-            Result.failure(e)
-        }
-    }
-
-    private fun elemToTvItem(element: Element): TvItem {
-        val anchor = element.getElementsByTag("a")
-            .firstOrNull()!!
-        val itemUrl = anchor
-            .attr("href")
-        val isShow = itemUrl
-            .startsWith("/tv/")
-        val nameElem = anchor
-            .getElementsByClass("title-cutoff")
-            .first()!!
-        val name = nameElem.ownText()
-        val yearParen = nameElem.parent()!!
-            .ownText()
-        val year = yearParen.substring(1 until yearParen.length - 1)
-        val yearInt = year.toIntOrNull()
-        return if (isShow) {
-            PrimewireShow(name, baseUrl, itemUrl, yearInt, this::loadHtmlFromUrl, httpLoader)
-        } else {
-            PrimewireMovie(name, baseUrl, itemUrl, yearInt, this::loadHtmlFromUrl)
-        }
-    }
-
     private fun queryToSearchUrl(query: String): String {
         val encoded = URLEncoder.encode(query, "utf-8")
         return "$baseUrl?s=$encoded&t=y&m=m&w=q"
     }
+
+    override suspend fun getTvShow(key: String): Result<TvShowInfo> {
+        val pageSource = httpLoader(baseUrl + key)
+            .getOrElse { return Result.failure(it) }
+        val document = withContext(Dispatchers.Default) {
+            Jsoup.parse(pageSource)
+        }
+        val seasons = parseSearchResultPageBlockingSeason(key, document)
+            .getOrElse { return Result.failure(it) }
+        val tvItemInfo = parseTvItemInfo(key, document)
+        val info = TvShowInfo(key, tvItemInfo, seasons)
+        return Result.success(info)
+    }
+
+    private fun parseTvItemInfo(key: String, page: Document): TvItemInfo {
+        val title =
+            page.selectFirst(".stage_navigation > h1:nth-child(1) > span:nth-child(1) > a:nth-child(1)")!!
+                .attr("title")
+        val yearStart = title.indexOfLast { it == '(' }
+        val yearEnd = title.indexOfLast { it == ')' }
+        val yearStr = title.subSequence(yearStart + 1, yearEnd)
+        val name = title.substring(0, yearStart - 1)
+        return TvItemInfo(key, name, "en", yearStr.toString().toInt())
+    }
+
+    override suspend fun getMovie(movieKey: String): Result<MovieInfo> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getStreamableLinks(episodeOrMovieKey: String): Result<List<VideoStreamRef>> {
+        val html = loadHtmlFromUrl(baseUrl + episodeOrMovieKey)
+            .getOrElse { return Result.failure(it) }
+        return withContext(Dispatchers.Default) {
+            getVideoStreamsBlocking(html, baseUrl)
+        }
+    }
+
 
     private suspend fun loadHtmlFromUrl(url: String): Result<String> {
         return pageLoader.invoke(url, this::shouldAllowUrl)

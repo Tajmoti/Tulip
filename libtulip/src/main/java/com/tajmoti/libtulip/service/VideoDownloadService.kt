@@ -1,6 +1,6 @@
 package com.tajmoti.libtulip.service
 
-import com.tajmoti.libtulip.model.StreamableInfo
+import com.tajmoti.libtulip.model.info.StreamableInfo
 
 interface VideoDownloadService {
 

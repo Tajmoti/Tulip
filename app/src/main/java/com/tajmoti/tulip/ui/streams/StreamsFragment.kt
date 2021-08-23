@@ -6,11 +6,10 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.viewModels
-import com.tajmoti.libtulip.model.StreamingService
-import com.tajmoti.libtulip.model.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.StreamableKey
+import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
 import com.tajmoti.tulip.BaseFragment
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentStreamsBinding
@@ -44,15 +43,10 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
 
     private fun getStreamInfo(): StreamableKey {
         val args = requireArguments()
-        val service = args.getSerializable(ARG_SERVICE) as StreamingService
-        return if (args.containsKey(ARG_TV_SHOW_ID)) {
-            val tvShow = args.getString(ARG_TV_SHOW_ID)!!
-            val season = args.getString(ARG_SEASON_ID)!!
-            val episode = args.getString(ARG_EPISODE_ID)!!
-            EpisodeKey(service, tvShow, season, episode)
+        return if (args.containsKey(ARG_EPISODE)) {
+            args.getSerializable(ARG_EPISODE) as EpisodeKey
         } else {
-            val movie = args.getString(ARG_MOVIE_ID)!!
-            MovieKey(service, movie)
+            args.getSerializable(ARG_MOVIE_KEY) as StreamableKey
         }
     }
 
@@ -85,12 +79,12 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
         }
     }
 
-    private fun onStreamClickedPlay(stream: UnloadedVideoStreamRef) {
-        viewModel.onStreamClicked(stream, false)
+    private fun onStreamClickedPlay(stream: UnloadedVideoWithLanguage) {
+        viewModel.onStreamClicked(stream.video, false)
     }
 
-    private fun onStreamClickedDownload(stream: UnloadedVideoStreamRef) {
-        viewModel.onStreamClicked(stream, true)
+    private fun onStreamClickedDownload(stream: UnloadedVideoWithLanguage) {
+        viewModel.onStreamClicked(stream.video, true)
     }
 
     private fun startVideo(url: String, direct: Boolean) {
@@ -105,34 +99,22 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
     }
 
     companion object {
-        private const val ARG_SERVICE = "service"
-        private const val ARG_MOVIE_ID = "movie"
-        private const val ARG_TV_SHOW_ID = "tv_show"
-        private const val ARG_SEASON_ID = "season"
-        private const val ARG_EPISODE_ID = "episode"
+        private const val ARG_MOVIE_KEY = "movie"
+        private const val ARG_EPISODE = "episode"
 
         @JvmStatic
-        fun newInstance(
-            service: StreamingService,
-            tvShow: String,
-            season: String,
-            key: String
-        ): StreamsFragment {
+        fun newInstance(episode: EpisodeKey): StreamsFragment {
             val args = Bundle()
-            args.putSerializable(ARG_SERVICE, service)
-            args.putString(ARG_TV_SHOW_ID, tvShow)
-            args.putString(ARG_SEASON_ID, season)
-            args.putString(ARG_EPISODE_ID, key)
+            args.putSerializable(ARG_EPISODE, episode)
             val fragment = StreamsFragment()
             fragment.arguments = args
             return fragment
         }
 
         @JvmStatic
-        fun newInstance(service: StreamingService, key: String): StreamsFragment {
+        fun newInstance(movie: MovieKey): StreamsFragment {
             val args = Bundle()
-            args.putSerializable(ARG_SERVICE, service)
-            args.putString(ARG_MOVIE_ID, key)
+            args.putSerializable(ARG_MOVIE_KEY, movie)
             val fragment = StreamsFragment()
             fragment.arguments = args
             return fragment

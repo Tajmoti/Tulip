@@ -1,19 +1,25 @@
 package com.tajmoti.tulip.ui.search
 
 import androidx.lifecycle.*
-import com.tajmoti.libtulip.model.TulipSearchResult
-import com.tajmoti.libtulip.service.TvDataService
+import com.tajmoti.libtulip.model.info.TmdbItemId
+import com.tajmoti.libtulip.model.info.TulipSearchResult
+import com.tajmoti.libtulip.model.key.ItemKey
+import com.tajmoti.libtulip.model.key.MovieKey
+import com.tajmoti.libtulip.model.key.TvShowKey
+import com.tajmoti.libtulip.service.SearchService
 import com.tajmoti.tulip.R
-import com.tajmoti.tulip.ui.runWithOnCancel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val service: TvDataService
+    private val service: SearchService
 ) : ViewModel() {
     companion object {
         /**
@@ -23,6 +29,7 @@ class SearchViewModel @Inject constructor(
     }
 
     private val _state = MutableLiveData<State>(State.Idle)
+    private val _itemToOpen = MutableLiveData<ItemKey?>()
     val state: LiveData<State> = _state
 
     /**
@@ -36,7 +43,7 @@ class SearchViewModel @Inject constructor(
     val statusText = Transformations.map(state) {
         when {
             it is State.Idle -> R.string.search_hint
-            it is State.Success && it.items.isEmpty() -> R.string.no_results
+            it is State.Success && it.results.isEmpty() -> R.string.no_results
             it is State.Error -> R.string.something_went_wrong
             else -> null
         }
@@ -48,7 +55,7 @@ class SearchViewModel @Inject constructor(
     val statusImage = Transformations.map(state) {
         when {
             it is State.Idle -> R.drawable.ic_search_24
-            it is State.Success && it.items.isEmpty() -> R.drawable.ic_sad_24
+            it is State.Success && it.results.isEmpty() -> R.drawable.ic_sad_24
             it is State.Error -> R.drawable.ic_sad_24
             else -> null
         }
@@ -58,6 +65,11 @@ class SearchViewModel @Inject constructor(
      * True if the retry button should be shown
      */
     val canTryAgain = Transformations.map(state) { it is State.Error }
+
+    /**
+     * Contains the item that should be opened
+     */
+    val itemToOpen: LiveData<ItemKey?> = _itemToOpen
 
     /**
      * Flow containing (even partial) queries entered in the search view
@@ -91,6 +103,17 @@ class SearchViewModel @Inject constructor(
         onNewSearchQuery(searchFlow.value ?: "")
     }
 
+    /**
+     * The user has clicked an identified item
+     */
+    fun onItemClicked(id: TmdbItemId) {
+        val key = when (id) {
+            is TmdbItemId.Tv -> TvShowKey.Tmdb(id)
+            is TmdbItemId.Movie -> MovieKey.Tmdb(id)
+        }
+        _itemToOpen.value = key
+    }
+
     private fun onNewSearchQuery(it: String?) {
         searchJob?.cancel()
         if (it == null) {
@@ -102,18 +125,15 @@ class SearchViewModel @Inject constructor(
     }
 
     private suspend fun startSearchAsync(query: String): State {
-        return runWithOnCancel(State.Idle) {
-            val successfulItems = service.searchAndSaveItems(query)
-                .getOrElse { return@runWithOnCancel State.Error }
-                .sortedWith(compareBy { it.tmdbId == null })
-            State.Success(successfulItems)
-        }
+        val successfulItems = service.search(query)
+            .getOrElse { return State.Error }
+        return State.Success(successfulItems)
     }
 
     sealed class State {
         object Idle : State()
         object Searching : State()
-        data class Success(val items: List<TulipSearchResult>) : State()
+        data class Success(val results: List<TulipSearchResult>) : State()
         object Error : State()
 
         val success: Boolean

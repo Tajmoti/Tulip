@@ -41,7 +41,7 @@
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:onClick="@{(v) -> viewModel.retryFetchEpisodes()}"
+                android:onClick="@{(v) -> viewModel.retryFetchTvShowData()}"
                 android:text="@string/retry" />
         </LinearLayout>
 

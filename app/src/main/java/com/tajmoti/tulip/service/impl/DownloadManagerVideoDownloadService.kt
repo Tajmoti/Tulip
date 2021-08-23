@@ -5,7 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import com.tajmoti.commonutils.logger
-import com.tajmoti.libtulip.model.StreamableInfo
+import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.tulip.R
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -37,45 +37,37 @@ class DownloadManagerVideoDownloadService @Inject constructor(
 
     private fun buildDisplayName(item: StreamableInfo): String {
         return when (item) {
-            is StreamableInfo.TvShow -> showToDownloadName(item)
-            is StreamableInfo.Movie -> item.movie.name
+            is StreamableInfo.Episode -> showToDownloadName(item)
+            is StreamableInfo.Movie -> item.name
         }
     }
 
-    private fun showToDownloadName(item: StreamableInfo.TvShow): String {
-        val episode = item.episode.number
-        val prefix = "${item.show.name} S${pad(item.season.number)}"
-        val name = if (episode != null) {
-            "E${pad(episode)}"
-        } else {
-            item.episode.name!!
-        }
+    private fun showToDownloadName(item: StreamableInfo.Episode): String {
+        val episode = item.info.number
+        val prefix = "${item.showName} S${pad(item.seasonNumber)}"
+        val name = "E${pad(episode)}"
         return prefix + name
     }
 
     private fun getSavePath(item: StreamableInfo): String {
         val path = when (item) {
-            is StreamableInfo.TvShow -> showToSavePath(item)
-            is StreamableInfo.Movie -> normalize(item.movie.name)
+            is StreamableInfo.Episode -> showToSavePath(item)
+            is StreamableInfo.Movie -> normalize(item.name)
         }
         return context.getString(R.string.app_name) + File.separator + path + FILE_EXTENSION
     }
 
-    private fun showToSavePath(item: StreamableInfo.TvShow): String {
+    private fun showToSavePath(item: StreamableInfo.Episode): String {
         val sep = File.separator
-        val ss = pad(item.season.number)
-        val ep = item.episode.number
-        val prefix = "${normalize(item.show.name)}$sep$SEASON_DIRECTORY_NAME $ss$sep"
-        val epName = if (ep != null) {
-            var fileName = pad(ep)
-            val epName = item.episode.name
-            if (epName != null)
-                fileName += " - $epName"
-            fileName
-        } else {
-            normalize(item.episode.name!!)
-        }
-        return prefix + epName
+        val ss = pad(item.seasonNumber)
+        val ep = item.info.number
+        val prefix = "${normalize(item.showName)}$sep$SEASON_DIRECTORY_NAME $ss$sep"
+        var fileName = pad(ep)
+        val epName = item.info.name
+        if (epName != null)
+            fileName += " - $epName"
+        fileName
+        return prefix + fileName
     }
 
     private fun normalize(name: String): String {

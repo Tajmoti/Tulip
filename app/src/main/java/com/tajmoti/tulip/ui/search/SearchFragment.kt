@@ -1,6 +1,5 @@
 package com.tajmoti.tulip.ui.search
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
@@ -8,9 +7,11 @@ import android.view.View
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.viewModels
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.tajmoti.libtulip.model.TmdbId
-import com.tajmoti.libtulip.model.TulipSearchResult
-import com.tajmoti.libtulip.model.TulipTvShow
+import com.tajmoti.libtulip.model.hosted.HostedItem
+import com.tajmoti.libtulip.model.info.TulipSearchResult
+import com.tajmoti.libtulip.model.key.ItemKey
+import com.tajmoti.libtulip.model.key.MovieKey
+import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.tulip.BaseFragment
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentSearchBinding
@@ -36,38 +37,53 @@ class SearchFragment : BaseFragment<FragmentSearchBinding, SearchViewModel>(
         binding.recyclerSearch.setupWithAdapterAndDivider(adapter)
         adapter.callback = this::onSearchResultClicked
         viewModel.state.observe(viewLifecycleOwner) { onStateChanged(it, adapter) }
+        viewModel.itemToOpen.observe(viewLifecycleOwner) { goToItemByKey(it!!) }
     }
 
     private fun onStateChanged(it: SearchViewModel.State, adapter: SearchAdapter) {
         if (it is SearchViewModel.State.Success)
-            adapter.items = it.items.groupBy { it.tmdbId }.toList()
+            adapter.items = it.results
     }
 
-    private fun onSearchResultClicked(result: Pair<TmdbId?, List<TulipSearchResult>>) {
-        val variants = result.second
-        if (variants.size == 1) {
-            goToTvShowScreen(variants[0])
-            return
+    private fun onSearchResultClicked(result: TulipSearchResult) {
+        val id = result.tmdbId
+        val results = result.results
+        if (id != null) {
+            viewModel.onItemClicked(id)
+        } else {
+            onUnidentifiedResultClicked(results)
         }
+    }
+
+    private fun onUnidentifiedResultClicked(variants: List<HostedItem>) {
         val labels = variants
-            .map { "[${it.language.uppercase()}][${it.service}] ${it.name}" }
+            .map { "[${it.info.language.uppercase()}][${it.service}] ${it.info.name}" }
             .toTypedArray()
         MaterialAlertDialogBuilder(requireContext())
-            .setItems(labels) { _, index -> goToTvShowScreen(variants[index]) }
+            .setItems(labels) { _, index -> onUnidentifiedItemClicked(variants[index]) }
             .setTitle(R.string.select_source)
             .setNeutralButton(R.string.back, null)
             .show()
     }
 
-    private fun goToTvShowScreen(it: TulipSearchResult) {
-        if (it is TulipTvShow) {
-            val intent = Intent(requireContext(), TabbedTvShowActivity::class.java)
-                .putExtra(TabbedTvShowActivity.ARG_SERVICE, it.service)
-                .putExtra(TabbedTvShowActivity.ARG_TV_SHOW_ID, it.key)
-            startActivity(intent)
-        } else {
-            StreamsFragment.newInstance(it.service, it.key)
-                .show(childFragmentManager, "streams")
+    private fun onUnidentifiedItemClicked(info: HostedItem) {
+        val key = when (info) {
+            is HostedItem.TvShow -> TvShowKey.Hosted(info.service, info.info.key)
+            is HostedItem.Movie -> MovieKey.Hosted(info.service, info.info.key)
+        }
+        goToItemByKey(key)
+    }
+
+    private fun goToItemByKey(key: ItemKey) {
+        when (key) {
+            is TvShowKey -> {
+                val intent = TabbedTvShowActivity.newInstance(requireContext(), key)
+                startActivity(intent)
+            }
+            is MovieKey -> {
+                StreamsFragment.newInstance(key)
+                    .show(childFragmentManager, "streams")
+            }
         }
     }
 

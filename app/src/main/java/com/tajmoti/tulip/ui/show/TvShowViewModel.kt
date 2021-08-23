@@ -4,17 +4,18 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
-import com.tajmoti.libtulip.model.StreamingService
+import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
+import com.tajmoti.libtulip.service.HostedTvDataService
 import com.tajmoti.libtulip.service.TvDataService
-import com.tajmoti.libtvprovider.Season
 import com.tajmoti.tulip.ui.performStatefulOneshotOperation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
 class TvShowViewModel @Inject constructor(
-    private val tvDataService: TvDataService
+    private val hostedTvDataService: HostedTvDataService,
+    private val tmdbTvDataService: TvDataService
 ) : ViewModel() {
     private val _state = MutableLiveData<State>(State.Idle)
     private val _name = MutableLiveData<String?>()
@@ -35,39 +36,55 @@ class TvShowViewModel @Inject constructor(
     val error = Transformations.map(state) { it is State.Error }
 
     /**
-     * Search for a TV show or a movie
+     * Retries the last fetching request
      */
-    fun fetchEpisodes(service: StreamingService, key: String) {
-        fetchEpisodes(TvShowKey(service, key))
+    fun retryFetchTvShowData() {
+        val lastKey = (state.value as State.Error).lastKey
+        fetchTvShowData(lastKey)
     }
 
     /**
-     * Retries the last fetching request
+     * Search for a TV show or a movie
      */
-    fun retryFetchEpisodes() {
-        val lastKey = (state.value as State.Error).lastKey
-        fetchEpisodes(lastKey)
-    }
-
-    private fun fetchEpisodes(key: TvShowKey) {
+    fun fetchTvShowData(key: TvShowKey) {
         performStatefulOneshotOperation(_state, State.Loading, State.Idle) {
+            when (key) {
+                is TvShowKey.Tmdb -> tmdbTvDataService.prefetchTvShowData(key)
+                is TvShowKey.Hosted -> hostedTvDataService.prefetchTvShow(key)
+            }
             fetchSeasonsToState(key)
         }
     }
 
     private suspend fun fetchSeasonsToState(key: TvShowKey): State {
-        val show = tvDataService.getTvShow(key)
+        return when (key) {
+            is TvShowKey.Hosted -> getHostedTvShowAsState(key)
+            is TvShowKey.Tmdb -> getTmdbTvShowAsState(key)
+        }
+    }
+
+    private suspend fun getHostedTvShowAsState(key: TvShowKey.Hosted): State {
+        val show = hostedTvDataService.getTvShow(key)
+            .getOrElse { return State.Error(key) }
+        _name.value = show.info.name
+        val result = hostedTvDataService.getSeasons(key)
+            .getOrElse { return State.Error(key) }
+        return State.Success(result.map { SeasonKey.Hosted(key, it.number) })
+    }
+
+    private suspend fun getTmdbTvShowAsState(key: TvShowKey.Tmdb): State {
+        val show = tmdbTvDataService.getTvShow(key)
             .getOrElse { return State.Error(key) }
         _name.value = show.name
-        val result = tvDataService.fetchAndSaveSeasons(key, show)
-            .getOrElse { return State.Error(key) }
-        return State.Success(result)
+        val tmdbSeasons = show.seasons
+            .map { SeasonKey.Tmdb(key, it.seasonNumber) }
+        return State.Success(tmdbSeasons)
     }
 
     sealed class State {
         object Idle : State()
         object Loading : State()
-        data class Success(val seasons: List<Season>) : State()
+        data class Success(val seasons: List<SeasonKey>) : State()
         data class Error(val lastKey: TvShowKey) : State()
 
         val success: Boolean
