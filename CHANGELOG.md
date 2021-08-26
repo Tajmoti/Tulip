@@ -3,6 +3,7 @@
 - Support for searching items in the TMDB database
 ### Changed
 - Fixed search progress indicator disappearing after deleting part of query mid-search
+- Always use dark theme
 
 ## [0.5.0] - 2021-08-17
 ### Changed
