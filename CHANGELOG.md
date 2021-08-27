@@ -1,6 +1,7 @@
 ## [Unreleased]
 ### Added
 - Support for searching items in the TMDB database
+- Slovak translation
 ### Changed
 - Fixed search progress indicator disappearing after deleting part of query mid-search
 - Always use dark theme

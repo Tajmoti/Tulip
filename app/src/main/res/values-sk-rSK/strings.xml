@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tulip</string>
+    <string name="title_search">Hľadať</string>
+    <string name="title_library">Knižnica</string>
+    <string name="title_downloads">Stiahnuté</string>
+    <string name="search_hint">Zadaj názov seriálu alebo episoódy</string>
+    <string name="no_results">Žiadne výsledky</string>
+    <string name="stream_not_downloadable">Toto video nepodporuje sťahovanie</string>
+    <string name="episode_number">Ep. %d</string>
+    <string name="episode_special">Špeciál</string>
+    <string name="something_went_wrong">Niekde sa stala chyba</string>
+    <string name="retry">Skúsiť znova</string>
+    <string name="empty" />
+    <string name="select_source">Vyber zdroj</string>
+    <string name="other_results">Ostatné výsledky</string>
+    <string name="back">Späť</string>
+    <string name="season_no">Séria %d</string>
+    <string name="season_specials">Špeciály</string>
+    <string name="direct_loading_failure">Video sa nepodarilo načítať</string>
+</resources>
