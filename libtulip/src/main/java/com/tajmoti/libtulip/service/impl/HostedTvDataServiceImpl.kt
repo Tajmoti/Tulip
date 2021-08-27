@@ -73,7 +73,22 @@ class HostedTvDataServiceImpl @Inject constructor(
         logger.debug("Retrieving seasons for {}", key)
         val result = getTvShow(key)
             .map { it.seasons }
-            .onSuccess { insertSeasonsToDb(key, it) }
+            .onSuccess {
+                mapToAsyncJobs(it) { season ->
+                    hostedTvShowRepo.insertSeason(
+                        HostedSeason(
+                            key.service,
+                            key.tvShowId,
+                            season.number
+                        )
+                    )
+                    mapToAsyncJobs(season.episodes) { episode ->
+                        val dbEpisode =
+                            HostedEpisode(key.service, key.tvShowId, season.number, episode)
+                        hostedTvShowRepo.insertEpisode(dbEpisode)
+                    }
+                }
+            }
             .map { it.map { s -> HostedSeason(key.service, s) } }
             .getOrElse { hostedTvShowRepo.getSeasonsByTvShow(key.service, key.tvShowId) }
             .takeIf { it.isNotEmpty() }
@@ -143,16 +158,8 @@ class HostedTvDataServiceImpl @Inject constructor(
         }
     }
 
-    private suspend fun insertEpisodeIntoDb(
-        key: TvShowKey.Hosted,
-        season: Season,
-        episode: EpisodeInfo
-    ) {
-        val dbEpisode = HostedEpisode(key.service, key.tvShowId, season.number, episode)
-        hostedTvShowRepo.insertEpisode(dbEpisode)
-    }
-
     override suspend fun getEpisodeByTmdbId(key: EpisodeKey.Tmdb): Result<List<HostedEpisode>> {
+        logger.debug("Retrieving episode by $key")
         prefetchTvShowByTmdbId(key.seasonKey.tvShowKey)
         val season = key.seasonKey
         val episodes = hostedTvShowRepo.getEpisodeByTmdbIdentifiers(
@@ -160,6 +167,7 @@ class HostedTvDataServiceImpl @Inject constructor(
             season.seasonNumber,
             key.episode
         )
+        logger.debug("Episode retrieved by $key")
         return Result.success(episodes)
     }
 
@@ -175,11 +183,13 @@ class HostedTvDataServiceImpl @Inject constructor(
     override suspend fun prefetchTvShowByTmdbId(key: TvShowKey.Tmdb): Result<Unit> {
         logger.debug("Prefetching $key")
         val shows = hostedTvShowRepo.getTvShowsByTmdbId(key.id)
+        logger.debug("Prefetching ${shows.size} show(s) for $key")
         val results = mapToAsyncJobs(shows) {
             val hostedShowKey = TvShowKey.Hosted(it.service, it.info.key)
             prefetchTvShow(hostedShowKey)
         }
         return if (results.any { it.isSuccess }) {
+            logger.debug("Prefetching $key finished")
             Result.success(Unit)
         } else {
             logger.debug("Prefetching $key failed")
@@ -191,21 +201,17 @@ class HostedTvDataServiceImpl @Inject constructor(
         val tmdbId = tmdbService.findTmdbId(SearchResult.Type.TV_SHOW, result.info)
                 as? TmdbItemId.Tv
         logger.debug("Inserting ${result.info} with ${result.seasons.size} season(s)")
-        hostedTvShowRepo.insertTvShow(HostedItem.TvShow(key.service, result.info, tmdbId))
-        insertSeasonsToDb(key, result.seasons)
-    }
-
-    private suspend fun insertSeasonsToDb(key: TvShowKey.Hosted, result: List<Season>) {
-        mapToAsyncJobs(result) {
-            hostedTvShowRepo.insertSeason(HostedSeason(key.service, key.tvShowId, it.number))
-            insertEpisodesToDb(key, it)
-        }
-    }
-
-    private suspend fun insertEpisodesToDb(key: TvShowKey.Hosted, season: Season) {
-        mapToAsyncJobs(season.episodes) {
-            insertEpisodeIntoDb(key, season, it)
-        }
+        val seasons = result.seasons
+            .map { HostedSeason(key.service, key.tvShowId, it.number) }
+        val numToEp = result.seasons
+            .flatMap { it.episodes.map { ep -> it.number to ep } }
+            .map { HostedEpisode(key.service, key.tvShowId, it.first, it.second) }
+        mapToAsyncJobs(
+            { hostedTvShowRepo.insertTvShow(HostedItem.TvShow(key.service, result.info, tmdbId)) },
+            { hostedTvShowRepo.insertSeasons(seasons) },
+            { hostedTvShowRepo.insertEpisodes(numToEp) }
+        )
+        logger.debug("Inserted ${result.info} with ${result.seasons.size} season(s)")
     }
 
     override suspend fun insertHostedItem(item: HostedItem) {

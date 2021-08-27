@@ -40,6 +40,8 @@ interface HostedTvShowRepository {
 
     suspend fun insertSeason(season: HostedSeason)
 
+    suspend fun insertSeasons(seasons: List<HostedSeason>)
+
 
     suspend fun getEpisodesBySeason(
         service: StreamingService,
@@ -69,4 +71,6 @@ interface HostedTvShowRepository {
     ): List<HostedEpisode>
 
     suspend fun insertEpisode(episode: HostedEpisode)
+
+    suspend fun insertEpisodes(episodes: List<HostedEpisode>)
 }

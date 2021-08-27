@@ -33,11 +33,13 @@ class KinoxTvProvider(
     override suspend fun getTvShow(key: String): Result<TvShowInfo> {
         val page = httpLoader(baseUrl + key)
             .getOrElse { return Result.failure(it) }
-        val document = withContext(Dispatchers.Default) { Jsoup.parse(page) }
-        val seasons = parseSeasonsBlocking(key, document)
-            .getOrElse { return Result.failure(it) }
-        val show = TvShowInfo(key, parseTvShowInfo(key, document), seasons)
-        return Result.success(show)
+        return withContext(Dispatchers.Default) {
+            val document = Jsoup.parse(page)
+            val seasons = parseSeasonsBlocking(key, document)
+                .getOrElse { return@withContext Result.failure(it) }
+            val info = TvShowInfo(key, parseTvShowInfo(key, document), seasons)
+            Result.success(info)
+        }
     }
 
     private fun parseTvShowInfo(key: String, document: Document): TvItemInfo {

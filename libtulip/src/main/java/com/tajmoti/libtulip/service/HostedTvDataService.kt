@@ -7,6 +7,9 @@ import com.tajmoti.libtvprovider.SearchResult
 import com.tajmoti.libtvprovider.Season
 import com.tajmoti.libtvprovider.TvShowInfo
 
+/**
+ * Handles data coming from specific streaming sites.
+ */
 interface HostedTvDataService {
 
     suspend fun search(query: String): Result<Map<StreamingService, Result<List<SearchResult>>>>

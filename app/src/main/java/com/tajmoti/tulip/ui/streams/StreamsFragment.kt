@@ -25,7 +25,7 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val streamInfo = getStreamInfo()
-        viewModel.fetchStreams(streamInfo)
+        viewModel.fetchStreamsWithLanguages(streamInfo)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -52,15 +52,16 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
 
     private fun onStreamLoadingStateChanged(it: StreamsViewModel.State, adapter: StreamsAdapter) {
         if (it is StreamsViewModel.State.Success)
-            adapter.items = it.streams
+            adapter.items = it.info.streams
     }
 
     private fun onDirectLoadingChanged(it: StreamsViewModel.LinkLoadingState?) {
         it ?: return
-        if (it is StreamsViewModel.LinkLoadingState.LoadedDirect) {
-            onDirectLinkLoaded(it)
-        } else if (it is StreamsViewModel.LinkLoadingState.DirectLinkUnsupported) {
-            onDirectLinkUnsupported(it)
+        when (it) {
+            is StreamsViewModel.LinkLoadingState.LoadedDirect -> onDirectLinkLoaded(it)
+            is StreamsViewModel.LinkLoadingState.DirectLinkUnsupported -> onDirectLinkUnsupported(it)
+            is StreamsViewModel.LinkLoadingState.Error -> onDirectLinkLoadingFail()
+            else -> Unit
         }
     }
 
@@ -77,6 +78,10 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
             Toast.makeText(requireContext(), R.string.stream_not_downloadable, Toast.LENGTH_SHORT)
                 .show()
         }
+    }
+
+    private fun onDirectLinkLoadingFail() {
+        Toast.makeText(requireContext(), R.string.direct_loading_failure, Toast.LENGTH_SHORT).show()
     }
 
     private fun onStreamClickedPlay(stream: UnloadedVideoWithLanguage) {

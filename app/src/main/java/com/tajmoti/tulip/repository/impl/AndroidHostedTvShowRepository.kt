@@ -73,8 +73,17 @@ class AndroidHostedTvShowRepository @Inject constructor(
     }
 
     override suspend fun insertSeason(season: HostedSeason) {
-        val db = DbSeason(season.service, season.tvShowKey, season.number)
+        val db = libToDbSeason(season)
         seasonDao.insert(db)
+    }
+
+    override suspend fun insertSeasons(seasons: List<HostedSeason>) {
+        val dbSeasons = seasons.map { libToDbSeason(it) }
+        seasonDao.insert(dbSeasons)
+    }
+
+    private fun libToDbSeason(season: HostedSeason): DbSeason {
+        return DbSeason(season.service, season.tvShowKey, season.number)
     }
 
     override suspend fun getEpisodesBySeason(
@@ -125,7 +134,17 @@ class AndroidHostedTvShowRepository @Inject constructor(
     }
 
     override suspend fun insertEpisode(episode: HostedEpisode) {
-        val db = DbEpisode(
+        val db = libEpisodeToDb(episode)
+        episodeDao.insert(db)
+    }
+
+    override suspend fun insertEpisodes(episodes: List<HostedEpisode>) {
+        val dbEpisodes = episodes.map { libEpisodeToDb(it) }
+        episodeDao.insert(dbEpisodes)
+    }
+
+    private fun libEpisodeToDb(episode: HostedEpisode): DbEpisode {
+        return DbEpisode(
             episode.service,
             episode.tvShowKey,
             episode.seasonNumber,
@@ -133,6 +152,5 @@ class AndroidHostedTvShowRepository @Inject constructor(
             episode.number,
             episode.name
         )
-        episodeDao.insert(db)
     }
 }

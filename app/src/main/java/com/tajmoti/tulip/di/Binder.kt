@@ -2,10 +2,7 @@ package com.tajmoti.tulip.di
 
 import com.tajmoti.libtulip.repository.*
 import com.tajmoti.libtulip.service.*
-import com.tajmoti.libtulip.service.impl.HostedTvDataServiceImpl
-import com.tajmoti.libtulip.service.impl.SearchServiceImpl
-import com.tajmoti.libtulip.service.impl.StreamsExtractionServiceImpl
-import com.tajmoti.libtulip.service.impl.TvDataServiceImpl
+import com.tajmoti.libtulip.service.impl.*
 import com.tajmoti.tulip.repository.impl.AndroidHostedMovieRepository
 import com.tajmoti.tulip.repository.impl.AndroidHostedTvShowRepository
 import com.tajmoti.tulip.repository.impl.AndroidTvDataRepositoryImpl
@@ -39,6 +36,10 @@ interface Binder {
     @Binds
     @Singleton
     fun provideSearchService(s: SearchServiceImpl): SearchService
+
+    @Binds
+    @Singleton
+    fun provideLanguageMappingService(s: LanguageMappingStreamServiceImpl): LanguageMappingStreamService
 
     @Binds
     @Singleton

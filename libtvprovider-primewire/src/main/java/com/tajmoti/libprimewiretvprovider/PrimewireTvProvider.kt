@@ -38,14 +38,14 @@ class PrimewireTvProvider(
     override suspend fun getTvShow(key: String): Result<TvShowInfo> {
         val pageSource = httpLoader(baseUrl + key)
             .getOrElse { return Result.failure(it) }
-        val document = withContext(Dispatchers.Default) {
-            Jsoup.parse(pageSource)
+        return withContext(Dispatchers.Default) {
+            val document = Jsoup.parse(pageSource)
+            val seasons = parseSearchResultPageBlockingSeason(key, document)
+                .getOrElse { return@withContext Result.failure(it) }
+            val tvItemInfo = parseTvItemInfo(key, document)
+            val info = TvShowInfo(key, tvItemInfo, seasons)
+            Result.success(info)
         }
-        val seasons = parseSearchResultPageBlockingSeason(key, document)
-            .getOrElse { return Result.failure(it) }
-        val tvItemInfo = parseTvItemInfo(key, document)
-        val info = TvShowInfo(key, tvItemInfo, seasons)
-        return Result.success(info)
     }
 
     private fun parseTvItemInfo(key: String, page: Document): TvItemInfo {

@@ -3,6 +3,7 @@ package com.tajmoti.tulip.ui.search
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.tajmoti.libtulip.model.hosted.HostedItem
+import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtulip.model.info.TulipSearchResult
 import com.tajmoti.tulip.BaseAdapter
 import com.tajmoti.tulip.R
@@ -34,6 +35,7 @@ class SearchAdapter : BaseAdapter<TulipSearchResult, ItemSearchBinding>(
             .map { it.language }
             .distinct()
             .sorted()
+            .map { LanguageCode(it) }
         inflateViewsForLanguages(languages, vh.binding.root)
     }
 
@@ -45,7 +47,7 @@ class SearchAdapter : BaseAdapter<TulipSearchResult, ItemSearchBinding>(
         }
     }
 
-    private fun inflateViewsForLanguages(languages: List<String>, container: ViewGroup) {
+    private fun inflateViewsForLanguages(languages: List<LanguageCode>, container: ViewGroup) {
         val inflater = LayoutInflater.from(container.context)
         while (container.childCount > 1) {
             container.removeViewAt(1)

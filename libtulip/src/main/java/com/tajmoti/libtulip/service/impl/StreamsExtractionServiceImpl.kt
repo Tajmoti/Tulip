@@ -1,5 +1,6 @@
 package com.tajmoti.libtulip.service.impl
 
+import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.service.StreamExtractorService
@@ -24,15 +25,8 @@ class StreamsExtractionServiceImpl @Inject constructor(
         val result = tvProvider.getStreamableLinks(service, streamableKey).getOrElse {
             return Result.failure(it)
         }
-        val sorted = mapAndSortLinksByRelevance(result)
+        val sorted = result.map { UnloadedVideoStreamRef(it, canExtractFromService(it)) }
         return Result.success(sorted)
-    }
-
-    private fun mapAndSortLinksByRelevance(it: List<VideoStreamRef>): List<UnloadedVideoStreamRef> {
-        val links = it.map { UnloadedVideoStreamRef(it, canExtractFromService(it)) }
-        val extractable = links.filter { it.linkExtractionSupported }
-        val notExtractable = links.filterNot { it.linkExtractionSupported }
-        return extractable + notExtractable
     }
 
     private fun canExtractFromService(ref: VideoStreamRef): Boolean {
@@ -60,5 +54,6 @@ class StreamsExtractionServiceImpl @Inject constructor(
 
     override suspend fun extractVideoLink(info: VideoStreamRef.Resolved): Result<String> {
         return linkExtractor.extractVideoLink(info.url, info.serviceName)
+            .onFailure { logger.warn("Link extraction for $info failed!", it) }
     }
 }

@@ -29,4 +29,7 @@ interface SeasonDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(episode: DbSeason)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(seasons: List<DbSeason>)
 }

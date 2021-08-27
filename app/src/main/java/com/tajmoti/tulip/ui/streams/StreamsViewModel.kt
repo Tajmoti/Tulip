@@ -1,18 +1,11 @@
 package com.tajmoti.tulip.ui.streams
 
 import androidx.lifecycle.*
-import com.tajmoti.commonutils.mapToAsyncJobs
 import com.tajmoti.libtulip.model.info.StreamableInfo
-import com.tajmoti.libtulip.model.key.EpisodeKey
-import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.StreamableKey
-import com.tajmoti.libtulip.model.key.TvShowKey
+import com.tajmoti.libtulip.model.stream.StreamableInfoWithLangLinks
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
-import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
-import com.tajmoti.libtulip.service.HostedTvDataService
-import com.tajmoti.libtulip.service.StreamExtractorService
-import com.tajmoti.libtulip.service.TvDataService
-import com.tajmoti.libtulip.service.VideoDownloadService
+import com.tajmoti.libtulip.service.*
 import com.tajmoti.libtvprovider.*
 import com.tajmoti.tulip.ui.performStatefulOneshotOperation
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,10 +14,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class StreamsViewModel @Inject constructor(
-    private val hostedTvDataService: HostedTvDataService,
     private val downloadService: VideoDownloadService,
     private val extractionService: StreamExtractorService,
-    private val tvDataService: TvDataService
+    private val streamService: LanguageMappingStreamService
 ) : ViewModel() {
     private val _state = MutableLiveData<State>(State.Idle)
     private val _linkLoadingState = MutableLiveData<LinkLoadingState>(LinkLoadingState.Idle)
@@ -40,7 +32,7 @@ class StreamsViewModel @Inject constructor(
     val streamableName: LiveData<String?> = Transformations.map(streamLoadingState) {
         val streamable = when (it) {
             is State.Loading -> it.info
-            is State.Success -> it.info
+            is State.Success -> it.info.info
             is State.Error -> it.info ?: return@map null
             else -> return@map null
         }
@@ -57,7 +49,7 @@ class StreamsViewModel @Inject constructor(
      * True when loading is finished, but no streams were found.
      */
     val noResults = Transformations.map(streamLoadingState)
-    { it is State.Success && it.streams.isEmpty() }
+    { it is State.Success && it.info.streams.isEmpty() }
 
     /**
      * After the user clicks a link, this is the state of the link loading.
@@ -80,7 +72,7 @@ class StreamsViewModel @Inject constructor(
     /**
      * Search for a TV show or a movie.
      */
-    fun fetchStreams(info: StreamableKey) {
+    fun fetchStreamsWithLanguages(info: StreamableKey) {
         performStatefulOneshotOperation(_state, State.Preparing, State.Idle) {
             fetchStreamsToState(info)
         }
@@ -138,59 +130,14 @@ class StreamsViewModel @Inject constructor(
 
     private fun downloadVideo(link: String) {
         val state = streamLoadingState.value as State.Success
-        downloadService.downloadFileToFiles(link, state.info)
+        downloadService.downloadFileToFiles(link, state.info.info)
     }
 
     private suspend fun fetchStreamsToState(info: StreamableKey): State {
-        return when (info) {
-            is StreamableKey.Hosted -> fetchStreamsToStateHosted(info)
-            is StreamableKey.Tmdb -> fetchStreamsToStateTmdb(info)
-        }
-    }
-
-    private suspend fun fetchStreams(info: StreamableKey.Hosted): Result<List<UnloadedVideoStreamRef>> {
-        val result = extractionService.fetchStreams(info.streamingService, info.streamableKey)
-            .getOrElse { return Result.failure(it) }
-        return Result.success(result)
-    }
-
-    private suspend fun fetchStreamsToStateHosted(info: StreamableKey.Hosted): State {
-        val newInfo = hostedTvDataService.getStreamableInfo(info)
-            .getOrElse { return State.Error(null) }
-        val result = fetchStreams(info)
-            .getOrElse { return State.Error(newInfo.streamableInfo) }
-            .map { UnloadedVideoWithLanguage(it, newInfo.language) }
-        return State.Success(newInfo.streamableInfo, result)
-    }
-
-    private suspend fun fetchStreamsToStateTmdb(info: StreamableKey.Tmdb): State {
-        val streamableInfo = tvDataService.getStreamableInfo(info)
-            .getOrElse { return State.Error(null) }
-        _state.value = State.Loading(streamableInfo)
-        val streamables = when (info) {
-            is MovieKey.Tmdb -> hostedTvDataService.getMovieByTmdbId(info)
-                .map { it.map { it to it.language } }
-                .getOrElse { return State.Error(null) }
-            is EpisodeKey.Tmdb -> hostedTvDataService.getEpisodeByTmdbId(info)
-                .map {
-                    it.map { ep ->
-                        val hostedKey = TvShowKey.Hosted(ep.service, ep.tvShowKey)
-                        val show = hostedTvDataService.getTvShow(hostedKey)
-                            .getOrElse { return State.Error(streamableInfo) }
-                        ep to show.info.language
-                    }
-                }
-                .getOrElse { return State.Error(null) }
-        }
-        val streams = mapToAsyncJobs(streamables) {
-            fetchStreams(it.first.hostedKey)
-                .getOrNull()
-                ?.let { videos -> videos to it.second }
-        }
-            .filterNotNull()
-            .flatMap { it.first.map { video -> video to it.second } }
-            .map { UnloadedVideoWithLanguage(it.first, it.second) }
-        return State.Success(streamableInfo, streams)
+        val consumer: (StreamableInfo) -> Unit = { _state.value = State.Loading(it) }
+        return streamService.getStreamsWithLanguages(info, consumer)
+            .map { State.Success(it) }
+            .getOrElse { State.Error((_state.value as? State.Loading)?.info) }
     }
 
     private fun streamableToName(streamable: StreamableInfo): String {
@@ -220,10 +167,7 @@ class StreamsViewModel @Inject constructor(
         /**
          * Streamable item loaded successfully.
          */
-        data class Success(
-            val info: StreamableInfo,
-            val streams: List<UnloadedVideoWithLanguage>
-        ) : State()
+        data class Success(val info: StreamableInfoWithLangLinks) : State()
 
         /**
          * Error during loading of the item.
