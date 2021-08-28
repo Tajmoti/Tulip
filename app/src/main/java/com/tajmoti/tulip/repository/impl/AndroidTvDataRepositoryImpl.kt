@@ -34,11 +34,9 @@ class AndroidTvDataRepositoryImpl @Inject constructor(
     override suspend fun insertCompleteTv(tv: Tv, seasons: List<Season>) {
         logger.debug("Inserting complete '${tv.name}' (${tv.id})")
         val episodes = seasons.flatMap { it.episodes }
-        mapToAsyncJobs(
-            { insertTv(tv) },
-            { insertSeasons(tv.id, seasons) },
-            { insertEpisodes(tv.id, episodes) }
-        )
+        insertTv(tv)
+        insertSeasons(tv.id, seasons)
+        insertEpisodes(tv.id, episodes)
     }
 
     override suspend fun getSeason(tvId: Long, seasonNumber: Int): Season? {

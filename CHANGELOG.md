@@ -5,6 +5,7 @@
 ### Changed
 - Fixed search progress indicator disappearing after deleting part of query mid-search
 - Always use dark theme
+- Fixed occasional crashes when loading new data
 
 ## [0.5.0] - 2021-08-17
 ### Changed
