@@ -1,19 +1,16 @@
 package com.tajmoti.tulip.ui.search
 
 import androidx.lifecycle.*
-import com.tajmoti.libtulip.model.info.TmdbItemId
+import com.tajmoti.libtulip.model.hosted.toItemKey
 import com.tajmoti.libtulip.model.info.TulipSearchResult
 import com.tajmoti.libtulip.model.key.ItemKey
-import com.tajmoti.libtulip.model.key.MovieKey
-import com.tajmoti.libtulip.model.key.TvShowKey
+import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.service.SearchService
 import com.tajmoti.tulip.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -29,7 +26,7 @@ class SearchViewModel @Inject constructor(
     }
 
     private val _state = MutableLiveData<State>(State.Idle)
-    private val _itemToOpen = MutableLiveData<ItemKey?>()
+    private val _itemToOpen = MutableSharedFlow<ItemKey?>()
     val state: LiveData<State> = _state
 
     /**
@@ -69,7 +66,7 @@ class SearchViewModel @Inject constructor(
     /**
      * Contains the item that should be opened
      */
-    val itemToOpen: LiveData<ItemKey?> = _itemToOpen
+    val itemToOpen: Flow<ItemKey?> = _itemToOpen
 
     /**
      * Flow containing (even partial) queries entered in the search view
@@ -82,6 +79,7 @@ class SearchViewModel @Inject constructor(
     private var searchJob: Job? = null
 
     init {
+        @OptIn(FlowPreview::class)
         searchFlow
             .debounce { if (it.isNullOrBlank()) 0L else DEBOUNCE_INTERVAL_MS }
             .onEach { onNewSearchQuery(it) }
@@ -107,11 +105,9 @@ class SearchViewModel @Inject constructor(
      * The user has clicked an identified item
      */
     fun onItemClicked(id: TmdbItemId) {
-        val key = when (id) {
-            is TmdbItemId.Tv -> TvShowKey.Tmdb(id)
-            is TmdbItemId.Movie -> MovieKey.Tmdb(id)
+        viewModelScope.launch {
+            _itemToOpen.emit(id.toItemKey())
         }
-        _itemToOpen.value = key
     }
 
     private fun onNewSearchQuery(it: String?) {

@@ -1,6 +1,9 @@
 package com.tajmoti.libtulip.service
 
-import com.tajmoti.libtulip.model.hosted.*
+import com.tajmoti.libtulip.model.hosted.HostedEpisode
+import com.tajmoti.libtulip.model.hosted.HostedItem
+import com.tajmoti.libtulip.model.hosted.HostedMovie
+import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.model.info.StreamableInfoWithLanguage
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtvprovider.SearchResult
@@ -16,7 +19,7 @@ interface HostedTvDataService {
 
     suspend fun getTvShow(key: TvShowKey.Hosted): Result<TvShowInfo>
 
-    suspend fun getSeasons(key: TvShowKey.Hosted): Result<List<HostedSeason>>
+    suspend fun getSeasons(key: TvShowKey.Hosted): Result<List<Season>>
 
     suspend fun getSeason(key: SeasonKey.Hosted): Result<Season>
 

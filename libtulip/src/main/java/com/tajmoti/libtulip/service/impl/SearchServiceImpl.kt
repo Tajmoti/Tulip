@@ -4,8 +4,8 @@ import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.mapToAsyncJobs
 import com.tajmoti.libtulip.model.hosted.HostedItem
 import com.tajmoti.libtulip.model.hosted.StreamingService
-import com.tajmoti.libtulip.model.info.TmdbItemId
 import com.tajmoti.libtulip.model.info.TulipSearchResult
+import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.service.HostedTvDataService
 import com.tajmoti.libtulip.service.SearchService
 import com.tajmoti.libtulip.service.TvDataService

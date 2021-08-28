@@ -16,11 +16,13 @@ import com.tajmoti.libwebdriver.WebViewWebDriver
 import com.tajmoti.tulip.createAppOkHttpClient
 import com.tajmoti.tulip.db.AppDatabase
 import com.tajmoti.tulip.db.TmdbDatabase
+import com.tajmoti.tulip.db.UserDataDatabase
 import com.tajmoti.tulip.db.dao.hosted.EpisodeDao
 import com.tajmoti.tulip.db.dao.hosted.MovieDao
 import com.tajmoti.tulip.db.dao.hosted.SeasonDao
 import com.tajmoti.tulip.db.dao.hosted.TvShowDao
 import com.tajmoti.tulip.db.dao.tmdb.TmdbDao
+import com.tajmoti.tulip.db.dao.userdata.FavoritesDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -124,14 +126,19 @@ object Provider {
     @Provides
     @Singleton
     fun provideDb(@ApplicationContext app: Context): AppDatabase {
-        return Room.databaseBuilder(app, AppDatabase::class.java, "tulip").build()
+        return Room.databaseBuilder(app, AppDatabase::class.java, "hosted.db").build()
     }
-
 
     @Provides
     @Singleton
     fun provideTmdbDb(@ApplicationContext app: Context): TmdbDatabase {
-        return Room.databaseBuilder(app, TmdbDatabase::class.java, "tmdb").build()
+        return Room.databaseBuilder(app, TmdbDatabase::class.java, "tmdb.db").build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserDataDb(@ApplicationContext app: Context): UserDataDatabase {
+        return Room.databaseBuilder(app, UserDataDatabase::class.java, "userdata.db").build()
     }
 
 
@@ -163,6 +170,12 @@ object Provider {
     @Singleton
     fun provideTmdbDao(db: TmdbDatabase): TmdbDao {
         return db.tmdbDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideFavoritesDao(db: UserDataDatabase): FavoritesDao {
+        return db.favoriteDao()
     }
 
     @Provides

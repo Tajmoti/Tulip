@@ -8,6 +8,12 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_7
 }
 
+compileKotlin {
+    kotlinOptions {
+        freeCompilerArgs += '-Xopt-in=kotlin.RequiresOptIn'
+    }
+}
+
 dependencies {
     // Business logic libs
     implementation project(':libtvprovider')

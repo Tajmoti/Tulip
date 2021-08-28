@@ -11,5 +11,7 @@ data class Tv(
     @field:Json(name = "seasons")
     val seasons: List<SlimSeason>,
     @field:Json(name = "poster_path")
-    override val posterPath: String?
+    override val posterPath: String?,
+    @field:Json(name = "backdrop_path")
+    override val backdropPath: String?
 ) : FindResult

@@ -1,24 +1,39 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="?android:attr/selectableItemBackground"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:padding="@dimen/list_item_padding">
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <TextView
-        android:id="@+id/text_episode_number"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:minWidth="48sp" />
+    <data>
 
-    <TextView
-        android:id="@+id/text_episode_title"
-        android:layout_width="wrap_content"
+        <variable
+            name="episodeNumber"
+            type="int" />
+
+        <variable
+            name="episodeTitle"
+            type="String" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/item_content_margin"
+        android:background="?android:attr/selectableItemBackground"
         android:gravity="center_vertical"
-        android:textColor="?android:textColorPrimary" />
-</LinearLayout>
+        android:orientation="horizontal"
+        android:padding="@dimen/list_item_padding">
+
+        <TextView
+            android:id="@+id/text_episode_number"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:minWidth="48sp"
+            android:text="@{String.valueOf(episodeNumber)}" />
+
+        <TextView
+            android:id="@+id/text_episode_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/item_content_margin"
+            android:gravity="center_vertical"
+            android:text="@{episodeTitle}"
+            android:textColor="?android:textColorPrimary" />
+    </LinearLayout>
+</layout>

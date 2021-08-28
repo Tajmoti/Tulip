@@ -1,8 +1,18 @@
 <resources>
-    <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <!-- List items -->
     <dimen name="list_item_padding">16dp</dimen>
     <dimen name="list_item_icon_padding">8dp</dimen>
-    <dimen name="streams_error_margin">64dp</dimen>
     <dimen name="item_content_margin">6sp</dimen>
+
+    <!-- TV Show fragment -->
+    <dimen name="tv_show_app_bar_height">220dp</dimen>
+
+    <!-- Streams fragment -->
+    <dimen name="streams_error_margin">64dp</dimen>
+
+    <!-- Fullscreen errors -->
+    <dimen name="error_screen_hint_spacing">16dp</dimen>
+    <dimen name="error_screen_image_size">72dp</dimen>
 </resources>

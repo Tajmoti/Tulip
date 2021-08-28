@@ -2,10 +2,10 @@ package com.tajmoti.tulip.ui.streams
 
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
-import com.tajmoti.tulip.BaseAdapter
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ItemStreamBinding
-import com.tajmoti.tulip.languageToIcon
+import com.tajmoti.tulip.ui.BaseAdapter
+import com.tajmoti.tulip.ui.languageToIcon
 
 class StreamsAdapter(
     val downloadCallback: (UnloadedVideoWithLanguage) -> Unit

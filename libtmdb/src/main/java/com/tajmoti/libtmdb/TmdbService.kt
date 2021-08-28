@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED")
+
 package com.tajmoti.libtmdb
 
 import com.tajmoti.libtmdb.model.find.FindResponse

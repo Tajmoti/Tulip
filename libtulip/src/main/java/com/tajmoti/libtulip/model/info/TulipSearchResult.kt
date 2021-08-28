@@ -1,6 +1,7 @@
 package com.tajmoti.libtulip.model.info
 
 import com.tajmoti.libtulip.model.hosted.HostedItem
+import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 
 sealed class TulipSearchResult {
     abstract val tmdbId: TmdbItemId?

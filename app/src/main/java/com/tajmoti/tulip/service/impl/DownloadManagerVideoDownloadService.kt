@@ -66,7 +66,6 @@ class DownloadManagerVideoDownloadService @Inject constructor(
         val epName = item.info.name
         if (epName != null)
             fileName += " - $epName"
-        fileName
         return prefix + fileName
     }
 

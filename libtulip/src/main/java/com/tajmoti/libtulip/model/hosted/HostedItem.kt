@@ -1,6 +1,6 @@
 package com.tajmoti.libtulip.model.hosted
 
-import com.tajmoti.libtulip.model.info.TmdbItemId
+import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtvprovider.TvItemInfo
 
 sealed class HostedItem {

@@ -14,7 +14,7 @@ sealed class SeasonKey : Serializable {
         override val tvShowKey: TvShowKey.Hosted,
         override val seasonNumber: Int
     ) : SeasonKey() {
-        val service = tvShowKey.service
+        val service = tvShowKey.streamingService
         val tvShowId = tvShowKey.tvShowId
     }
 

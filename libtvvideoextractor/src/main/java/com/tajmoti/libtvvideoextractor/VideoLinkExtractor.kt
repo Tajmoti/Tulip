@@ -40,7 +40,7 @@ class VideoLinkExtractor(
 
     /**
      * Returns true if the service with [serviceName] is supported for video link extraction.
-     * This check is performed as a best-effort and the name is simply comparet to known names.
+     * This check is performed as a best-effort and the name is simply compared to known names.
      *
      * Note that it's still possible to fail video link extraction of a supported url
      * because of an exception or a change in the website's source code.

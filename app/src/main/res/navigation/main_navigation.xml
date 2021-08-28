@@ -2,24 +2,49 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/mobile_navigation"
     app:startDestination="@+id/navigation_search">
 
     <fragment
         android:id="@+id/navigation_search"
         android:name="com.tajmoti.tulip.ui.search.SearchFragment"
         android:label="@string/title_search"
-        tools:layout="@layout/fragment_search" />
+        tools:layout="@layout/fragment_search">
+        <action
+            android:id="@+id/action_navigation_search_to_tabbedTvShowActivity"
+            app:destination="@id/tabbedTvShowActivity"
+            app:enterAnim="@anim/slide_from_right_enter"
+            app:exitAnim="@anim/slide_to_right_exit"
+            app:popEnterAnim="@anim/slide_from_left_enter"
+            app:popExitAnim="@anim/slide_to_left_exit" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_library"
         android:name="com.tajmoti.tulip.ui.library.LibraryFragment"
         android:label="@string/title_library"
-        tools:layout="@layout/fragment_library" />
+        tools:layout="@layout/fragment_library">
+        <action
+            android:id="@+id/action_navigation_library_to_tabbedTvShowActivity"
+            app:destination="@id/tabbedTvShowActivity"
+            app:enterAnim="@anim/slide_from_right_enter"
+            app:exitAnim="@anim/slide_to_right_exit"
+            app:popEnterAnim="@anim/slide_from_left_enter"
+            app:popExitAnim="@anim/slide_to_left_exit" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_downloads"
         android:name="com.tajmoti.tulip.ui.downloads.DownloadsFragment"
         android:label="@string/title_downloads"
         tools:layout="@layout/fragment_downloads" />
+
+    <fragment
+        android:id="@+id/tabbedTvShowActivity"
+        android:name="com.tajmoti.tulip.ui.show.TvShowFragment"
+        android:label="@string/tv_show"
+        tools:layout="@layout/activity_tabbed_tv_show">
+        <argument
+            android:name="itemKey"
+            app:argType="com.tajmoti.libtulip.model.key.TvShowKey" />
+    </fragment>
 </navigation>

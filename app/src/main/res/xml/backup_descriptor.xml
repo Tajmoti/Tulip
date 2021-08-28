@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Exclude specific shared preferences that contain GCM registration Id -->
+    <exclude
+        domain="database"
+        path="hosted.db" />
+    <exclude
+        domain="database"
+        path="tmdb.db" />
+</full-backup-content>

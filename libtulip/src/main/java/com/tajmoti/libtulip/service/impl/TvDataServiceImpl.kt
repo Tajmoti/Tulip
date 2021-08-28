@@ -4,40 +4,52 @@ import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.mapToAsyncJobs
 import com.tajmoti.libtmdb.model.tv.Season
 import com.tajmoti.libtmdb.model.tv.Tv
+import com.tajmoti.libtulip.misc.NetworkResult
 import com.tajmoti.libtulip.model.MissingEntityException
+import com.tajmoti.libtulip.model.hosted.toKey
 import com.tajmoti.libtulip.model.info.StreamableInfo
-import com.tajmoti.libtulip.model.info.TmdbItemId
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.key.*
-import com.tajmoti.libtulip.repository.SearchableTvDataRepository
+import com.tajmoti.libtulip.model.tmdb.TmdbCompleteTvShow
+import com.tajmoti.libtulip.model.tmdb.TmdbItemId
+import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtulip.service.TvDataService
 import com.tajmoti.libtulip.service.takeIfNoneNull
 import com.tajmoti.libtvprovider.SearchResult
 import com.tajmoti.libtvprovider.TvItemInfo
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class TvDataServiceImpl @Inject constructor(
-    private val tvDataRepo: SearchableTvDataRepository
+    private val tvDataRepo: TmdbTvDataRepository
 ) : TvDataService {
 
     override suspend fun prefetchTvShowData(key: TvShowKey.Tmdb): Result<Unit> {
         logger.debug("Prefetching TMDB data for $key")
-        val tv = tvDataRepo.getTv(key.id.id)
+        val tv = tvDataRepo.getTv(key)
             ?: return Result.failure(NullPointerException())
-        mapToAsyncJobs(tv.seasons) { tvDataRepo.getSeason(tv.id, it.seasonNumber) }
+        mapToAsyncJobs(tv.seasons) { tvDataRepo.getSeason(it.toKey(tv)) }
             .takeIfNoneNull() ?: return Result.failure(NullPointerException())
         logger.debug("Prefetching TMDB data for $key successful")
         return Result.success(Unit)
     }
 
     override suspend fun getTvShow(key: TvShowKey.Tmdb): Result<Tv> {
-        return tvDataRepo.getTv(key.id.id)
+        return tvDataRepo.getTv(key)
             ?.let { Result.success(it) }
             ?: Result.failure(MissingEntityException)
     }
 
+    override suspend fun getTvShowAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<Tv>> {
+        return tvDataRepo.getTvAsFlow(key)
+    }
+
+    override suspend fun getTvShowWithSeasonsAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<TmdbCompleteTvShow>> {
+        return tvDataRepo.getTvShowWithSeasonsAsFlow(key)
+    }
+
     override suspend fun getSeason(key: SeasonKey.Tmdb): Result<Season> {
-        return tvDataRepo.getSeason(key.tvShowKey.id.id, key.seasonNumber)
+        return tvDataRepo.getSeason(key)
             ?.let { Result.success(it) }
             ?: Result.failure(MissingEntityException)
     }
@@ -50,7 +62,7 @@ class TvDataServiceImpl @Inject constructor(
     }
 
     private suspend fun getMovieInfo(key: MovieKey.Tmdb): Result<StreamableInfo.Movie> {
-        val name = tvDataRepo.getMovie(key.id.id)
+        val name = tvDataRepo.getMovie(key.id)
             ?: return Result.failure(MissingEntityException)
         val movie = StreamableInfo.Movie(name.title)
         return Result.success(movie)

@@ -1,11 +1,15 @@
 package com.tajmoti.tulip.di
 
-import com.tajmoti.libtulip.repository.*
+import com.tajmoti.libtulip.data.LocalTvDataSource
+import com.tajmoti.libtulip.data.UserDataDataSource
+import com.tajmoti.libtulip.repository.HostedTvDataRepository
+import com.tajmoti.libtulip.repository.TmdbTvDataRepository
+import com.tajmoti.libtulip.repository.TmdbTvDataRepositoryImpl
 import com.tajmoti.libtulip.service.*
 import com.tajmoti.libtulip.service.impl.*
-import com.tajmoti.tulip.repository.impl.AndroidHostedMovieRepository
-import com.tajmoti.tulip.repository.impl.AndroidHostedTvShowRepository
-import com.tajmoti.tulip.repository.impl.AndroidTvDataRepositoryImpl
+import com.tajmoti.tulip.repository.impl.AndroidHostedTvDataRepository
+import com.tajmoti.tulip.repository.impl.AndroidTvDataSourceImpl
+import com.tajmoti.tulip.repository.impl.AndroidUserDataDataSource
 import com.tajmoti.tulip.service.impl.DownloadManagerVideoDownloadService
 import dagger.Binds
 import dagger.Module
@@ -43,17 +47,21 @@ interface Binder {
 
     @Binds
     @Singleton
-    fun provideAndroidTvShowRepository(s: AndroidHostedTvShowRepository): HostedTvShowRepository
+    fun provideAndroidTvShowRepository(s: AndroidHostedTvDataRepository): HostedTvDataRepository
 
     @Binds
     @Singleton
-    fun provideAndroidMovieRepository(s: AndroidHostedMovieRepository): HostedMovieRepository
+    fun provideLocalTvDataSource(s: AndroidTvDataSourceImpl): LocalTvDataSource
 
     @Binds
     @Singleton
-    fun provideSearchableTvDataRepository(s: AndroidTvDataRepositoryImpl): WritableTvDataRepository
+    fun provideUserFavoriteDataRepository(s: AndroidUserDataDataSource): UserDataDataSource
 
     @Binds
     @Singleton
-    fun provideTvDataRepository(s: TvDataRepositoryImpl): SearchableTvDataRepository
+    fun provideTvDataRepository(s: TmdbTvDataRepositoryImpl): TmdbTvDataRepository
+
+    @Binds
+    @Singleton
+    fun provideUserFavoritesService(s: UserFavoriteServiceImpl): UserFavoritesService
 }

@@ -1,5 +1,8 @@
 package com.tajmoti.tulip.ui
 
+import android.widget.Toast
+import androidx.annotation.StringRes
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,8 +16,12 @@ fun RecyclerView.setupWithAdapterAndDivider(adapter: RecyclerView.Adapter<*>) {
     addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
 }
 
+fun <T : RecyclerView.Adapter<*>> T.setToRecyclerWithDividers(rv: RecyclerView): T {
+    rv.setupWithAdapterAndDivider(this)
+    return this
+}
 
-suspend fun <T> runWithOnCancel(onCancel: T, block: suspend () -> T): T {
+suspend inline fun <T> runWithOnCancel(onCancel: T, crossinline block: suspend () -> T): T {
     return try {
         block()
     } catch (e: CancellationException) {
@@ -24,16 +31,20 @@ suspend fun <T> runWithOnCancel(onCancel: T, block: suspend () -> T): T {
 
 fun <T> ViewModel.performStatefulOneshotOperation(
     state: MutableLiveData<T>,
-    initial: T?,
-    onCancel: T?,
+    initial: T,
+    onCancel: T,
     block: suspend () -> T
 ) {
-    val currentClazz = state.value?.let { it::class.java }
-    val initialClazz = state.value?.let { it::class.java }
+    val currentClazz = state.value!!::class.java
+    val initialClazz = state.value!!::class.java
     if (initialClazz != currentClazz)
         return
-    state.value = initial
+    state.value = initial!!
     viewModelScope.launch {
-        state.value = runWithOnCancel(onCancel, block)
+        state.value = runWithOnCancel(onCancel, block)!!
     }
+}
+
+fun Fragment.toast(@StringRes stringResId: Int) {
+    Toast.makeText(requireContext(), stringResId, Toast.LENGTH_SHORT).show()
 }

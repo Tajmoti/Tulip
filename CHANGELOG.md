@@ -6,6 +6,7 @@
 - Fixed search progress indicator disappearing after deleting part of query mid-search
 - Always use dark theme
 - Fixed occasional crashes when loading new data
+- Reworked TV Show UI from tabs to expandable list items and implemented library of favorite items
 
 ## [0.5.0] - 2021-08-17
 ### Changed

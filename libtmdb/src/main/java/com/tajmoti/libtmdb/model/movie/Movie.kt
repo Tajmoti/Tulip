@@ -11,7 +11,9 @@ data class Movie(
     @field:Json(name = "overview")
     val overview: String?,
     @field:Json(name = "poster_path")
-    override val posterPath: String?
+    override val posterPath: String?,
+    @field:Json(name = "backdrop_path")
+    override val backdropPath: String?
 ) : FindResult {
     override val name: String
         get() = title

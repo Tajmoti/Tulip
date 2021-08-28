@@ -9,5 +9,6 @@ data class DbTmdbMovie(
     val id: Long,
     val name: String,
     val overview: String?,
-    val posterPath: String?
+    val posterPath: String?,
+    val backdropPath: String?
 )

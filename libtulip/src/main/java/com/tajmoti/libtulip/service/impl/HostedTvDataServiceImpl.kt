@@ -8,11 +8,10 @@ import com.tajmoti.libtulip.model.NoSuccessfulResultsException
 import com.tajmoti.libtulip.model.hosted.*
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.info.StreamableInfoWithLanguage
-import com.tajmoti.libtulip.model.info.TmdbItemId
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.key.*
-import com.tajmoti.libtulip.repository.HostedMovieRepository
-import com.tajmoti.libtulip.repository.HostedTvShowRepository
+import com.tajmoti.libtulip.model.tmdb.TmdbItemId
+import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.service.HostedTvDataService
 import com.tajmoti.libtulip.service.TvDataService
 import com.tajmoti.libtvprovider.*
@@ -21,8 +20,7 @@ import kotlinx.coroutines.coroutineScope
 import javax.inject.Inject
 
 class HostedTvDataServiceImpl @Inject constructor(
-    private val hostedTvShowRepo: HostedTvShowRepository,
-    private val hostedMovieRepo: HostedMovieRepository,
+    private val hostedTvDataRepo: HostedTvDataRepository,
     private val tvProvider: MultiTvProvider<StreamingService>,
     private val tmdbService: TvDataService
 ) : HostedTvDataService {
@@ -40,8 +38,8 @@ class HostedTvDataServiceImpl @Inject constructor(
 
     override suspend fun getTvShow(key: TvShowKey.Hosted): Result<TvShowInfo> {
         logger.debug("Retrieving {}", key)
-        val result = tvProvider.getShow(key.service, key.tvShowId)
-            .onFailure { logger.warn("Failed to fetch $key") }
+        val result = tvProvider.getShow(key.streamingService, key.tvShowId)
+            .onFailure { logger.warn("Failed to fetch $key", it) }
             .onSuccess { insertTvShowToDb(key, it) }
             .getOrElse { getShowFromDb(key).getOrNull() }
             ?: return Result.failure(MissingEntityException) // TODO Better handling here
@@ -49,12 +47,12 @@ class HostedTvDataServiceImpl @Inject constructor(
     }
 
     private suspend fun getShowFromDb(key: TvShowKey.Hosted): Result<TvShowInfo> {
-        val show = hostedTvShowRepo.getTvShowByKey(key)
+        val show = hostedTvDataRepo.getTvShowByKey(key)
             ?: return Result.failure(MissingEntityException)
-        val seasons = hostedTvShowRepo.getSeasonsByTvShow(key)
+        val seasons = hostedTvDataRepo.getSeasonsByTvShow(key)
         val episodes = mapToAsyncJobs(seasons) {
             val hostedSeasonKey = SeasonKey.Hosted(key, it.number)
-            val episodes = hostedTvShowRepo.getEpisodesBySeason(hostedSeasonKey)
+            val episodes = hostedTvDataRepo.getEpisodesBySeason(hostedSeasonKey)
             it to episodes
         }
         val seasonsToReturns = episodes
@@ -69,42 +67,16 @@ class HostedTvDataServiceImpl @Inject constructor(
         return Result.success(info)
     }
 
-    override suspend fun getSeasons(key: TvShowKey.Hosted): Result<List<HostedSeason>> {
-        logger.debug("Retrieving seasons for {}", key)
-        val result = getTvShow(key)
-            .map { it.seasons }
-            .onSuccess {
-                mapToAsyncJobs(it) { season ->
-                    hostedTvShowRepo.insertSeason(
-                        HostedSeason(
-                            key.service,
-                            key.tvShowId,
-                            season.number
-                        )
-                    )
-                    mapToAsyncJobs(season.episodes) { episode ->
-                        val dbEpisode =
-                            HostedEpisode(key.service, key.tvShowId, season.number, episode)
-                        hostedTvShowRepo.insertEpisode(dbEpisode)
-                    }
-                }
-            }
-            .map { it.map { s -> HostedSeason(key.service, s) } }
-            .getOrElse { hostedTvShowRepo.getSeasonsByTvShow(key.service, key.tvShowId) }
-            .takeIf { it.isNotEmpty() }
-            ?: return Result.failure(MissingEntityException) // TODO Better handling here
-        return Result.success(result)
-    }
-
     override suspend fun getSeason(key: SeasonKey.Hosted): Result<Season> {
         logger.debug("Retrieving {}", key)
-        val dbSeason = hostedTvShowRepo.getSeasonByKey(key)
-        if (dbSeason == null) {
-            logger.warn("{} not found", key)
-            return Result.failure(MissingEntityException)
-        }
         return tvProvider.getShow(key.service, key.tvShowId)
             .map { it.seasons.first { season -> season.number == key.seasonNumber } }
+    }
+
+    override suspend fun getSeasons(key: TvShowKey.Hosted): Result<List<Season>> {
+        logger.debug("Retrieving {}", key)
+        return tvProvider.getShow(key.streamingService, key.tvShowId)
+            .map { it.seasons }
     }
 
     override suspend fun getStreamableInfo(key: StreamableKey.Hosted): Result<StreamableInfoWithLanguage> {
@@ -116,9 +88,9 @@ class HostedTvDataServiceImpl @Inject constructor(
 
     private suspend fun getEpisodeInfo(key: EpisodeKey.Hosted): Result<StreamableInfoWithLanguage> {
         val abc = coroutineScope {
-            val epJob = async { hostedTvShowRepo.getEpisodeByKey(key) }
-            val ssJob = async { hostedTvShowRepo.getSeasonByKey(key.seasonKey) }
-            val shJob = async { hostedTvShowRepo.getTvShowByKey(key.seasonKey.tvShowKey) }
+            val epJob = async { hostedTvDataRepo.getEpisodeByKey(key) }
+            val ssJob = async { hostedTvDataRepo.getSeasonByKey(key.seasonKey) }
+            val shJob = async { hostedTvDataRepo.getTvShowByKey(key.seasonKey.tvShowKey) }
             Triple(epJob, ssJob, shJob)
         }
         val (eps, sss, shs) = abc.awaitAll()
@@ -143,7 +115,7 @@ class HostedTvDataServiceImpl @Inject constructor(
     }
 
     private suspend fun getMovieInfo(key: MovieKey.Hosted): Result<StreamableInfoWithLanguage> {
-        val movie = hostedMovieRepo.getMovieByKey(key) ?: run {
+        val movie = hostedTvDataRepo.getMovieByKey(key) ?: run {
             logger.warn("{} not found", key)
             return Result.failure(MissingEntityException)
         }
@@ -162,17 +134,17 @@ class HostedTvDataServiceImpl @Inject constructor(
         logger.debug("Retrieving episode by $key")
         prefetchTvShowByTmdbId(key.seasonKey.tvShowKey)
         val season = key.seasonKey
-        val episodes = hostedTvShowRepo.getEpisodeByTmdbIdentifiers(
+        val episodes = hostedTvDataRepo.getEpisodeByTmdbIdentifiers(
             season.tvShowKey.id,
             season.seasonNumber,
-            key.episode
+            key.episodeNumber
         )
         logger.debug("Episode retrieved by $key")
         return Result.success(episodes)
     }
 
     override suspend fun getMovieByTmdbId(key: MovieKey.Tmdb): Result<List<HostedMovie>> {
-        val movies = hostedMovieRepo.getMovieByTmdbIdentifiers(key.id)
+        val movies = hostedTvDataRepo.getMovieByTmdbIdentifiers(key.id)
         return Result.success(movies)
     }
 
@@ -182,7 +154,7 @@ class HostedTvDataServiceImpl @Inject constructor(
 
     override suspend fun prefetchTvShowByTmdbId(key: TvShowKey.Tmdb): Result<Unit> {
         logger.debug("Prefetching $key")
-        val shows = hostedTvShowRepo.getTvShowsByTmdbId(key.id)
+        val shows = hostedTvDataRepo.getTvShowsByTmdbId(key.id)
         logger.debug("Prefetching ${shows.size} show(s) for $key")
         val results = mapToAsyncJobs(shows) {
             val hostedShowKey = TvShowKey.Hosted(it.service, it.info.key)
@@ -202,22 +174,26 @@ class HostedTvDataServiceImpl @Inject constructor(
                 as? TmdbItemId.Tv
         logger.debug("Inserting ${result.info} with ${result.seasons.size} season(s)")
         val seasons = result.seasons
-            .map { HostedSeason(key.service, key.tvShowId, it.number) }
+            .map { HostedSeason(key.streamingService, key.tvShowId, it.number) }
         val numToEp = result.seasons
             .flatMap { it.episodes.map { ep -> it.number to ep } }
-            .map { HostedEpisode(key.service, key.tvShowId, it.first, it.second) }
-        mapToAsyncJobs(
-            { hostedTvShowRepo.insertTvShow(HostedItem.TvShow(key.service, result.info, tmdbId)) },
-            { hostedTvShowRepo.insertSeasons(seasons) },
-            { hostedTvShowRepo.insertEpisodes(numToEp) }
+            .map { HostedEpisode(key.streamingService, key.tvShowId, it.first, it.second) }
+        hostedTvDataRepo.insertTvShow(
+            HostedItem.TvShow(
+                key.streamingService,
+                result.info,
+                tmdbId
+            )
         )
+        hostedTvDataRepo.insertSeasons(seasons)
+        hostedTvDataRepo.insertEpisodes(numToEp)
         logger.debug("Inserted ${result.info} with ${result.seasons.size} season(s)")
     }
 
     override suspend fun insertHostedItem(item: HostedItem) {
         when (item) {
-            is HostedItem.TvShow -> hostedTvShowRepo.insertTvShow(item)
-            is HostedItem.Movie -> hostedMovieRepo.insertMovie(item)
+            is HostedItem.TvShow -> hostedTvDataRepo.insertTvShow(item)
+            is HostedItem.Movie -> hostedTvDataRepo.insertMovie(item)
         }
     }
 

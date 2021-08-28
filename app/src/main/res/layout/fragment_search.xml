@@ -14,51 +14,77 @@
             type="com.tajmoti.tulip.ui.search.SearchViewModel" />
     </data>
 
-    <FrameLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/root"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true">
 
-        <LinearLayout
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:popupTheme="@style/Theme.Tulip.PopupOverlay" />
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="@dimen/error_screen_image_size"
+            android:layout_height="@dimen/error_screen_image_size"
+            android:src="@{viewModel.statusImage ?? 0}"
+            android:visibility="@{viewModel.statusImage != null ? View.VISIBLE : View.GONE}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+
+        <TextView
+            android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
+            android:layout_marginTop="@dimen/error_screen_hint_spacing"
+            android:layout_marginBottom="@dimen/activity_vertical_margin"
+            android:text="@{viewModel.statusText ?? R.string.empty}"
+            android:visibility="@{viewModel.statusText != null ? View.VISIBLE : View.GONE}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/imageView"
+            app:layout_constraintVertical_bias="0.0" />
 
-            <ImageView
-                android:layout_width="72dp"
-                android:layout_height="72dp"
-                android:layout_marginBottom="@dimen/activity_vertical_margin"
-                android:src="@{viewModel.statusImage ?? 0}"
-                android:visibility="@{viewModel.statusImage != null ? View.VISIBLE : View.GONE}" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/activity_vertical_margin"
-                android:text="@{viewModel.statusText ?? R.string.empty}"
-                android:visibility="@{viewModel.statusText != null ? View.VISIBLE : View.GONE}" />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="@{(v) -> viewModel.resubmitText()}"
-                android:text="@string/retry"
-                android:visibility="@{viewModel.canTryAgain ? View.VISIBLE : View.GONE}" />
-        </LinearLayout>
+        <Button
+            android:id="@+id/button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="@{(v) -> viewModel.resubmitText()}"
+            android:text="@string/retry"
+            android:visibility="@{viewModel.canTryAgain ? View.VISIBLE : View.GONE}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView" />
 
         <ProgressBar
+            android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
             android:indeterminate="true"
-            android:visibility="@{viewModel.loading ? View.VISIBLE : View.GONE}" />
+            android:visibility="@{viewModel.loading ? View.VISIBLE : View.GONE}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_search"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             android:visibility="@{viewModel.state.success ? View.VISIBLE : View.GONE}"
-            app:layoutManager="LinearLayoutManager" />
-    </FrameLayout>
+            app:layoutManager="LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

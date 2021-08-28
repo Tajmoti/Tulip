@@ -5,11 +5,11 @@ import android.view.ViewGroup
 import com.tajmoti.libtulip.model.hosted.HostedItem
 import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtulip.model.info.TulipSearchResult
-import com.tajmoti.tulip.BaseAdapter
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.IconSearchResultLanguageBinding
 import com.tajmoti.tulip.databinding.ItemSearchBinding
-import com.tajmoti.tulip.languageToIcon
+import com.tajmoti.tulip.ui.BaseAdapter
+import com.tajmoti.tulip.ui.languageToIcon
 
 class SearchAdapter : BaseAdapter<TulipSearchResult, ItemSearchBinding>(
     ItemSearchBinding::inflate

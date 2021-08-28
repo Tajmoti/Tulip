@@ -1,15 +1,18 @@
 package com.tajmoti.libtulip.model.key
 
 import com.tajmoti.libtulip.model.hosted.StreamingService
-import com.tajmoti.libtulip.model.info.TmdbItemId
+import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 
 sealed class TvShowKey : ItemKey {
     data class Hosted(
-        val service: StreamingService,
+        override val streamingService: StreamingService,
         val tvShowId: String
-    ) : TvShowKey(), ItemKey.Hosted
+    ) : TvShowKey(), ItemKey.Hosted {
+        override val key: String
+            get() = tvShowId
+    }
 
     data class Tmdb(
-        val id: TmdbItemId.Tv
+        override val id: TmdbItemId.Tv
     ) : TvShowKey(), ItemKey.Tmdb
 }

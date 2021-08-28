@@ -18,11 +18,7 @@ data class HostedEpisode(
         tvShowKey: String,
         seasonNumber: Int,
         episode: EpisodeInfo
-    ) :
-            this(service, tvShowKey, seasonNumber, episode.key, episode.number, episode.name)
-
-    val apiInfo: EpisodeInfo
-        get() = EpisodeInfo(key, number, name)
+    ) : this(service, tvShowKey, seasonNumber, episode.key, episode.number, episode.name)
 
     override val hostedKey = EpisodeKey.Hosted(
         SeasonKey.Hosted(TvShowKey.Hosted(service, tvShowKey), seasonNumber), key

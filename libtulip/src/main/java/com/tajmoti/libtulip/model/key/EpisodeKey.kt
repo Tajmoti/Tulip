@@ -7,15 +7,15 @@ sealed class EpisodeKey : StreamableKey {
         override val seasonKey: SeasonKey.Hosted,
         val key: String
     ) : EpisodeKey(), StreamableKey.Hosted {
-        val service = seasonKey.tvShowKey.service
+        val service = seasonKey.tvShowKey.streamingService
         val tvShowId = seasonKey.tvShowKey.tvShowId
         val episodeId = key
-        override val streamingService = seasonKey.tvShowKey.service
+        override val streamingService = seasonKey.tvShowKey.streamingService
         override val streamableKey = key
     }
 
     data class Tmdb(
         override val seasonKey: SeasonKey.Tmdb,
-        val episode: Int
+        val episodeNumber: Int
     ) : EpisodeKey(), StreamableKey.Tmdb
 }

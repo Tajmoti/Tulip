@@ -1,5 +1,6 @@
 package com.tajmoti.tulip.ui.streams
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -10,10 +11,11 @@ import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
-import com.tajmoti.tulip.BaseFragment
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentStreamsBinding
+import com.tajmoti.tulip.ui.BaseFragment
 import com.tajmoti.tulip.ui.setupWithAdapterAndDivider
+import com.tajmoti.tulip.ui.toast
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -100,7 +102,11 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
             val intent = Intent(Intent.ACTION_VIEW)
             intent.setData(Uri.parse(url))
         }
-        startActivity(intent)
+        try {
+            startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            toast(R.string.video_player_not_installed)
+        }
     }
 
     companion object {
