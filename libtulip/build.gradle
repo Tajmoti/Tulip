@@ -23,6 +23,10 @@ dependencies {
     implementation project(':libtvvideoextractor')
     implementation project(':libtmdb')
 
+    // Video information
+    implementation 'org.mp4parser:isoparser:1.9.41'
+    implementation 'org.mp4parser:streaming:1.9.41'
+
     // Ktor
     implementation "io.ktor:ktor-client-core:$ktor_version"
 

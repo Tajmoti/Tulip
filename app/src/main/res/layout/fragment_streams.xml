@@ -36,12 +36,6 @@
             app:drawableStartCompat="@drawable/ic_baseline_play_circle_filled_24"
             app:drawableTint="?colorOnPrimary" />
 
-        <com.google.android.material.progressindicator.LinearProgressIndicator
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:indeterminate="true"
-            android:visibility="@{viewModel.loadingStreamOrDirectLink ? View.VISIBLE : View.INVISIBLE}" />
-
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">

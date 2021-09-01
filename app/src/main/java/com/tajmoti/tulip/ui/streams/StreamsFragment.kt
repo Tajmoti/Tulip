@@ -10,6 +10,7 @@ import androidx.fragment.app.viewModels
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.StreamableKey
+import com.tajmoti.libtulip.model.stream.FinalizedVideoInformation
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentStreamsBinding
@@ -38,9 +39,6 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
         viewModel.streamLoadingState.observe(viewLifecycleOwner) {
             onStreamLoadingStateChanged(it, adapter)
         }
-        viewModel.linkLoadingState.observe(viewLifecycleOwner) {
-            onDirectLoadingChanged(it)
-        }
     }
 
     private fun getStreamInfo(): StreamableKey {
@@ -57,41 +55,21 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
             adapter.items = it.info.streams
     }
 
-    private fun onDirectLoadingChanged(it: StreamsViewModel.LinkLoadingState?) {
-        it ?: return
-        when (it) {
-            is StreamsViewModel.LinkLoadingState.LoadedDirect -> onDirectLinkLoaded(it)
-            is StreamsViewModel.LinkLoadingState.DirectLinkUnsupported -> onDirectLinkUnsupported(it)
-            is StreamsViewModel.LinkLoadingState.Error -> onDirectLinkLoadingFail()
-            else -> Unit
+    private fun onDirectLinkUnsupported() {
+        Toast.makeText(requireContext(), R.string.stream_not_downloadable, Toast.LENGTH_SHORT)
+            .show()
+    }
+
+    private fun onStreamClickedPlay(stream: FinalizedVideoInformation) {
+        val direct = stream is FinalizedVideoInformation.Direct
+        startVideo(stream.url, direct)
+    }
+
+    private fun onStreamClickedDownload(stream: FinalizedVideoInformation) {
+        when (stream) {
+            is FinalizedVideoInformation.Direct -> viewModel.downloadVideo(stream.url)
+            is FinalizedVideoInformation.Website -> onDirectLinkUnsupported()
         }
-    }
-
-    private fun onDirectLinkLoaded(it: StreamsViewModel.LinkLoadingState.LoadedDirect) {
-        if (!it.download) {
-            startVideo(it.directLink, true)
-        }
-    }
-
-    private fun onDirectLinkUnsupported(it: StreamsViewModel.LinkLoadingState.DirectLinkUnsupported) {
-        if (!it.download) {
-            startVideo(it.stream.url, false)
-        } else {
-            Toast.makeText(requireContext(), R.string.stream_not_downloadable, Toast.LENGTH_SHORT)
-                .show()
-        }
-    }
-
-    private fun onDirectLinkLoadingFail() {
-        Toast.makeText(requireContext(), R.string.direct_loading_failure, Toast.LENGTH_SHORT).show()
-    }
-
-    private fun onStreamClickedPlay(stream: UnloadedVideoWithLanguage) {
-        viewModel.onStreamClicked(stream.video, false)
-    }
-
-    private fun onStreamClickedDownload(stream: UnloadedVideoWithLanguage) {
-        viewModel.onStreamClicked(stream.video, true)
     }
 
     private fun startVideo(url: String, direct: Boolean) {
