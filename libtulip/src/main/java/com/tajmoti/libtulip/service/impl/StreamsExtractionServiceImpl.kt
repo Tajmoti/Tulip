@@ -10,6 +10,7 @@ import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import java.net.URI
 import javax.inject.Inject
 
 class StreamsExtractionServiceImpl @Inject constructor(
@@ -47,13 +48,34 @@ class StreamsExtractionServiceImpl @Inject constructor(
      */
     private suspend fun resolveRedirects(url: String): Result<String?> {
         return runCatching {
-            val response: HttpResponse = httpClient.request(url)
-            response.headers["location"]
+            val originalHost = URI.create(url).host
+            logger.debug("Resolving redirects of '$url'")
+            var nextLocation = url
+            var attempts = 0
+            while (attempts++ < MAX_REDIRECTS && shouldRetryRedirect(nextLocation, originalHost)) {
+                val response: HttpResponse = httpClient.request(nextLocation)
+                nextLocation = response.headers["location"] ?: return@runCatching nextLocation
+                logger.debug("Next location for '$url' is '$nextLocation'")
+            }
+            logger.debug("Redirects of '$url' resolved into '$nextLocation'")
+            nextLocation
         }
+    }
+
+    private fun shouldRetryRedirect(nextLocation: String, originalHost: String): Boolean {
+        val nextHost = URI.create(nextLocation).host
+        return nextHost.contains(originalHost) || originalHost.contains(nextHost)
     }
 
     override suspend fun extractVideoLink(info: VideoStreamRef.Resolved): Result<String> {
         return linkExtractor.extractVideoLink(info.url, info.serviceName)
             .onFailure { logger.warn("Link extraction for $info failed!", it) }
+    }
+
+    companion object {
+        /**
+         * How many redirects are attempted before returning in [resolveRedirects]
+         */
+        private const val MAX_REDIRECTS = 10
     }
 }

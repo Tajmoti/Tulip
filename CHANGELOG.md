@@ -8,6 +8,7 @@
 - Fixed occasional crashes when loading new data
 - Reworked TV Show UI from tabs to expandable list items and implemented library of favorite items
 - When a direct stream fails to load, allow the user to open the original page in a browser
+- Fixed some streaming sites not being loaded correctly from Kinox.to
 
 ## [0.5.0] - 2021-08-17
 ### Changed
