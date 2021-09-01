@@ -14,7 +14,10 @@
     <string name="back">Back</string>
     <string name="season_no">Season %d</string>
     <string name="season_specials">Specials</string>
-    <string name="direct_loading_failure">This video can\'t be played</string>
+    <string name="direct_loading_failure">This video can\'t be played directly</string>
+    <string name="direct_loading_failure_message">Do you want me to open the webpage with the video?</string>
+    <string name="direct_loading_failure_yes">Open the webpage</string>
+    <string name="direct_loading_failure_no">Not really</string>
     <string name="tv_show">TV Show</string>
     <string name="library_empty_hint">TV Shows added to favorites will show up here</string>
     <string name="video_player_not_installed">No video player is installed. Install one and try again.</string>

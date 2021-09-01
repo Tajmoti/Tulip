@@ -7,10 +7,12 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.viewModels
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
+import com.tajmoti.libtvprovider.VideoStreamRef
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentStreamsBinding
 import com.tajmoti.tulip.ui.BaseFragment
@@ -62,7 +64,10 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
         when (it) {
             is StreamsViewModel.LinkLoadingState.LoadedDirect -> onDirectLinkLoaded(it)
             is StreamsViewModel.LinkLoadingState.DirectLinkUnsupported -> onDirectLinkUnsupported(it)
-            is StreamsViewModel.LinkLoadingState.Error -> onDirectLinkLoadingFail()
+            is StreamsViewModel.LinkLoadingState.Error -> onDirectLinkLoadingFail(
+                it.stream,
+                it.download
+            )
             else -> Unit
         }
     }
@@ -82,8 +87,21 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
         }
     }
 
-    private fun onDirectLinkLoadingFail() {
-        Toast.makeText(requireContext(), R.string.direct_loading_failure, Toast.LENGTH_SHORT).show()
+    private fun onDirectLinkLoadingFail(stream: VideoStreamRef, download: Boolean) {
+        if (download) {
+            Toast.makeText(requireContext(), R.string.direct_loading_failure, Toast.LENGTH_SHORT)
+                .show()
+        } else {
+            MaterialAlertDialogBuilder(requireContext())
+                .setIcon(R.drawable.ic_sad_24)
+                .setTitle(R.string.direct_loading_failure)
+                .setMessage(R.string.direct_loading_failure_message)
+                .setPositiveButton(R.string.direct_loading_failure_yes) { _, _ ->
+                    startVideo(stream.url, false)
+                }
+                .setNegativeButton(R.string.direct_loading_failure_no) { _, _ -> }
+                .show()
+        }
     }
 
     private fun onStreamClickedPlay(stream: UnloadedVideoWithLanguage) {

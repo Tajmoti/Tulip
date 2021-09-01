@@ -109,7 +109,7 @@ class StreamsViewModel @Inject constructor(
     ): LinkLoadingState {
         _linkLoadingState.value = LinkLoadingState.Loading(info, download)
         val resolvedUrl = extractionService.resolveStream(info)
-            .getOrElse { return LinkLoadingState.Error }
+            .getOrElse { return LinkLoadingState.Error(info, download) }
         return processResolvedLink(ref, resolvedUrl, download)
     }
 
@@ -122,7 +122,7 @@ class StreamsViewModel @Inject constructor(
             return LinkLoadingState.DirectLinkUnsupported(info, download)
         _linkLoadingState.value = LinkLoadingState.LoadingDirect(info, download)
         val result = extractionService.extractVideoLink(info)
-            .getOrElse { return LinkLoadingState.Error }
+            .getOrElse { return LinkLoadingState.Error(info, download) }
         if (download)
             downloadVideo(result)
         return LinkLoadingState.LoadedDirect(info, download, result)
@@ -218,6 +218,9 @@ class StreamsViewModel @Inject constructor(
             val directLink: String
         ) : LinkLoadingState()
 
-        object Error : LinkLoadingState()
+        data class Error(
+            val stream: VideoStreamRef,
+            val download: Boolean
+        ) : LinkLoadingState()
     }
 }
