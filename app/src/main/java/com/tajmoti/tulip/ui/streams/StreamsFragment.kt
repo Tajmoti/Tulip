@@ -75,6 +75,8 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
     private fun onDirectLinkLoaded(it: StreamsViewModel.LinkLoadingState.LoadedDirect) {
         if (!it.download) {
             startVideo(it.directLink, true)
+        } else {
+            toast(R.string.starting_download)
         }
     }
 

@@ -22,4 +22,5 @@
     <string name="library_empty_hint">TV Shows added to favorites will show up here</string>
     <string name="video_player_not_installed">No video player is installed. Install one and try again.</string>
     <string name="search_query_hint">Enter the name of a TV Show or a movie</string>
+    <string name="starting_download">Starting download</string>
 </resources>

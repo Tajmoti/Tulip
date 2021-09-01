@@ -22,4 +22,5 @@
     <string name="direct_loading_failure_message">Mám otvoriť stránku s videom?</string>
     <string name="direct_loading_failure_yes">Otvoriť stránku</string>
     <string name="direct_loading_failure_no">Radšej nie</string>
+    <string name="starting_download">Sťahovanie sa začalo</string>
 </resources>
