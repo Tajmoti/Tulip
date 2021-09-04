@@ -15,7 +15,7 @@ internal suspend fun fetchSources(
 ): Result<List<VideoStreamRef>> {
     return try {
         val links = Jsoup.parse(pageSource)
-            .getElementsByTag("ul")
+            .select("#HosterList")
             .first()!!
             .children()
         val result = mapToAsyncJobs(links) {

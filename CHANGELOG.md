@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Changed
+- Fixed movies from Kinox.to not working
 
 ## [0.5.0] - 2021-09-02
 ### Added
