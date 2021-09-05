@@ -1,7 +1,7 @@
 package com.tajmoti.libtulip.service.impl
 
 import com.tajmoti.commonutils.logger
-import com.tajmoti.commonutils.mapToAsyncJobs
+import com.tajmoti.commonutils.parallelMap
 import com.tajmoti.libtmdb.model.tv.Season
 import com.tajmoti.libtmdb.model.tv.Tv
 import com.tajmoti.libtulip.misc.NetworkResult
@@ -28,7 +28,7 @@ class TvDataServiceImpl @Inject constructor(
         logger.debug("Prefetching TMDB data for $key")
         val tv = tvDataRepo.getTv(key)
             ?: return Result.failure(NullPointerException())
-        mapToAsyncJobs(tv.seasons) { tvDataRepo.getSeason(it.toKey(tv)) }
+        tv.seasons.parallelMap { tvDataRepo.getSeason(it.toKey(tv)) }
             .takeIfNoneNull() ?: return Result.failure(NullPointerException())
         logger.debug("Prefetching TMDB data for $key successful")
         return Result.success(Unit)

@@ -1,16 +1,17 @@
 package com.tajmoti.libtulip.service.impl
 
-import com.tajmoti.commonutils.mapToAsyncJobs
-import com.tajmoti.libtulip.model.MissingEntityException
+import com.tajmoti.commonutils.*
 import com.tajmoti.libtulip.model.hosted.HostedEpisode
 import com.tajmoti.libtulip.model.hosted.HostedStreamable
 import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtulip.model.info.StreamableInfo
+import com.tajmoti.libtulip.model.info.StreamableInfoWithLanguage
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.model.stream.StreamableInfoWithLangLinks
+import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
 import com.tajmoti.libtulip.service.HostedTvDataService
 import com.tajmoti.libtulip.service.LanguageMappingStreamService
@@ -24,74 +25,85 @@ class LanguageMappingStreamServiceImpl @Inject constructor(
     private val tvDataService: TvDataService
 ) : LanguageMappingStreamService {
 
-    override suspend fun getStreamsWithLanguagesByHostedKey(
+    override suspend fun getStreamsWithLanguages(
         key: StreamableKey.Hosted,
         infoConsumer: (StreamableInfo) -> Unit
     ): Result<StreamableInfoWithLangLinks> {
-        val newInfo = hostedTvDataService.getStreamableInfo(key)
-            .getOrElse { return Result.failure(it) }
-        infoConsumer(newInfo.streamableInfo)
-        val result = extractorService.fetchStreams(key.streamingService, key.streamableKey)
-            .getOrElse { return Result.failure(it) }
-            .map { UnloadedVideoWithLanguage(it, LanguageCode(newInfo.language)) }
-            .sortedBy { !it.video.linkExtractionSupported }
-        return Result.success(StreamableInfoWithLangLinks(newInfo.streamableInfo, result))
+        return hostedTvDataService.getStreamableInfo(key)
+            .onSuccess { infoConsumer(it.streamableInfo) to it }
+            .onFailure { logger.warn("Streamable info retrieval failed", it) }
+            .flatMapZip { extractorService.fetchStreams(key.streamingService, key.streamableKey) }
+            .map { (infoWithLang, streams) -> combineInfoWithStreams(infoWithLang, streams) }
     }
 
-    override suspend fun getStreamsByTmdbKey(
+    private fun combineInfoWithStreams(
+        infoWithLang: StreamableInfoWithLanguage,
+        streams: List<UnloadedVideoStreamRef>
+    ) = streams
+        .map { UnloadedVideoWithLanguage(it, LanguageCode(infoWithLang.language)) }
+        .sortedBy { !it.video.linkExtractionSupported }
+        .let { videos -> StreamableInfoWithLangLinks(infoWithLang.streamableInfo, videos) }
+
+    override suspend fun getStreamsWithLanguages(
         key: StreamableKey.Tmdb,
         infoConsumer: (StreamableInfo) -> Unit
     ): Result<StreamableInfoWithLangLinks> {
-        val streamableInfo = tvDataService.getStreamableInfo(key)
-            .getOrElse { return Result.failure(it) }
-        infoConsumer(streamableInfo)
-        val x = getStreamablesWithLanguages(key)
-            .getOrElse { return Result.failure(it) }
-        val streams = getStreamsAndMapLanguages(x)
-            .sortedBy { !it.video.linkExtractionSupported }
-        return Result.success(StreamableInfoWithLangLinks(streamableInfo, streams))
+        return tvDataService.getStreamableInfo(key)
+            .onFailure { logger.warn("Failed to fetch streams for $key", it) }
+            .onSuccess(infoConsumer)
+            .flatMapZip { getStreamablesWithLanguages(key) }
+            .onFailure { logger.warn("Failed to retrieve streamables for $key", it) }
+            .map { (info, listOfPairs) -> combineInfoWithStreamables(listOfPairs, info) }
     }
+
+    private suspend fun combineInfoWithStreamables(
+        listOfPairs: List<Pair<HostedStreamable, LanguageCode>>,
+        info: StreamableInfo
+    ) = getStreamsAndMapLanguages(listOfPairs)
+        .sortedBy { videoWithLang -> !videoWithLang.video.linkExtractionSupported }
+        .let { StreamableInfoWithLangLinks(info, it) }
+
 
     private suspend fun getStreamablesWithLanguages(
         info: StreamableKey.Tmdb
     ): Result<List<Pair<HostedStreamable, LanguageCode>>> {
-        val result = when (info) {
-            is MovieKey.Tmdb -> {
-                val movie = hostedTvDataService.getMovieByTmdbId(info)
-                movie.map { it.map { movie -> movie to LanguageCode(movie.language) } }
-                    .getOrElse { return Result.failure(it) }
-            }
-            is EpisodeKey.Tmdb -> {
-                hostedTvDataService.getEpisodeByTmdbId(info)
-                    .map { mapLanguagesParallel(it) }
-                    .getOrElse { return Result.failure(it) }
-                    .mapNotNull { it.getOrNull() }
-            }
-        }
-        return Result.success(result)
+        return when (info) {
+            is MovieKey.Tmdb -> getMovieStreamsWithLanguages(info)
+            is EpisodeKey.Tmdb -> getEpisodeStreamsWithLanguages(info)
+        }.onFailure { logger.warn("Streamable language info retrieval failed for $info", it) }
     }
 
-    private suspend fun mapLanguagesParallel(
-        it: List<HostedEpisode>
-    ): List<Result<Pair<HostedEpisode, LanguageCode>>> {
-        return mapToAsyncJobs(it) { ep ->
-            val hostedKey = TvShowKey.Hosted(ep.service, ep.tvShowKey)
-            val show = hostedTvDataService.getTvShow(hostedKey)
-                .getOrElse { return@mapToAsyncJobs Result.failure(MissingEntityException) }
-            Result.success(ep to LanguageCode(show.info.language))
-        }
-    }
+    private suspend fun getEpisodeStreamsWithLanguages(info: EpisodeKey.Tmdb) =
+        hostedTvDataService.getEpisodeByTmdbId(info)
+            .map { it.parallelMap { ep -> getLanguagesForEpisode(ep).pairWithReverse(ep) } }
+            .map { it.mapNotNull { langResult -> langResult.getOrNull() } }
+
+    private suspend fun getMovieStreamsWithLanguages(info: MovieKey.Tmdb) =
+        hostedTvDataService.getMovieByTmdbId(info)
+            .map { it.map { movie -> movie to LanguageCode(movie.language) } }
+
+    private suspend fun getLanguagesForEpisode(ep: HostedEpisode) =
+        TvShowKey.Hosted(ep.service, ep.tvShowKey)
+            .let { hostedTvDataService.getTvShow(it) }
+            .onFailure { logger.warn("TV Show info retrieval failed for $ep", it) }
+            .map { LanguageCode(it.info.language) }
 
     private suspend fun getStreamsAndMapLanguages(
         streamables: List<Pair<HostedStreamable, LanguageCode>>
     ): List<UnloadedVideoWithLanguage> {
-        return mapToAsyncJobs(streamables) {
-            getStreamsWithLanguagesByHostedKey(it.first.hostedKey) {}
-                .getOrNull()
-                ?.let { videos -> videos to it.second }
-        }
+        return streamables.parallelMap { (s, l) -> combineStreamableWithLanguage(s, l) }
             .filterNotNull()
-            .flatMap { it.first.streams.map { video -> video to it.second } }
-            .map { UnloadedVideoWithLanguage(it.first.video, it.second) }
+            .flatMapWithTransform(
+                { pair -> pair.first.streams },
+                { pair, lang -> lang.video to pair.second }
+            )
+            .map { (video, lang) -> UnloadedVideoWithLanguage(video, lang) }
     }
+
+    private suspend fun combineStreamableWithLanguage(
+        streamable: HostedStreamable,
+        language: LanguageCode
+    ) = getStreamsWithLanguages(streamable.hostedKey) {}
+        .getOrNull()
+        ?.let { videos -> videos to language }
 }

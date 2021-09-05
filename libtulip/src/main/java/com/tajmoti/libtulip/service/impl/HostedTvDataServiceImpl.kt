@@ -2,7 +2,8 @@ package com.tajmoti.libtulip.service.impl
 
 import com.tajmoti.commonutils.awaitAll
 import com.tajmoti.commonutils.logger
-import com.tajmoti.commonutils.mapToAsyncJobs
+import com.tajmoti.commonutils.parallelMap
+import com.tajmoti.commonutils.parallelMapBoth
 import com.tajmoti.libtulip.model.MissingEntityException
 import com.tajmoti.libtulip.model.NoSuccessfulResultsException
 import com.tajmoti.libtulip.model.hosted.*
@@ -39,7 +40,7 @@ class HostedTvDataServiceImpl @Inject constructor(
     override suspend fun getTvShow(key: TvShowKey.Hosted): Result<TvShowInfo> {
         logger.debug("Retrieving {}", key)
         val result = tvProvider.getShow(key.streamingService, key.tvShowId)
-            .onFailure { logger.warn("Failed to fetch $key", it) }
+            .onFailure { logger.warn("Failed to retrieve TV Show $key", it) }
             .onSuccess { insertTvShowToDb(key, it) }
             .getOrElse { getShowFromDb(key).getOrNull() }
             ?: return Result.failure(MissingEntityException) // TODO Better handling here
@@ -50,10 +51,9 @@ class HostedTvDataServiceImpl @Inject constructor(
         val show = hostedTvDataRepo.getTvShowByKey(key)
             ?: return Result.failure(MissingEntityException)
         val seasons = hostedTvDataRepo.getSeasonsByTvShow(key)
-        val episodes = mapToAsyncJobs(seasons) {
+        val episodes = seasons.parallelMapBoth {
             val hostedSeasonKey = SeasonKey.Hosted(key, it.number)
-            val episodes = hostedTvDataRepo.getEpisodesBySeason(hostedSeasonKey)
-            it to episodes
+            hostedTvDataRepo.getEpisodesBySeason(hostedSeasonKey)
         }
         val seasonsToReturns = episodes
             .map { season ->
@@ -156,7 +156,7 @@ class HostedTvDataServiceImpl @Inject constructor(
         logger.debug("Prefetching $key")
         val shows = hostedTvDataRepo.getTvShowsByTmdbId(key.id)
         logger.debug("Prefetching ${shows.size} show(s) for $key")
-        val results = mapToAsyncJobs(shows) {
+        val results = shows.parallelMap {
             val hostedShowKey = TvShowKey.Hosted(it.service, it.info.key)
             prefetchTvShow(hostedShowKey)
         }
@@ -199,7 +199,7 @@ class HostedTvDataServiceImpl @Inject constructor(
 
     override suspend fun insertHostedItems(items: List<HostedItem>) {
         logger.debug("Inserting ${items.size} hosted items")
-        mapToAsyncJobs(items) {
+        items.parallelMap {
             insertHostedItem(it)
         }
     }

@@ -110,7 +110,7 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
 
     override suspend fun getMovie(movieId: TmdbItemId.Movie): Movie? {
         return runCatching { service.getMovie(movieId.id) }
-            .onFailure { logger.debug("Exception", it) }
+            .onFailure { logger.warn("Failed to retrieve movie $movieId", it) }
             .onSuccess { db.insertMovie(it) }
             .getOrElse { db.getMovie(movieId.id) }
     }

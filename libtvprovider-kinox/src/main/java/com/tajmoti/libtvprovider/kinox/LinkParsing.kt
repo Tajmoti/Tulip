@@ -1,6 +1,6 @@
 package com.tajmoti.libtvprovider.kinox
 
-import com.tajmoti.commonutils.mapToAsyncJobs
+import com.tajmoti.commonutils.parallelMap
 import com.tajmoti.libtvprovider.VideoStreamRef
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
@@ -18,7 +18,7 @@ internal suspend fun fetchSources(
             .select("#HosterList")
             .first()!!
             .children()
-        val result = mapToAsyncJobs(links) {
+        val result = links.parallelMap {
             runCatching { elementToStream(baseUrl, it, pageSourceLoader) }.getOrNull()
         }.filterNotNull()
         Result.success(result)

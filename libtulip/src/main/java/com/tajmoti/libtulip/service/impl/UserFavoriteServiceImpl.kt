@@ -1,6 +1,7 @@
 package com.tajmoti.libtulip.service.impl
 
-import com.tajmoti.commonutils.mapToAsyncJobs
+import com.tajmoti.commonutils.parallelMap
+import com.tajmoti.commonutils.parallelMapBoth
 import com.tajmoti.libtulip.data.UserDataDataSource
 import com.tajmoti.libtulip.model.hosted.toItemKey
 import com.tajmoti.libtulip.model.hosted.toKey
@@ -38,8 +39,8 @@ class UserFavoriteServiceImpl @Inject constructor(
 
     private suspend fun getHostedFavorites(favorites: List<UserFavorite>): List<TulipItemInfo> {
         val hostedKeys = favorites.map { it.info }.filterIsInstance(ItemKey.Hosted::class.java)
-        val pairs = mapToAsyncJobs(hostedKeys) {
-            it to hostedRepo.getItemByKey(it)
+        val pairs = hostedKeys.parallelMapBoth {
+            hostedRepo.getItemByKey(it)
         }
         return pairs.mapNotNull { (key, item) ->
             item ?: return@mapNotNull null
@@ -51,10 +52,10 @@ class UserFavoriteServiceImpl @Inject constructor(
         val tmdb = favorites.map { it.info }.filterIsInstance(ItemKey.Tmdb::class.java)
         val tmdbTvIds = tmdb.map { it.id }.filterIsInstance(TmdbItemId.Tv::class.java)
         val tmdbMovieIds = tmdb.map { it.id }.filterIsInstance(TmdbItemId.Movie::class.java)
-        val tmdbShows = mapToAsyncJobs(tmdbTvIds) {
+        val tmdbShows = tmdbTvIds.parallelMap {
             it to tmdbRepo.getTv(it.toKey())
         }
-        val tmdbMovies = mapToAsyncJobs(tmdbMovieIds) {
+        val tmdbMovies = tmdbMovieIds.parallelMap {
             it to tmdbRepo.getMovie(it)
         }
         return (tmdbShows + tmdbMovies).mapNotNull { (id, item) ->

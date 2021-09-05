@@ -18,17 +18,17 @@ interface LanguageMappingStreamService {
         infoConsumer: (StreamableInfo) -> Unit
     ): Result<StreamableInfoWithLangLinks> {
         return when (key) {
-            is StreamableKey.Hosted -> getStreamsWithLanguagesByHostedKey(key, infoConsumer)
-            is StreamableKey.Tmdb -> getStreamsByTmdbKey(key, infoConsumer)
+            is StreamableKey.Hosted -> getStreamsWithLanguages(key, infoConsumer)
+            is StreamableKey.Tmdb -> getStreamsWithLanguages(key, infoConsumer)
         }
     }
 
-    suspend fun getStreamsWithLanguagesByHostedKey(
+    suspend fun getStreamsWithLanguages(
         key: StreamableKey.Hosted,
         infoConsumer: (StreamableInfo) -> Unit
     ): Result<StreamableInfoWithLangLinks>
 
-    suspend fun getStreamsByTmdbKey(
+    suspend fun getStreamsWithLanguages(
         key: StreamableKey.Tmdb,
         infoConsumer: (StreamableInfo) -> Unit
     ): Result<StreamableInfoWithLangLinks>

@@ -1,8 +1,9 @@
 package com.tajmoti.libprimewiretvprovider
 
+import com.tajmoti.commonutils.flatMapWithContext
+import com.tajmoti.commonutils.mapWithContext
 import com.tajmoti.libtvprovider.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.net.URLEncoder
@@ -23,11 +24,10 @@ class PrimewireTvProvider(
 ) : TvProvider {
 
     override suspend fun search(query: String): Result<List<SearchResult>> {
-        val pageSource = httpLoader(queryToSearchUrl(query))
-            .getOrElse { return Result.failure(it) }
-        return withContext(Dispatchers.Default) {
-            parseSearchResultPageBlocking(pageSource)
-        }
+        return httpLoader(queryToSearchUrl(query))
+            .flatMapWithContext(Dispatchers.Default) {
+                parseSearchResultPageBlocking(it)
+            }
     }
 
     private fun queryToSearchUrl(query: String): String {
@@ -36,16 +36,16 @@ class PrimewireTvProvider(
     }
 
     override suspend fun getTvShow(key: String): Result<TvShowInfo> {
-        val pageSource = httpLoader(baseUrl + key)
-            .getOrElse { return Result.failure(it) }
-        return withContext(Dispatchers.Default) {
-            val document = Jsoup.parse(pageSource)
-            val seasons = parseSearchResultPageBlockingSeason(key, document)
-                .getOrElse { return@withContext Result.failure(it) }
-            val tvItemInfo = parseTvItemInfo(key, document)
-            val info = TvShowInfo(key, tvItemInfo, seasons)
-            Result.success(info)
-        }
+        return httpLoader(baseUrl + key)
+            .flatMapWithContext(Dispatchers.Default) { source ->
+                val document = Jsoup.parse(source)
+                parseSearchResultPageBlockingSeason(key, document)
+                    .map { seasons -> document to seasons }
+            }
+            .mapWithContext(Dispatchers.Default) { (document, seasons) ->
+                val tvItemInfo = parseTvItemInfo(key, document)
+                TvShowInfo(key, tvItemInfo, seasons)
+            }
     }
 
     private fun parseTvItemInfo(key: String, page: Document): TvItemInfo {
@@ -64,11 +64,10 @@ class PrimewireTvProvider(
     }
 
     override suspend fun getStreamableLinks(episodeOrMovieKey: String): Result<List<VideoStreamRef>> {
-        val html = loadHtmlFromUrl(baseUrl + episodeOrMovieKey)
-            .getOrElse { return Result.failure(it) }
-        return withContext(Dispatchers.Default) {
-            getVideoStreamsBlocking(html, baseUrl)
-        }
+        return loadHtmlFromUrl(baseUrl + episodeOrMovieKey)
+            .flatMapWithContext(Dispatchers.Default) {
+                getVideoStreamsBlocking(it, baseUrl)
+            }
     }
 
 

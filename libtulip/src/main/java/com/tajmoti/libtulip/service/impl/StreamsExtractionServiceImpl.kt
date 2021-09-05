@@ -23,9 +23,11 @@ class StreamsExtractionServiceImpl @Inject constructor(
         service: StreamingService,
         streamableKey: String
     ): Result<List<UnloadedVideoStreamRef>> {
-        val result = tvProvider.getStreamableLinks(service, streamableKey).getOrElse {
-            return Result.failure(it)
-        }
+        val result = tvProvider.getStreamableLinks(service, streamableKey)
+            .onFailure { logger.warn("Failed to fetch streams for $service $streamableKey", it) }
+            .getOrElse {
+                return Result.failure(it)
+            }
         val sorted = result.map { UnloadedVideoStreamRef(it, canExtractFromService(it)) }
         return Result.success(sorted)
     }
@@ -36,10 +38,10 @@ class StreamsExtractionServiceImpl @Inject constructor(
     }
 
     override suspend fun resolveStream(ref: VideoStreamRef.Unresolved): Result<VideoStreamRef.Resolved> {
-        val realUrl = resolveRedirects(ref.url)
-            .getOrElse { return Result.failure(it) }
         // If there were no redirects, assume that the link already points to the streaming page
-        return Result.success(ref.asResolved(realUrl ?: ref.url))
+        return resolveRedirects(ref.url)
+            .onFailure { logger.warn("Failed to resolve redirects of $ref", it) }
+            .map { ref.asResolved(it ?: ref.url) }
     }
 
     /**

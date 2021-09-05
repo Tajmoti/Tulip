@@ -1,7 +1,7 @@
 package com.tajmoti.libtulip.service.impl
 
 import com.tajmoti.commonutils.logger
-import com.tajmoti.commonutils.mapToAsyncJobs
+import com.tajmoti.commonutils.parallelMapBoth
 import com.tajmoti.libtulip.model.hosted.HostedItem
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.model.info.TulipSearchResult
@@ -18,13 +18,18 @@ class SearchServiceImpl @Inject constructor(
 ) : SearchService {
 
     override suspend fun search(query: String): Result<List<TulipSearchResult>> {
-        val hostedResults = hostedService.search(query)
-            .getOrElse { return Result.failure(it) }
-        val successfulItems = successfulResultsToHostedItems(hostedResults)
+        return hostedService.search(query)
+            .map { handleSearchResult(it) }
+            .onFailure { logger.warn("Search failed", it) }
+    }
+
+    private suspend fun handleSearchResult(
+        searchResults: Map<StreamingService, Result<List<SearchResult>>>
+    ): List<TulipSearchResult> {
+        val successfulItems = successfulResultsToHostedItems(searchResults)
         logger.debug("Found {} results", successfulItems.size)
         hostedService.insertHostedItems(successfulItems)
-        val zipped = hostedItemsToSearchResults(successfulItems)
-        return Result.success(zipped)
+        return hostedItemsToSearchResults(successfulItems)
     }
 
 
@@ -46,15 +51,15 @@ class SearchServiceImpl @Inject constructor(
         service: StreamingService,
         items: List<SearchResult>
     ): List<HostedItem> {
-        val tmdbIds = mapToAsyncJobs(items) { tvDataService.findTmdbId(it.type, it.info) }
-        return items.zip(tmdbIds) { item, tmdbId ->
-            when (item.type) {
-                SearchResult.Type.TV_SHOW ->
-                    HostedItem.TvShow(service, item.info, tmdbId as? TmdbItemId.Tv?)
-                SearchResult.Type.MOVIE ->
-                    HostedItem.Movie(service, item.info, tmdbId as? TmdbItemId.Movie?)
+        return items.parallelMapBoth { tvDataService.findTmdbId(it.type, it.info) }
+            .map { (item, tmdbId) ->
+                when (item.type) {
+                    SearchResult.Type.TV_SHOW ->
+                        HostedItem.TvShow(service, item.info, tmdbId as? TmdbItemId.Tv?)
+                    SearchResult.Type.MOVIE ->
+                        HostedItem.Movie(service, item.info, tmdbId as? TmdbItemId.Movie?)
+                }
             }
-        }
     }
 
     private fun hostedItemsToSearchResults(items: List<HostedItem>): List<TulipSearchResult> {

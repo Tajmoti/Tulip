@@ -18,12 +18,33 @@ suspend inline fun <A, B> Pair<Deferred<A>, Deferred<B>>.awaitAll(): Pair<A, B> 
     return Pair(a as A, b as B)
 }
 
-suspend inline fun <R, S> mapToAsyncJobs(
-    items: List<R>,
+suspend inline fun <R, S> List<R>.parallelMap(
     crossinline block: suspend CoroutineScope.(R) -> S
 ): List<S> {
     return coroutineScope {
-        items.map { async { block.invoke(this, it) } }
+        map { async { block.invoke(this, it) } }
+    }.awaitAll()
+}
+
+suspend inline fun <P, R, S> Map<P, R>.parallelMap(
+    crossinline block: suspend CoroutineScope.(P, R) -> S
+): List<S> {
+    return mapToAsyncJobs(this, block)
+}
+
+suspend inline fun <R, S> List<R>.parallelMapBoth(
+    crossinline block: suspend CoroutineScope.(R) -> S
+): List<Pair<R, S>> {
+    return coroutineScope {
+        map { async { it to block.invoke(this, it) } }
+    }.awaitAll()
+}
+
+suspend inline fun <R, S> List<R>.parallelMapBothReversed(
+    crossinline block: suspend CoroutineScope.(R) -> S
+): List<Pair<S, R>> {
+    return coroutineScope {
+        map { async { block.invoke(this, it) to it } }
     }.awaitAll()
 }
 

@@ -1,8 +1,8 @@
 package com.tajmoti.libtvprovider.kinox
 
+import com.tajmoti.commonutils.flatMapWithContext
 import com.tajmoti.libtvprovider.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.net.URLEncoder
@@ -18,11 +18,10 @@ class KinoxTvProvider(
 ) : TvProvider {
 
     override suspend fun search(query: String): Result<List<SearchResult>> {
-        val pageSource = httpLoader(queryToSearchUrl(query))
-            .getOrElse { return Result.failure(it) }
-        return withContext(Dispatchers.Default) {
-            parseSearchResultPageBlocking(pageSource, throwAwayItemsWithNoYear)
-        }
+        return httpLoader(queryToSearchUrl(query))
+            .flatMapWithContext(Dispatchers.Default) {
+                parseSearchResultPageBlocking(it, throwAwayItemsWithNoYear)
+            }
     }
 
     private fun queryToSearchUrl(query: String): String {
@@ -31,15 +30,12 @@ class KinoxTvProvider(
     }
 
     override suspend fun getTvShow(key: String): Result<TvShowInfo> {
-        val page = httpLoader(baseUrl + key)
-            .getOrElse { return Result.failure(it) }
-        return withContext(Dispatchers.Default) {
-            val document = Jsoup.parse(page)
-            val seasons = parseSeasonsBlocking(key, document)
-                .getOrElse { return@withContext Result.failure(it) }
-            val info = TvShowInfo(key, parseTvShowInfo(key, document), seasons)
-            Result.success(info)
-        }
+        return httpLoader(baseUrl + key)
+            .flatMapWithContext(Dispatchers.Default) {
+                val document = Jsoup.parse(it)
+                parseSeasonsBlocking(key, document)
+                    .map { seasons -> TvShowInfo(key, parseTvShowInfo(key, document), seasons) }
+            }
     }
 
     private fun parseTvShowInfo(key: String, document: Document): TvItemInfo {
@@ -63,10 +59,9 @@ class KinoxTvProvider(
     }
 
     override suspend fun getStreamableLinks(episodeOrMovieKey: String): Result<List<VideoStreamRef>> {
-        val page = httpLoader(baseUrl + episodeOrMovieKey)
-            .getOrElse { return Result.failure(it) }
-        return withContext(Dispatchers.Default) {
-            fetchSources(baseUrl, page, httpLoader)
-        }
+        return httpLoader(baseUrl + episodeOrMovieKey)
+            .flatMapWithContext(Dispatchers.Default) {
+                fetchSources(baseUrl, it, httpLoader)
+            }
     }
 }

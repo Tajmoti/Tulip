@@ -1,5 +1,6 @@
 package com.tajmoti.libtvvideoextractor.module
 
+import com.tajmoti.commonutils.flatMap
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtvvideoextractor.ExtractorModule
 import com.tajmoti.libtvvideoextractor.PageSourceLoaderWithLoadCount
@@ -14,18 +15,17 @@ class StreamzzTo : ExtractorModule {
         url: String,
         loader: PageSourceLoaderWithLoadCount
     ): Result<String> {
-        val source = loader(url, 2, this::checkUrl)
-            .getOrElse { return Result.failure(it) }
-        return try {
-            val document = Jsoup.parse(source)
-            val src = document.getElementsByTag("video")
+        return loader(url, 2, this::checkUrl)
+            .flatMap { parseResults(it) }
+    }
+
+    private fun parseResults(source: String): Result<String> {
+        return runCatching {
+            Jsoup.parse(source)
+                .getElementsByTag("video")
                 .first()!!
                 .attr("src")
-            Result.success(src)
-        } catch (e: Throwable) {
-            logger.warn("Request failed", e)
-            Result.failure(e)
-        }
+        }.onFailure { logger.warn("Request failed", it) }
     }
 
     private fun checkUrl(url: String): Boolean {
