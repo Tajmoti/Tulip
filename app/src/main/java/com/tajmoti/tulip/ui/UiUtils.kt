@@ -2,6 +2,7 @@
 
 package com.tajmoti.tulip.ui
 
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import com.tajmoti.libtulip.model.info.LanguageCode
@@ -21,6 +22,17 @@ fun languageToIcon(language: LanguageCode): Int? {
 
 inline fun <T> Fragment.consume(flow: Flow<T>, crossinline action: suspend (value: T) -> Unit) {
     viewLifecycleOwner.lifecycleScope.launch {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            flow.collect(action)
+        }
+    }
+}
+
+inline fun <T> AppCompatActivity.consume(
+    flow: Flow<T>,
+    crossinline action: suspend (value: T) -> Unit
+) {
+    lifecycleScope.launch {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             flow.collect(action)
         }

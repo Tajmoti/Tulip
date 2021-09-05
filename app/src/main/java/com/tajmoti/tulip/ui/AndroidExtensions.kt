@@ -2,6 +2,7 @@ package com.tajmoti.tulip.ui
 
 import android.widget.Toast
 import androidx.annotation.StringRes
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -47,4 +48,12 @@ fun <T> ViewModel.performStatefulOneshotOperation(
 
 fun Fragment.toast(@StringRes stringResId: Int) {
     Toast.makeText(requireContext(), stringResId, Toast.LENGTH_SHORT).show()
+}
+
+fun AppCompatActivity.toast(@StringRes stringResId: Int) {
+    Toast.makeText(this, stringResId, Toast.LENGTH_SHORT).show()
+}
+
+fun Fragment.toast(message: String) {
+    Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
 }

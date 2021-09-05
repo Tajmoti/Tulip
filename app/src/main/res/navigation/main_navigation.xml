@@ -64,5 +64,20 @@
         <argument
             android:name="streamableKey"
             app:argType="com.tajmoti.libtulip.model.key.StreamableKey" />
+        <action
+            android:id="@+id/action_navigation_streams_to_videoPlayerActivity"
+            app:destination="@id/videoPlayerActivity" />
     </dialog>
+    <activity
+        android:id="@+id/videoPlayerActivity"
+        android:name="com.tajmoti.tulip.ui.player.VideoPlayerActivity"
+        android:label="activity_video_player"
+        tools:layout="@layout/activity_video_player">
+        <argument
+            android:name="videoUrl"
+            app:argType="string" />
+        <argument
+            android:name="streamableKey"
+            app:argType="com.tajmoti.libtulip.model.key.StreamableKey" />
+    </activity>
 </navigation>

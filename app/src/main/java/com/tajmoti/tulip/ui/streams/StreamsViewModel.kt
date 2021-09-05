@@ -1,7 +1,7 @@
 package com.tajmoti.tulip.ui.streams
 
 import androidx.lifecycle.*
-import com.tajmoti.commonutils.statefulMap
+import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.stream.StreamableInfoWithLangLinks
@@ -50,7 +50,7 @@ class StreamsViewModel @Inject constructor(
     /**
      * Whether the stream links are being loaded right now.
      */
-    val loading = streamLoadingState.statefulMap(viewModelScope)
+    val loading = streamLoadingState.map(viewModelScope)
     { it is State.Idle || it is State.Preparing || it is State.Loading }
 
     /**

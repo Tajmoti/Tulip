@@ -1,7 +1,7 @@
 package com.tajmoti.tulip.ui.show
 
 import androidx.lifecycle.*
-import com.tajmoti.commonutils.statefulMap
+import com.tajmoti.commonutils.map
 import com.tajmoti.libtmdb.model.tv.Tv
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtulip.misc.NetworkResult
@@ -45,7 +45,7 @@ class TvShowViewModel @Inject constructor(
     /**
      * True if an error occurred during show loading
      */
-    val error = state.statefulMap(viewModelScope) { it is State.Error }
+    val error = state.map(viewModelScope) { it is State.Error }
 
     /**
      * True if this item is saved in the user's favorites

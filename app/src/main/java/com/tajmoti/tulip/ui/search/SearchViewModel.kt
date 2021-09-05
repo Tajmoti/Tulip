@@ -2,7 +2,7 @@ package com.tajmoti.tulip.ui.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tajmoti.commonutils.statefulMap
+import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.model.hosted.toItemKey
 import com.tajmoti.libtulip.model.info.TulipSearchResult
 import com.tajmoti.libtulip.model.key.ItemKey
@@ -34,12 +34,12 @@ class SearchViewModel @Inject constructor(
     /**
      * True if currently searching a query
      */
-    val loading = _state.statefulMap(viewModelScope) { it is State.Searching }
+    val loading = _state.map(viewModelScope) { it is State.Searching }
 
     /**
      * All search results for the entered query
      */
-    val results = _state.statefulMap(viewModelScope) {
+    val results = _state.map(viewModelScope) {
         when (it) {
             is State.Success -> it.results
             else -> emptyList()
@@ -49,7 +49,7 @@ class SearchViewModel @Inject constructor(
     /**
      * Contains the text that should be shown or null if none
      */
-    val statusText = _state.statefulMap(viewModelScope) {
+    val statusText = _state.map(viewModelScope) {
         when {
             it is State.Idle -> R.string.search_hint
             it is State.Success && it.results.isEmpty() -> R.string.no_results
@@ -61,7 +61,7 @@ class SearchViewModel @Inject constructor(
     /**
      * A status icon shown above the status text
      */
-    val statusImage = _state.statefulMap(viewModelScope) {
+    val statusImage = _state.map(viewModelScope) {
         when {
             it is State.Idle -> R.drawable.ic_search_24
             it is State.Success && it.results.isEmpty() -> R.drawable.ic_sad_24
@@ -73,7 +73,7 @@ class SearchViewModel @Inject constructor(
     /**
      * True if the retry button should be shown
      */
-    val canTryAgain = _state.statefulMap(viewModelScope) { it is State.Error }
+    val canTryAgain = _state.map(viewModelScope) { it is State.Error }
 
     /**
      * Contains the item that should be opened

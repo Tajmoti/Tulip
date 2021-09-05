@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Added
+- Custom video player with support for changing streams mid-play and subtitles
 ### Changed
 - Fixed streams from Primewire sometimes loaded incorrectly
 

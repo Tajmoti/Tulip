@@ -1,19 +1,13 @@
 package com.tajmoti.tulip.di
 
+import com.tajmoti.libtulip.data.HostedInfoDataSource
 import com.tajmoti.libtulip.data.LocalTvDataSource
 import com.tajmoti.libtulip.data.UserDataDataSource
-import com.tajmoti.libtulip.data.HostedInfoDataSource
-import com.tajmoti.libtulip.repository.FavoritesRepository
-import com.tajmoti.libtulip.repository.TmdbTvDataRepository
-import com.tajmoti.libtulip.repository.impl.FavoriteRepositoryImpl
-import com.tajmoti.libtulip.repository.impl.TmdbTvDataRepositoryImpl
-import com.tajmoti.libtulip.repository.HostedTvDataRepository
+import com.tajmoti.libtulip.repository.*
+import com.tajmoti.libtulip.repository.impl.*
 import com.tajmoti.libtulip.service.LanguageMappingStreamService
-import com.tajmoti.libtulip.repository.StreamsRepository
 import com.tajmoti.libtulip.service.VideoDownloadService
-import com.tajmoti.libtulip.repository.impl.HostedTvDataRepositoryImpl
 import com.tajmoti.libtulip.service.impl.LanguageMappingStreamServiceImpl
-import com.tajmoti.libtulip.repository.impl.StreamsRepositoryImpl
 import com.tajmoti.tulip.datasource.AndroidHostedInfoDataSource
 import com.tajmoti.tulip.datasource.AndroidTvDataSource
 import com.tajmoti.tulip.datasource.AndroidUserDataDataSource
@@ -63,4 +57,8 @@ interface Binder {
     @Binds
     @Singleton
     fun provideUserFavoritesService(s: FavoriteRepositoryImpl): FavoritesRepository
+
+    @Binds
+    @Singleton
+    fun provideSubtitleRepository(s: SubtitleRepositoryImpl): SubtitleRepository
 }

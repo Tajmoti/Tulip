@@ -20,7 +20,9 @@
     <string name="direct_loading_failure_no">Not really</string>
     <string name="tv_show">TV Show</string>
     <string name="library_empty_hint">TV Shows added to favorites will show up here</string>
-    <string name="video_player_not_installed">No video player is installed. Install one and try again.</string>
+    <string name="web_browser_not_installed">No web browser found. Install one and try again.</string>
     <string name="search_query_hint">Enter the name of a TV Show or a movie</string>
     <string name="starting_download">Starting download</string>
+    <string name="select_subtitles">Select subtitles</string>
+    <string name="subtitle_download_failure">Selected subtitles failed to load</string>
 </resources>

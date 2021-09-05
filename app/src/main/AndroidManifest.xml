@@ -9,14 +9,17 @@
     <application
         android:name=".Tulip"
         android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_descriptor"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Tulip.NoActionBar"
         android:usesCleartextTraffic="true"
-        tools:ignore="UnusedAttribute"
-        android:fullBackupContent="@xml/backup_descriptor">
+        tools:ignore="UnusedAttribute">
+        <activity
+            android:name=".ui.player.VideoPlayerActivity"
+            android:exported="true" />
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"

@@ -7,9 +7,9 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.tajmoti.libtulip.model.key.EpisodeKey
-import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
 import com.tajmoti.libtvprovider.VideoStreamRef
 import com.tajmoti.tulip.R
@@ -24,6 +24,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
     FragmentStreamsBinding::inflate
 ) {
+    private val args: StreamsFragmentArgs by navArgs()
     override val viewModel: StreamsViewModel by viewModels()
 
 
@@ -97,40 +98,18 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
     }
 
     private fun startVideo(url: String, direct: Boolean) {
-        val intent = if (direct) {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-            intent.setDataAndType(Uri.parse(url), "video/mp4")
+        if (direct) {
+            StreamsFragmentDirections
+                .actionNavigationStreamsToVideoPlayerActivity(url, args.streamableKey)
+                .let { findNavController().navigate(it) }
         } else {
             val intent = Intent(Intent.ACTION_VIEW)
-            intent.setData(Uri.parse(url))
-        }
-        try {
-            startActivity(intent)
-        } catch (e: ActivityNotFoundException) {
-            toast(R.string.video_player_not_installed)
-        }
-    }
-
-    companion object {
-        private const val ARG_MOVIE_KEY = "movie"
-        private const val ARG_EPISODE = "episode"
-
-        @JvmStatic
-        fun newInstance(episode: EpisodeKey): StreamsFragment {
-            val args = Bundle()
-            args.putSerializable(ARG_EPISODE, episode)
-            val fragment = StreamsFragment()
-            fragment.arguments = args
-            return fragment
-        }
-
-        @JvmStatic
-        fun newInstance(movie: MovieKey): StreamsFragment {
-            val args = Bundle()
-            args.putSerializable(ARG_MOVIE_KEY, movie)
-            val fragment = StreamsFragment()
-            fragment.arguments = args
-            return fragment
+            intent.data = Uri.parse(url)
+            try {
+                startActivity(intent)
+            } catch (e: ActivityNotFoundException) {
+                toast(R.string.web_browser_not_installed)
+            }
         }
     }
 }

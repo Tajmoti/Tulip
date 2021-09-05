@@ -101,7 +101,7 @@ suspend fun mapToAsyncJobs(vararg tasks: suspend CoroutineScope.() -> Any) {
     }.awaitAll()
 }
 
-inline fun <T, R> StateFlow<T>.statefulMap(
+inline fun <T, R> StateFlow<T>.map(
     scope: CoroutineScope,
     crossinline transform: (value: T) -> R
 ): StateFlow<R> {
@@ -110,5 +110,5 @@ inline fun <T, R> StateFlow<T>.statefulMap(
         val transformed = transform(value)
         return@transform emit(transformed)
     }
-    return flow.stateIn(scope, SharingStarted.Lazily, initial)
+    return flow.stateIn(scope, SharingStarted.Eagerly, initial)
 }

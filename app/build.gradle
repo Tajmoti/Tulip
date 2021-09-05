@@ -4,12 +4,8 @@ plugins {
     id 'kotlin-kapt'
     id 'dagger.hilt.android.plugin'
     id 'androidx.navigation.safeargs'
+    id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
 }
-
-// TMDB API key storage
-def props = new Properties()
-new File(rootDir, "tmdb.properties").withInputStream { props.load(it) }
-def tmdbApiKey = props.getProperty("key")
 
 // Development options
 def HTTP_DEBUG = true
@@ -24,7 +20,6 @@ android {
         targetSdkVersion 31
         versionCode 7
         versionName "0.7.0"
-        buildConfigField('String', 'TMDB_API_KEY', "\"$tmdbApiKey\"")
     }
 
     buildTypes {
@@ -51,8 +46,13 @@ android {
     }
 }
 
+secrets {
+    propertiesFileName 'secrets.properties'
+}
+
 repositories {
     maven { url "https://jitpack.io" }
+    maven { url "https://dl.bintray.com/videolan/Android" }
 }
 
 dependencies {
@@ -79,6 +79,7 @@ dependencies {
     implementation "com.github.lisawray.groupie:groupie-viewbinding:$groupie_version"
     implementation "com.github.lisawray.groupie:groupie-databinding:$groupie_version"
     implementation 'com.github.bumptech.glide:glide:4.10.0'
+    implementation "org.videolan.android:libvlc-all:3.1.12"
 
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"
@@ -113,4 +114,5 @@ dependencies {
     implementation project(':libwebdriver')
     implementation project(':libtvvideoextractor')
     implementation project(':libtmdb')
+    implementation project(':libopensubtitles')
 }

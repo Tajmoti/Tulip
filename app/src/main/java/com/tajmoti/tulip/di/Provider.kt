@@ -2,6 +2,8 @@ package com.tajmoti.tulip.di
 
 import android.content.Context
 import androidx.room.Room
+import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
+import com.tajmoti.libopensubtitles.OpenSubtitlesService
 import com.tajmoti.libprimewiretvprovider.PrimewireTvProvider
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtulip.model.hosted.StreamingService
@@ -13,6 +15,9 @@ import com.tajmoti.libtvvideoextractor.WebDriverPageSourceLoaderWithCustomJs
 import com.tajmoti.libwebdriver.WebDriver
 import com.tajmoti.libwebdriver.WebViewWebDriver
 import com.tajmoti.tulip.createAppOkHttpClient
+import com.tajmoti.tulip.createOpenSubtitlesFallbackRetrofit
+import com.tajmoti.tulip.createOpenSubtitlesRetrofit
+import com.tajmoti.tulip.createTmdbRetrofit
 import com.tajmoti.tulip.db.AppDatabase
 import com.tajmoti.tulip.db.TmdbDatabase
 import com.tajmoti.tulip.db.UserDataDatabase
@@ -31,8 +36,6 @@ import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
 import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
@@ -182,21 +185,25 @@ object Provider {
 
     @Provides
     @Singleton
-    fun provideTmdbService(client: OkHttpClient): TmdbService {
-        return createTmdbRetrofit(client).create(TmdbService::class.java)
+    fun provideTmdbService(): TmdbService {
+        return createTmdbRetrofit().create(TmdbService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOpenSubtitlesService(): OpenSubtitlesService {
+        return createOpenSubtitlesRetrofit().create(OpenSubtitlesService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOpenSubtitlesFallbackService(): OpenSubtitlesFallbackService {
+        return createOpenSubtitlesFallbackRetrofit().create(OpenSubtitlesFallbackService::class.java)
     }
 
     @Provides
     @Singleton
     fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
         return createAppOkHttpClient(context)
-    }
-
-    private fun createTmdbRetrofit(okHttpClient: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
-            .client(okHttpClient)
-            .baseUrl("https://api.themoviedb.org/")
-            .addConverterFactory(MoshiConverterFactory.create())
-            .build()
     }
 }
