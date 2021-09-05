@@ -3,6 +3,7 @@ package com.tajmoti.tulip.ui.show
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.bumptech.glide.Glide
@@ -13,12 +14,10 @@ import com.tajmoti.tulip.databinding.ActivityTabbedTvShowBinding
 import com.tajmoti.tulip.ui.BaseFragment
 import com.tajmoti.tulip.ui.MainActivity
 import com.tajmoti.tulip.ui.consume
-import com.tajmoti.tulip.ui.streams.StreamsFragment
 import com.xwray.groupie.ExpandableGroup
 import com.xwray.groupie.GroupieAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
@@ -39,8 +38,8 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding, TvShowViewModel
         val divider = DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
         binding.recyclerTvShow.addItemDecoration(divider)
 
-        consume { viewModel.state.collect { onStateChanged(it) } }
-        consume { viewModel.name.collect { onNameChanged(it) } }
+        consume(viewModel.state) { onStateChanged(it) }
+        consume(viewModel.name) { onNameChanged(it) }
     }
 
     override fun onStart() {
@@ -88,7 +87,7 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding, TvShowViewModel
     }
 
     private fun goToStreamsScreen(episodeKey: EpisodeKey) {
-        val frag = StreamsFragment.newInstance(episodeKey)
-        frag.show(childFragmentManager, "Streams")
+        TvShowFragmentDirections.actionTabbedTvShowActivityToStreamsFragment(episodeKey)
+            .let { findNavController().navigate(it) }
     }
 }

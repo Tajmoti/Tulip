@@ -55,7 +55,7 @@ suspend fun mapToAsyncJobs(vararg tasks: suspend CoroutineScope.() -> Any) {
     }.awaitAll()
 }
 
-inline fun <T, R : Any> StateFlow<T>.statefulMap(
+inline fun <T, R> StateFlow<T>.statefulMap(
     scope: CoroutineScope,
     crossinline transform: (value: T) -> R
 ): StateFlow<R> {

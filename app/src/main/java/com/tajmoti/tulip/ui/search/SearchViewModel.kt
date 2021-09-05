@@ -1,12 +1,14 @@
 package com.tajmoti.tulip.ui.search
 
 import androidx.lifecycle.*
+import com.tajmoti.commonutils.statefulMap
 import com.tajmoti.libtulip.model.hosted.toItemKey
 import com.tajmoti.libtulip.model.info.TulipSearchResult
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.service.SearchService
 import com.tajmoti.tulip.R
+import com.tajmoti.tulip.ui.doCancelableJob
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -25,19 +27,19 @@ class SearchViewModel @Inject constructor(
         private const val DEBOUNCE_INTERVAL_MS = 500L
     }
 
-    private val _state = MutableLiveData<State>(State.Idle)
-    private val _itemToOpen = MutableSharedFlow<ItemKey?>()
-    val state: LiveData<State> = _state
+    private val _state = MutableStateFlow<State>(State.Idle)
+    private val _itemToOpen = MutableSharedFlow<ItemKey>()
+    val state: StateFlow<State> = _state
 
     /**
      * True if currently searching a query
      */
-    val loading = Transformations.map(state) { it is State.Searching }
+    val loading = state.statefulMap(viewModelScope) { it is State.Searching }
 
     /**
      * Contains the text that should be shown or null if none
      */
-    val statusText = Transformations.map(state) {
+    val statusText = state.statefulMap(viewModelScope) {
         when {
             it is State.Idle -> R.string.search_hint
             it is State.Success && it.results.isEmpty() -> R.string.no_results
@@ -49,7 +51,7 @@ class SearchViewModel @Inject constructor(
     /**
      * A status icon shown above the status text
      */
-    val statusImage = Transformations.map(state) {
+    val statusImage = state.statefulMap(viewModelScope) {
         when {
             it is State.Idle -> R.drawable.ic_search_24
             it is State.Success && it.results.isEmpty() -> R.drawable.ic_sad_24
@@ -61,12 +63,12 @@ class SearchViewModel @Inject constructor(
     /**
      * True if the retry button should be shown
      */
-    val canTryAgain = Transformations.map(state) { it is State.Error }
+    val canTryAgain = state.statefulMap(viewModelScope) { it is State.Error }
 
     /**
      * Contains the item that should be opened
      */
-    val itemToOpen: Flow<ItemKey?> = _itemToOpen
+    val itemToOpen: Flow<ItemKey> = _itemToOpen
 
     /**
      * Flow containing (even partial) queries entered in the search view
@@ -111,19 +113,21 @@ class SearchViewModel @Inject constructor(
     }
 
     private fun onNewSearchQuery(it: String?) {
-        searchJob?.cancel()
-        if (it == null) {
-            _state.value = State.Idle
-        } else {
-            _state.value = State.Searching
-            searchJob = viewModelScope.launch { _state.value = startSearchAsync(it) }
+        doCancelableJob(this::searchJob, null) {
+            val result = if (it == null) {
+                flowOf(State.Idle)
+            } else {
+                startSearchAsync(it)
+            }
+            _state.emitAll(result)
         }
     }
 
-    private suspend fun startSearchAsync(query: String): State {
-        val successfulItems = service.search(query)
-            .getOrElse { return State.Error }
-        return State.Success(successfulItems)
+    private suspend fun startSearchAsync(query: String) = flow {
+        emit(State.Searching)
+        service.search(query)
+            .onSuccess { emit(State.Success(it)) }
+            .getOrElse { emit(State.Error) }
     }
 
     sealed class State {

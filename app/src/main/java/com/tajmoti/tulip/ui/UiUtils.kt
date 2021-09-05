@@ -3,14 +3,13 @@
 package com.tajmoti.tulip.ui
 
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.*
 import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.tulip.R
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlin.reflect.KMutableProperty0
 
 fun languageToIcon(language: LanguageCode): Int? {
     return when (language.code) {
@@ -20,14 +19,34 @@ fun languageToIcon(language: LanguageCode): Int? {
     }
 }
 
-fun LifecycleOwner.consume(block: suspend CoroutineScope.() -> Unit) {
-    lifecycleScope.launch {
-        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED, block)
+inline fun <T> Fragment.consume(flow: Flow<T>, crossinline action: suspend (value: T) -> Unit) {
+    viewLifecycleOwner.lifecycleScope.launch {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            flow.collect(action)
+        }
     }
 }
 
-fun Fragment.consume(block: suspend CoroutineScope.() -> Unit) {
-    viewLifecycleOwner.lifecycleScope.launch {
-        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED, block)
+fun ViewModel.doCancelableJob(
+    job: KMutableProperty0<Job?>,
+    state: MutableStateFlow<Boolean>?,
+    task: suspend () -> Unit
+) {
+    job.get()?.cancel()
+    val newJob = viewModelScope.launch {
+        state?.value = true
+        try {
+            task()
+        } finally {
+            state?.value = false
+        }
     }
+    job.set(newJob)
+}
+
+fun <T> ViewModel.startFlowAction(
+    initial: T,
+    job: suspend FlowCollector<T>.() -> Unit
+): StateFlow<T> {
+    return flow(job).stateIn(viewModelScope, SharingStarted.Lazily, initial)
 }

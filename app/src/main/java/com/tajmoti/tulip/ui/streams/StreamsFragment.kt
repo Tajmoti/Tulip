@@ -10,12 +10,12 @@ import androidx.fragment.app.viewModels
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.MovieKey
-import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
 import com.tajmoti.libtvprovider.VideoStreamRef
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentStreamsBinding
 import com.tajmoti.tulip.ui.BaseFragment
+import com.tajmoti.tulip.ui.consume
 import com.tajmoti.tulip.ui.setupWithAdapterAndDivider
 import com.tajmoti.tulip.ui.toast
 import dagger.hilt.android.AndroidEntryPoint
@@ -26,32 +26,14 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
 ) {
     override val viewModel: StreamsViewModel by viewModels()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val streamInfo = getStreamInfo()
-        viewModel.fetchStreamsWithLanguages(streamInfo)
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val adapter = StreamsAdapter(this::onStreamClickedDownload)
         adapter.callback = this::onStreamClickedPlay
         binding.viewModel = viewModel
         binding.recyclerSearch.setupWithAdapterAndDivider(adapter)
-        viewModel.streamLoadingState.observe(viewLifecycleOwner) {
-            onStreamLoadingStateChanged(it, adapter)
-        }
-        viewModel.linkLoadingState.observe(viewLifecycleOwner) {
-            onDirectLoadingChanged(it)
-        }
-    }
-
-    private fun getStreamInfo(): StreamableKey {
-        val args = requireArguments()
-        return if (args.containsKey(ARG_EPISODE)) {
-            args.getSerializable(ARG_EPISODE) as EpisodeKey
-        } else {
-            args.getSerializable(ARG_MOVIE_KEY) as StreamableKey
-        }
+        consume(viewModel.streamLoadingState) { onStreamLoadingStateChanged(it, adapter) }
+        consume(viewModel.linkLoadingState) { onDirectLoadingChanged(it) }
     }
 
     private fun onStreamLoadingStateChanged(it: StreamsViewModel.State, adapter: StreamsAdapter) {

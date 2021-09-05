@@ -11,11 +11,14 @@
         tools:layout="@layout/fragment_search">
         <action
             android:id="@+id/action_navigation_search_to_tabbedTvShowActivity"
-            app:destination="@id/tabbedTvShowActivity"
+            app:destination="@id/navigation_tv_show"
             app:enterAnim="@anim/slide_from_right_enter"
             app:exitAnim="@anim/slide_to_right_exit"
             app:popEnterAnim="@anim/slide_from_left_enter"
             app:popExitAnim="@anim/slide_to_left_exit" />
+        <action
+            android:id="@+id/action_navigation_search_to_streamsFragment"
+            app:destination="@id/navigation_streams" />
     </fragment>
 
     <fragment
@@ -25,11 +28,14 @@
         tools:layout="@layout/fragment_library">
         <action
             android:id="@+id/action_navigation_library_to_tabbedTvShowActivity"
-            app:destination="@id/tabbedTvShowActivity"
+            app:destination="@id/navigation_tv_show"
             app:enterAnim="@anim/slide_from_right_enter"
             app:exitAnim="@anim/slide_to_right_exit"
             app:popEnterAnim="@anim/slide_from_left_enter"
             app:popExitAnim="@anim/slide_to_left_exit" />
+        <action
+            android:id="@+id/action_navigation_library_to_navigation_streams"
+            app:destination="@id/navigation_streams" />
     </fragment>
 
     <fragment
@@ -39,12 +45,24 @@
         tools:layout="@layout/fragment_downloads" />
 
     <fragment
-        android:id="@+id/tabbedTvShowActivity"
+        android:id="@+id/navigation_tv_show"
         android:name="com.tajmoti.tulip.ui.show.TvShowFragment"
         android:label="@string/tv_show"
         tools:layout="@layout/activity_tabbed_tv_show">
         <argument
             android:name="itemKey"
             app:argType="com.tajmoti.libtulip.model.key.TvShowKey" />
+        <action
+            android:id="@+id/action_tabbedTvShowActivity_to_streamsFragment"
+            app:destination="@id/navigation_streams" />
     </fragment>
+
+    <dialog
+        android:id="@+id/navigation_streams"
+        android:name="com.tajmoti.tulip.ui.streams.StreamsFragment"
+        android:label="StreamsFragment">
+        <argument
+            android:name="streamableKey"
+            app:argType="com.tajmoti.libtulip.model.key.StreamableKey" />
+    </dialog>
 </navigation>

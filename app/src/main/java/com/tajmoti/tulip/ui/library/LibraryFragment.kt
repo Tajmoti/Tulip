@@ -11,9 +11,7 @@ import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.tulip.databinding.FragmentLibraryBinding
 import com.tajmoti.tulip.ui.BaseFragment
 import com.tajmoti.tulip.ui.consume
-import com.tajmoti.tulip.ui.streams.StreamsFragment
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
 
 @AndroidEntryPoint
 class LibraryFragment : BaseFragment<FragmentLibraryBinding, LibraryViewModel>(
@@ -33,19 +31,19 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding, LibraryViewModel>(
             startItem(it)
         }
 
-        consume { viewModel.favoriteItems.collect { adapter.items = it } }
+        consume(viewModel.favoriteItems) { adapter.items = it }
     }
 
     private fun startItem(it: TulipItemInfo) {
+        val navController = findNavController()
         when (val key = it.key) {
             is TvShowKey -> {
-                val action =
-                    LibraryFragmentDirections.actionNavigationLibraryToTabbedTvShowActivity(key)
-                findNavController().navigate(action)
+                LibraryFragmentDirections.actionNavigationLibraryToTabbedTvShowActivity(key)
+                    .let { navController.navigate(it) }
             }
             is MovieKey -> {
-                StreamsFragment.newInstance(key)
-                    .show(childFragmentManager, "streams")
+                LibraryFragmentDirections.actionNavigationLibraryToNavigationStreams(key)
+                    .let { navController.navigate(it) }
             }
         }
     }

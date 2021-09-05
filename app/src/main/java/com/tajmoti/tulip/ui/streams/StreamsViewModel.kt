@@ -1,35 +1,43 @@
 package com.tajmoti.tulip.ui.streams
 
 import androidx.lifecycle.*
+import com.tajmoti.commonutils.statefulMap
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.stream.StreamableInfoWithLangLinks
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.service.*
 import com.tajmoti.libtvprovider.*
-import com.tajmoti.tulip.ui.performStatefulOneshotOperation
+import com.tajmoti.tulip.ui.doCancelableJob
+import com.tajmoti.tulip.ui.startFlowAction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @HiltViewModel
 class StreamsViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val downloadService: VideoDownloadService,
     private val extractionService: StreamExtractorService,
     private val streamService: LanguageMappingStreamService
 ) : ViewModel() {
-    private val _state = MutableLiveData<State>(State.Idle)
-    private val _linkLoadingState = MutableLiveData<LinkLoadingState>(LinkLoadingState.Idle)
+    private val args = StreamsFragmentArgs.fromSavedStateHandle(savedStateHandle)
+    private val _state = startFlowAction<State>(State.Idle) {
+        emitAll(fetchStreams(args.streamableKey))
+    }
+    private val _linkLoadingState = MutableStateFlow(false)
+    private val _linkLoadingFlow = MutableSharedFlow<LinkLoadingState>()
 
     /**
      * Loading state of the video stream links.
      */
-    val streamLoadingState: LiveData<State> = _state
+    val streamLoadingState: StateFlow<State> = _state
 
     /**
      * Name of the item, which the streams belong to.
      */
-    val streamableName: LiveData<String?> = Transformations.map(streamLoadingState) {
+    val streamableName: StateFlow<String?> = streamLoadingState.map {
         val streamable = when (it) {
             is State.Loading -> it.info
             is State.Success -> it.info.info
@@ -37,64 +45,47 @@ class StreamsViewModel @Inject constructor(
             else -> return@map null
         }
         streamableToName(streamable)
-    }
+    }.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
     /**
      * Whether the stream links are being loaded right now.
      */
-    val loading = Transformations.map(streamLoadingState)
+    val loading = streamLoadingState.statefulMap(viewModelScope)
     { it is State.Idle || it is State.Preparing || it is State.Loading }
 
     /**
      * True when loading is finished, but no streams were found.
      */
-    val noResults = Transformations.map(streamLoadingState)
+    val noResults = streamLoadingState.statefulMap(viewModelScope)
     { it is State.Success && it.info.streams.isEmpty() }
 
     /**
      * After the user clicks a link, this is the state of the link loading.
      */
-    val linkLoadingState: LiveData<LinkLoadingState?> = _linkLoadingState
+    val linkLoadingState: Flow<LinkLoadingState> = _linkLoadingFlow
 
     /**
      * Whether a stream loading or direct link conversion is currently being performed.
      */
-    val loadingStreamOrDirectLink = Transformations.map(_linkLoadingState) {
-        it is LinkLoadingState.Loading || it is LinkLoadingState.LoadingDirect
-    }
+    val loadingStreamOrDirectLink = _linkLoadingState
 
     /**
      * Represents the link preparation and playing of the last clicked link.
      */
     private var linkExtractionJob: Job? = null
 
-
-    /**
-     * Search for a TV show or a movie.
-     */
-    fun fetchStreamsWithLanguages(info: StreamableKey) {
-        performStatefulOneshotOperation(_state, State.Preparing, State.Idle) {
-            fetchStreamsToState(info)
-        }
-    }
-
     /**
      * The user has clicked a link, it needs to be resolved and played.
      */
     fun onStreamClicked(stream: UnloadedVideoStreamRef, download: Boolean) {
-        val info = stream.info
-        linkExtractionJob?.cancel()
-        linkExtractionJob = viewModelScope.launch {
-            try {
-                _linkLoadingState.value = when (info) {
-                    is VideoStreamRef.Resolved ->
-                        processResolvedLink(stream, info, download)
-                    is VideoStreamRef.Unresolved ->
-                        processUnresolvedLink(stream, info, download)
-                }
-            } catch (e: CancellationException) {
-                _linkLoadingState.value = LinkLoadingState.Idle
+        doCancelableJob(this::linkExtractionJob, _linkLoadingState) {
+            val flow = when (val info = stream.info) {
+                is VideoStreamRef.Resolved ->
+                    processResolvedLink(stream, info, download)
+                is VideoStreamRef.Unresolved ->
+                    processUnresolvedLink(stream, info, download)
             }
+            _linkLoadingFlow.emitAll(flow)
         }
     }
 
@@ -106,26 +97,31 @@ class StreamsViewModel @Inject constructor(
         ref: UnloadedVideoStreamRef,
         info: VideoStreamRef.Unresolved,
         download: Boolean
-    ): LinkLoadingState {
-        _linkLoadingState.value = LinkLoadingState.Loading(info, download)
+    ) = flow {
+        emit(LinkLoadingState.Loading(info, download))
         val resolvedUrl = extractionService.resolveStream(info)
-            .getOrElse { return LinkLoadingState.Error(info, download) }
-        return processResolvedLink(ref, resolvedUrl, download)
+            .getOrElse { emit(LinkLoadingState.Error(info, download)); return@flow }
+        emitAll(processResolvedLink(ref, resolvedUrl, download))
     }
 
     private suspend fun processResolvedLink(
         ref: UnloadedVideoStreamRef,
         info: VideoStreamRef.Resolved,
-        download: Boolean
-    ): LinkLoadingState {
-        if (!ref.linkExtractionSupported)
-            return LinkLoadingState.DirectLinkUnsupported(info, download)
-        _linkLoadingState.value = LinkLoadingState.LoadingDirect(info, download)
+        download: Boolean,
+    ) = flow {
+        if (!ref.linkExtractionSupported) {
+            emit(LinkLoadingState.DirectLinkUnsupported(info, download))
+            return@flow
+        }
+        _linkLoadingFlow.emit(LinkLoadingState.LoadingDirect(info, download))
         val result = extractionService.extractVideoLink(info)
-            .getOrElse { return LinkLoadingState.Error(info, download) }
+            .getOrElse {
+                emit(LinkLoadingState.Error(info, download))
+                return@flow
+            }
         if (download)
             downloadVideo(result)
-        return LinkLoadingState.LoadedDirect(info, download, result)
+        emit(LinkLoadingState.LoadedDirect(info, download, result))
     }
 
     private fun downloadVideo(link: String) {
@@ -133,11 +129,18 @@ class StreamsViewModel @Inject constructor(
         downloadService.downloadFileToFiles(link, state.info.info)
     }
 
-    private suspend fun fetchStreamsToState(info: StreamableKey): State {
-        val consumer: (StreamableInfo) -> Unit = { _state.value = State.Loading(it) }
-        return streamService.getStreamsWithLanguages(info, consumer)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private suspend fun fetchStreams(info: StreamableKey) = channelFlow {
+        var loadingState: State.Loading? = null
+        val consumer: (StreamableInfo) -> Unit = {
+            val obj = State.Loading(it)
+            loadingState = obj
+            viewModelScope.launch { send(obj) }
+        }
+        val result = streamService.getStreamsWithLanguages(info, consumer)
             .map { State.Success(it) }
-            .getOrElse { State.Error((_state.value as? State.Loading)?.info) }
+            .getOrElse { State.Error(loadingState?.info) }
+        send(result)
     }
 
     private fun streamableToName(streamable: StreamableInfo): String {
@@ -180,10 +183,6 @@ class StreamsViewModel @Inject constructor(
     }
 
     sealed class LinkLoadingState {
-        /**
-         * No link clicked yet.
-         */
-        object Idle : LinkLoadingState()
 
         /**
          * The streaming page URL is being resolved.

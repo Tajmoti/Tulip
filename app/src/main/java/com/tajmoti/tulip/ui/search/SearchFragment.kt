@@ -18,9 +18,7 @@ import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentSearchBinding
 import com.tajmoti.tulip.ui.*
-import com.tajmoti.tulip.ui.streams.StreamsFragment
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
 
 @AndroidEntryPoint
 class SearchFragment : BaseFragment<FragmentSearchBinding, SearchViewModel>(
@@ -41,8 +39,8 @@ class SearchFragment : BaseFragment<FragmentSearchBinding, SearchViewModel>(
         val adapter = SearchAdapter()
             .apply { callback = this@SearchFragment::onSearchResultClicked }
             .setToRecyclerWithDividers(binding.recyclerSearch)
-        viewModel.state.observe(viewLifecycleOwner) { onStateChanged(it, adapter) }
-        consume { viewModel.itemToOpen.collect { goToItemByKey(it!!) } }
+        consume(viewModel.state) { onStateChanged(it, adapter) }
+        consume(viewModel.itemToOpen) { goToItemByKey(it) }
     }
 
     private fun fixLayoutCentering() {
@@ -94,14 +92,15 @@ class SearchFragment : BaseFragment<FragmentSearchBinding, SearchViewModel>(
 
     private fun goToItemByKey(key: ItemKey) {
         searchView.clearFocus()
+        val navController = findNavController()
         when (key) {
             is TvShowKey -> {
                 SearchFragmentDirections.actionNavigationSearchToTabbedTvShowActivity(key)
-                    .let { findNavController().navigate(it) }
+                    .let { navController.navigate(it) }
             }
             is MovieKey -> {
-                StreamsFragment.newInstance(key)
-                    .show(childFragmentManager, "streams")
+                SearchFragmentDirections.actionNavigationSearchToStreamsFragment(key)
+                    .let { navController.navigate(it) }
             }
         }
     }
