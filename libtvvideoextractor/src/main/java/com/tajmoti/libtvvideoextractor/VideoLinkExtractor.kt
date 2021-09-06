@@ -8,7 +8,8 @@ import kotlinx.coroutines.withContext
  * Extracts a direct video URL from a streaming service video page.
  */
 class VideoLinkExtractor(
-    private val pageLoader: PageSourceLoaderWithLoadCount,
+    private val rawSourceLoader: RawPageSourceLoader,
+    private val webDriverSourceLoader: WebDriverPageSourceLoader,
     private val modules: List<ExtractorModule> = ExtractorModule.DEFAULT_MODULES
 ) {
 
@@ -24,7 +25,7 @@ class VideoLinkExtractor(
             return Result.failure(Exception("No handler exists for url $url"))
         }
         return withContext(Dispatchers.Default) {
-            handler.extractVideoUrl(url, pageLoader)
+            handler.extractVideoUrl(url, rawSourceLoader, webDriverSourceLoader)
         }
     }
 

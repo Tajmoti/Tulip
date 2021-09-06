@@ -2,6 +2,7 @@
 ### Changed
 - Fixed movies from Kinox.to not working
 - Add streams to stream result list as they load instead of all at once
+- Speed up video link loading from streamzz.to
 
 ## [0.5.0] - 2021-09-02
 ### Added

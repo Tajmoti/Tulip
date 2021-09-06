@@ -3,14 +3,13 @@ package com.tajmoti.tulip.di
 import android.content.Context
 import android.os.Handler
 import androidx.room.Room
-import com.tajmoti.libprimewiretvprovider.PageSourceLoader
 import com.tajmoti.libprimewiretvprovider.PrimewireTvProvider
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.kinox.KinoxTvProvider
-import com.tajmoti.libtvvideoextractor.PageSourceLoaderWithLoadCount
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
+import com.tajmoti.libtvvideoextractor.WebDriverPageSourceLoader
 import com.tajmoti.libwebdriver.WebDriver
 import com.tajmoti.libwebdriver.WebViewWebDriver
 import com.tajmoti.tulip.createAppOkHttpClient
@@ -70,7 +69,7 @@ object Provider {
      * Returns a function, which loads the provided URL into a WebView,
      * runs all the JavaScript and returns the finished page HTML source.
      */
-    private fun makeWebViewGetter(webDriver: WebDriver): PageSourceLoader {
+    private fun makeWebViewGetter(webDriver: WebDriver): WebDriverPageSourceLoader {
         return { url, urlFilter ->
             val params = WebDriver.Params(urlFilter = urlFilter)
             webDriver.getPageHtml(url, params)
@@ -106,20 +105,10 @@ object Provider {
 
     @Provides
     @Singleton
-    fun provideLinkExtractor(webDriver: WebDriver): VideoLinkExtractor {
-        val webViewGetter = makeWebViewGetterWithLoadCount(webDriver)
-        return VideoLinkExtractor(webViewGetter)
-    }
-
-    /**
-     * Same as [makeWebViewGetter], but the page must finish loading
-     * count times before the page source is returned.
-     */
-    private fun makeWebViewGetterWithLoadCount(webDriver: WebDriver): PageSourceLoaderWithLoadCount {
-        return { url, count, urlBlocker ->
-            val params = WebDriver.Params(urlFilter = urlBlocker, count = count)
-            webDriver.getPageHtml(url, params)
-        }
+    fun provideLinkExtractor(okHttpClient: OkHttpClient, webDriver: WebDriver): VideoLinkExtractor {
+        val webViewGetter = makeWebViewGetter(webDriver)
+        val http = makeHttpGetter(okHttpClient)
+        return VideoLinkExtractor(http, webViewGetter)
     }
 
 

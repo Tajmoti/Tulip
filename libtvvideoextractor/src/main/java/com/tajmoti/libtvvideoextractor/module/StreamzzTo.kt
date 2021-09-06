@@ -1,10 +1,9 @@
 package com.tajmoti.libtvvideoextractor.module
 
 import com.tajmoti.commonutils.flatMap
-import com.tajmoti.commonutils.logger
 import com.tajmoti.libtvvideoextractor.ExtractorModule
-import com.tajmoti.libtvvideoextractor.PageSourceLoaderWithLoadCount
-import org.jsoup.Jsoup
+import com.tajmoti.libtvvideoextractor.RawPageSourceLoader
+import com.tajmoti.libtvvideoextractor.WebDriverPageSourceLoader
 
 class StreamzzTo : ExtractorModule {
     override val supportedUrls = listOf("streamzz.to")
@@ -13,23 +12,21 @@ class StreamzzTo : ExtractorModule {
 
     override suspend fun extractVideoUrl(
         url: String,
-        loader: PageSourceLoaderWithLoadCount
+        rawLoader: RawPageSourceLoader,
+        webDriverLoader: WebDriverPageSourceLoader
     ): Result<String> {
-        return loader(url, 2, this::checkUrl)
+        return rawLoader(url)
             .flatMap { parseResults(it) }
     }
 
     private fun parseResults(source: String): Result<String> {
         return runCatching {
-            Jsoup.parse(source)
-                .getElementsByTag("video")
-                .first()!!
-                .attr("src")
-        }.onFailure { logger.warn("Request failed", it) }
+            val token = VIDEO_URL_REGEX.find(source)!!.groupValues[1]
+            "https://get.streamz.tw/getlink-$token.dll"
+        }
     }
 
-    private fun checkUrl(url: String): Boolean {
-        return (url.contains(supportedUrls[0]) || url.contains("cdn"))
-                && !url.endsWith(".png") && !url.endsWith(".jpg")
+    companion object {
+        private val VIDEO_URL_REGEX = "video3\\|src\\|(.*)\\|type\\|video_3".toRegex()
     }
 }

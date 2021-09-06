@@ -16,10 +16,6 @@ interface WebDriver {
         /**
          * Accepts or reject URLs, see [UrlFilter] doc.
          */
-        val urlFilter: UrlFilter? = null,
-        /**
-         * How many page loads should finish before the HTML is returned.
-         */
-        val count: Int = 1
+        val urlFilter: UrlFilter? = null
     )
 }

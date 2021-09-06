@@ -38,25 +38,14 @@ class WebViewWebDriver(
         p: WebDriver.Params,
         cont: Continuation<Result<String>>
     ) {
-        var state: State = State.Waiting(0)
-
-        fun shouldSubmit(state: State.Waiting, result: Result<String>): Boolean {
-            return state.submittedCount == p.count - 1 || result.isFailure
-        }
-
+        var finished = false
         fun submitOnce(wv: WebView, result: Result<String>) {
-            val saved = state
-            if (saved !is State.Waiting)
+            if (finished)
                 return
-            state = if (shouldSubmit(saved, result)) {
-                cont.resumeWith(Result.success(result))
-                wv.destroy()
-                State.Finished
-            } else {
-                saved.copy(saved.submittedCount + 1)
-            }
+            cont.resumeWith(Result.success(result))
+            wv.destroy()
+            finished = true
         }
-
         val wv = createWebView(p,
             { wv, html ->
                 mainHandler.post { submitOnce(wv, Result.success(html)) }
@@ -70,11 +59,6 @@ class WebViewWebDriver(
             submitOnce(wv, Result.failure(TimeoutException()))
         }, p.timeoutMs)
         wv.loadUrl(url)
-    }
-
-    private sealed class State {
-        data class Waiting(val submittedCount: Int) : State()
-        object Finished : State()
     }
 
     private fun createWebView(

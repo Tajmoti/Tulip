@@ -25,5 +25,9 @@ interface ExtractorModule {
     val supportedServiceNames: List<String>
 
 
-    suspend fun extractVideoUrl(url: String, loader: PageSourceLoaderWithLoadCount): Result<String>
+    suspend fun extractVideoUrl(
+        url: String,
+        rawLoader: RawPageSourceLoader,
+        webDriverLoader: WebDriverPageSourceLoader
+    ): Result<String>
 }
