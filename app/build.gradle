@@ -12,7 +12,7 @@ new File(rootDir, "tmdb.properties").withInputStream { props.load(it) }
 def tmdbApiKey = props.getProperty("key")
 
 // Development options
-def HTTP_DEBUG = false
+def HTTP_DEBUG = true
 
 android {
     compileSdkVersion 31

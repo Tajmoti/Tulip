@@ -7,7 +7,6 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.tajmoti.commonutils.logger
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -20,7 +19,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        logger.debug("onCreate activity")
         navController = findNavController(R.id.nav_host_fragment_activity_main)
         binding.navView.setupWithNavController(navController)
     }
