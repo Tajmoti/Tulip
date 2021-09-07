@@ -1,11 +1,13 @@
 ## [Unreleased]
+
+## [0.7.0] - 2021-09-07
 ### Changed
 - Fixed movies from Kinox.to not working
 - Add streams to stream result list as they load instead of all at once
 - Speed up video link loading from streamzz.to
 - Don't expand search view on app start
 
-## [0.5.0] - 2021-09-02
+## [0.6.0] - 2021-09-02
 ### Added
 - Support for searching items in the TMDB database
 - Slovak translation
@@ -47,6 +49,7 @@
 - Support for primewire.ag
 
 [Unreleased]: https://github.com/Tajmoti/Tulip/tree/main
+[0.6.0]: https://github.com/Tajmoti/Tulip/tree/v0.6.0
 [0.5.0]: https://github.com/Tajmoti/Tulip/tree/v0.5.0
 [0.4.0]: https://github.com/Tajmoti/Tulip/tree/v0.4.0
 [0.3.0]: https://github.com/Tajmoti/Tulip/tree/v0.3.0
