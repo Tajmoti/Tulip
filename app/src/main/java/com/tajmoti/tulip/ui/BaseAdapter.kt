@@ -2,6 +2,7 @@ package com.tajmoti.tulip.ui
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 
@@ -10,8 +11,9 @@ abstract class BaseAdapter<T, B : ViewBinding>(
 ) : RecyclerView.Adapter<BaseAdapter.Holder<B>>() {
     var items = listOf<T>()
         set(value) {
+            val diffResult = DiffUtil.calculateDiff(EqualityDiffCallback(value, field))
             field = value
-            notifyDataSetChanged()
+            diffResult.dispatchUpdatesTo(this)
         }
     var callback: ((T) -> Unit)? = null
 
@@ -35,4 +37,22 @@ abstract class BaseAdapter<T, B : ViewBinding>(
     abstract fun onBindViewHolder(vh: Holder<B>, item: T)
 
     class Holder<B : ViewBinding>(val binding: B) : RecyclerView.ViewHolder(binding.root)
+
+    class EqualityDiffCallback<T>(
+        private var newVideos: List<T>,
+        private var oldVideos: List<T>
+    ) : DiffUtil.Callback() {
+
+        override fun getOldListSize() = oldVideos.size
+
+        override fun getNewListSize() = newVideos.size
+
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldVideos[oldItemPosition] == newVideos[newItemPosition]
+        }
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldVideos[oldItemPosition] == newVideos[newItemPosition]
+        }
+    }
 }
