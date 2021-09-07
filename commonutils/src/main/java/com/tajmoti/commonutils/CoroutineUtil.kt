@@ -26,6 +26,20 @@ suspend inline fun <R, S> List<R>.parallelMap(
     }.awaitAll()
 }
 
+suspend inline fun <R, S> List<R>.parallelMapToFlow(
+    crossinline block: suspend CoroutineScope.(R) -> S
+): Flow<S> {
+    return channelFlow {
+        coroutineScope {
+            map {
+                async {
+                    send(block.invoke(this, it))
+                }
+            }
+        }
+    }
+}
+
 suspend inline fun <P, R, S> Map<P, R>.parallelMap(
     crossinline block: suspend CoroutineScope.(P, R) -> S
 ): List<S> {

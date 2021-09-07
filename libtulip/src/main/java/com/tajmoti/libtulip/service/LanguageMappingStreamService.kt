@@ -3,6 +3,8 @@ package com.tajmoti.libtulip.service
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.stream.StreamableInfoWithLangLinks
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * Retrieves streams and maps them to their languages.
@@ -16,9 +18,10 @@ interface LanguageMappingStreamService {
     suspend fun getStreamsWithLanguages(
         key: StreamableKey,
         infoConsumer: (StreamableInfo) -> Unit
-    ): Result<StreamableInfoWithLangLinks> {
+    ): Result<Flow<StreamableInfoWithLangLinks>> {
         return when (key) {
             is StreamableKey.Hosted -> getStreamsWithLanguages(key, infoConsumer)
+                .map { flowOf(it) } // TODO
             is StreamableKey.Tmdb -> getStreamsWithLanguages(key, infoConsumer)
         }
     }
@@ -31,5 +34,5 @@ interface LanguageMappingStreamService {
     suspend fun getStreamsWithLanguages(
         key: StreamableKey.Tmdb,
         infoConsumer: (StreamableInfo) -> Unit
-    ): Result<StreamableInfoWithLangLinks>
+    ): Result<Flow<StreamableInfoWithLangLinks>>
 }

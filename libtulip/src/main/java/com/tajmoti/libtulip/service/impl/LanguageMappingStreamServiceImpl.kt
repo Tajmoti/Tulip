@@ -17,6 +17,7 @@ import com.tajmoti.libtulip.service.HostedTvDataService
 import com.tajmoti.libtulip.service.LanguageMappingStreamService
 import com.tajmoti.libtulip.service.StreamExtractorService
 import com.tajmoti.libtulip.service.TvDataService
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class LanguageMappingStreamServiceImpl @Inject constructor(
@@ -47,7 +48,7 @@ class LanguageMappingStreamServiceImpl @Inject constructor(
     override suspend fun getStreamsWithLanguages(
         key: StreamableKey.Tmdb,
         infoConsumer: (StreamableInfo) -> Unit
-    ): Result<StreamableInfoWithLangLinks> {
+    ): Result<Flow<StreamableInfoWithLangLinks>> {
         return tvDataService.getStreamableInfo(key)
             .onFailure { logger.warn("Failed to fetch streams for $key", it) }
             .onSuccess(infoConsumer)
@@ -60,9 +61,10 @@ class LanguageMappingStreamServiceImpl @Inject constructor(
         listOfPairs: List<Pair<HostedStreamable, LanguageCode>>,
         info: StreamableInfo
     ) = getStreamsAndMapLanguages(listOfPairs)
-        .sortedBy { videoWithLang -> !videoWithLang.video.linkExtractionSupported }
-        .let { StreamableInfoWithLangLinks(info, it) }
-
+        .map {
+            val vid = it.sortedBy { videoWithLang -> !videoWithLang.video.linkExtractionSupported }
+            StreamableInfoWithLangLinks(info, vid)
+        }
 
     private suspend fun getStreamablesWithLanguages(
         info: StreamableKey.Tmdb
@@ -90,14 +92,19 @@ class LanguageMappingStreamServiceImpl @Inject constructor(
 
     private suspend fun getStreamsAndMapLanguages(
         streamables: List<Pair<HostedStreamable, LanguageCode>>
-    ): List<UnloadedVideoWithLanguage> {
-        return streamables.parallelMap { (s, l) -> combineStreamableWithLanguage(s, l) }
+    ): Flow<List<UnloadedVideoWithLanguage>> {
+        return streamables.parallelMapToFlow { (s, l) -> combineStreamableWithLanguage(s, l) }
             .filterNotNull()
-            .flatMapWithTransform(
-                { pair -> pair.first.streams },
-                { pair, lang -> lang.video to pair.second }
-            )
-            .map { (video, lang) -> UnloadedVideoWithLanguage(video, lang) }
+            .runningFold(emptyList<Pair<StreamableInfoWithLangLinks, LanguageCode>>()) { a, b ->
+                a + b
+            }
+            .map {
+                it.flatMapWithTransform(
+                    { pair -> pair.first.streams },
+                    { pair, lang -> lang.video to pair.second }
+                )
+                    .map { (video, lang) -> UnloadedVideoWithLanguage(video, lang) }
+            }
     }
 
     private suspend fun combineStreamableWithLanguage(

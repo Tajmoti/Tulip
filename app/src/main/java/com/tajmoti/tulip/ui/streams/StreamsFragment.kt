@@ -38,7 +38,7 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
 
     private fun onStreamLoadingStateChanged(it: StreamsViewModel.State, adapter: StreamsAdapter) {
         if (it is StreamsViewModel.State.Success)
-            adapter.items = it.info.streams
+            consume(it.infoFlow) { adapter.items = it.streams }
     }
 
     private fun onDirectLoadingChanged(it: StreamsViewModel.LinkLoadingState?) {

@@ -23,16 +23,15 @@ class StreamsViewModel @Inject constructor(
     private val streamService: LanguageMappingStreamService
 ) : ViewModel() {
     private val args = StreamsFragmentArgs.fromSavedStateHandle(savedStateHandle)
-    private val _state = startFlowAction<State>(State.Idle) {
-        emitAll(fetchStreams(args.streamableKey))
-    }
     private val _linkLoadingState = MutableStateFlow(false)
     private val _linkLoadingFlow = MutableSharedFlow<LinkLoadingState>()
 
     /**
      * Loading state of the video stream links.
      */
-    val streamLoadingState: StateFlow<State> = _state
+    val streamLoadingState: StateFlow<State> = startFlowAction<State>(State.Idle) {
+        emitAll(fetchStreams(args.streamableKey))
+    }
 
     /**
      * Name of the item, which the streams belong to.
@@ -40,7 +39,7 @@ class StreamsViewModel @Inject constructor(
     val streamableName: StateFlow<String?> = streamLoadingState.map {
         val streamable = when (it) {
             is State.Loading -> it.info
-            is State.Success -> it.info.info
+            is State.Success -> it.infoFlow.value.info
             is State.Error -> it.info ?: return@map null
             else -> return@map null
         }
@@ -54,10 +53,9 @@ class StreamsViewModel @Inject constructor(
     { it is State.Idle || it is State.Preparing || it is State.Loading }
 
     /**
-     * True when loading is finished, but no streams were found.
+     * True when loading is finished, but no streams were found. // TODO Better solution
      */
-    val noResults = streamLoadingState.statefulMap(viewModelScope)
-    { it is State.Success && it.info.streams.isEmpty() }
+    val noResults = MutableStateFlow(false)
 
     /**
      * After the user clicks a link, this is the state of the link loading.
@@ -126,7 +124,7 @@ class StreamsViewModel @Inject constructor(
 
     private fun downloadVideo(link: String) {
         val state = streamLoadingState.value as State.Success
-        downloadService.downloadFileToFiles(link, state.info.info)
+        downloadService.downloadFileToFiles(link, state.infoFlow.value.info)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -138,9 +136,15 @@ class StreamsViewModel @Inject constructor(
             viewModelScope.launch { send(obj) }
         }
         val result = streamService.getStreamsWithLanguages(info, consumer)
-            .map { State.Success(it) }
+            .map { it.onCompletion { updateAnyErrorsValue() } }
+            .map { State.Success(it.stateIn(viewModelScope)) }
             .getOrElse { State.Error(loadingState?.info) }
         send(result)
+    }
+
+    private fun updateAnyErrorsValue() {
+        val successState = (streamLoadingState.value as? State.Success)
+        noResults.value = successState?.infoFlow?.value?.streams?.none() ?: false
     }
 
     private fun streamableToName(streamable: StreamableInfo): String {
@@ -170,7 +174,7 @@ class StreamsViewModel @Inject constructor(
         /**
          * Streamable item loaded successfully.
          */
-        data class Success(val info: StreamableInfoWithLangLinks) : State()
+        data class Success(val infoFlow: StateFlow<StreamableInfoWithLangLinks>) : State()
 
         /**
          * Error during loading of the item.
