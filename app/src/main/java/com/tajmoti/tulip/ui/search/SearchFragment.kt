@@ -111,8 +111,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding, SearchViewModel>(
         searchView = (item.actionView as SearchView)
             .apply { setOnQueryTextListener(this@SearchFragment) }
             .apply { queryHint = getString(R.string.search_query_hint) }
-            .apply { requestFocus() }
-        item.expandActionView()
     }
 
     override fun onQueryTextSubmit(query: String): Boolean {
