@@ -17,6 +17,24 @@
         android:keepScreenOn="true"
         tools:context=".ui.player.VideoPlayerActivity">
 
+        <Button
+            android:id="@+id/button_subtitle_adjust_video"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/ic_baseline_hearing_24"
+            android:text="@string/subtitle_adjust_word_heard"
+            app:layout_constraintBottom_toTopOf="@id/button_subtitle_adjust_text"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <Button
+            android:id="@+id/button_subtitle_adjust_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/ic_baseline_remove_red_eye_24"
+            android:text="@string/subtitle_adjust_word_seen"
+            app:layout_constraintBottom_toTopOf="@id/seek_bar_video_progress"
+            app:layout_constraintEnd_toEndOf="parent" />
+
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline_top_panel"
             android:layout_width="wrap_content"

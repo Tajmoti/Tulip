@@ -29,6 +29,10 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 ) {
     private val args: VideoPlayerActivityArgs by navArgs()
     private val viewModel: VideoPlayerViewModel by viewModels()
+
+    /**
+     * Instance of the VLC library and its video player
+     */
     private lateinit var vlc: VLC
 
 
@@ -50,8 +54,15 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         binding.seekBarVideoProgress.setOnSeekBarChangeListener(OnSeekBarChangeListener())
         binding.buttonPlayResume.setOnClickListener { onPlayPausePressed() }
         binding.buttonSubtitles.setOnClickListener { showSubtitleSelectionDialog() }
+        binding.buttonSubtitleAdjustText.setOnClickListener {
+            viewModel.onTextSeen(vlc.player.time)
+        }
+        binding.buttonSubtitleAdjustVideo.setOnClickListener {
+            viewModel.onWordHeard(vlc.player.time)
+        }
         consume(viewModel.subtitleFile) { it?.let { onSubtitlesReady(it) } }
         consume(viewModel.downloadingError) { if (it) toast(R.string.subtitle_download_failure) }
+        consume(viewModel.subtitleOffset) { onSubtitlesDelayChanged(it) }
     }
 
     private fun initVLC(): VLC {
@@ -160,6 +171,15 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
     private fun onSubtitlesReady(file: File) {
         vlc.player.addSlave(Subtitle, Uri.fromFile(file), true)
+    }
+
+    private fun onSubtitlesDelayChanged(delay: Long) {
+        if (!vlc.player.isPlaying)
+            return
+        if (!vlc.player.setSpuDelay(-delay * 1000))
+            toast("Setting of subtitle delay failed")
+        if (delay != 0L)
+            toast("Applying subtitle delay of $delay ms")
     }
 
     inner class OnSeekBarChangeListener : SeekBar.OnSeekBarChangeListener {

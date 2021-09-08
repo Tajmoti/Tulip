@@ -25,4 +25,6 @@
     <string name="starting_download">Starting download</string>
     <string name="select_subtitles">Select subtitles</string>
     <string name="subtitle_download_failure">Selected subtitles failed to load</string>
+    <string name="subtitle_adjust_word_heard">I heard it</string>
+    <string name="subtitle_adjust_word_seen">I saw it</string>
 </resources>

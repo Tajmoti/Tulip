@@ -54,6 +54,10 @@ fun AppCompatActivity.toast(@StringRes stringResId: Int) {
     Toast.makeText(this, stringResId, Toast.LENGTH_SHORT).show()
 }
 
+fun AppCompatActivity.toast(message: String) {
+    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+}
+
 fun Fragment.toast(message: String) {
     Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
 }

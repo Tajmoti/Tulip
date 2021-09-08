@@ -27,6 +27,7 @@ class VideoPlayerViewModel @Inject constructor(
 ) : ViewModel() {
     private val args = VideoPlayerActivityArgs.fromSavedStateHandle(savedStateHandle)
 
+    private val _subtitleOffset = MutableStateFlow(0L)
     private val _subtitleListLoadingState = MutableStateFlow(false)
     private val _subtitleListLoadingFlow =
         MutableStateFlow<SubtitleListLoadingState>(SubtitleListLoadingState.Loading)
@@ -85,6 +86,19 @@ class VideoPlayerViewModel @Inject constructor(
     }
 
     /**
+     * State of the interactive subtitle synchronization mechanism.
+     * If not null, the user has pressed a button because they
+     * saw a word that they want to match to a later shown subtitle text or vice versa.
+     */
+    private var subSyncState: SubtitleSyncState? = null
+
+    /**
+     * How much the subtitles should be offset.
+     * Positive values mean subtitles should be shown earlier.
+     */
+    val subtitleOffset: StateFlow<Long> = _subtitleOffset
+
+    /**
      * Represents fetching of the list of available subtitles.
      */
     private var subtitleFetchJob: Job? = null
@@ -112,9 +126,43 @@ class VideoPlayerViewModel @Inject constructor(
      * The subtitles need to be downloaded before the video is played.
      */
     fun onSubtitlesSelected(subtitleInfo: SubtitleInfo) {
+        _subtitleOffset.value = 0L
         doCancelableJob(this::subtitleDownloadJob, _subtitleDownloadState) {
             _subtitleDownloadFlow.emitAll(downloadSubtitles(subtitleInfo))
         }
+    }
+
+    /**
+     * The user heard a word that they want to match to some text.
+     */
+    fun onWordHeard(time: Long) {
+        val seen = subSyncState.takeIf { it is SubtitleSyncState.Seen }
+                as? SubtitleSyncState.Seen
+        if (seen == null) {
+            subSyncState = SubtitleSyncState.Heard(time)
+        } else {
+            calculateAndSetSubtitleDelay(time, seen.time)
+        }
+    }
+
+    /**
+     * The user saw text that they want to match to a heard word.
+     */
+    fun onTextSeen(time: Long) {
+        // If an offset is already set, take it into account
+        val adjustedTime = time - subtitleOffset.value
+        val heard = subSyncState.takeIf { it is SubtitleSyncState.Heard }
+                as? SubtitleSyncState.Heard
+        if (heard == null) {
+            subSyncState = SubtitleSyncState.Seen(adjustedTime)
+        } else {
+            calculateAndSetSubtitleDelay(heard.time, adjustedTime)
+        }
+    }
+
+    private fun calculateAndSetSubtitleDelay(heardTime: Long, seenTime: Long) {
+        subSyncState = null
+        _subtitleOffset.value = seenTime - heardTime
     }
 
     private fun downloadSubtitles(subtitleInfo: SubtitleInfo) = flow {
@@ -143,5 +191,10 @@ class VideoPlayerViewModel @Inject constructor(
         data class Success(val subtitles: File) : SubtitleDownloadingState()
 
         object Error : SubtitleDownloadingState()
+    }
+
+    sealed interface SubtitleSyncState {
+        class Heard(val time: Long): SubtitleSyncState
+        class Seen(val time: Long): SubtitleSyncState
     }
 }
