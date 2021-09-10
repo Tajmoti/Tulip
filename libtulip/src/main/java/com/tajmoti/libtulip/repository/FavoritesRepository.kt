@@ -1,11 +1,9 @@
-package com.tajmoti.libtulip.data
+package com.tajmoti.libtulip.repository
 
 import com.tajmoti.libtulip.model.key.ItemKey
 import kotlinx.coroutines.flow.Flow
 
-interface UserDataDataSource {
-
-    suspend fun getUserFavorites(): List<ItemKey>
+interface FavoritesRepository {
 
     fun getUserFavoritesAsFlow(): Flow<List<ItemKey>>
 

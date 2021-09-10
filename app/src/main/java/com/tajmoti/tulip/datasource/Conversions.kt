@@ -1,6 +1,6 @@
 @file:Suppress("NOTHING_TO_INLINE")
 
-package com.tajmoti.tulip.repository.impl
+package com.tajmoti.tulip.datasource
 
 import com.tajmoti.libtmdb.model.movie.Movie
 import com.tajmoti.libtmdb.model.tv.Episode
@@ -16,7 +16,6 @@ import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
-import com.tajmoti.libtulip.model.userdata.UserFavorite
 import com.tajmoti.libtvprovider.TvItemInfo
 import com.tajmoti.tulip.db.entity.hosted.DbEpisode
 import com.tajmoti.tulip.db.entity.hosted.DbMovie
@@ -67,20 +66,20 @@ internal inline fun Movie.toDb(): DbTmdbMovie {
 }
 
 
-internal inline fun DbFavoriteTmdbItem.fromDb(): UserFavorite {
+internal inline fun DbFavoriteTmdbItem.fromDb(): ItemKey {
     val id = if (type == ItemType.TV_SHOW) {
         TvShowKey.Tmdb(TmdbItemId.Tv(tmdbItemId))
     } else {
         MovieKey.Tmdb(TmdbItemId.Movie(tmdbItemId))
     }
-    return UserFavorite(id)
+    return id
 }
 
-internal inline fun DbFavoriteHostedItem.fromDb(): UserFavorite {
+internal inline fun DbFavoriteHostedItem.fromDb(): ItemKey {
     return if (type == ItemType.TV_SHOW) {
-        UserFavorite(TvShowKey.Hosted(streamingService, key))
+        TvShowKey.Hosted(streamingService, key)
     } else {
-        UserFavorite(MovieKey.Hosted(streamingService, key))
+        MovieKey.Hosted(streamingService, key)
     }
 }
 

@@ -1,4 +1,4 @@
-package com.tajmoti.tulip.repository.impl
+package com.tajmoti.tulip.datasource
 
 import com.tajmoti.libtmdb.model.movie.Movie
 import com.tajmoti.libtmdb.model.tv.Episode
@@ -9,7 +9,7 @@ import com.tajmoti.tulip.db.dao.tmdb.TmdbDao
 import com.tajmoti.tulip.db.entity.tmdb.DbTmdbSeason
 import javax.inject.Inject
 
-class AndroidTvDataSourceImpl @Inject constructor(
+class AndroidTvDataSource @Inject constructor(
     private val dao: TmdbDao
 ) : LocalTvDataSource {
 

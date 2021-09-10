@@ -1,6 +1,6 @@
 @file:Suppress("UNUSED", "NOTHING_TO_INLINE")
 
-package com.tajmoti.libtulip.service
+package com.tajmoti.libtulip.misc
 
 inline fun <T> List<T?>.takeIfNoneNull(): List<T>? {
     val notNull = filterNotNull()

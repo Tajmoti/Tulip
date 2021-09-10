@@ -62,6 +62,17 @@ suspend inline fun <R, S> List<R>.parallelMapBothReversed(
     }.awaitAll()
 }
 
+suspend inline fun <A, B> mapToAsyncJobsPair(
+    crossinline a: suspend () -> A,
+    crossinline b: suspend () -> B,
+): Pair<A, B> {
+    return coroutineScope {
+        val aDeferred = async { a() }
+        val bDeferred = async { b() }
+        Pair(aDeferred, bDeferred)
+    }.awaitAll()
+}
+
 suspend inline fun <A, B, C> mapToAsyncJobsTriple(
     crossinline a: suspend () -> A,
     crossinline b: suspend () -> B,

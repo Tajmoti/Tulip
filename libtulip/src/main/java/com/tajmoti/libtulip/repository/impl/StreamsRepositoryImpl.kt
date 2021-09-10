@@ -1,10 +1,7 @@
-package com.tajmoti.libtulip.service.impl
+package com.tajmoti.libtulip.repository.impl
 
 import com.tajmoti.commonutils.logger
-import com.tajmoti.libtulip.model.hosted.StreamingService
-import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
-import com.tajmoti.libtulip.service.StreamExtractorService
-import com.tajmoti.libtvprovider.MultiTvProvider
+import com.tajmoti.libtulip.repository.StreamsRepository
 import com.tajmoti.libtvprovider.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
 import io.ktor.client.*
@@ -13,31 +10,19 @@ import io.ktor.client.statement.*
 import java.net.URI
 import javax.inject.Inject
 
-class StreamsExtractionServiceImpl @Inject constructor(
+class StreamsRepositoryImpl @Inject constructor(
     private val linkExtractor: VideoLinkExtractor,
-    private val httpClient: HttpClient,
-    private val tvProvider: MultiTvProvider<StreamingService>
-) : StreamExtractorService {
+    private val httpClient: HttpClient
+) : StreamsRepository {
 
-    override suspend fun fetchStreams(
-        service: StreamingService,
-        streamableKey: String
-    ): Result<List<UnloadedVideoStreamRef>> {
-        val result = tvProvider.getStreamableLinks(service, streamableKey)
-            .onFailure { logger.warn("Failed to fetch streams for $service $streamableKey", it) }
-            .getOrElse {
-                return Result.failure(it)
-            }
-        val sorted = result.map { UnloadedVideoStreamRef(it, canExtractFromService(it)) }
-        return Result.success(sorted)
-    }
-
-    private fun canExtractFromService(ref: VideoStreamRef): Boolean {
+    override fun canExtractFromService(ref: VideoStreamRef): Boolean {
         return linkExtractor.canExtractUrl(ref.url)
                 || linkExtractor.canExtractService(ref.serviceName)
     }
 
-    override suspend fun resolveStream(ref: VideoStreamRef.Unresolved): Result<VideoStreamRef.Resolved> {
+    override suspend fun resolveStream(
+        ref: VideoStreamRef.Unresolved
+    ): Result<VideoStreamRef.Resolved> {
         // If there were no redirects, assume that the link already points to the streaming page
         return resolveRedirects(ref.url)
             .onFailure { logger.warn("Failed to resolve redirects of $ref", it) }

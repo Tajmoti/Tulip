@@ -5,5 +5,5 @@ import com.tajmoti.libtmdb.model.tv.Tv
 
 data class SearchTvResponse(
     @field:Json(name = "results")
-    val results: List<Tv>,
-)
+    override val results: List<Tv>,
+) : SearchResponse

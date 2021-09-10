@@ -3,15 +3,15 @@ package com.tajmoti.tulip.ui.show
 import androidx.lifecycle.*
 import com.tajmoti.commonutils.statefulMap
 import com.tajmoti.libtmdb.model.tv.Tv
+import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtulip.misc.NetworkResult
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.model.pairSeasonInfoWithKey
 import com.tajmoti.libtulip.model.tmdb.TmdbCompleteTvShow
 import com.tajmoti.libtulip.model.toTulipSeasonInfo
-import com.tajmoti.libtulip.service.HostedTvDataService
-import com.tajmoti.libtulip.service.TvDataService
-import com.tajmoti.libtulip.service.UserFavoritesService
+import com.tajmoti.libtulip.repository.HostedTvDataRepository
+import com.tajmoti.libtulip.repository.FavoritesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -22,9 +22,9 @@ import javax.inject.Inject
 @HiltViewModel
 class TvShowViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val hostedTvDataService: HostedTvDataService,
-    private val tmdbTvDataService: TvDataService,
-    private val favoritesService: UserFavoritesService
+    private val hostedTvDataRepository: HostedTvDataRepository,
+    private val tmdbRepo: TmdbTvDataRepository,
+    private val favoritesRepository: FavoritesRepository
 ) : ViewModel() {
     private val args = TvShowFragmentArgs.fromSavedStateHandle(savedStateHandle)
 
@@ -72,8 +72,8 @@ class TvShowViewModel @Inject constructor(
 
     private fun attachFavorites() {
         viewModelScope.launch {
-            val flow = favoritesService.getUserFavoritesAsFlow()
-                .map { result -> result.any { it.key == args.itemKey } }
+            val flow = favoritesRepository.getUserFavoritesAsFlow()
+                .map { result -> result.any { it == args.itemKey } }
             _isFavorite.emitAll(flow)
         }
     }
@@ -81,9 +81,9 @@ class TvShowViewModel @Inject constructor(
     fun toggleFavorites(key: TvShowKey) {
         viewModelScope.launch {
             if (isFavorite.value) {
-                favoritesService.deleteUserFavorite(key)
+                favoritesRepository.deleteUserFavorite(key)
             } else {
-                favoritesService.addUserFavorite(key)
+                favoritesRepository.addUserFavorite(key)
             }
         }
     }
@@ -92,20 +92,20 @@ class TvShowViewModel @Inject constructor(
         return when (key) {
             is TvShowKey.Hosted -> getHostedTvShowAsState(key)
             is TvShowKey.Tmdb -> {
-                tmdbTvDataService.prefetchTvShowData(key)
+                tmdbRepo.prefetchTvShowData(key)
                 getTmdbTvShowAsState(key)
             }
         }
     }
 
     private suspend inline fun getHostedTvShowAsState(key: TvShowKey.Hosted) = flow {
-        val show = hostedTvDataService.getTvShow(key)
+        val show = hostedTvDataRepository.getTvShow(key)
             .getOrElse {
                 emit(State.Error)
                 return@flow
             }
         _name.value = show.info.name
-        val result = hostedTvDataService.getSeasons(key)
+        val result = hostedTvDataRepository.getSeasons(key)
             .getOrElse {
                 emit(State.Error)
                 return@flow
@@ -115,7 +115,7 @@ class TvShowViewModel @Inject constructor(
     }
 
     private suspend inline fun getTmdbTvShowAsState(key: TvShowKey.Tmdb): Flow<State> {
-        return tmdbTvDataService.getTvShowWithSeasonsAsFlow(key)
+        return tmdbRepo.getTvShowWithSeasonsAsFlow(key)
             .onEach { result ->
                 if (result !is NetworkResult.Success)
                     return@onEach

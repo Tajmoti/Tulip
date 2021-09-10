@@ -1,5 +1,6 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
@@ -38,7 +39,8 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+            app:layout_constraintTop_toBottomOf="@+id/toolbar"
+            tools:ignore="ContentDescription" />
 
         <TextView
             android:id="@+id/textView"
@@ -80,7 +82,7 @@
             android:id="@+id/recycler_search"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:visibility="@{viewModel.state.success ? View.VISIBLE : View.GONE}"
+            android:visibility="@{viewModel.results.size() > 0 ? View.VISIBLE : View.GONE}"
             app:layoutManager="LinearLayoutManager"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

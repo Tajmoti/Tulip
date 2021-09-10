@@ -2,14 +2,21 @@ package com.tajmoti.tulip.di
 
 import com.tajmoti.libtulip.data.LocalTvDataSource
 import com.tajmoti.libtulip.data.UserDataDataSource
-import com.tajmoti.libtulip.repository.HostedTvDataRepository
+import com.tajmoti.libtulip.data.HostedInfoDataSource
+import com.tajmoti.libtulip.repository.FavoritesRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
-import com.tajmoti.libtulip.repository.TmdbTvDataRepositoryImpl
-import com.tajmoti.libtulip.service.*
-import com.tajmoti.libtulip.service.impl.*
-import com.tajmoti.tulip.repository.impl.AndroidHostedTvDataRepository
-import com.tajmoti.tulip.repository.impl.AndroidTvDataSourceImpl
-import com.tajmoti.tulip.repository.impl.AndroidUserDataDataSource
+import com.tajmoti.libtulip.repository.impl.FavoriteRepositoryImpl
+import com.tajmoti.libtulip.repository.impl.TmdbTvDataRepositoryImpl
+import com.tajmoti.libtulip.repository.HostedTvDataRepository
+import com.tajmoti.libtulip.service.LanguageMappingStreamService
+import com.tajmoti.libtulip.repository.StreamsRepository
+import com.tajmoti.libtulip.service.VideoDownloadService
+import com.tajmoti.libtulip.repository.impl.HostedTvDataRepositoryImpl
+import com.tajmoti.libtulip.service.impl.LanguageMappingStreamServiceImpl
+import com.tajmoti.libtulip.repository.impl.StreamsRepositoryImpl
+import com.tajmoti.tulip.datasource.AndroidHostedInfoDataSource
+import com.tajmoti.tulip.datasource.AndroidTvDataSource
+import com.tajmoti.tulip.datasource.AndroidUserDataDataSource
 import com.tajmoti.tulip.service.impl.DownloadManagerVideoDownloadService
 import dagger.Binds
 import dagger.Module
@@ -23,11 +30,7 @@ interface Binder {
 
     @Binds
     @Singleton
-    fun bindTvDataService(s: TvDataServiceImpl): TvDataService
-
-    @Binds
-    @Singleton
-    fun bindHostedTvDataService(s: HostedTvDataServiceImpl): HostedTvDataService
+    fun bindHostedTvDataService(s: HostedTvDataRepositoryImpl): HostedTvDataRepository
 
     @Binds
     @Singleton
@@ -35,11 +38,7 @@ interface Binder {
 
     @Binds
     @Singleton
-    fun provideExtractionService(s: StreamsExtractionServiceImpl): StreamExtractorService
-
-    @Binds
-    @Singleton
-    fun provideSearchService(s: SearchServiceImpl): SearchService
+    fun provideExtractionService(s: StreamsRepositoryImpl): StreamsRepository
 
     @Binds
     @Singleton
@@ -47,11 +46,11 @@ interface Binder {
 
     @Binds
     @Singleton
-    fun provideAndroidTvShowRepository(s: AndroidHostedTvDataRepository): HostedTvDataRepository
+    fun provideAndroidTvShowRepository(s: AndroidHostedInfoDataSource): HostedInfoDataSource
 
     @Binds
     @Singleton
-    fun provideLocalTvDataSource(s: AndroidTvDataSourceImpl): LocalTvDataSource
+    fun provideLocalTvDataSource(s: AndroidTvDataSource): LocalTvDataSource
 
     @Binds
     @Singleton
@@ -63,5 +62,5 @@ interface Binder {
 
     @Binds
     @Singleton
-    fun provideUserFavoritesService(s: UserFavoriteServiceImpl): UserFavoritesService
+    fun provideUserFavoritesService(s: FavoriteRepositoryImpl): FavoritesRepository
 }

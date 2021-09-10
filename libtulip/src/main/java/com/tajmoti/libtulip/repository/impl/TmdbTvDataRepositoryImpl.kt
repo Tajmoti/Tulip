@@ -1,9 +1,11 @@
-package com.tajmoti.libtulip.repository
+package com.tajmoti.libtulip.repository.impl
 
 import com.tajmoti.commonutils.logger
+import com.tajmoti.commonutils.parallelMap
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtmdb.model.movie.Movie
 import com.tajmoti.libtmdb.model.search.SearchMovieResponse
+import com.tajmoti.libtmdb.model.search.SearchResponse
 import com.tajmoti.libtmdb.model.search.SearchTvResponse
 import com.tajmoti.libtmdb.model.tv.Episode
 import com.tajmoti.libtmdb.model.tv.Season
@@ -17,6 +19,10 @@ import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.model.tmdb.TmdbCompleteTvShow
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
+import com.tajmoti.libtulip.repository.TmdbTvDataRepository
+import com.tajmoti.libtulip.misc.takeIfNoneNull
+import com.tajmoti.libtvprovider.SearchResult
+import com.tajmoti.libtvprovider.TvItemInfo
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -28,6 +34,35 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
     private val service: TmdbService,
     private val db: LocalTvDataSource
 ) : TmdbTvDataRepository {
+
+
+    override suspend fun prefetchTvShowData(key: TvShowKey.Tmdb): Result<Unit> {
+        logger.debug("Prefetching TMDB data for $key")
+        val tv = getTv(key)
+            ?: return Result.failure(NullPointerException())
+        tv.seasons.parallelMap { getSeason(it.toKey(tv)) }
+            .takeIfNoneNull() ?: return Result.failure(NullPointerException())
+        logger.debug("Prefetching TMDB data for $key successful")
+        return Result.success(Unit)
+    }
+
+    override suspend fun findTmdbId(type: SearchResult.Type, info: TvItemInfo): TmdbItemId? {
+        return runCatching {
+            when (type) {
+                SearchResult.Type.TV_SHOW -> searchTv(info.name, info.firstAirDateYear)
+                    .map { firstResultIdOrNull(it) }.getOrNull()?.let { TmdbItemId.Tv(it) }
+                SearchResult.Type.MOVIE -> searchMovie(info.name, info.firstAirDateYear)
+                    .map { firstResultIdOrNull(it) }.getOrNull()?.let { TmdbItemId.Movie(it) }
+            }
+        }
+            .onFailure { logger.warn("Exception searching $type $info") }
+            .getOrNull()
+    }
+
+    private fun firstResultIdOrNull(r: SearchResponse): Long? {
+        return r.results.firstOrNull()?.id
+    }
+
 
     override suspend fun searchTv(query: String, firstAirDateYear: Int?): Result<SearchTvResponse> {
         return runCatching { service.searchTv(query, firstAirDateYear) }

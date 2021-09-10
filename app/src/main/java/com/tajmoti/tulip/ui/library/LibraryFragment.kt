@@ -5,7 +5,6 @@ import android.view.View
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
-import com.tajmoti.libtulip.model.info.TulipItemInfo
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.tulip.databinding.FragmentLibraryBinding
@@ -34,7 +33,7 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding, LibraryViewModel>(
         consume(viewModel.favoriteItems) { adapter.items = it }
     }
 
-    private fun startItem(it: TulipItemInfo) {
+    private fun startItem(it: LibraryItem) {
         val navController = findNavController()
         when (val key = it.key) {
             is TvShowKey -> {

@@ -39,7 +39,8 @@ class SearchFragment : BaseFragment<FragmentSearchBinding, SearchViewModel>(
         val adapter = SearchAdapter()
             .apply { callback = this@SearchFragment::onSearchResultClicked }
             .setToRecyclerWithDividers(binding.recyclerSearch)
-        consume(viewModel.state) { onStateChanged(it, adapter) }
+        binding.recyclerSearch.itemAnimator = null
+        consume(viewModel.results) { adapter.items = it }
         consume(viewModel.itemToOpen) { goToItemByKey(it) }
     }
 
@@ -62,11 +63,6 @@ class SearchFragment : BaseFragment<FragmentSearchBinding, SearchViewModel>(
     override fun onStop() {
         super.onStop()
         (requireActivity() as MainActivity).swapActionBar(null)
-    }
-
-    private fun onStateChanged(it: SearchViewModel.State, adapter: SearchAdapter) {
-        if (it is SearchViewModel.State.Success)
-            adapter.items = it.results
     }
 
     private fun onSearchResultClicked(result: TulipSearchResult) {

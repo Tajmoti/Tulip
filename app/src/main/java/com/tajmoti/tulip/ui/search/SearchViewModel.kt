@@ -1,12 +1,13 @@
 package com.tajmoti.tulip.ui.search
 
-import androidx.lifecycle.*
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.tajmoti.commonutils.statefulMap
 import com.tajmoti.libtulip.model.hosted.toItemKey
 import com.tajmoti.libtulip.model.info.TulipSearchResult
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
-import com.tajmoti.libtulip.service.SearchService
+import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.ui.doCancelableJob
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,7 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val service: SearchService
+    private val repository: HostedTvDataRepository
 ) : ViewModel() {
     companion object {
         /**
@@ -29,17 +30,26 @@ class SearchViewModel @Inject constructor(
 
     private val _state = MutableStateFlow<State>(State.Idle)
     private val _itemToOpen = MutableSharedFlow<ItemKey>()
-    val state: StateFlow<State> = _state
 
     /**
      * True if currently searching a query
      */
-    val loading = state.statefulMap(viewModelScope) { it is State.Searching }
+    val loading = _state.statefulMap(viewModelScope) { it is State.Searching }
+
+    /**
+     * All search results for the entered query
+     */
+    val results = _state.statefulMap(viewModelScope) {
+        when (it) {
+            is State.Success -> it.results
+            else -> emptyList()
+        }
+    }
 
     /**
      * Contains the text that should be shown or null if none
      */
-    val statusText = state.statefulMap(viewModelScope) {
+    val statusText = _state.statefulMap(viewModelScope) {
         when {
             it is State.Idle -> R.string.search_hint
             it is State.Success && it.results.isEmpty() -> R.string.no_results
@@ -51,7 +61,7 @@ class SearchViewModel @Inject constructor(
     /**
      * A status icon shown above the status text
      */
-    val statusImage = state.statefulMap(viewModelScope) {
+    val statusImage = _state.statefulMap(viewModelScope) {
         when {
             it is State.Idle -> R.drawable.ic_search_24
             it is State.Success && it.results.isEmpty() -> R.drawable.ic_sad_24
@@ -63,7 +73,7 @@ class SearchViewModel @Inject constructor(
     /**
      * True if the retry button should be shown
      */
-    val canTryAgain = state.statefulMap(viewModelScope) { it is State.Error }
+    val canTryAgain = _state.statefulMap(viewModelScope) { it is State.Error }
 
     /**
      * Contains the item that should be opened
@@ -125,7 +135,7 @@ class SearchViewModel @Inject constructor(
 
     private suspend fun startSearchAsync(query: String) = flow {
         emit(State.Searching)
-        service.search(query)
+        repository.search(query)
             .onSuccess { emit(State.Success(it)) }
             .getOrElse { emit(State.Error) }
     }

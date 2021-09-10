@@ -1,32 +1,33 @@
-package com.tajmoti.libtulip.service.impl
+package com.tajmoti.libtulip.repository.impl
 
-import com.tajmoti.commonutils.awaitAll
-import com.tajmoti.commonutils.logger
-import com.tajmoti.commonutils.parallelMap
-import com.tajmoti.commonutils.parallelMapBoth
+import com.tajmoti.commonutils.*
+import com.tajmoti.libtulip.data.HostedInfoDataSource
 import com.tajmoti.libtulip.model.MissingEntityException
 import com.tajmoti.libtulip.model.NoSuccessfulResultsException
 import com.tajmoti.libtulip.model.hosted.*
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.info.StreamableInfoWithLanguage
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
+import com.tajmoti.libtulip.model.info.TulipSearchResult
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
+import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
-import com.tajmoti.libtulip.service.HostedTvDataService
-import com.tajmoti.libtulip.service.TvDataService
+import com.tajmoti.libtulip.service.impl.toInfo
 import com.tajmoti.libtvprovider.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class HostedTvDataServiceImpl @Inject constructor(
-    private val hostedTvDataRepo: HostedTvDataRepository,
+class HostedTvDataRepositoryImpl @Inject constructor(
+    private val hostedTvDataRepo: HostedInfoDataSource,
     private val tvProvider: MultiTvProvider<StreamingService>,
-    private val tmdbService: TvDataService
-) : HostedTvDataService {
+    private val tmdbRepo: TmdbTvDataRepository
+) : HostedTvDataRepository {
 
-    override suspend fun search(query: String): Result<Map<StreamingService, Result<List<SearchResult>>>> {
+    override suspend fun search(query: String): Result<List<TulipSearchResult>> {
         logger.debug("Searching '{}'", query)
         val searchResult = tvProvider.search(query)
         if (searchResult.none { it.value.isSuccess }) {
@@ -34,7 +35,72 @@ class HostedTvDataServiceImpl @Inject constructor(
             return Result.failure(NoSuccessfulResultsException)
         }
         logExceptions(searchResult)
-        return Result.success(searchResult)
+        val mapped = withContext(Dispatchers.Default) {
+            handleSearchResult(searchResult)
+        }
+        return Result.success(mapped)
+    }
+
+    private suspend inline fun handleSearchResult(
+        searchResults: Map<StreamingService, Result<List<SearchResult>>>
+    ): List<TulipSearchResult> {
+        val successfulItems = successfulResultsToHostedItems(searchResults)
+        logger.debug("Found {} results", successfulItems.size)
+        insertHostedItems(successfulItems)
+        return hostedItemsToSearchResults(successfulItems)
+    }
+
+    private suspend inline fun successfulResultsToHostedItems(
+        results: Map<StreamingService, Result<List<SearchResult>>>
+    ): List<HostedItem> {
+        return results
+            .mapNotNull { (service, itemListResult) ->
+                val itemList = itemListResult
+                    .getOrElse { return@mapNotNull null }
+                service to itemList
+            }
+            .flatMap { (service, itemListResult) ->
+                itemsToHostedItems(service, itemListResult)
+            }
+    }
+
+    private suspend inline fun itemsToHostedItems(
+        service: StreamingService,
+        items: List<SearchResult>
+    ): List<HostedItem> {
+        return items.parallelMapBoth { tmdbRepo.findTmdbId(it.type, it.info) }
+            .map { (item, tmdbId) ->
+                when (item.type) {
+                    SearchResult.Type.TV_SHOW ->
+                        HostedItem.TvShow(service, item.info, tmdbId as? TmdbItemId.Tv?)
+                    SearchResult.Type.MOVIE ->
+                        HostedItem.Movie(service, item.info, tmdbId as? TmdbItemId.Movie?)
+                }
+            }
+    }
+
+    private fun hostedItemsToSearchResults(items: List<HostedItem>): List<TulipSearchResult> {
+        val idToItems = items.groupBy { it.tmdbId }
+        val recognized = idToItems
+            .filterKeys { it != null }
+            .map { entry -> groupedItemToResult(entry.key!!, entry.value) }
+        val unrecognized = idToItems[null]
+            ?.let { listOf(TulipSearchResult.Unrecognized(it)) }
+            ?: emptyList()
+        return recognized + unrecognized
+    }
+
+    private fun groupedItemToResult(id: TmdbItemId, items: List<HostedItem>): TulipSearchResult {
+        return when (id) {
+            is TmdbItemId.Tv -> {
+                val mapped = items.map { it as HostedItem.TvShow }
+                TulipSearchResult.TvShow(id, mapped)
+            }
+            is TmdbItemId.Movie -> {
+                val mapped = items.map { it as HostedItem.Movie }
+                TulipSearchResult.Movie(id, mapped)
+            }
+        }
     }
 
     override suspend fun getTvShow(key: TvShowKey.Hosted): Result<TvShowInfo> {
@@ -56,13 +122,11 @@ class HostedTvDataServiceImpl @Inject constructor(
             hostedTvDataRepo.getEpisodesBySeason(hostedSeasonKey)
         }
         val seasonsToReturns = episodes
-            .map { season ->
-                val seasonEpisodes = season.second.map { ep ->
-                    EpisodeInfo(ep.key, ep.number, ep.name)
-                }
-                Season(season.first.tvShowKey, season.first.number, seasonEpisodes)
+            .map { (season, episodes) ->
+                val seasonEpisodes = episodes.map { it.toInfo() }
+                season.toInfo(seasonEpisodes)
             }
-        val tvInfo = TvItemInfo(key.tvShowId, show.name, show.language, show.firstAirDateYear)
+        val tvInfo = show.toInfo(key)
         val info = TvShowInfo(key.tvShowId, tvInfo, seasonsToReturns)
         return Result.success(info)
     }
@@ -133,18 +197,13 @@ class HostedTvDataServiceImpl @Inject constructor(
     override suspend fun getEpisodeByTmdbId(key: EpisodeKey.Tmdb): Result<List<HostedEpisode>> {
         logger.debug("Retrieving episode by $key")
         prefetchTvShowByTmdbId(key.seasonKey.tvShowKey)
-        val season = key.seasonKey
-        val episodes = hostedTvDataRepo.getEpisodeByTmdbIdentifiers(
-            season.tvShowKey.id,
-            season.seasonNumber,
-            key.episodeNumber
-        )
+        val episodes = hostedTvDataRepo.getEpisodeByTmdbId(key)
         logger.debug("Episode retrieved by $key")
         return Result.success(episodes)
     }
 
     override suspend fun getMovieByTmdbId(key: MovieKey.Tmdb): Result<List<HostedMovie>> {
-        val movies = hostedTvDataRepo.getMovieByTmdbIdentifiers(key.id)
+        val movies = hostedTvDataRepo.getMovieByTmdbKey(key)
         return Result.success(movies)
     }
 
@@ -154,7 +213,7 @@ class HostedTvDataServiceImpl @Inject constructor(
 
     override suspend fun prefetchTvShowByTmdbId(key: TvShowKey.Tmdb): Result<Unit> {
         logger.debug("Prefetching $key")
-        val shows = hostedTvDataRepo.getTvShowsByTmdbId(key.id)
+        val shows = hostedTvDataRepo.getTvShowsByTmdbId(key)
         logger.debug("Prefetching ${shows.size} show(s) for $key")
         val results = shows.parallelMap {
             val hostedShowKey = TvShowKey.Hosted(it.service, it.info.key)
@@ -170,37 +229,40 @@ class HostedTvDataServiceImpl @Inject constructor(
     }
 
     private suspend fun insertTvShowToDb(key: TvShowKey.Hosted, result: TvShowInfo) {
-        val tmdbId = tmdbService.findTmdbId(SearchResult.Type.TV_SHOW, result.info)
+        val tmdbId = tmdbRepo.findTmdbId(SearchResult.Type.TV_SHOW, result.info)
                 as? TmdbItemId.Tv
         logger.debug("Inserting ${result.info} with ${result.seasons.size} season(s)")
         val seasons = result.seasons
             .map { HostedSeason(key.streamingService, key.tvShowId, it.number) }
-        val numToEp = result.seasons
-            .flatMap { it.episodes.map { ep -> it.number to ep } }
+        val episodes = result.seasons
+            .flatMapWithTransform({ it.episodes }, { season, episode -> season.number to episode })
             .map { HostedEpisode(key.streamingService, key.tvShowId, it.first, it.second) }
-        hostedTvDataRepo.insertTvShow(
-            HostedItem.TvShow(
-                key.streamingService,
-                result.info,
-                tmdbId
-            )
-        )
+        val tvShow = HostedItem.TvShow(key.streamingService, result.info, tmdbId)
+        hostedTvDataRepo.insertTvShow(tvShow)
         hostedTvDataRepo.insertSeasons(seasons)
-        hostedTvDataRepo.insertEpisodes(numToEp)
+        hostedTvDataRepo.insertEpisodes(episodes)
         logger.debug("Inserted ${result.info} with ${result.seasons.size} season(s)")
     }
 
-    override suspend fun insertHostedItem(item: HostedItem) {
+    private suspend inline fun insertHostedItem(item: HostedItem) {
         when (item) {
             is HostedItem.TvShow -> hostedTvDataRepo.insertTvShow(item)
             is HostedItem.Movie -> hostedTvDataRepo.insertMovie(item)
         }
     }
 
-    override suspend fun insertHostedItems(items: List<HostedItem>) {
+    private suspend inline fun insertHostedItems(items: List<HostedItem>) {
         logger.debug("Inserting ${items.size} hosted items")
         items.parallelMap {
             insertHostedItem(it)
         }
+    }
+
+
+    override suspend fun fetchStreams(key: StreamableKey.Hosted): Result<List<VideoStreamRef>> {
+        val service = key.streamingService
+        val streamableKey = key.streamableKey
+        return tvProvider.getStreamableLinks(service, streamableKey)
+            .onFailure { logger.warn("Failed to fetch streams for $service $streamableKey", it) }
     }
 }

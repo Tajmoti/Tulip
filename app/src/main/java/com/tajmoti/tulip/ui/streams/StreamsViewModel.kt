@@ -6,6 +6,7 @@ import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.stream.StreamableInfoWithLangLinks
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
+import com.tajmoti.libtulip.repository.StreamsRepository
 import com.tajmoti.libtulip.service.*
 import com.tajmoti.libtvprovider.*
 import com.tajmoti.tulip.ui.doCancelableJob
@@ -19,7 +20,7 @@ import javax.inject.Inject
 class StreamsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val downloadService: VideoDownloadService,
-    private val extractionService: StreamExtractorService,
+    private val extractionService: StreamsRepository,
     private val streamService: LanguageMappingStreamService
 ) : ViewModel() {
     private val args = StreamsFragmentArgs.fromSavedStateHandle(savedStateHandle)
