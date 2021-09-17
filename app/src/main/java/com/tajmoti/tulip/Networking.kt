@@ -39,7 +39,7 @@ fun createAppOkHttpClient(context: Context): OkHttpClient {
         .addInterceptor(UserAgentInterceptor(USER_AGENT))
     if (BuildConfig.HTTP_DEBUG) {
         val logger = HttpLoggingInterceptor(interceptorLogger)
-            .also { it.level = HttpLoggingInterceptor.Level.BODY }
+            .also { it.level = HttpLoggingInterceptor.Level.BASIC }
         builder.addInterceptor(logger)
     }
     return builder.build()
