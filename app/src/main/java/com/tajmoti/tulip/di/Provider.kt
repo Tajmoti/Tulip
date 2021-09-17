@@ -1,7 +1,6 @@
 package com.tajmoti.tulip.di
 
 import android.content.Context
-import android.os.Handler
 import androidx.room.Room
 import com.tajmoti.libprimewiretvprovider.PrimewireTvProvider
 import com.tajmoti.libtmdb.TmdbService
@@ -10,6 +9,7 @@ import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.kinox.KinoxTvProvider
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
 import com.tajmoti.libtvvideoextractor.WebDriverPageSourceLoader
+import com.tajmoti.libtvvideoextractor.WebDriverPageSourceLoaderWithCustomJs
 import com.tajmoti.libwebdriver.WebDriver
 import com.tajmoti.libwebdriver.WebViewWebDriver
 import com.tajmoti.tulip.createAppOkHttpClient
@@ -42,8 +42,7 @@ object Provider {
     @Provides
     @Singleton
     fun provideWebDriver(@ApplicationContext app: Context): WebDriver {
-        val mainHandler = Handler(app.mainLooper)
-        return WebViewWebDriver(app, mainHandler, blockImages = true)
+        return WebViewWebDriver(app)
     }
 
     @Provides
@@ -52,7 +51,7 @@ object Provider {
         webDriver: WebDriver,
         okHttpClient: OkHttpClient
     ): MultiTvProvider<StreamingService> {
-        val webViewGetter = makeWebViewGetter(webDriver)
+        val webViewGetter = makeWebViewGetterWithCustomJs(webDriver)
         val httpGetter = makeHttpGetter(okHttpClient)
         val primewire = PrimewireTvProvider(webViewGetter, httpGetter)
         val kinox = KinoxTvProvider(httpGetter)
@@ -72,6 +71,20 @@ object Provider {
     private fun makeWebViewGetter(webDriver: WebDriver): WebDriverPageSourceLoader {
         return { url, urlFilter ->
             val params = WebDriver.Params(urlFilter = urlFilter)
+            webDriver.getPageHtml(url, params)
+        }
+    }
+
+    /**
+     * Returns a function, which loads the provided URL into a WebView,
+     * runs all the JavaScript and returns the finished page HTML source.
+     */
+    private fun makeWebViewGetterWithCustomJs(webDriver: WebDriver): WebDriverPageSourceLoaderWithCustomJs {
+        return { url, urlFilter, interfaceName ->
+            val params = WebDriver.Params(
+                WebDriver.SubmitTrigger.CustomJs(interfaceName),
+                urlFilter = urlFilter
+            )
             webDriver.getPageHtml(url, params)
         }
     }

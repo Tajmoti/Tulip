@@ -4,7 +4,11 @@ package com.tajmoti.libprimewiretvprovider
 /**
  * A function, which loads the provided URL into a real web browser and returns the page HTML source.
  */
-typealias PageSourceLoader = suspend (url: String, urlBlocker: UrlBlocker) -> Result<String>
+typealias PageSourceLoader = suspend (
+    url: String,
+    urlBlocker: UrlBlocker,
+    submitTriggerJsGenerator: (String) -> String
+) -> Result<String>
 
 /**
  * Same as [PageSourceLoader], but without the URL blocker.

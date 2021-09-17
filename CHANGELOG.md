@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Changed
+- Fixed streams from Primewire sometimes loaded incorrectly
 
 ## [0.7.0] - 2021-09-07
 ### Changed

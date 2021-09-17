@@ -10,34 +10,32 @@ import com.tajmoti.commonutils.logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeoutException
-import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
 
 class WebViewWebDriver(
-    val context: Context,
-    private val mainHandler: Handler = Handler(context.mainLooper),
-    private val blockImages: Boolean = false,
+    /**
+     * Context used to instantiate WebView instances and [mainHandler]
+     */
+    private val context: Context,
+    /**
+     * Whether to disable all WebView logging messages (suppress log spam)
+     */
     private val suppressConsole: Boolean = true
 ) : WebDriver {
     private val chromeClient: ChromeClient by lazy(LazyThreadSafetyMode.NONE) {
         ChromeClient(suppressConsole)
     }
+    private val mainHandler = Handler(context.mainLooper)
+
 
     override suspend fun getPageHtml(url: String, params: WebDriver.Params): Result<String> {
-        return withContext(Dispatchers.Main) { loadPageOnMainThread(url, params) }
+        return withContext(Dispatchers.Main) { loadPageWithContinuation(url, params) }
     }
 
-    private suspend fun loadPageOnMainThread(url: String, p: WebDriver.Params): Result<String> {
-        return suspendCoroutine { continuation ->
-            loadPageWithContinuation(url, p, continuation)
-        }
-    }
-
-    private fun loadPageWithContinuation(
+    private suspend fun loadPageWithContinuation(
         url: String,
-        p: WebDriver.Params,
-        cont: Continuation<Result<String>>
-    ) {
+        p: WebDriver.Params
+    ): Result<String> = suspendCoroutine { cont ->
         var finished = false
         fun submitOnce(wv: WebView, result: Result<String>) {
             if (finished)
@@ -46,6 +44,7 @@ class WebViewWebDriver(
             wv.destroy()
             finished = true
         }
+
         val wv = createWebView(p,
             { wv, html ->
                 mainHandler.post { submitOnce(wv, Result.success(html)) }
@@ -69,34 +68,32 @@ class WebViewWebDriver(
         @Suppress("SetJavaScriptEnabled")
         return WebView(context)
             .apply { settings.javaScriptEnabled = true }
-            .apply { settings.blockNetworkImage = blockImages }
-            .apply { addJavascriptInterface(JSInterface { onSuccess(this, it) }, CLIENT_NAME) }
-            .apply { webViewClient = HtmlRetrievingClient(p.urlFilter, onError) }
+            .apply { settings.blockNetworkImage = p.blockImages }
+            .apply {
+                addJavascriptInterface(
+                    JSInterface(this) { onSuccess(this, it) },
+                    INTERFACE_NAME
+                )
+            }
+            .apply { webViewClient = HtmlRetrievingClient(p, onError) }
             .apply { webChromeClient = chromeClient }
     }
 
     private class HtmlRetrievingClient(
-        private val filter: UrlFilter?,
+        private val p: WebDriver.Params,
         private val onError: (WebView, Any) -> Unit
     ) : WebViewClient() {
-        companion object {
-            private const val HTML_RETRIEVER_JS =
-                """
-                window
-                .$CLIENT_NAME
-                .getHtml(document.getElementsByTagName('html')[0].outerHTML);
-                """
-        }
 
         override fun onPageFinished(view: WebView, url: String) {
-            view.loadUrl("javascript:$HTML_RETRIEVER_JS")
+            val js = p.submitTrigger.jsGenerator("window.$INTERFACE_NAME")
+            view.evaluateJavascript(js, null)
         }
 
         override fun shouldInterceptRequest(
             view: WebView,
             request: WebResourceRequest
         ): WebResourceResponse? {
-            if (filter?.invoke(request.url.toString()) != false) {
+            if (p.urlFilter?.invoke(request.url.toString()) != false) {
                 return null
             }
             return WebResourceResponse("", "", null)
@@ -162,15 +159,32 @@ class WebViewWebDriver(
         }
     }
 
-    private class JSInterface(private val callback: (String) -> Unit) {
-        @Suppress("unused")
+    @Suppress("unused")
+    private inner class JSInterface(
+        private val wv: WebView,
+        private val callback: (String) -> Unit
+    ) {
+        private val htmlSubmitScript = "window" +
+                ".$INTERFACE_NAME" +
+                ".submitHtmlInternal(document.documentElement.outerHTML);"
+
         @JavascriptInterface
-        fun getHtml(html: String) {
+        fun submitHtml() {
+            mainHandler.post { wv.evaluateJavascript(htmlSubmitScript, null) }
+        }
+
+        @JavascriptInterface
+        fun submitHtmlInternal(html: String) {
             callback(html)
+        }
+
+        @JavascriptInterface
+        fun logPrint(message: String) {
+            logger.debug(message)
         }
     }
 
     companion object {
-        private const val CLIENT_NAME = "HtmlGetter"
+        private const val INTERFACE_NAME = "webDriverInterface"
     }
 }

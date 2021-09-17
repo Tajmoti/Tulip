@@ -64,16 +64,12 @@ class PrimewireTvProvider(
     }
 
     override suspend fun getStreamableLinks(episodeOrMovieKey: String): Result<List<VideoStreamRef>> {
-        return loadHtmlFromUrl(baseUrl + episodeOrMovieKey)
+        return pageLoader.invoke(baseUrl + episodeOrMovieKey, this::shouldAllowUrl, LINK_PAGE_HTML_SUBMIT_TRIGGER)
             .flatMapWithContext(Dispatchers.Default) {
                 getVideoStreamsBlocking(it, baseUrl)
             }
     }
 
-
-    private suspend fun loadHtmlFromUrl(url: String): Result<String> {
-        return pageLoader.invoke(url, this::shouldAllowUrl)
-    }
 
     private fun shouldAllowUrl(url: String): Boolean {
         return url.contains(baseUrl) && URL_BLACKLIST.none { url.contains(it) }
@@ -81,5 +77,34 @@ class PrimewireTvProvider(
 
     companion object {
         private val URL_BLACKLIST = listOf("/comments/", "/css/", "/spiderman")
+
+
+        val LINK_PAGE_HTML_SUBMIT_TRIGGER: (String) -> String = {
+            """
+            const directLinks = document.getElementsByClassName('propper-link');
+            const linkCount = directLinks.length;
+            const config = {
+                attributes: true,
+                attributeFilter: ["key"]
+            };
+            var alreadyModified = 0;
+            const callback = function (mutationsList, observer) {
+                for (var i = 0; i < mutationsList.length; ++i) {
+                    var mutation = mutationsList[i];
+                    if (mutation.type === 'attributes') {
+                        alreadyModified++;
+                        if (alreadyModified === linkCount) {
+                            $it.submitHtml();
+                        }
+                    }
+                }
+            };
+            const observer = new MutationObserver(callback);
+            for (var i = 0; i < directLinks.length; ++i) {
+                var node = directLinks[i];
+                observer.observe(node, config);
+            }
+            """
+        }
     }
 }

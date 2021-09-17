@@ -9,6 +9,16 @@ typealias WebDriverPageSourceLoader = suspend (url: String, urlBlocker: UrlBlock
 
 /**
  * A function, which loads the provided URL into a real web browser and returns the page HTML source.
+ * A WebDriver is used to load the full page, useless URLs are blocked with urlBlocker.
+ */
+typealias WebDriverPageSourceLoaderWithCustomJs = suspend (
+    url: String,
+    urlBlocker: UrlBlocker,
+    submitTriggerJsGenerator: (String) -> String
+) -> Result<String>
+
+/**
+ * A function, which loads the provided URL into a real web browser and returns the page HTML source.
  * A raw HTTP GET request is performed to retrieve the HTML source.
  */
 typealias RawPageSourceLoader = suspend (url: String) -> Result<String>
