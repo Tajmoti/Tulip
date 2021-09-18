@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface StreamsViewModel {
     /**
-     * Whether the stream links are being loaded right now.
+     * Whether the stream links are being loaded right now and there are no loaded links yet.
      */
     val linksLoading: StateFlow<Boolean>
 

@@ -33,7 +33,10 @@ class StreamsViewModelImpl constructor(
 
 
     override val linksLoading = streamLoadingState.map(viewModelScope) {
-        it is State.Idle || it is State.Preparing || it is State.Loading
+        it is State.Idle
+                || it is State.Preparing
+                || it is State.Loading
+                || (it is State.Success && it.infoFlow.streams.isEmpty() && !linksNoResult.value)
     }
 
     override val streamableName = streamLoadingState
