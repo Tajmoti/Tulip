@@ -26,31 +26,66 @@ class VideoPlayerViewModelImpl @Inject constructor(
     private val context: Context
 ) : ViewModel(), VideoPlayerViewModel {
     private val args = VideoPlayerActivityArgs.fromSavedStateHandle(savedStateHandle)
+
+    /**
+     * State of subtitle list loading
+     */
+    private val loadingSubtitlesState = MutableStateFlow<SubtitleListLoadingState>(
+        SubtitleListLoadingState.Loading
+    )
+
+    /**
+     * State of downloading of selected subtitles
+     */
+    private val subtitleDownloadState = MutableStateFlow<SubtitleDownloadingState>(
+        SubtitleDownloadingState.Idle
+    )
+
     override val subtitleOffset = MutableStateFlow(0L)
-    private val _subtitleListLoadingState = MutableStateFlow(false)
-    private val loadingSubtitlesState =
-        MutableStateFlow<SubtitleListLoadingState>(SubtitleListLoadingState.Loading)
+    override val loadingSubtitles = MutableStateFlow(false)
     override val downloadingSubtitleFile = MutableStateFlow(false)
-    private val _subtitleDownloadFlow =
-        MutableStateFlow<SubtitleDownloadingState>(SubtitleDownloadingState.Idle)
     override val subtitleList = loadingSubtitlesState.map(viewModelScope) {
-        when (it) {
-            is SubtitleListLoadingState.Success -> it.subtitles
-            else -> emptyList()
-        }
+        (it as? SubtitleListLoadingState.Success)?.subtitles ?: emptyList()
     }
-    override val loadingSubtitles = _subtitleListLoadingState
     override val subtitlesReadyToSelect = loadingSubtitlesState.map(viewModelScope) {
         it is SubtitleListLoadingState.Success
     }
-    override val downloadingError = _subtitleDownloadFlow.map(viewModelScope) {
+    override val downloadingError = subtitleDownloadState.map(viewModelScope) {
         it is SubtitleDownloadingState.Error
     }
-    override val subtitleFile = _subtitleDownloadFlow.map(viewModelScope) {
+    override val subtitleFile = subtitleDownloadState.map(viewModelScope) {
+        (it as? SubtitleDownloadingState.Success)?.subtitles
+    }
+
+    /**
+     * State of the currently attached media player.
+     */
+    private val mediaPlayerState = MutableStateFlow<MediaPlayerHelper.State>(
+        MediaPlayerHelper.State.Initializing
+    )
+    override val showPlayButton = mediaPlayerState.map(viewModelScope) {
         when (it) {
-            is SubtitleDownloadingState.Success -> it.subtitles
-            else -> null
+            is MediaPlayerHelper.State.Buffering -> VideoPlayerViewModel.PlayButtonState.HIDE
+            is MediaPlayerHelper.State.Error -> VideoPlayerViewModel.PlayButtonState.HIDE
+            is MediaPlayerHelper.State.Initializing -> VideoPlayerViewModel.PlayButtonState.HIDE
+            is MediaPlayerHelper.State.Paused -> VideoPlayerViewModel.PlayButtonState.SHOW_PLAY
+            is MediaPlayerHelper.State.Playing -> VideoPlayerViewModel.PlayButtonState.SHOW_PAUSE
         }
+    }
+    override val buffering = mediaPlayerState.map(viewModelScope) { state ->
+        (state as? MediaPlayerHelper.State.Buffering)?.percent
+    }
+    override val position = mediaPlayerState.map(viewModelScope) { state ->
+        when (state) {
+            is MediaPlayerHelper.State.Buffering -> state.position
+            is MediaPlayerHelper.State.Error -> null
+            is MediaPlayerHelper.State.Initializing -> null
+            is MediaPlayerHelper.State.Paused -> state.position
+            is MediaPlayerHelper.State.Playing -> state.position
+        }
+    }
+    override val isError = mediaPlayerState.map(viewModelScope) { state ->
+        state is MediaPlayerHelper.State.Error
     }
 
     /**
@@ -70,14 +105,10 @@ class VideoPlayerViewModelImpl @Inject constructor(
      */
     private var subtitleDownloadJob: Job? = null
 
-    override val showPlayButton = MutableStateFlow(VideoPlayerViewModel.PlayButtonState.HIDE)
-    override val buffering = MutableStateFlow<Float?>(null)
-    override val isError = MutableStateFlow(false)
-    override val position = MutableStateFlow<Position?>(null)
-
     init {
-        doCancelableJob(this::subtitleFetchJob, _subtitleListLoadingState) {
-            loadingSubtitlesState.emitAll(loadSubtitlesList(args.streamableKey as StreamableKey.Tmdb))
+        doCancelableJob(this::subtitleFetchJob, loadingSubtitles) {
+            val subtitleListFlow = loadSubtitlesList(args.streamableKey as StreamableKey.Tmdb)
+            loadingSubtitlesState.emitAll(subtitleListFlow)
         }
     }
 
@@ -88,38 +119,12 @@ class VideoPlayerViewModelImpl @Inject constructor(
         emit(SubtitleListLoadingState.Success(subtitles))
     }
 
-    fun onMediaStateChanged(state: MediaPlayerHelper.State) {
-        when (state) {
-            is MediaPlayerHelper.State.Buffering -> {
-                showPlayButton.value = VideoPlayerViewModel.PlayButtonState.HIDE
-                position.value = state.position
-                buffering.value = state.percent
-                isError.value = false
-            }
-            is MediaPlayerHelper.State.Error -> {
-                showPlayButton.value = VideoPlayerViewModel.PlayButtonState.HIDE
-                position.value = null
-                buffering.value = null
-                isError.value = true
-            }
-            is MediaPlayerHelper.State.Initializing -> {
-                showPlayButton.value = VideoPlayerViewModel.PlayButtonState.HIDE
-                position.value = null
-                buffering.value = null
-                isError.value = false
-            }
-            is MediaPlayerHelper.State.Paused -> {
-                showPlayButton.value = VideoPlayerViewModel.PlayButtonState.SHOW_PLAY
-                position.value = state.position
-                buffering.value = null
-                isError.value = false
-            }
-            is MediaPlayerHelper.State.Playing -> {
-                showPlayButton.value = VideoPlayerViewModel.PlayButtonState.SHOW_PAUSE
-                position.value = state.position
-                buffering.value = null
-                isError.value = false
-            }
+    /**
+     * A new media is attached and starting to be played.
+     */
+    fun onMediaAttached(media: MediaPlayerHelper) {
+        viewModelScope.launch {
+            mediaPlayerState.emitAll(media.state)
         }
     }
 
@@ -129,11 +134,8 @@ class VideoPlayerViewModelImpl @Inject constructor(
      */
     fun onSubtitlesSelected(subtitleInfo: SubtitleInfo) {
         subtitleOffset.value = 0L
-        doCancelableJob(
-            this::subtitleDownloadJob,
-            downloadingSubtitleFile
-        ) {
-            _subtitleDownloadFlow.emitAll(downloadSubtitles(subtitleInfo))
+        doCancelableJob(this::subtitleDownloadJob, downloadingSubtitleFile) {
+            subtitleDownloadState.emitAll(downloadSubtitles(subtitleInfo))
         }
     }
 
@@ -178,24 +180,17 @@ class VideoPlayerViewModelImpl @Inject constructor(
         emit(SubtitleDownloadingState.Success(subtitleStream))
     }
 
-    sealed class SubtitleListLoadingState {
-        object Loading : SubtitleListLoadingState()
-
-        data class Success(
-            val subtitles: List<SubtitleInfo>
-        ) : SubtitleListLoadingState()
-
-        object Error : SubtitleListLoadingState()
+    sealed interface SubtitleListLoadingState {
+        object Loading : SubtitleListLoadingState
+        data class Success(val subtitles: List<SubtitleInfo>) : SubtitleListLoadingState
+        object Error : SubtitleListLoadingState
     }
 
-    sealed class SubtitleDownloadingState {
-        object Idle : SubtitleDownloadingState()
-
-        object Loading : SubtitleDownloadingState()
-
-        data class Success(val subtitles: File) : SubtitleDownloadingState()
-
-        object Error : SubtitleDownloadingState()
+    sealed interface SubtitleDownloadingState {
+        object Idle : SubtitleDownloadingState
+        object Loading : SubtitleDownloadingState
+        data class Success(val subtitles: File) : SubtitleDownloadingState
+        object Error : SubtitleDownloadingState
     }
 
     sealed interface SubtitleSyncState {

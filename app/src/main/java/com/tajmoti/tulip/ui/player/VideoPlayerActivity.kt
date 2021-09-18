@@ -189,7 +189,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     private fun reloadVideo() {
         vlc?.release()
         vlc = VlcMediaHelper(libVLC, args.videoUrl)
-            .also { consume(it.state, viewModel::onMediaStateChanged) }
+            .also { viewModel.onMediaAttached(it) }
             .also { it.attachAndPlay(binding.videoLayout) }
     }
 
