@@ -24,4 +24,10 @@
     <string name="direct_loading_failure_no">Radšej nie</string>
     <string name="starting_download">Sťahovanie sa začalo</string>
     <string name="select_subtitles">Vybrať titulky</string>
+    <string name="subtitle_download_failure">Vybrané titulky sa nepodarilo načítať</string>
+    <string name="subtitle_adjust_word_heard">Počul som</string>
+    <string name="subtitle_adjust_word_seen">Videl som</string>
+    <string name="subtitles">Titulky</string>
+    <string name="restart_video">Znovu načítať</string>
+    <string name="change_source">Zmeniť zdroj</string>
 </resources>
