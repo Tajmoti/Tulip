@@ -4,6 +4,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.SeekBar
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
@@ -43,13 +44,6 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding.viewModel = viewModel
-        WindowInsetsControllerCompat(window, binding.root)
-            .apply { hide(WindowInsetsCompat.Type.systemBars()) }
-            .apply {
-                systemBarsBehavior =
-                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
-
         libVLC = LibVLC(this, arrayListOf("-vvv"))
         reloadVideo()
         setupUI()
@@ -59,6 +53,13 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         consume(viewModel.showPlayButton, this::updatePlayPauseButton)
         consume(viewModel.buffering, this::updateBuffering)
         consume(viewModel.position, this::updatePosition)
+    }
+
+    private fun setupFullscreen() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val ctl = WindowInsetsControllerCompat(window, binding.root)
+        ctl.hide(WindowInsetsCompat.Type.systemBars())
+        ctl.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 
     private fun setupUI() {
@@ -81,6 +82,11 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     override fun onStart() {
         super.onStart()
         vlc?.attachAndPlay(binding.videoLayout)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        setupFullscreen()
     }
 
     override fun onStop() {
