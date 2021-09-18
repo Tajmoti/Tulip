@@ -17,9 +17,9 @@ interface MediaPlayerHelper {
     }
 
     fun playOrResume()
-    fun setProgress(progress: Float)
-    fun setTime(timeMs: Long)
+    var progress: Float
+    var time: Long
+    val length: Long
     fun setSubtitles(uri: String)
     fun setSubtitleDelay(delay: Long): Boolean
-    fun getTime(): Long
 }

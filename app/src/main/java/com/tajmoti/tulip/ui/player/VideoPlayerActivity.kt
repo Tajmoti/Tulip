@@ -71,14 +71,20 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         binding.buttonPlayResume.setOnClickListener {
             onPlayPausePressed()
         }
+        binding.buttonRewind.setOnClickListener {
+            vlc?.let { it.time = (it.time - REWIND_TIME_MS).coerceAtLeast(0) }
+        }
+        binding.buttonSeek.setOnClickListener {
+            vlc?.let { it.time = (it.time + REWIND_TIME_MS).coerceAtMost(it.length) }
+        }
         binding.buttonSubtitles.setOnClickListener {
             showSubtitleSelectionDialog()
         }
         binding.buttonSubtitleAdjustText.setOnClickListener {
-            vlc?.let { playerViewModel.onTextSeen(it.getTime()) }
+            vlc?.let { playerViewModel.onTextSeen(it.time) }
         }
         binding.buttonSubtitleAdjustVideo.setOnClickListener {
-            vlc?.let { playerViewModel.onWordHeard(it.getTime()) }
+            vlc?.let { playerViewModel.onWordHeard(it.time) }
         }
         binding.buttonRestartVideo.setOnClickListener {
             streamsViewModel.directLoaded.value?.let { reloadVideo(it.directLink) }
@@ -278,7 +284,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     private fun setMediaProgress(progress: Int) {
-        vlc?.setProgress(convertFromUiProgress(progress))
+        vlc?.progress = convertFromUiProgress(progress)
     }
 
     private fun showSubtitleSelectionDialog() {
@@ -335,6 +341,8 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     companion object {
+        private const val REWIND_TIME_MS = 10_000
+
         /**
          * The number of steps that the seek and progress bars have.
          */

@@ -124,7 +124,7 @@ class VideoPlayerViewModelImpl constructor(
         }
         lastValidPosition.value
             .takeIf { it != 0L }
-            ?.let { media.setTime(it) }
+            ?.let { media.time = it }
     }
 
     override fun onSubtitlesSelected(subtitleInfo: SubtitleInfo) {

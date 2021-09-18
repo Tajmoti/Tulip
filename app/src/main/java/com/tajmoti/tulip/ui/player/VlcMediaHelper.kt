@@ -53,13 +53,20 @@ class VlcMediaHelper(
         }
     }
 
-    override fun setProgress(progress: Float) {
-        player.time = (progress * player.length).toLong()
-    }
+    override var progress: Float
+        get() = player.time.toFloat() / player.length.toFloat()
+        set(value) {
+            player.time = (value * player.length).toLong()
+        }
 
-    override fun setTime(timeMs: Long) {
-        player.time = timeMs
-    }
+    override var time: Long
+        get() = player.time
+        set(value) {
+            player.time = value
+        }
+
+    override val length: Long
+        get() = player.length
 
     override fun setSubtitles(uri: String) {
         player.addSlave(Media.Slave.Type.Subtitle, Uri.parse(uri), true)
@@ -67,10 +74,6 @@ class VlcMediaHelper(
 
     override fun setSubtitleDelay(delay: Long): Boolean {
         return delay == 0L || (player.isPlaying && player.setSpuDelay(-delay * 1000))
-    }
-
-    override fun getTime(): Long {
-        return player.time
     }
 
     fun release() {
