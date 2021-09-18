@@ -81,28 +81,47 @@ class PrimewireTvProvider(
 
         val LINK_PAGE_HTML_SUBMIT_TRIGGER: (String) -> String = {
             """
-            const directLinks = document.getElementsByClassName('propper-link');
-            const linkCount = directLinks.length;
-            const config = {
-                attributes: true,
-                attributeFilter: ["key"]
-            };
-            var alreadyModified = 0;
-            const callback = function (mutationsList, observer) {
-                for (var i = 0; i < mutationsList.length; ++i) {
-                    var mutation = mutationsList[i];
-                    if (mutation.type === 'attributes') {
+            function listenForKeysAdded(links, noKeyLinkCount) {
+                const config = {
+                    attributes: true,
+                    attributeFilter: ["key"]
+                };
+                var alreadyModified = 0;
+                const callback = function (mutationsList, observer) {
+                    for (var i = 0; i < mutationsList.length; ++i) {
+                        var mutation = mutationsList[i];
+                        if (mutation.type !== 'attributes')
+                            continue;
                         alreadyModified++;
-                        if (alreadyModified === linkCount) {
+                        if (alreadyModified === noKeyLinkCount) {
                             $it.submitHtml();
+                            return;
                         }
                     }
+                };
+                const observer = new MutationObserver(callback);
+                for (var i = 0; i < links.length; ++i) {
+                    var node = links[i];
+                    observer.observe(node, config);
                 }
-            };
-            const observer = new MutationObserver(callback);
-            for (var i = 0; i < directLinks.length; ++i) {
-                var node = directLinks[i];
-                observer.observe(node, config);
+            }
+            
+            function countLinksWithoutKey(links) {
+                var linksWithoutKey = 0;
+                for (var i = 0; i < links.length; ++i) {
+                    var link = links[i];
+                    if (!link.hasAttribute("key"))
+                        linksWithoutKey++;
+                }
+                return linksWithoutKey;
+            }
+            
+            const links = document.getElementsByClassName('propper-link');
+            var noKeyLinkCount = countLinksWithoutKey(links);
+            if (noKeyLinkCount === 0) {
+                $it.submitHtml();
+            } else {
+                listenForKeysAdded(links, noKeyLinkCount);
             }
             """
         }
