@@ -1,7 +1,8 @@
 package com.tajmoti.libtulip.service.impl
 
+import arrow.core.left
+import arrow.core.right
 import com.tajmoti.commonutils.*
-import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtulip.model.MissingEntityException
 import com.tajmoti.libtulip.model.hosted.HostedEpisode
 import com.tajmoti.libtulip.model.hosted.HostedStreamable
@@ -17,14 +18,15 @@ import com.tajmoti.libtulip.model.stream.StreamableInfoWithLangLinks
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
-import com.tajmoti.libtulip.service.LanguageMappingStreamService
 import com.tajmoti.libtulip.repository.StreamsRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.runningFold
+import com.tajmoti.libtulip.repository.TmdbTvDataRepository
+import com.tajmoti.libtulip.service.LanguageMappingStreamService
+import com.tajmoti.libtulip.service.StreamsResult
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class LanguageMappingStreamServiceImpl @Inject constructor(
     private val hostedTvDataRepository: HostedTvDataRepository,
     private val streamsRepo: StreamsRepository,
@@ -32,11 +34,9 @@ class LanguageMappingStreamServiceImpl @Inject constructor(
 ) : LanguageMappingStreamService {
 
     override suspend fun getStreamsWithLanguages(
-        key: StreamableKey.Hosted,
-        infoConsumer: (StreamableInfo) -> Unit
-    ): Result<StreamableInfoWithLangLinks> {
+        key: StreamableKey.Hosted
+    ): StreamsResult {
         return hostedTvDataRepository.getStreamableInfo(key)
-            .onSuccess { infoConsumer(it.streamableInfo) to it }
             .onFailure { logger.warn("Streamable info retrieval failed", it) }
             .flatMapZip { hostedTvDataRepository.fetchStreams(key) }
             .map { (infoWithLang, streams) ->
@@ -44,7 +44,7 @@ class LanguageMappingStreamServiceImpl @Inject constructor(
                     UnloadedVideoStreamRef(it, streamsRepo.canExtractFromService(it))
                 }
                 combineInfoWithStreams(infoWithLang, streamRefs)
-            }
+            }.fold({ it.right() }, { null.left() })
     }
 
     private fun combineInfoWithStreams(
@@ -56,15 +56,22 @@ class LanguageMappingStreamServiceImpl @Inject constructor(
         .let { videos -> StreamableInfoWithLangLinks(infoWithLang.streamableInfo, videos) }
 
     override suspend fun getStreamsWithLanguages(
-        key: StreamableKey.Tmdb,
-        infoConsumer: (StreamableInfo) -> Unit
-    ): Result<Flow<StreamableInfoWithLangLinks>> {
-        return getStreamableInfo(key)
-            .onFailure { logger.warn("Failed to fetch streams for $key", it) }
-            .onSuccess(infoConsumer)
-            .flatMapZip { getStreamablesWithLanguages(key) }
-            .onFailure { logger.warn("Failed to retrieve streamables for $key", it) }
-            .map { (info, listOfPairs) -> combineInfoWithStreamables(listOfPairs, info) }
+        key: StreamableKey.Tmdb
+    ): Flow<StreamsResult> = flow {
+        val info = getStreamableInfo(key)
+            .getOrElse {
+                logger.warn("Failed to fetch streams for $key", it)
+                emit(null.left())
+                return@flow
+            }
+        emit(StreamableInfoWithLangLinks(info, emptyList()).right())
+        val secondInfo = getStreamablesWithLanguages(key)
+            .getOrElse {
+                logger.warn("Failed to retrieve streamables for $key", it)
+                emit(info.left())
+                return@flow
+            }
+        emitAll(combineInfoWithStreamables(secondInfo, info).map { it.right() })
     }
 
     private suspend fun getStreamableInfo(key: StreamableKey.Tmdb): Result<StreamableInfo> {
@@ -97,11 +104,13 @@ class LanguageMappingStreamServiceImpl @Inject constructor(
     private suspend fun combineInfoWithStreamables(
         listOfPairs: List<Pair<HostedStreamable, LanguageCode>>,
         info: StreamableInfo
-    ) = getStreamsAndMapLanguages(listOfPairs)
-        .map {
-            val vid = it.sortedBy { videoWithLang -> !videoWithLang.video.linkExtractionSupported }
-            StreamableInfoWithLangLinks(info, vid)
-        }
+    ): Flow<StreamableInfoWithLangLinks> {
+        return getStreamsAndMapLanguages(listOfPairs)
+            .map {
+                val vid = it.sortedBy { videoWithLang -> !videoWithLang.video.linkExtractionSupported }
+                StreamableInfoWithLangLinks(info, vid)
+            }
+    }
 
     private suspend fun getStreamablesWithLanguages(
         info: StreamableKey.Tmdb
@@ -147,7 +156,7 @@ class LanguageMappingStreamServiceImpl @Inject constructor(
     private suspend fun combineStreamableWithLanguage(
         streamable: HostedStreamable,
         language: LanguageCode
-    ) = getStreamsWithLanguages(streamable.hostedKey) {}
-        .getOrNull()
+    ) = getStreamsWithLanguages(streamable.hostedKey)
+        .orNull()
         ?.let { videos -> videos to language }
 }

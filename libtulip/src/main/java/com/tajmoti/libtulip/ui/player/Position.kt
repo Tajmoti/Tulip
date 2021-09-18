@@ -1,4 +1,4 @@
-package com.tajmoti.tulip.ui.player
+package com.tajmoti.libtulip.ui.player
 
 data class Position(
     val fraction: Float,

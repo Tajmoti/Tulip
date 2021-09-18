@@ -5,13 +5,13 @@
 
     <data>
 
-        <import type="com.tajmoti.tulip.ui.show.TvShowViewModel.State" />
+        <import type="com.tajmoti.libtulip.ui.tvshow.TvShowViewModel.State" />
 
         <import type="android.view.View" />
 
         <variable
             name="viewModel"
-            type="com.tajmoti.tulip.ui.show.TvShowViewModel" />
+            type="com.tajmoti.libtulip.ui.tvshow.TvShowViewModel" />
     </data>
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout

@@ -1,31 +1,22 @@
-package com.tajmoti.tulip.ui.player
+package com.tajmoti.libtulip.ui.player
 
-import android.annotation.SuppressLint
-import android.content.Context
-import androidx.lifecycle.*
 import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.repository.SubtitleRepository
 import com.tajmoti.libtulip.service.*
+import com.tajmoti.libtulip.ui.doCancelableJob
 import com.tajmoti.libtvprovider.*
-import com.tajmoti.tulip.ui.doCancelableJob
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.io.File
-import javax.inject.Inject
 
-@HiltViewModel
-@SuppressLint("StaticFieldLeak")
-class VideoPlayerViewModelImpl @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+class VideoPlayerViewModelImpl constructor(
     private val subtitleRepository: SubtitleRepository,
-    @ApplicationContext
-    private val context: Context
-) : ViewModel(), VideoPlayerViewModel {
-    private val args = VideoPlayerActivityArgs.fromSavedStateHandle(savedStateHandle)
+    private val subDirectory: File,
+    private val viewModelScope: CoroutineScope,
+    private val streamableKey: StreamableKey.Tmdb
+) : VideoPlayerViewModel {
 
     /**
      * State of subtitle list loading
@@ -106,8 +97,8 @@ class VideoPlayerViewModelImpl @Inject constructor(
     private var subtitleDownloadJob: Job? = null
 
     init {
-        doCancelableJob(this::subtitleFetchJob, loadingSubtitles) {
-            val subtitleListFlow = loadSubtitlesList(args.streamableKey as StreamableKey.Tmdb)
+        viewModelScope.doCancelableJob(this::subtitleFetchJob, loadingSubtitles) {
+            val subtitleListFlow = loadSubtitlesList(streamableKey)
             loadingSubtitlesState.emitAll(subtitleListFlow)
         }
     }
@@ -119,30 +110,20 @@ class VideoPlayerViewModelImpl @Inject constructor(
         emit(SubtitleListLoadingState.Success(subtitles))
     }
 
-    /**
-     * A new media is attached and starting to be played.
-     */
-    fun onMediaAttached(media: MediaPlayerHelper) {
+    override fun onMediaAttached(media: MediaPlayerHelper) {
         viewModelScope.launch {
             mediaPlayerState.emitAll(media.state)
         }
     }
 
-    /**
-     * The user has selected which subtitles they wish to use.
-     * The subtitles need to be downloaded before the video is played.
-     */
-    fun onSubtitlesSelected(subtitleInfo: SubtitleInfo) {
+    override fun onSubtitlesSelected(subtitleInfo: SubtitleInfo) {
         subtitleOffset.value = 0L
-        doCancelableJob(this::subtitleDownloadJob, downloadingSubtitleFile) {
+        viewModelScope.doCancelableJob(this::subtitleDownloadJob, downloadingSubtitleFile) {
             subtitleDownloadState.emitAll(downloadSubtitles(subtitleInfo))
         }
     }
 
-    /**
-     * The user heard a word that they want to match to some text.
-     */
-    fun onWordHeard(time: Long) {
+    override fun onWordHeard(time: Long) {
         val seen = subSyncState.takeIf { it is SubtitleSyncState.Seen }
                 as? SubtitleSyncState.Seen
         if (seen == null) {
@@ -152,10 +133,7 @@ class VideoPlayerViewModelImpl @Inject constructor(
         }
     }
 
-    /**
-     * The user saw text that they want to match to a heard word.
-     */
-    fun onTextSeen(time: Long) {
+    override fun onTextSeen(time: Long) {
         // If an offset is already set, take it into account
         val adjustedTime = time - subtitleOffset.value
         val heard = subSyncState.takeIf { it is SubtitleSyncState.Heard }
@@ -174,7 +152,6 @@ class VideoPlayerViewModelImpl @Inject constructor(
 
     private fun downloadSubtitles(subtitleInfo: SubtitleInfo) = flow {
         emit(SubtitleDownloadingState.Loading)
-        val subDirectory = context.getExternalFilesDir(null)!!
         val subtitleStream = subtitleRepository.downloadSubtitleToFile(subtitleInfo, subDirectory)
             .getOrElse { emit(SubtitleDownloadingState.Error); return@flow }
         emit(SubtitleDownloadingState.Success(subtitleStream))

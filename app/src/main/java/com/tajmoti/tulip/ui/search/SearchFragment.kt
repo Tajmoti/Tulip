@@ -6,7 +6,7 @@ import android.view.MenuInflater
 import android.view.View
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.ViewCompat
-import androidx.fragment.app.viewModels
+import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tajmoti.libtulip.model.hosted.HostedItem
@@ -15,17 +15,18 @@ import com.tajmoti.libtulip.model.info.TulipSearchResult
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
+import com.tajmoti.libtulip.ui.search.SearchViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentSearchBinding
 import com.tajmoti.tulip.ui.*
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class SearchFragment : BaseFragment<FragmentSearchBinding, SearchViewModel>(
+class SearchFragment : BaseFragment<FragmentSearchBinding, AndroidSearchViewModel>(
     FragmentSearchBinding::inflate
 ), SearchView.OnQueryTextListener {
     private lateinit var searchView: SearchView
-    override val viewModel: SearchViewModel by viewModels()
+    private val viewModel by viewModelsDelegated<SearchViewModel, AndroidSearchViewModel>()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +42,9 @@ class SearchFragment : BaseFragment<FragmentSearchBinding, SearchViewModel>(
             .setToRecyclerWithDividers(binding.recyclerSearch)
         binding.recyclerSearch.itemAnimator = null
         consume(viewModel.results) { adapter.items = it }
-        consume(viewModel.itemToOpen) { goToItemByKey(it) }
+        consume(viewModel.itemToOpen, this::goToItemByKey)
+        consume(viewModel.status, this::setStatusView)
+
     }
 
     private fun fixLayoutCentering() {
@@ -98,6 +101,25 @@ class SearchFragment : BaseFragment<FragmentSearchBinding, SearchViewModel>(
                 SearchFragmentDirections.actionNavigationSearchToStreamsFragment(key)
                     .let { navController.navigate(it) }
             }
+        }
+    }
+
+    private fun setStatusView(it: SearchViewModel.Icon?) {
+        val textToImage = when (it) {
+            SearchViewModel.Icon.READY -> R.string.search_hint to R.drawable.ic_search_24
+            SearchViewModel.Icon.NO_RESULTS -> R.string.no_results to R.drawable.ic_sad_24
+            SearchViewModel.Icon.ERROR -> R.string.something_went_wrong to R.drawable.ic_sad_24
+            else -> null
+        }
+        if (textToImage == null) {
+            binding.statusText.isVisible = false
+            binding.statusImage.isVisible = false
+        } else {
+            binding.statusText.isVisible = true
+            binding.statusImage.isVisible = true
+            val (text, image) = textToImage
+            binding.statusText.setText(text)
+            binding.statusImage.setImageResource(image)
         }
     }
 

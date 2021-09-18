@@ -9,5 +9,5 @@ import dagger.hilt.android.AndroidEntryPoint
 class DownloadsFragment : BaseFragment<FragmentDownloadsBinding, DownloadsViewModel>(
     FragmentDownloadsBinding::inflate
 ) {
-    override val viewModel: DownloadsViewModel by viewModels()
+    val viewModelUndelegated: DownloadsViewModel by viewModels()
 }

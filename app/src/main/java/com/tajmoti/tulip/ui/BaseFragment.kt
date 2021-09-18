@@ -12,7 +12,6 @@ abstract class BaseFragment<B : ViewDataBinding, VM : ViewModel>(
     private val bindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> B
 ) : BottomSheetDialogFragment() {
     protected lateinit var binding: B
-    protected abstract val viewModel: VM
 
     override fun onCreateView(
         inflater: LayoutInflater,

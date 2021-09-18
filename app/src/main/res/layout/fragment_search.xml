@@ -4,15 +4,13 @@
 
     <data>
 
-        <import type="com.tajmoti.tulip.ui.search.SearchViewModel.State" />
-
         <import type="android.view.View" />
 
         <import type="com.tajmoti.tulip.R" />
 
         <variable
             name="viewModel"
-            type="com.tajmoti.tulip.ui.search.SearchViewModel" />
+            type="com.tajmoti.libtulip.ui.search.SearchViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -31,11 +29,9 @@
             app:popupTheme="@style/Theme.Tulip.PopupOverlay" />
 
         <ImageView
-            android:id="@+id/imageView"
+            android:id="@+id/status_image"
             android:layout_width="@dimen/error_screen_image_size"
             android:layout_height="@dimen/error_screen_image_size"
-            android:src="@{viewModel.statusImage ?? 0}"
-            android:visibility="@{viewModel.statusImage != null ? View.VISIBLE : View.GONE}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -43,16 +39,14 @@
             tools:ignore="ContentDescription" />
 
         <TextView
-            android:id="@+id/textView"
+            android:id="@+id/status_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/error_screen_hint_spacing"
             android:layout_marginBottom="@dimen/activity_vertical_margin"
-            android:text="@{viewModel.statusText ?? R.string.empty}"
-            android:visibility="@{viewModel.statusText != null ? View.VISIBLE : View.GONE}"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/imageView"
+            app:layout_constraintTop_toBottomOf="@id/status_image"
             app:layout_constraintVertical_bias="0.0" />
 
         <Button
@@ -64,7 +58,7 @@
             android:visibility="@{viewModel.canTryAgain ? View.VISIBLE : View.GONE}"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView" />
+            app:layout_constraintTop_toBottomOf="@+id/status_text" />
 
         <ProgressBar
             android:id="@+id/progressBar"

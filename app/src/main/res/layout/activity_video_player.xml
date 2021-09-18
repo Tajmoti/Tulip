@@ -6,11 +6,13 @@
 
         <import type="android.view.View" />
 
-        <import type="com.tajmoti.tulip.ui.player.VideoPlayerViewModel.PlayButtonState" />
+        <import type="com.tajmoti.libtulip.ui.player.VideoPlayerViewModel" />
+
+        <import type="com.tajmoti.libtulip.ui.player.VideoPlayerViewModel.PlayButtonState" />
 
         <variable
             name="viewModel"
-            type="com.tajmoti.tulip.ui.player.VideoPlayerViewModelImpl" />
+            type="com.tajmoti.libtulip.ui.player.VideoPlayerViewModel" />
     </data>
 
     <FrameLayout

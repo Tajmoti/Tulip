@@ -2,6 +2,8 @@ package com.tajmoti.tulip.ui.player
 
 import android.net.Uri
 import com.tajmoti.commonutils.logger
+import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
+import com.tajmoti.libtulip.ui.player.Position
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.videolan.libvlc.LibVLC
 import org.videolan.libvlc.Media
@@ -55,8 +57,8 @@ class VlcMediaHelper(
         player.time = (progress * player.length).toLong()
     }
 
-    override fun setSubtitles(uri: Uri) {
-        player.addSlave(Media.Slave.Type.Subtitle, uri, true)
+    override fun setSubtitles(uri: String) {
+        player.addSlave(Media.Slave.Type.Subtitle, Uri.parse(uri), true)
     }
 
     override fun setSubtitleDelay(delay: Long): Boolean {

@@ -1,6 +1,5 @@
-package com.tajmoti.tulip.ui.player
+package com.tajmoti.libtulip.ui.player
 
-import android.net.Uri
 import kotlinx.coroutines.flow.MutableStateFlow
 
 interface MediaPlayerHelper {
@@ -19,7 +18,7 @@ interface MediaPlayerHelper {
 
     fun playOrResume()
     fun setProgress(progress: Float)
-    fun setSubtitles(uri: Uri)
+    fun setSubtitles(uri: String)
     fun setSubtitleDelay(delay: Long): Boolean
     fun getTime(): Long
 }

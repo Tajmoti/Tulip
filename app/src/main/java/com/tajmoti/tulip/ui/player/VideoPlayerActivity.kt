@@ -4,17 +4,19 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.SeekBar
-import androidx.activity.viewModels
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import androidx.navigation.navArgs
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.tajmoti.libtulip.ui.player.Position
+import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ActivityVideoPlayerBinding
 import com.tajmoti.tulip.ui.BaseActivity
 import com.tajmoti.tulip.ui.consume
 import com.tajmoti.tulip.ui.toast
+import com.tajmoti.tulip.ui.viewModelsDelegated
 import dagger.hilt.android.AndroidEntryPoint
 import org.videolan.libvlc.LibVLC
 import java.io.File
@@ -25,7 +27,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     R.layout.activity_video_player
 ) {
     private val args: VideoPlayerActivityArgs by navArgs()
-    private val viewModel: VideoPlayerViewModelImpl by viewModels()
+    private val viewModel by viewModelsDelegated<VideoPlayerViewModel, AndroidVideoPlayerViewModel>()
 
     /**
      * Instance of the VLC library
@@ -171,8 +173,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     private fun onSubtitlesReady(file: File) {
-        val uri = Uri.fromFile(file)
-        vlc?.setSubtitles(uri)
+        vlc?.setSubtitles(Uri.fromFile(file).toString())
     }
 
     private fun onSubtitlesDelayChanged(delay: Long) {

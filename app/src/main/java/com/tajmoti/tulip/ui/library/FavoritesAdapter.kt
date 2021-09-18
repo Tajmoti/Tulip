@@ -2,6 +2,7 @@ package com.tajmoti.tulip.ui.library
 
 import com.bumptech.glide.Glide
 import com.tajmoti.libtulip.model.key.TvShowKey
+import com.tajmoti.libtulip.ui.library.LibraryItem
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ItemLibraryBinding
 import com.tajmoti.tulip.ui.BaseAdapter

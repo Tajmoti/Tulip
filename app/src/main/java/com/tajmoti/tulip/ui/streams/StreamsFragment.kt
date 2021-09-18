@@ -6,26 +6,25 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
-import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
-import com.tajmoti.libtvprovider.VideoStreamRef
+import com.tajmoti.libtulip.ui.streams.FailedLink
+import com.tajmoti.libtulip.ui.streams.LoadedLink
+import com.tajmoti.libtulip.ui.streams.SelectedLink
+import com.tajmoti.libtulip.ui.streams.StreamsViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentStreamsBinding
-import com.tajmoti.tulip.ui.BaseFragment
-import com.tajmoti.tulip.ui.consume
-import com.tajmoti.tulip.ui.setupWithAdapterAndDivider
-import com.tajmoti.tulip.ui.toast
+import com.tajmoti.tulip.ui.*
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
+class StreamsFragment : BaseFragment<FragmentStreamsBinding, AndroidStreamsViewModel>(
     FragmentStreamsBinding::inflate
 ) {
     private val args: StreamsFragmentArgs by navArgs()
-    override val viewModel: StreamsViewModel by viewModels()
+    private val viewModel by viewModelsDelegated<StreamsViewModel, AndroidStreamsViewModel>()
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -33,29 +32,13 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
         adapter.callback = this::onStreamClickedPlay
         binding.viewModel = viewModel
         binding.recyclerSearch.setupWithAdapterAndDivider(adapter)
-        consume(viewModel.streamLoadingState) { onStreamLoadingStateChanged(it, adapter) }
-        consume(viewModel.linkLoadingState) { onDirectLoadingChanged(it) }
+        consume(viewModel.linksResult) { it?.let { adapter.items = it.streams } }
+        consume(viewModel.directLoadingUnsupported, this::onDirectLinkUnsupported)
+        consume(viewModel.directLoaded, this::onDirectLinkLoaded)
+        consume(viewModel.linkLoadingError, this::onDirectLinkLoadingError)
     }
 
-    private fun onStreamLoadingStateChanged(it: StreamsViewModel.State, adapter: StreamsAdapter) {
-        if (it is StreamsViewModel.State.Success)
-            consume(it.infoFlow) { adapter.items = it.streams }
-    }
-
-    private fun onDirectLoadingChanged(it: StreamsViewModel.LinkLoadingState?) {
-        it ?: return
-        when (it) {
-            is StreamsViewModel.LinkLoadingState.LoadedDirect -> onDirectLinkLoaded(it)
-            is StreamsViewModel.LinkLoadingState.DirectLinkUnsupported -> onDirectLinkUnsupported(it)
-            is StreamsViewModel.LinkLoadingState.Error -> onDirectLinkLoadingFail(
-                it.stream,
-                it.download
-            )
-            else -> Unit
-        }
-    }
-
-    private fun onDirectLinkLoaded(it: StreamsViewModel.LinkLoadingState.LoadedDirect) {
+    private fun onDirectLinkLoaded(it: LoadedLink) {
         if (!it.download) {
             startVideo(it.directLink, true)
         } else {
@@ -63,7 +46,7 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
         }
     }
 
-    private fun onDirectLinkUnsupported(it: StreamsViewModel.LinkLoadingState.DirectLinkUnsupported) {
+    private fun onDirectLinkUnsupported(it: SelectedLink) {
         if (!it.download) {
             startVideo(it.stream.url, false)
         } else {
@@ -72,8 +55,8 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
         }
     }
 
-    private fun onDirectLinkLoadingFail(stream: VideoStreamRef, download: Boolean) {
-        if (download) {
+    private fun onDirectLinkLoadingError(link: FailedLink) {
+        if (link.download) {
             Toast.makeText(requireContext(), R.string.direct_loading_failure, Toast.LENGTH_SHORT)
                 .show()
         } else {
@@ -82,7 +65,7 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding, StreamsViewModel>(
                 .setTitle(R.string.direct_loading_failure)
                 .setMessage(R.string.direct_loading_failure_message)
                 .setPositiveButton(R.string.direct_loading_failure_yes) { _, _ ->
-                    startVideo(stream.url, false)
+                    startVideo(link.stream.url, false)
                 }
                 .setNegativeButton(R.string.direct_loading_failure_no) { _, _ -> }
                 .show()

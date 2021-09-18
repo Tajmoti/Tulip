@@ -1,7 +1,5 @@
-package com.tajmoti.tulip.ui.library
+package com.tajmoti.libtulip.ui.library
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.tajmoti.commonutils.mapToAsyncJobsPair
 import com.tajmoti.commonutils.parallelMap
 import com.tajmoti.commonutils.parallelMapBoth
@@ -12,21 +10,18 @@ import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.repository.FavoritesRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
-import javax.inject.Inject
 
-@HiltViewModel
-class LibraryViewModel @Inject constructor(
-    favoritesRepository: FavoritesRepository,
+class LibraryViewModelImpl constructor(
+    favoritesRepo: FavoritesRepository,
     private val hostedRepo: HostedInfoDataSource,
-    private val tmdbRepo: TmdbTvDataRepository
-) : ViewModel() {
+    private val tmdbRepo: TmdbTvDataRepository,
+    viewModelScope: CoroutineScope
+) : LibraryViewModel {
 
-    /**
-     * All items that the user has marked as favorite
-     */
-    val favoriteItems = favoritesRepository.getUserFavoritesAsFlow().map { mapFavorites(it) }
+    override val favoriteItems = favoritesRepo.getUserFavoritesAsFlow()
+        .map { mapFavorites(it) }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
 

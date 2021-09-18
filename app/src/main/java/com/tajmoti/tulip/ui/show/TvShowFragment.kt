@@ -2,18 +2,19 @@ package com.tajmoti.tulip.ui.show
 
 import android.os.Bundle
 import android.view.View
-import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.bumptech.glide.Glide
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
 import com.tajmoti.libtulip.model.key.EpisodeKey
+import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ActivityTabbedTvShowBinding
 import com.tajmoti.tulip.ui.BaseFragment
 import com.tajmoti.tulip.ui.MainActivity
 import com.tajmoti.tulip.ui.consume
+import com.tajmoti.tulip.ui.viewModelsDelegated
 import com.xwray.groupie.ExpandableGroup
 import com.xwray.groupie.GroupieAdapter
 import dagger.hilt.android.AndroidEntryPoint
@@ -21,10 +22,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
-class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding, TvShowViewModel>(
+class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding, AndroidTvShowViewModel>(
     ActivityTabbedTvShowBinding::inflate
 ) {
-    override val viewModel: TvShowViewModel by viewModels()
+    private val viewModel by viewModelsDelegated<TvShowViewModel, AndroidTvShowViewModel>()
     private val args: TvShowFragmentArgs by navArgs()
     private lateinit var adapter: GroupieAdapter
 

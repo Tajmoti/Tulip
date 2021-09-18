@@ -3,13 +3,13 @@
 
     <data>
 
-        <import type="com.tajmoti.tulip.ui.library.LibraryViewModel" />
+        <import type="com.tajmoti.libtulip.ui.library.LibraryViewModel" />
 
         <import type="android.view.View" />
 
         <variable
             name="viewModel"
-            type="com.tajmoti.tulip.ui.library.LibraryViewModel" />
+            type="com.tajmoti.libtulip.ui.library.LibraryViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

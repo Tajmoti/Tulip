@@ -55,10 +55,3 @@ fun ViewModel.doCancelableJob(
     }
     job.set(newJob)
 }
-
-fun <T> ViewModel.startFlowAction(
-    initial: T,
-    job: suspend FlowCollector<T>.() -> Unit
-): StateFlow<T> {
-    return flow(job).stateIn(viewModelScope, SharingStarted.Lazily, initial)
-}

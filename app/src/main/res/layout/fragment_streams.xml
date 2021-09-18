@@ -3,10 +3,7 @@
 
     <data>
 
-        <import type="com.tajmoti.tulip.ui.streams.StreamsViewModel" />
-
-        <import type="com.tajmoti.tulip.ui.streams.StreamsViewModel.State" />
-
+        <import type="com.tajmoti.libtulip.ui.streams.StreamsViewModel" />
 
         <import type="android.view.View" />
 
@@ -52,20 +49,20 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="@string/no_results"
-                android:visibility="@{viewModel.noResults ? View.VISIBLE : View.GONE}" />
+                android:visibility="@{viewModel.linksNoResult ? View.VISIBLE : View.GONE}" />
 
             <ProgressBar
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:indeterminate="true"
-                android:visibility="@{viewModel.loading ? View.VISIBLE : View.GONE}" />
+                android:visibility="@{viewModel.linksLoading ? View.VISIBLE : View.GONE}" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recycler_search"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:visibility="@{viewModel.streamLoadingState.success ? View.VISIBLE : View.GONE}"
+                android:visibility="@{viewModel.linksResult != null ? View.VISIBLE : View.GONE}"
                 app:layoutManager="LinearLayoutManager" />
         </FrameLayout>
     </LinearLayout>

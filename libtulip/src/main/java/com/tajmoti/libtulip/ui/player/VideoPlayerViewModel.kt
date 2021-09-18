@@ -1,4 +1,4 @@
-package com.tajmoti.tulip.ui.player
+package com.tajmoti.libtulip.ui.player
 
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import kotlinx.coroutines.flow.StateFlow
@@ -60,6 +60,27 @@ interface VideoPlayerViewModel {
      * True if an error was encountered and the player was canceled
      */
     val isError: StateFlow<Boolean>
+
+    /**
+     * A new media is attached and starting to be played.
+     */
+    fun onMediaAttached(media: MediaPlayerHelper)
+
+    /**
+     * The user has selected which subtitles they wish to use.
+     * The subtitles need to be downloaded before the video is played.
+     */
+    fun onSubtitlesSelected(subtitleInfo: SubtitleInfo)
+
+    /**
+     * The user heard a word that they want to match to some text.
+     */
+    fun onWordHeard(time: Long)
+
+    /**
+     * The user saw text that they want to match to a heard word.
+     */
+    fun onTextSeen(time: Long)
 
     enum class PlayButtonState {
         SHOW_PLAY,
