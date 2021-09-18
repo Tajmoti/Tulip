@@ -1,6 +1,5 @@
 package com.tajmoti.libtulip.ui.streams
 
-import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.stream.StreamableInfoWithLangLinks
@@ -31,14 +30,6 @@ class StreamsViewModelImpl constructor(
      */
     private val linkLoadingState = MutableStateFlow<LinkLoadingState>(LinkLoadingState.Idle)
 
-
-    override val linksLoading = streamLoadingState.map(viewModelScope) {
-        it is State.Idle
-                || it is State.Preparing
-                || it is State.Loading
-                || (it is State.Success && it.infoFlow.streams.isEmpty() && !linksNoResult.value)
-    }
-
     override val streamableName = streamLoadingState
         .map { stateToStreamName(it) }
         .stateIn(viewModelScope, SharingStarted.Lazily, null)
@@ -49,6 +40,15 @@ class StreamsViewModelImpl constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     override val linksNoResult = MutableStateFlow(false)
+
+    override val linksLoading = streamLoadingState
+        .combine(linksNoResult) { state, noResults ->
+            state is State.Idle
+                    || state is State.Preparing
+                    || state is State.Loading
+                    || (state is State.Success && state.infoFlow.streams.isEmpty() && !noResults)
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
 
     override val loadingStreamOrDirectLink = MutableStateFlow(false)
