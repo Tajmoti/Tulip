@@ -45,7 +45,7 @@ interface StreamsViewModel {
     /**
      * Selected item with direct link loaded.
      */
-    val directLoaded: SharedFlow<LoadedLink>
+    val directLoaded: StateFlow<LoadedLink?>
 
     /**
      * Selected item failed to load redirects or failed to load direct link.

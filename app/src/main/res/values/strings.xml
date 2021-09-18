@@ -29,4 +29,5 @@
     <string name="subtitle_adjust_word_seen">I saw it</string>
     <string name="subtitles">Subtitles</string>
     <string name="restart_video">Reload video</string>
+    <string name="change_source">Change source</string>
 </resources>

@@ -1,4 +1,4 @@
-package com.tajmoti.tulip.ui.streams
+package com.tajmoti.tulip.ui.player
 
 import androidx.lifecycle.*
 import com.tajmoti.libtulip.repository.StreamsRepository
@@ -20,7 +20,7 @@ class AndroidStreamsViewModel @Inject constructor(
         downloadService,
         extractionService,
         streamService,
-        StreamsFragmentArgs.fromSavedStateHandle(savedStateHandle).streamableKey,
+        VideoPlayerActivityArgs.fromSavedStateHandle(savedStateHandle).streamableKey,
         viewModelScope
     )
 }

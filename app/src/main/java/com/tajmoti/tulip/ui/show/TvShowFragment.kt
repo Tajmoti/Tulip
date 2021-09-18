@@ -88,7 +88,7 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding, AndroidTvShowVi
     }
 
     private fun goToStreamsScreen(episodeKey: EpisodeKey) {
-        TvShowFragmentDirections.actionTabbedTvShowActivityToStreamsFragment(episodeKey)
+        TvShowFragmentDirections.actionNavigationTvShowToVideoPlayerActivity(episodeKey)
             .let { findNavController().navigate(it) }
     }
 }

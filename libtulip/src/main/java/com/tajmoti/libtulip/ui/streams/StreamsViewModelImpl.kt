@@ -23,6 +23,7 @@ class StreamsViewModelImpl constructor(
      * Loading state of the list of available streams
      */
     private val streamLoadingState = fetchStreams(streamableKey)
+        .onEach { (it as? State.Success)?.let { success -> onInitialStreams(success.streams) } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, State.Idle)
 
     /**
@@ -36,7 +37,7 @@ class StreamsViewModelImpl constructor(
 
 
     override val linksResult = streamLoadingState
-        .map { (it as? State.Success)?.infoFlow }
+        .map { (it as? State.Success)?.streams }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     override val linksNoResult = MutableStateFlow(false)
@@ -46,7 +47,7 @@ class StreamsViewModelImpl constructor(
             state is State.Idle
                     || state is State.Preparing
                     || state is State.Loading
-                    || (state is State.Success && state.infoFlow.streams.isEmpty() && !noResults)
+                    || (state is State.Success && state.streams.streams.isEmpty() && !noResults)
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
@@ -65,7 +66,7 @@ class StreamsViewModelImpl constructor(
             (state as? LinkLoadingState.LoadedDirect)
                 ?.let { LoadedLink(it.stream, it.download, it.directLink) }
         }
-        .shareIn(viewModelScope, SharingStarted.Eagerly)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     override val linkLoadingError = linkLoadingState
         .mapNotNull { state ->
@@ -74,20 +75,36 @@ class StreamsViewModelImpl constructor(
         }
         .shareIn(viewModelScope, SharingStarted.Eagerly)
 
+    /**
+     * True if a stream was already auto-selected for automatic play.
+     */
+    private var autoStreamAlreadySelected = false
 
+    /**
+     * A job representing ongoing link extraction.
+     * To be canceled if another video stream is selected.
+     */
     private var linkExtractionJob: Job? = null
 
 
     override fun onStreamClicked(stream: UnloadedVideoStreamRef, download: Boolean) {
+        startFetchingStream(stream, download, false)
+    }
+
+    private fun startFetchingStream(
+        stream: UnloadedVideoStreamRef,
+        download: Boolean,
+        auto: Boolean
+    ) {
         viewModelScope.doCancelableJob(
             this::linkExtractionJob,
             loadingStreamOrDirectLink
         ) {
             val flow = when (val info = stream.info) {
                 is VideoStreamRef.Resolved ->
-                    processResolvedLink(stream, info, download)
+                    processResolvedLink(stream, info, download, auto)
                 is VideoStreamRef.Unresolved ->
-                    processUnresolvedLink(stream, info, download)
+                    processUnresolvedLink(stream, info, download, auto)
             }
             linkLoadingState.emitAll(flow)
         }
@@ -100,44 +117,39 @@ class StreamsViewModelImpl constructor(
     private suspend fun processUnresolvedLink(
         ref: UnloadedVideoStreamRef,
         info: VideoStreamRef.Unresolved,
-        download: Boolean
+        download: Boolean,
+        auto: Boolean
     ) = flow {
-        emit(LinkLoadingState.Loading(info, download))
-        val resolvedUrl = streamsRepo.resolveStream(info)
-            .getOrElse {
-                emit(
-                    LinkLoadingState.Error(
-                        info,
-                        download
-                    )
-                ); return@flow
-            }
-        emitAll(processResolvedLink(ref, resolvedUrl, download))
+        emit(LinkLoadingState.Loading(info, download, auto))
+        streamsRepo.resolveStream(info)
+            .onSuccess { emitAll(processResolvedLink(ref, it, download, auto)) }
+            .onFailure { emit(LinkLoadingState.Error(info, download, auto)) }
     }
 
     private suspend fun processResolvedLink(
         ref: UnloadedVideoStreamRef,
         info: VideoStreamRef.Resolved,
         download: Boolean,
+        auto: Boolean
     ) = flow {
         if (!ref.linkExtractionSupported) {
-            emit(LinkLoadingState.DirectLinkUnsupported(info, download))
+            emit(LinkLoadingState.DirectLinkUnsupported(info, download, auto))
             return@flow
         }
-        linkLoadingState.emit(LinkLoadingState.LoadingDirect(info, download))
+        linkLoadingState.emit(LinkLoadingState.LoadingDirect(info, download, auto))
         val result = streamsRepo.extractVideoLink(info)
             .getOrElse {
-                emit(LinkLoadingState.Error(info, download))
+                emit(LinkLoadingState.Error(info, download, auto))
                 return@flow
             }
         if (download)
             downloadVideo(result)
-        emit(LinkLoadingState.LoadedDirect(info, download, result))
+        emit(LinkLoadingState.LoadedDirect(info, download, result, auto))
     }
 
     private fun downloadVideo(link: String) {
         val state = streamLoadingState.value as State.Success
-        downloadService.downloadFileToFiles(link, state.infoFlow.info)
+        downloadService.downloadFileToFiles(link, state.streams.info)
     }
 
     private fun fetchStreams(info: StreamableKey) = flow {
@@ -149,13 +161,13 @@ class StreamsViewModelImpl constructor(
 
     private fun updateAnyErrorsValue() {
         val successState = (streamLoadingState.value as? State.Success)
-        linksNoResult.value = successState?.infoFlow?.streams?.none() ?: false
+        linksNoResult.value = successState?.streams?.streams?.none() ?: false
     }
 
     private fun stateToStreamName(it: State): String? {
         val streamable = when (it) {
             is State.Loading -> it.info
-            is State.Success -> it.infoFlow.info
+            is State.Success -> it.streams.info
             is State.Error -> it.info
             else -> null
         }
@@ -168,6 +180,14 @@ class StreamsViewModelImpl constructor(
                 streamable.info.name ?: streamable.info.number.toString()
             is StreamableInfo.Movie -> streamable.name
         }
+    }
+
+    private fun onInitialStreams(info: StreamableInfoWithLangLinks) {
+        if (autoStreamAlreadySelected)
+            return
+        val firstDirect = info.streams.firstOrNull { it.video.linkExtractionSupported } ?: return
+        autoStreamAlreadySelected = true
+        startFetchingStream(firstDirect.video, download = false, auto = true)
     }
 
 
@@ -190,7 +210,7 @@ class StreamsViewModelImpl constructor(
         /**
          * Streamable item loaded successfully.
          */
-        data class Success(val infoFlow: StreamableInfoWithLangLinks) : State
+        data class Success(val streams: StreamableInfoWithLangLinks) : State
 
         /**
          * Error during loading of the item.
@@ -203,14 +223,19 @@ class StreamsViewModelImpl constructor(
     }
 
     sealed interface LinkLoadingState {
-        object Idle : LinkLoadingState
+        val auto: Boolean
+
+        object Idle : LinkLoadingState {
+            override val auto = false
+        }
 
         /**
          * The streaming page URL is being resolved.
          */
         data class Loading(
             val stream: VideoStreamRef.Unresolved,
-            val download: Boolean
+            val download: Boolean,
+            override val auto: Boolean
         ) : LinkLoadingState
 
         /**
@@ -218,7 +243,8 @@ class StreamsViewModelImpl constructor(
          */
         data class DirectLinkUnsupported(
             val stream: VideoStreamRef.Resolved,
-            val download: Boolean
+            val download: Boolean,
+            override val auto: Boolean
         ) : LinkLoadingState
 
         /**
@@ -226,7 +252,8 @@ class StreamsViewModelImpl constructor(
          */
         data class LoadingDirect(
             val stream: VideoStreamRef.Resolved,
-            val download: Boolean
+            val download: Boolean,
+            override val auto: Boolean
         ) : LinkLoadingState
 
         /**
@@ -235,12 +262,14 @@ class StreamsViewModelImpl constructor(
         data class LoadedDirect(
             val stream: VideoStreamRef.Resolved,
             val download: Boolean,
-            val directLink: String
+            val directLink: String,
+            override val auto: Boolean
         ) : LinkLoadingState
 
         data class Error(
             val stream: VideoStreamRef,
-            val download: Boolean
+            val download: Boolean,
+            override val auto: Boolean
         ) : LinkLoadingState
     }
 }

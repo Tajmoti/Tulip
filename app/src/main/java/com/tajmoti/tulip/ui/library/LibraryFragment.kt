@@ -44,7 +44,7 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding, AndroidLibraryViewM
                     .let { navController.navigate(it) }
             }
             is MovieKey -> {
-                LibraryFragmentDirections.actionNavigationLibraryToNavigationStreams(key)
+                LibraryFragmentDirections.actionNavigationLibraryToVideoPlayerActivity(key)
                     .let { navController.navigate(it) }
             }
         }

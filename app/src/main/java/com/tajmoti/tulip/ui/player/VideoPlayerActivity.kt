@@ -1,23 +1,27 @@
 package com.tajmoti.tulip.ui.player
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.SeekBar
+import android.widget.Toast
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
-import androidx.navigation.navArgs
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
 import com.tajmoti.libtulip.ui.player.Position
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
+import com.tajmoti.libtulip.ui.streams.FailedLink
+import com.tajmoti.libtulip.ui.streams.LoadedLink
+import com.tajmoti.libtulip.ui.streams.SelectedLink
+import com.tajmoti.libtulip.ui.streams.StreamsViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ActivityVideoPlayerBinding
-import com.tajmoti.tulip.ui.BaseActivity
-import com.tajmoti.tulip.ui.consume
-import com.tajmoti.tulip.ui.toast
-import com.tajmoti.tulip.ui.viewModelsDelegated
+import com.tajmoti.tulip.ui.*
 import dagger.hilt.android.AndroidEntryPoint
 import org.videolan.libvlc.LibVLC
 import java.io.File
@@ -27,8 +31,8 @@ import java.util.concurrent.TimeUnit
 class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     R.layout.activity_video_player
 ) {
-    private val args: VideoPlayerActivityArgs by navArgs()
-    private val viewModel by viewModelsDelegated<VideoPlayerViewModel, AndroidVideoPlayerViewModel>()
+    private val playerViewModel by viewModelsDelegated<VideoPlayerViewModel, AndroidVideoPlayerViewModel>()
+    private val streamsViewModel by viewModelsDelegated<StreamsViewModel, AndroidStreamsViewModel>()
 
     /**
      * Instance of the VLC library
@@ -43,16 +47,14 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding.viewModel = viewModel
+        binding.viewModel = playerViewModel
+        binding.includeStreamsSelection.viewModel = streamsViewModel
         libVLC = LibVLC(this, arrayListOf("-vvv"))
-        reloadVideo()
-        setupUI()
-        consume(viewModel.subtitleFile) { it?.let { onSubtitlesReady(it) } }
-        consume(viewModel.downloadingError) { if (it) toast(R.string.subtitle_download_failure) }
-        consume(viewModel.subtitleOffset, this::onSubtitlesDelayChanged)
-        consume(viewModel.showPlayButton, this::updatePlayPauseButton)
-        consume(viewModel.buffering, this::updateBuffering)
-        consume(viewModel.position, this::updatePosition)
+
+        val adapter = StreamsAdapter(this::onStreamClickedDownload)
+        adapter.callback = this::onStreamClickedPlay
+        setupPlayerUi(adapter)
+        setupFlowCollectors(adapter)
     }
 
     private fun setupFullscreen() {
@@ -62,21 +64,51 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         ctl.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 
-    private fun setupUI() {
+    private fun setupPlayerUi(adapter: StreamsAdapter) {
         binding.seekBarVideoProgress.max = UI_PROGRESS_STEPS
         binding.progressBarBuffering.max = UI_PROGRESS_STEPS
         binding.seekBarVideoProgress.setOnSeekBarChangeListener(OnSeekBarChangeListener())
-        binding.buttonPlayResume.setOnClickListener { onPlayPausePressed() }
-        binding.buttonSubtitles.setOnClickListener { showSubtitleSelectionDialog() }
+        binding.buttonPlayResume.setOnClickListener {
+            onPlayPausePressed()
+        }
+        binding.buttonSubtitles.setOnClickListener {
+            showSubtitleSelectionDialog()
+        }
         binding.buttonSubtitleAdjustText.setOnClickListener {
-            vlc?.let { viewModel.onTextSeen(it.getTime()) }
+            vlc?.let { playerViewModel.onTextSeen(it.getTime()) }
         }
         binding.buttonSubtitleAdjustVideo.setOnClickListener {
-            vlc?.let { viewModel.onWordHeard(it.getTime()) }
+            vlc?.let { playerViewModel.onWordHeard(it.getTime()) }
         }
-        binding.buttonRestartVideo.setOnClickListener { reloadVideo() }
-        binding.videoLayout.setOnClickListener { onVideoClicked() }
-        binding.buttonBack.setOnClickListener { finish() }
+        binding.buttonRestartVideo.setOnClickListener {
+            streamsViewModel.directLoaded.value?.let { reloadVideo(it.directLink) }
+        }
+        binding.buttonChangeSource.setOnClickListener {
+            binding.includeStreamsSelection.containerStreamSelection.isVisible = true
+        }
+        binding.videoLayout.setOnClickListener {
+            onVideoClicked()
+        }
+        binding.buttonBack.setOnClickListener {
+            finish()
+        }
+        binding.includeStreamsSelection.titleStreamSelection.setOnClickListener {
+            binding.includeStreamsSelection.containerStreamSelection.isVisible = false
+        }
+        binding.includeStreamsSelection.recyclerSearch.setupWithAdapterAndDivider(adapter)
+    }
+
+    private fun setupFlowCollectors(adapter: StreamsAdapter) {
+        consume(playerViewModel.subtitleFile) { it?.let { onSubtitlesReady(it) } }
+        consume(playerViewModel.downloadingError) { if (it) toast(R.string.subtitle_download_failure) }
+        consume(playerViewModel.subtitleOffset, this::onSubtitlesDelayChanged)
+        consume(playerViewModel.showPlayButton, this::updatePlayPauseButton)
+        consume(playerViewModel.buffering, this::updateBuffering)
+        consume(playerViewModel.position, this::updatePosition)
+        consume(streamsViewModel.linksResult) { it?.let { adapter.items = it.streams } }
+        consume(streamsViewModel.directLoadingUnsupported, this::onDirectLinkUnsupported)
+        consume(streamsViewModel.directLoaded) { onDirectLinkLoaded(it) }
+        consume(streamsViewModel.linkLoadingError, this::onDirectLinkLoadingError)
     }
 
     override fun onStart() {
@@ -98,6 +130,91 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         super.onDestroy()
         vlc?.release()
         libVLC.release()
+    }
+
+    /**
+     * A video link was clicked, load it and play it.
+     */
+    private fun onStreamClickedPlay(stream: UnloadedVideoWithLanguage) {
+        streamsViewModel.onStreamClicked(stream.video, false)
+    }
+
+    /**
+     * A video link was long-clicked which means download.
+     */
+    private fun onStreamClickedDownload(stream: UnloadedVideoWithLanguage) {
+        streamsViewModel.onStreamClicked(stream.video, true)
+    }
+
+    /**
+     * If not null, a link to a direct video stream was selected and loaded,
+     * that means we can start playing or downloading.
+     */
+    private fun onDirectLinkLoaded(it: LoadedLink?) {
+        if (it == null) {
+            binding.buttonRestartVideo.isVisible = false
+            return
+        }
+        binding.buttonRestartVideo.isVisible = true
+        if (!it.download) {
+            startVideo(it.directLink, true)
+        } else {
+            toast(R.string.starting_download)
+        }
+    }
+
+    /**
+     * A link was clicked, but we can't extract a link to a direct video stream.
+     * We can play it in a browser, but definitely can't download it.
+     */
+    private fun onDirectLinkUnsupported(it: SelectedLink) {
+        if (!it.download) {
+            startVideo(it.stream.url, false)
+        } else {
+            Toast.makeText(this, R.string.stream_not_downloadable, Toast.LENGTH_SHORT)
+                .show()
+        }
+    }
+
+    /**
+     * A link was clicked, but we failed to resolve its redirects
+     * or its direct video stream link.
+     */
+    private fun onDirectLinkLoadingError(link: FailedLink) {
+        if (link.download) {
+            Toast.makeText(this, R.string.direct_loading_failure, Toast.LENGTH_SHORT)
+                .show()
+        } else {
+            MaterialAlertDialogBuilder(this)
+                .setIcon(R.drawable.ic_sad_24)
+                .setTitle(R.string.direct_loading_failure)
+                .setMessage(R.string.direct_loading_failure_message)
+                .setPositiveButton(R.string.direct_loading_failure_yes) { _, _ ->
+                    startVideo(link.stream.url, false)
+                }
+                .setNegativeButton(R.string.direct_loading_failure_no) { _, _ -> }
+                .show()
+        }
+    }
+
+    /**
+     * A link was clicked and its redirects resolved.
+     * If we also extracted a direct video link, play it here,
+     * otherwise open a web browser.
+     */
+    private fun startVideo(url: String, direct: Boolean) {
+        if (direct) {
+            reloadVideo(url)
+        } else {
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.data = Uri.parse(url)
+            try {
+                startActivity(intent)
+            } catch (e: ActivityNotFoundException) {
+                toast(R.string.web_browser_not_installed)
+            }
+            binding
+        }
     }
 
     private fun updatePlayPauseButton(it: VideoPlayerViewModel.PlayButtonState) {
@@ -165,14 +282,14 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     private fun showSubtitleSelectionDialog() {
-        val subtitles = viewModel.subtitleList.value.sortedBy { it.language }
+        val subtitles = playerViewModel.subtitleList.value.sortedBy { it.language }
         val labels = subtitles
             .mapIndexed { index, item -> "#$index ${item.language}" }
             .toTypedArray()
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.select_subtitles)
             .setItems(labels) { _, index ->
-                viewModel.onSubtitlesSelected(subtitles[index])
+                playerViewModel.onSubtitlesSelected(subtitles[index])
             }
             .setNegativeButton(R.string.back, null)
             .show()
@@ -193,11 +310,12 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         binding.groupVideoControls.isVisible = !binding.groupVideoControls.isVisible
     }
 
-    private fun reloadVideo() {
+    private fun reloadVideo(url: String) {
         vlc?.release()
-        vlc = VlcMediaHelper(libVLC, args.videoUrl)
-            .also { viewModel.onMediaAttached(it) }
+        vlc = VlcMediaHelper(libVLC, url)
+            .also { playerViewModel.onMediaAttached(it) }
             .also { it.attachAndPlay(binding.videoLayout) }
+        playerViewModel.subtitleFile.value?.let { onSubtitlesReady(it) }
     }
 
     inner class OnSeekBarChangeListener : SeekBar.OnSeekBarChangeListener {

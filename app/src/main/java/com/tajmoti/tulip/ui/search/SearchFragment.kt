@@ -98,7 +98,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding, AndroidSearchViewMode
                     .let { navController.navigate(it) }
             }
             is MovieKey -> {
-                SearchFragmentDirections.actionNavigationSearchToStreamsFragment(key)
+                SearchFragmentDirections.actionNavigationSearchToVideoPlayerActivity(key)
                     .let { navController.navigate(it) }
             }
         }

@@ -15,14 +15,14 @@ class VideoPlayerViewModelImpl constructor(
     private val subtitleRepository: SubtitleRepository,
     private val subDirectory: File,
     private val viewModelScope: CoroutineScope,
-    private val streamableKey: StreamableKey.Tmdb
+    private val streamableKey: StreamableKey
 ) : VideoPlayerViewModel {
 
     /**
      * State of subtitle list loading
      */
     private val loadingSubtitlesState = MutableStateFlow<SubtitleListLoadingState>(
-        SubtitleListLoadingState.Loading
+        SubtitleListLoadingState.Idle
     )
 
     /**
@@ -97,9 +97,15 @@ class VideoPlayerViewModelImpl constructor(
     private var subtitleDownloadJob: Job? = null
 
     init {
-        viewModelScope.doCancelableJob(this::subtitleFetchJob, loadingSubtitles) {
-            val subtitleListFlow = loadSubtitlesList(streamableKey)
-            loadingSubtitlesState.emitAll(subtitleListFlow)
+        loadSubtitleListIfNeeded()
+    }
+
+    private fun loadSubtitleListIfNeeded() {
+        (streamableKey as? StreamableKey.Tmdb)?.let {
+            viewModelScope.doCancelableJob(this::subtitleFetchJob, loadingSubtitles) {
+                val subtitleListFlow = loadSubtitlesList(streamableKey)
+                loadingSubtitlesState.emitAll(subtitleListFlow)
+            }
         }
     }
 
@@ -158,6 +164,7 @@ class VideoPlayerViewModelImpl constructor(
     }
 
     sealed interface SubtitleListLoadingState {
+        object Idle : SubtitleListLoadingState
         object Loading : SubtitleListLoadingState
         data class Success(val subtitles: List<SubtitleInfo>) : SubtitleListLoadingState
         object Error : SubtitleListLoadingState
