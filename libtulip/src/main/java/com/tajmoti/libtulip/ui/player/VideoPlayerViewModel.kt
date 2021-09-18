@@ -57,12 +57,19 @@ interface VideoPlayerViewModel {
     val position: StateFlow<Position?>
 
     /**
+     * Last valid time in ms when playing or 0 if never played
+     */
+    val lastValidPosition: StateFlow<Long>
+
+    /**
      * True if an error was encountered and the player was canceled
      */
     val isError: StateFlow<Boolean>
 
     /**
      * A new media is attached and starting to be played.
+     * If some media was already played, the position of the new
+     * one will be set to the last valid position of the last media.
      */
     fun onMediaAttached(media: MediaPlayerHelper)
 

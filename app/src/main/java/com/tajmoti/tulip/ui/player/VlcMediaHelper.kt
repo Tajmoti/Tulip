@@ -57,6 +57,10 @@ class VlcMediaHelper(
         player.time = (progress * player.length).toLong()
     }
 
+    override fun setTime(timeMs: Long) {
+        player.time = timeMs
+    }
+
     override fun setSubtitles(uri: String) {
         player.addSlave(Media.Slave.Type.Subtitle, Uri.parse(uri), true)
     }

@@ -75,6 +75,8 @@ class VideoPlayerViewModelImpl constructor(
             is MediaPlayerHelper.State.Playing -> state.position
         }
     }
+    override val lastValidPosition = position.mapNotNull { it?.timeMs }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 0L)
     override val isError = mediaPlayerState.map(viewModelScope) { state ->
         state is MediaPlayerHelper.State.Error
     }
@@ -120,6 +122,9 @@ class VideoPlayerViewModelImpl constructor(
         viewModelScope.launch {
             mediaPlayerState.emitAll(media.state)
         }
+        lastValidPosition.value
+            .takeIf { it != 0L }
+            ?.let { media.setTime(it) }
     }
 
     override fun onSubtitlesSelected(subtitleInfo: SubtitleInfo) {

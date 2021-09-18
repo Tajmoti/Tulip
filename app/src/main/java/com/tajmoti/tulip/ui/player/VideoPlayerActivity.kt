@@ -313,8 +313,8 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     private fun reloadVideo(url: String) {
         vlc?.release()
         vlc = VlcMediaHelper(libVLC, url)
-            .also { playerViewModel.onMediaAttached(it) }
             .also { it.attachAndPlay(binding.videoLayout) }
+            .also { playerViewModel.onMediaAttached(it) }
         playerViewModel.subtitleFile.value?.let { onSubtitlesReady(it) }
     }
 
