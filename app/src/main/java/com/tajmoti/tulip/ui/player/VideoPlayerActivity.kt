@@ -146,7 +146,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         if (!shouldShow)
             return
         binding.progressBarBuffering.isIndeterminate = indeterminate
-        binding.progressBarBuffering.progress = convertToUiProgress(buffering!!)
+        binding.progressBarBuffering.progress = convertToUiProgress(buffering!! / 100.0f)
         binding.progressBarBuffering.isVisible = true
     }
 
