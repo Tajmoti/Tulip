@@ -10,7 +10,6 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import androidx.navigation.navArgs
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.tajmoti.commonutils.logger
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ActivityVideoPlayerBinding
 import com.tajmoti.tulip.ui.BaseActivity
@@ -18,27 +17,30 @@ import com.tajmoti.tulip.ui.consume
 import com.tajmoti.tulip.ui.toast
 import dagger.hilt.android.AndroidEntryPoint
 import org.videolan.libvlc.LibVLC
-import org.videolan.libvlc.Media
-import org.videolan.libvlc.Media.Slave.Type.Subtitle
-import org.videolan.libvlc.MediaPlayer
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     R.layout.activity_video_player
 ) {
     private val args: VideoPlayerActivityArgs by navArgs()
-    private val viewModel: VideoPlayerViewModel by viewModels()
+    private val viewModel: VideoPlayerViewModelImpl by viewModels()
 
     /**
-     * Instance of the VLC library and its video player
+     * Instance of the VLC library
      */
-    private lateinit var vlc: VLC
+    private lateinit var libVLC: LibVLC
+
+    /**
+     * Media currently being played
+     */
+    private var vlc: VlcMediaHelper? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        binding.viewModel = viewModel
         WindowInsetsControllerCompat(window, binding.root)
             .apply { hide(WindowInsetsCompat.Type.systemBars()) }
             .apply {
@@ -46,113 +48,112 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
                     WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
 
-        vlc = initVLC()
-        vlc.player.setEventListener { onVlcEvent(it) }
-        binding.viewModel = viewModel
+        libVLC = LibVLC(this, arrayListOf("-vvv"))
+        reloadVideo()
+        setupUI()
+        consume(viewModel.subtitleFile) { it?.let { onSubtitlesReady(it) } }
+        consume(viewModel.downloadingError) { if (it) toast(R.string.subtitle_download_failure) }
+        consume(viewModel.subtitleOffset, this::onSubtitlesDelayChanged)
+        consume(viewModel.showPlayButton, this::updatePlayPauseButton)
+        consume(viewModel.buffering, this::updateBuffering)
+        consume(viewModel.position, this::updatePosition)
+    }
+
+    private fun setupUI() {
         binding.seekBarVideoProgress.max = UI_PROGRESS_STEPS
         binding.progressBarBuffering.max = UI_PROGRESS_STEPS
         binding.seekBarVideoProgress.setOnSeekBarChangeListener(OnSeekBarChangeListener())
         binding.buttonPlayResume.setOnClickListener { onPlayPausePressed() }
         binding.buttonSubtitles.setOnClickListener { showSubtitleSelectionDialog() }
         binding.buttonSubtitleAdjustText.setOnClickListener {
-            viewModel.onTextSeen(vlc.player.time)
+            vlc?.let { viewModel.onTextSeen(it.getTime()) }
         }
         binding.buttonSubtitleAdjustVideo.setOnClickListener {
-            viewModel.onWordHeard(vlc.player.time)
+            vlc?.let { viewModel.onWordHeard(it.getTime()) }
         }
-        consume(viewModel.subtitleFile) { it?.let { onSubtitlesReady(it) } }
-        consume(viewModel.downloadingError) { if (it) toast(R.string.subtitle_download_failure) }
-        consume(viewModel.subtitleOffset) { onSubtitlesDelayChanged(it) }
-    }
-
-    private fun initVLC(): VLC {
-        val libVlc = LibVLC(this, arrayListOf("-vvv"))
-        val player = MediaPlayer(libVlc)
-        val media = initMedia(libVlc)
-        player.media = media
-        media.release()
-        return VLC(libVlc, player)
-    }
-
-    private fun initMedia(lib: LibVLC): Media {
-        return Media(lib, Uri.parse(args.videoUrl))
+        binding.buttonRestartVideo.setOnClickListener { reloadVideo() }
+        binding.videoLayout.setOnClickListener { onVideoClicked() }
+        binding.buttonBack.setOnClickListener { finish() }
     }
 
     override fun onStart() {
         super.onStart()
-        vlc.player.attachViews(binding.videoLayout, null, true, false)
-        vlc.player.play()
+        vlc?.attachAndPlay(binding.videoLayout)
     }
 
     override fun onStop() {
         super.onStop()
-        vlc.player.pause()
-        vlc.player.detachViews()
+        vlc?.detachAndPause()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        vlc.release()
+        vlc?.release()
+        libVLC.release()
     }
 
-    private fun onVlcEvent(it: MediaPlayer.Event) {
-        if (!it.isSpam)
-            logger.debug("VLC event ${it.format()}")
-        when (it.type) {
-            MediaPlayer.Event.PositionChanged -> updatePositionView(it.positionChanged)
-            MediaPlayer.Event.Buffering -> updateBufferingView(it.buffering)
-            MediaPlayer.Event.Playing -> updatePlayingView(playable = true, playing = true)
-            MediaPlayer.Event.Paused -> updatePlayingView(playable = true, playing = false)
-            MediaPlayer.Event.Stopped -> updatePlayingView(playable = false, playing = false)
-            MediaPlayer.Event.EncounteredError -> updateErrorView()
+    private fun updatePlayPauseButton(it: VideoPlayerViewModel.PlayButtonState) {
+        when (it) {
+            VideoPlayerViewModel.PlayButtonState.SHOW_PLAY ->
+                updatePlayPauseImage(false)
+            VideoPlayerViewModel.PlayButtonState.SHOW_PAUSE ->
+                updatePlayPauseImage(true)
+            else -> Unit
         }
     }
 
-    private fun updatePositionView(position: Float) {
-        val hasPosition = position != 0.0f
-        binding.seekBarVideoProgress.visibility = if (hasPosition) View.VISIBLE else View.INVISIBLE
-        binding.seekBarVideoProgress.progress = convertToUiProgress(position)
+    private fun updatePlayPauseImage(showPause: Boolean) {
+        binding.buttonPlayResume.setImageResource(
+            if (showPause) {
+                R.drawable.ic_baseline_pause_24
+            } else {
+                R.drawable.ic_baseline_play_arrow_24
+            }
+        )
     }
 
-    private fun updateBufferingView(buffering: Float) {
-        val shouldShow = buffering >= 0.0f && buffering < 100.0f
+    private fun updatePosition(position: Position?) {
+        val hasPosition = position != null
+        binding.seekBarVideoProgress.visibility = if (hasPosition) View.VISIBLE else View.INVISIBLE
+        position?.let { binding.seekBarVideoProgress.progress = convertToUiProgress(it.fraction) }
+        position?.let { binding.textVideoTime.text = formatTimeForDisplay(it.timeMs) }
+    }
+
+    private fun formatTimeForDisplay(timeMs: Long): String {
+        var mutableTimeMs = timeMs
+        val hours = TimeUnit.MILLISECONDS.toHours(mutableTimeMs)
+        mutableTimeMs -= TimeUnit.HOURS.toMillis(hours)
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(mutableTimeMs)
+        mutableTimeMs -= TimeUnit.MINUTES.toMillis(minutes)
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(mutableTimeMs)
+        return when {
+            hours > 0 -> hours.toString() + timePad(minutes) + ':' + timePad(seconds)
+            minutes > 0 -> timePad(minutes) + ':' + timePad(seconds)
+            else -> "0:" + timePad(seconds)
+        }
+    }
+
+    private fun timePad(time: Long): String {
+        return time.toString().padStart(2, '0')
+    }
+
+    private fun updateBuffering(buffering: Float?) {
+        val shouldShow = buffering != null && buffering >= 0.0f && buffering < 100.0f
         val indeterminate = buffering == 0.0f
         binding.progressBarBuffering.isVisible = false
         if (!shouldShow)
             return
         binding.progressBarBuffering.isIndeterminate = indeterminate
-        binding.progressBarBuffering.progress = convertToUiProgress(buffering)
+        binding.progressBarBuffering.progress = convertToUiProgress(buffering!!)
         binding.progressBarBuffering.isVisible = true
     }
 
-    private fun updatePlayingView(playable: Boolean, playing: Boolean) {
-        val visibility = if (playable) View.VISIBLE else View.INVISIBLE
-        binding.buttonPlayResume.visibility = visibility
-        binding.buttonPlayResume.setImageResource(
-            if (playing) {
-                R.drawable.ic_baseline_pause_circle_outline_24
-            } else {
-                R.drawable.ic_baseline_play_circle_outline_24
-            }
-        )
-        binding.seekBarVideoProgress.visibility = visibility
-    }
-
-    private fun updateErrorView() {
-        updateBufferingView(100.0f)
-        binding.imageVideoError.isVisible = true
-    }
-
     private fun onPlayPausePressed() {
-        if (vlc.player.isPlaying) {
-            vlc.player.pause()
-        } else {
-            vlc.player.play()
-        }
+        vlc?.playOrResume()
     }
 
     private fun setMediaProgress(progress: Int) {
-        vlc.player.time = (convertFromUiProgress(progress) * vlc.player.length).toLong()
+        vlc?.setProgress(convertFromUiProgress(progress))
     }
 
     private fun showSubtitleSelectionDialog() {
@@ -170,16 +171,26 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     private fun onSubtitlesReady(file: File) {
-        vlc.player.addSlave(Subtitle, Uri.fromFile(file), true)
+        val uri = Uri.fromFile(file)
+        vlc?.setSubtitles(uri)
     }
 
     private fun onSubtitlesDelayChanged(delay: Long) {
-        if (!vlc.player.isPlaying)
-            return
-        if (!vlc.player.setSpuDelay(-delay * 1000))
-            toast("Setting of subtitle delay failed")
         if (delay != 0L)
             toast("Applying subtitle delay of $delay ms")
+        if (vlc?.setSubtitleDelay(delay) == false)
+            toast("Setting of subtitle delay failed")
+    }
+
+    private fun onVideoClicked() {
+        binding.groupVideoControls.isVisible = !binding.groupVideoControls.isVisible
+    }
+
+    private fun reloadVideo() {
+        vlc?.release()
+        vlc = VlcMediaHelper(libVLC, args.videoUrl)
+            .also { consume(it.state, viewModel::onMediaStateChanged) }
+            .also { it.attachAndPlay(binding.videoLayout) }
     }
 
     inner class OnSeekBarChangeListener : SeekBar.OnSeekBarChangeListener {
@@ -210,16 +221,6 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
         fun convertFromUiProgress(uiProgress: Int): Float {
             return (uiProgress.toFloat() / UI_PROGRESS_STEPS)
-        }
-    }
-
-    class VLC(
-        private val lib: LibVLC,
-        val player: MediaPlayer
-    ) {
-        fun release() {
-            player.release()
-            lib.release()
         }
     }
 }

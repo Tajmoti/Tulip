@@ -22,7 +22,7 @@
 
     <style name="Theme.Tulip.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
-    <style name="FullscreenButton" parent="Widget.AppCompat.ImageButton">
+    <style name="FullscreenButton" parent="Widget.AppCompat.Button.Borderless">
         <item name="android:background">?android:selectableItemBackground</item>
     </style>
 </resources>

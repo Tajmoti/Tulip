@@ -19,7 +19,8 @@
         tools:ignore="UnusedAttribute">
         <activity
             android:name=".ui.player.VideoPlayerActivity"
-            android:exported="true" />
+            android:exported="true"
+            android:screenOrientation="userLandscape" />
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"

@@ -6,106 +6,170 @@
 
         <import type="android.view.View" />
 
+        <import type="com.tajmoti.tulip.ui.player.VideoPlayerViewModel.PlayButtonState" />
+
         <variable
             name="viewModel"
-            type="com.tajmoti.tulip.ui.player.VideoPlayerViewModel" />
+            type="com.tajmoti.tulip.ui.player.VideoPlayerViewModelImpl" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:keepScreenOn="true"
-        tools:context=".ui.player.VideoPlayerActivity">
-
-        <Button
-            android:id="@+id/button_subtitle_adjust_video"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:drawableStart="@drawable/ic_baseline_hearing_24"
-            android:text="@string/subtitle_adjust_word_heard"
-            app:layout_constraintBottom_toTopOf="@id/button_subtitle_adjust_text"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-        <Button
-            android:id="@+id/button_subtitle_adjust_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:drawableStart="@drawable/ic_baseline_remove_red_eye_24"
-            android:text="@string/subtitle_adjust_word_seen"
-            app:layout_constraintBottom_toTopOf="@id/seek_bar_video_progress"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline_top_panel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintGuide_begin="40dp" />
+        android:layout_height="match_parent">
 
         <org.videolan.libvlc.util.VLCVideoLayout
             android:id="@+id/video_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:fitsSystemWindows="false">
+            android:fitsSystemWindows="false" />
 
-        </org.videolan.libvlc.util.VLCVideoLayout>
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/group_video_controls"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/scrim_player_controls"
+            android:keepScreenOn="true"
+            tools:context=".ui.player.VideoPlayerActivity">
 
-        <SeekBar
-            android:id="@+id/seek_bar_video_progress"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@+id/button_play_resume"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            <ImageButton
+                android:id="@+id/button_back"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/activity_vertical_margin"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_baseline_arrow_back_24" />
 
-        <ImageButton
-            android:id="@+id/button_play_resume"
-            style="@style/FullscreenButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_gravity="bottom|center_horizontal"
-            android:layout_marginBottom="8dp"
-            android:scaleType="fitCenter"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/video_layout"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            <Button
+                android:id="@+id/button_subtitle_adjust_video"
+                style="@style/FullscreenButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/subtitle_adjust_word_heard"
+                android:visibility="@{viewModel.subtitleFile == null ? View.GONE : View.VISIBLE}"
+                app:icon="@drawable/ic_baseline_hearing_24"
+                app:layout_constraintBottom_toTopOf="@id/button_subtitle_adjust_text"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="@id/guideline_subtitle_buttons" />
 
-        <com.google.android.material.progressindicator.CircularProgressIndicator
-            android:id="@+id/progress_bar_buffering"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/activity_vertical_margin"
-            app:layout_constraintBottom_toTopOf="@+id/seek_bar_video_progress"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            <Button
+                android:id="@+id/button_subtitle_adjust_text"
+                style="@style/FullscreenButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/subtitle_adjust_word_seen"
+                android:visibility="@{viewModel.subtitleFile == null ? View.GONE : View.VISIBLE}"
+                app:icon="@drawable/ic_baseline_remove_red_eye_24"
+                app:layout_constraintBottom_toTopOf="@id/seek_bar_video_progress"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="@id/guideline_subtitle_buttons" />
 
-        <ImageButton
-            android:id="@+id/button_subtitles"
-            style="@style/FullscreenButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/activity_vertical_margin"
-            android:src="@drawable/ic_baseline_subtitles_24"
-            android:visibility="@{viewModel.subtitlesReadyToSelect ? View.VISIBLE : View.GONE}"
-            app:layout_constraintBottom_toTopOf="@+id/guideline_top_panel"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/guideline_top_panel" />
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/guideline_subtitle_buttons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="start"
+                app:constraint_referenced_ids="button_subtitle_adjust_text,button_subtitle_adjust_video"
+                tools:layout_editor_absoluteX="279dp" />
 
-        <ImageView
-            android:id="@+id/image_video_error"
-            android:layout_width="@dimen/error_screen_image_size"
-            android:layout_height="@dimen/error_screen_image_size"
-            android:scaleType="fitCenter"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@+id/seek_bar_video_progress"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_sad_24" />
+            <ImageButton
+                android:id="@+id/button_play_resume"
+                style="@style/FullscreenButton"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:scaleType="fitCenter"
+                android:visibility="@{viewModel.showPlayButton != PlayButtonState.HIDE ? View.VISIBLE : View.GONE}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:src="@drawable/ic_baseline_play_arrow_24" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/progress_bar_buffering"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/activity_vertical_margin"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/image_video_error"
+                android:layout_width="@dimen/error_screen_image_size"
+                android:layout_height="@dimen/error_screen_image_size"
+                android:scaleType="fitCenter"
+                android:visibility="@{viewModel.isError() ? View.VISIBLE : View.GONE}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_sad_24" />
+
+            <SeekBar
+                android:id="@+id/seek_bar_video_progress"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:visibility="@{!viewModel.isError() ? View.VISIBLE : View.GONE}"
+                app:layout_constraintBottom_toTopOf="@id/barrier_bottom_buttons"
+                app:layout_constraintEnd_toStartOf="@id/text_video_time"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@+id/text_video_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minEms="3"
+                android:textColor="@color/white"
+                android:visibility="@{!viewModel.isError() ? View.VISIBLE : View.GONE}"
+                app:layout_constraintBottom_toBottomOf="@id/seek_bar_video_progress"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/seek_bar_video_progress"
+                app:layout_constraintTop_toTopOf="@id/seek_bar_video_progress"
+                tools:text="4:44:44" />
+
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/barrier_bottom_buttons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="top"
+                app:constraint_referenced_ids="button_subtitles"
+                tools:layout_editor_absoluteY="667dp" />
+
+            <Button
+                android:id="@+id/button_subtitles"
+                style="@style/FullscreenButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/activity_vertical_margin"
+                android:text="@string/subtitles"
+                android:visibility="@{viewModel.subtitlesReadyToSelect ? View.VISIBLE : View.GONE}"
+                app:icon="@drawable/ic_baseline_subtitles_24"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/button_restart_video"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <Button
+                android:id="@+id/button_restart_video"
+                style="@style/FullscreenButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/activity_vertical_margin"
+                android:text="@string/restart_video"
+                app:icon="@drawable/ic_baseline_refresh_24"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/button_subtitles" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </FrameLayout>
+
 </layout>
