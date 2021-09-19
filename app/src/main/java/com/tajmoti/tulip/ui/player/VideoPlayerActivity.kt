@@ -58,6 +58,11 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         setupFlowCollectors(adapter)
     }
 
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        setupFullscreen()
+    }
+
     private fun setupFullscreen() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         val ctl = WindowInsetsControllerCompat(window, binding.root)
