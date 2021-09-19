@@ -1,6 +1,5 @@
 package com.tajmoti.libtulip.repository
 
-import com.tajmoti.commonutils.mapToAsyncJobsTriple
 import com.tajmoti.libtmdb.model.movie.Movie
 import com.tajmoti.libtmdb.model.search.SearchMovieResponse
 import com.tajmoti.libtmdb.model.search.SearchTvResponse
@@ -14,14 +13,12 @@ import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.model.tmdb.TmdbCompleteTvShow
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
-import com.tajmoti.libtulip.misc.takeIfNoneNull
 import com.tajmoti.libtvprovider.SearchResult
 import com.tajmoti.libtvprovider.TvItemInfo
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.last
 
 interface TmdbTvDataRepository {
-
-    suspend fun prefetchTvShowData(key: TvShowKey.Tmdb): Result<Unit>
 
     suspend fun findTmdbId(type: SearchResult.Type, info: TvItemInfo): TmdbItemId?
 
@@ -31,38 +28,28 @@ interface TmdbTvDataRepository {
     suspend fun searchMovie(query: String, firstAirDateYear: Int?): Result<SearchMovieResponse>
 
 
-    fun getTvAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<Tv>>
+    fun getTvAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<out Tv>>
 
     suspend fun getTv(key: TvShowKey.Tmdb): Tv? {
         return getTvAsFlow(key).finalValueOrNull()
     }
 
-    fun getTvShowWithSeasonsAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<TmdbCompleteTvShow>>
+    fun getTvShowWithSeasonsAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<out TmdbCompleteTvShow>>
 
+    fun getSeasonAsFlow(key: SeasonKey.Tmdb): Flow<NetworkResult<out Season>>
 
-    fun getSeasonAsFlow(key: SeasonKey.Tmdb): Flow<NetworkResult<Season>>
+    suspend fun getEpisodeAsFlow(key: EpisodeKey.Tmdb): Flow<NetworkResult<out Episode>>
 
-
-    suspend fun getSeason(key: SeasonKey.Tmdb): Season? {
-        return getSeasonAsFlow(key).finalValueOrNull()
-    }
-
-
-    suspend fun getEpisodeAsFlow(key: EpisodeKey.Tmdb): Flow<NetworkResult<Episode>>
-
-    suspend fun getEpisode(key: EpisodeKey.Tmdb): Episode? {
-        return getEpisodeAsFlow(key).finalValueOrNull()
+    suspend fun getFullEpisodeData(key: EpisodeKey.Tmdb): Triple<Tv, Season, Episode>? {
+        val tv = getTvShowWithSeasonsAsFlow(key.seasonKey.tvShowKey)
+            .last().data ?: return null
+        val seasons = tv.seasons
+            .firstOrNull { key.seasonKey.seasonNumber == it.seasonNumber } ?: return null
+        val episode = seasons.episodes
+            .firstOrNull { it.episodeNumber == key.episodeNumber } ?: return null
+        return Triple(tv.tv, seasons, episode)
     }
 
 
     suspend fun getMovie(movieId: TmdbItemId.Movie): Movie?
-
-
-    suspend fun getFullEpisodeData(key: EpisodeKey.Tmdb): Triple<Tv, Season, Episode>? {
-        return mapToAsyncJobsTriple(
-            { getTv(key.seasonKey.tvShowKey) },
-            { getSeason(key.seasonKey) },
-            { getEpisode(key) }
-        ).takeIfNoneNull()
-    }
 }

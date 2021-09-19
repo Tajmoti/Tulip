@@ -1,6 +1,8 @@
 package com.tajmoti.libtulip.repository.impl
 
+import com.tajmoti.commonutils.allOrNone
 import com.tajmoti.commonutils.logger
+import com.tajmoti.commonutils.mapToAsyncJobsPair
 import com.tajmoti.commonutils.parallelMap
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtmdb.model.movie.Movie
@@ -12,39 +14,27 @@ import com.tajmoti.libtmdb.model.tv.Season
 import com.tajmoti.libtmdb.model.tv.Tv
 import com.tajmoti.libtulip.data.LocalTvDataSource
 import com.tajmoti.libtulip.misc.NetworkResult
-import com.tajmoti.libtulip.misc.getNetworkBoundResource
-import com.tajmoti.libtulip.model.hosted.toKey
+import com.tajmoti.libtulip.misc.TimedCache
+import com.tajmoti.libtulip.misc.getNetworkBoundResourceVariable
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.model.tmdb.TmdbCompleteTvShow
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
-import com.tajmoti.libtulip.misc.takeIfNoneNull
 import com.tajmoti.libtvprovider.SearchResult
 import com.tajmoti.libtvprovider.TvItemInfo
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapConcat
-import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 
 class TmdbTvDataRepositoryImpl @Inject constructor(
     private val service: TmdbService,
     private val db: LocalTvDataSource
 ) : TmdbTvDataRepository {
+    private val tvCache = TimedCache<TvShowKey.Tmdb, TmdbCompleteTvShow>(
+        timeout = CACHE_EXPIRY_MS, size = CACHE_SIZE
+    )
 
-
-    override suspend fun prefetchTvShowData(key: TvShowKey.Tmdb): Result<Unit> {
-        logger.debug("Prefetching TMDB data for $key")
-        val tv = getTv(key)
-            ?: return Result.failure(NullPointerException())
-        tv.seasons.parallelMap { getSeason(it.toKey(tv)) }
-            .takeIfNoneNull() ?: return Result.failure(NullPointerException())
-        logger.debug("Prefetching TMDB data for $key successful")
-        return Result.success(Unit)
-    }
 
     override suspend fun findTmdbId(type: SearchResult.Type, info: TvItemInfo): TmdbItemId? {
         return runCatching {
@@ -75,72 +65,84 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
         return runCatching { service.searchMovie(query, firstAirDateYear) }
     }
 
-    override fun getTvAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<Tv>> {
+    override fun getTvAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<out Tv>> {
         val id = key.id.id
-        return getNetworkBoundResource(
+        logger.debug("Getting TV as flow")
+        return getNetworkBoundResourceVariable(
             { db.getTv(id) },
-            { runCatching { service.getTv(id) } },
-            { db.insertTv(it) }
+            { fetchFullTvInfo(key) },
+            { db.insertCompleteTv(it.tv, it.seasons) },
+            { it.tv },
+            { tvCache[key] },
+            { tvCache[key] = it }
         )
     }
 
-    override fun getTvShowWithSeasonsAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<TmdbCompleteTvShow>> {
-        @OptIn(FlowPreview::class)
-        return getTvAsFlow(key)
-            .flatMapConcat { result -> tvResultToFlowOfCompleteTvShow(result) }
+    private suspend inline fun fetchFullTvInfo(key: TvShowKey.Tmdb): Result<TmdbCompleteTvShow> {
+        logger.debug("Downloading full TV info")
+        val tv = runCatching { service.getTv(key.id.id) }
+            .getOrElse { return Result.failure(it) }
+        return tv.seasons
+            .parallelMap { slim -> runCatching { service.getSeason(tv.id, slim.seasonNumber) } }
+            .allOrNone()
+            .map { TmdbCompleteTvShow(tv, it) }
     }
 
-    private fun tvResultToFlowOfCompleteTvShow(
-        result: NetworkResult<Tv>
-    ): Flow<NetworkResult<TmdbCompleteTvShow>> {
-        return when (result) {
-            is NetworkResult.Success<Tv> -> tvToCompleteTvShow(result.data)
-            is NetworkResult.Error<Tv> -> flowOf(NetworkResult.Error(result.error))
-            is NetworkResult.Cached<Tv> -> tvToCompleteTvShow(result.data) // TODO
-        }
+    override fun getTvShowWithSeasonsAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<out TmdbCompleteTvShow>> {
+        logger.debug("Getting TV as flow")
+        return getNetworkBoundResourceVariable(
+            { getFullTvFromDb(key) },
+            { fetchFullTvInfo(key) },
+            { db.insertCompleteTv(it.tv, it.seasons) },
+            { it },
+            { tvCache[key] },
+            { tvCache[key] = it }
+        )
     }
 
-    private fun tvToCompleteTvShow(tv: Tv): Flow<NetworkResult<TmdbCompleteTvShow>> {
-        val seasonFlows = tv.seasons.map { season ->
-            getSeasonAsFlow(season.toKey(tv))
-        }
-        return combine(seasonFlows) { seasonResults ->
-            mapNetworkResults(seasonResults, tv)
-        }
+    private suspend fun getFullTvFromDb(key: TvShowKey.Tmdb): TmdbCompleteTvShow? {
+        val (tv, seasons) = mapToAsyncJobsPair(
+            { db.getTv(key.id.id) },
+            { db.getSeasons(key.id.id) }
+        )
+        tv ?: return null
+        return TmdbCompleteTvShow(tv, seasons)
     }
 
-    private fun mapNetworkResults(
-        seasonResults: Array<NetworkResult<Season>>,
-        tv: Tv
-    ): NetworkResult<TmdbCompleteTvShow> {
-        val seasons = seasonResults.map { seasonResult ->
-            when (seasonResult) {
-                is NetworkResult.Success<Season> -> seasonResult.data
-                is NetworkResult.Error<Season> ->
-                    return NetworkResult.Error(seasonResult.error)
-                is NetworkResult.Cached -> seasonResult.data // TODO
-            }
-        }
-        return NetworkResult.Success(TmdbCompleteTvShow(tv, seasons))
-    }
-
-    override fun getSeasonAsFlow(key: SeasonKey.Tmdb): Flow<NetworkResult<Season>> {
+    override fun getSeasonAsFlow(key: SeasonKey.Tmdb): Flow<NetworkResult<out Season>> {
         val tvId = key.tvShowKey.id.id
-        return getNetworkBoundResource(
+        logger.debug("Getting season as flow")
+        return getNetworkBoundResourceVariable(
             { db.getSeason(tvId, key.seasonNumber) },
-            { runCatching { service.getSeason(tvId, key.seasonNumber) } },
-            { db.insertSeason(tvId, it) }
+            { fetchFullTvInfo(key.tvShowKey) },
+            { db.insertCompleteTv(it.tv, it.seasons) },
+            { getCorrectSeason(it, key) },
+            { tvCache[key.tvShowKey] },
+            { tvCache[key.tvShowKey] = it }
         )
     }
 
-    override suspend fun getEpisodeAsFlow(key: EpisodeKey.Tmdb): Flow<NetworkResult<Episode>> {
+    override suspend fun getEpisodeAsFlow(key: EpisodeKey.Tmdb): Flow<NetworkResult<out Episode>> {
         val tvId = key.seasonKey.tvShowKey.id.id
         val seasonNumber = key.seasonKey.seasonNumber
-        return getNetworkBoundResource(
+        logger.debug("Getting episode as flow")
+        return getNetworkBoundResourceVariable(
             { db.getEpisode(tvId, seasonNumber, key.episodeNumber) },
-            { runCatching { service.getEpisode(tvId, seasonNumber, key.episodeNumber) } },
-            { db.insertEpisode(tvId, it) }
+            { fetchFullTvInfo(key.seasonKey.tvShowKey) },
+            { db.insertCompleteTv(it.tv, it.seasons) },
+            { getCorrectEpisode(it, key) },
+            { tvCache[key.seasonKey.tvShowKey] },
+            { tvCache[key.seasonKey.tvShowKey] = it }
         )
+    }
+
+    private fun getCorrectSeason(all: TmdbCompleteTvShow, key: SeasonKey.Tmdb): Season? {
+        return all.seasons.firstOrNull { s -> s.seasonNumber == key.seasonNumber }
+    }
+
+    private fun getCorrectEpisode(all: TmdbCompleteTvShow, key: EpisodeKey.Tmdb): Episode? {
+        return getCorrectSeason(all, key.seasonKey)?.episodes
+            ?.firstOrNull { e -> e.episodeNumber == key.episodeNumber }
     }
 
     override suspend fun getMovie(movieId: TmdbItemId.Movie): Movie? {
@@ -148,5 +150,18 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
             .onFailure { logger.warn("Failed to retrieve movie $movieId", it) }
             .onSuccess { db.insertMovie(it) }
             .getOrElse { db.getMovie(movieId.id) }
+    }
+
+    companion object {
+        /**
+         * How many TV shows will be cached in memory at max.
+         */
+        private const val CACHE_SIZE = 16
+
+        /**
+         * The memory cache is valid for one hour.
+         * After that, the data will be invalidated on the next retrieval.
+         */
+        private const val CACHE_EXPIRY_MS = 60 * 60 * 1000L
     }
 }

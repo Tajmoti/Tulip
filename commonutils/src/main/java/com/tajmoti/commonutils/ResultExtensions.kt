@@ -79,3 +79,20 @@ inline fun <R, T> Result<T>.pairWith(other: R): Result<Pair<T, R>> {
 inline fun <R, T> Result<T>.pairWithReverse(other: R): Result<Pair<R, T>> {
     return map { other to it }
 }
+
+/**
+ * Returns a successful result of all items if all were successful,
+ * or failure with the first exception if one of them failed.
+ */
+inline fun <T> List<Result<T>>.allOrNone(): Result<List<T>> {
+    if (isEmpty()) {
+        return Result.success(emptyList())
+    }
+    val ok = filter { it.isSuccess }
+    return if (ok.size == size) {
+        Result.success(map { it.getOrNull()!! })
+    } else {
+        val exception = first { it.exceptionOrNull() != null }.exceptionOrNull()!!
+        Result.failure(exception)
+    }
+}

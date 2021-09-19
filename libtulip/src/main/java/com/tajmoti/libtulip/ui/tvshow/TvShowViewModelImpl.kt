@@ -71,10 +71,7 @@ class TvShowViewModelImpl constructor(
     private suspend inline fun fetchSeasonsToState(key: TvShowKey): Flow<TvShowViewModel.State> {
         return when (key) {
             is TvShowKey.Hosted -> getHostedTvShowAsState(key)
-            is TvShowKey.Tmdb -> {
-                tmdbRepo.prefetchTvShowData(key)
-                getTmdbTvShowAsState(key)
-            }
+            is TvShowKey.Tmdb -> getTmdbTvShowAsState(key)
         }
     }
 
@@ -109,11 +106,11 @@ class TvShowViewModelImpl constructor(
     }
 
     private fun resultToState(
-        result: NetworkResult<TmdbCompleteTvShow>,
+        result: NetworkResult<out TmdbCompleteTvShow>,
         key: TvShowKey.Tmdb
     ): TvShowViewModel.State {
         return when (result) {
-            is NetworkResult.Success<TmdbCompleteTvShow> ->
+            is NetworkResult.Success<out TmdbCompleteTvShow> ->
                 tvToStateFlow(key, result.data.tv, result.data.seasons)
             is NetworkResult.Error ->
                 TvShowViewModel.State.Error

@@ -22,7 +22,8 @@ sealed class NetworkResult<T> {
     @Suppress("UNUSED")
     enum class ErrorType {
         NO_CONNECTION,
-        NOT_FOUND
+        NOT_FOUND,
+        CONVERSION_FAILED
     }
 
     /**
