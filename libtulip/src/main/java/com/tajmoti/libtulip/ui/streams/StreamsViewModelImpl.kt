@@ -136,15 +136,14 @@ class StreamsViewModelImpl constructor(
             emit(LinkLoadingState.DirectLinkUnsupported(info, download, auto))
             return@flow
         }
-        linkLoadingState.emit(LinkLoadingState.LoadingDirect(info, download, auto))
+        emit(LinkLoadingState.LoadingDirect(info, download, auto))
         val result = streamsRepo.extractVideoLink(info)
-            .getOrElse {
-                emit(LinkLoadingState.Error(info, download, auto))
-                return@flow
-            }
-        if (download)
-            downloadVideo(result)
-        emit(LinkLoadingState.LoadedDirect(info, download, result, auto))
+            .onSuccess { result -> if (download) downloadVideo(result) }
+            .fold(
+                { LinkLoadingState.LoadedDirect(info, download, it, auto) },
+                { LinkLoadingState.Error(info, download, auto) }
+            )
+        emit(result)
     }
 
     private fun downloadVideo(link: String) {
