@@ -7,6 +7,9 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
+    <color name="indicator_loading_streams">#81D4FA</color>
+    <color name="indicator_loading_link">#1976D2</color>
+
     <color name="translucent_scrim_bottom">#D0121212</color>
     <color name="translucent_scrim_center">#A0121212</color>
 </resources>

@@ -49,6 +49,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding.viewModel = playerViewModel
+        binding.streamsViewModel = streamsViewModel
         binding.includeStreamsSelection.viewModel = streamsViewModel
         libVLC = LibVLC(this, arrayListOf("-vvv"))
 
@@ -297,12 +298,19 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     private fun updateBuffering(buffering: Float?) {
         val shouldShow = buffering != null && buffering >= 0.0f && buffering < 100.0f
         val indeterminate = buffering == 0.0f
-        binding.progressBarBuffering.isVisible = false
+        if (shouldShow != binding.progressBarBuffering.isVisible) {
+            binding.progressBarBuffering.isVisible = shouldShow
+        }
         if (!shouldShow)
             return
-        binding.progressBarBuffering.isIndeterminate = indeterminate
-        binding.progressBarBuffering.progress = convertToUiProgress(buffering!! / 100.0f)
-        binding.progressBarBuffering.isVisible = true
+        if (indeterminate && !binding.progressBarBuffering.isIndeterminate) {
+            binding.progressBarBuffering.isVisible = false
+            binding.progressBarBuffering.isIndeterminate = true
+            binding.progressBarBuffering.isVisible = true
+        } else if (!indeterminate) {
+            val progressSteps = convertToUiProgress(buffering!! / 100.0f)
+            binding.progressBarBuffering.setProgressCompat(progressSteps, true)
+        }
     }
 
     private fun onPlayPausePressed() {
