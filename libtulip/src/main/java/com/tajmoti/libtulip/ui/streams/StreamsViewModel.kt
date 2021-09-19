@@ -1,5 +1,6 @@
 package com.tajmoti.libtulip.ui.streams
 
+import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.stream.StreamableInfoWithLangLinks
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import kotlinx.coroutines.flow.SharedFlow
@@ -12,9 +13,9 @@ interface StreamsViewModel {
     val linksLoading: StateFlow<Boolean>
 
     /**
-     * Name of the item, which the streams belong to.
+     * Streamable that is being loaded or null if still fetching.
      */
-    val streamableName: StateFlow<String?>
+    val streamableInfo: StateFlow<StreamableInfo?>
 
     /**
      * Flow containing the results to show in the list.

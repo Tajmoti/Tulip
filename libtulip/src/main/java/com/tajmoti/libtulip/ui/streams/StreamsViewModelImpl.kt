@@ -31,8 +31,8 @@ class StreamsViewModelImpl constructor(
      */
     private val linkLoadingState = MutableStateFlow<LinkLoadingState>(LinkLoadingState.Idle)
 
-    override val streamableName = streamLoadingState
-        .map { stateToStreamName(it) }
+    override val streamableInfo = streamLoadingState
+        .map { stateToStreamableInfo(it) }
         .stateIn(viewModelScope, SharingStarted.Lazily, null)
 
 
@@ -164,21 +164,12 @@ class StreamsViewModelImpl constructor(
         linksNoResult.value = successState?.streams?.streams?.none() ?: false
     }
 
-    private fun stateToStreamName(it: State): String? {
-        val streamable = when (it) {
+    private fun stateToStreamableInfo(it: State): StreamableInfo? {
+        return when (it) {
             is State.Loading -> it.info
             is State.Success -> it.streams.info
             is State.Error -> it.info
             else -> null
-        }
-        return streamable?.let { streamableToName(it) }
-    }
-
-    private fun streamableToName(streamable: StreamableInfo): String {
-        return when (streamable) {
-            is StreamableInfo.Episode ->
-                streamable.info.name ?: streamable.info.number.toString()
-            is StreamableInfo.Movie -> streamable.name
         }
     }
 

@@ -29,7 +29,6 @@
             android:gravity="center_vertical"
             android:maxLines="1"
             android:padding="@dimen/activity_vertical_margin"
-            android:text="@{viewModel.streamableName}"
             android:textAllCaps="true"
             android:textColor="?colorOnPrimary"
             android:textSize="20sp"

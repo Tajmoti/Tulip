@@ -43,6 +43,17 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/ic_baseline_arrow_back_24" />
 
+            <TextView
+                android:id="@+id/text_item_name"
+                style="@style/FullscreenText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@+id/button_back"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/button_back" />
+
             <Button
                 android:id="@+id/button_subtitle_adjust_video"
                 style="@style/FullscreenButton"
@@ -79,10 +90,9 @@
 
             <ImageButton
                 android:id="@+id/button_rewind"
+                style="@style/FullscreenImageButton"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:scaleType="fitCenter"
                 android:visibility="@{viewModel.showPlayButton != PlayButtonState.HIDE ? View.VISIBLE : View.GONE}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/button_seek"
@@ -93,11 +103,9 @@
 
             <ImageButton
                 android:id="@+id/button_play_resume"
-                style="@style/FullscreenButton"
+                style="@style/FullscreenImageButton"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:layout_gravity="bottom|center_horizontal"
-                android:scaleType="fitCenter"
                 android:visibility="@{viewModel.showPlayButton != PlayButtonState.HIDE ? View.VISIBLE : View.GONE}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -107,10 +115,9 @@
 
             <ImageButton
                 android:id="@+id/button_seek"
+                style="@style/FullscreenImageButton"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:scaleType="fitCenter"
                 android:visibility="@{viewModel.showPlayButton != PlayButtonState.HIDE ? View.VISIBLE : View.GONE}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -131,9 +138,9 @@
 
             <ImageView
                 android:id="@+id/image_video_error"
+                style="@style/FullscreenIcon"
                 android:layout_width="@dimen/error_screen_image_size"
                 android:layout_height="@dimen/error_screen_image_size"
-                android:scaleType="fitCenter"
                 android:visibility="@{viewModel.isError() ? View.VISIBLE : View.GONE}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -153,10 +160,10 @@
 
             <TextView
                 android:id="@+id/text_video_time"
+                style="@style/FullscreenText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:minEms="3"
-                android:textColor="@color/white"
                 android:visibility="@{!viewModel.isError() ? View.VISIBLE : View.GONE}"
                 app:layout_constraintBottom_toBottomOf="@id/seek_bar_video_progress"
                 app:layout_constraintEnd_toEndOf="parent"

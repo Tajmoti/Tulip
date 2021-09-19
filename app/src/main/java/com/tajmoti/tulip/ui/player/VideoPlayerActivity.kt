@@ -12,6 +12,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
 import com.tajmoti.libtulip.ui.player.Position
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
@@ -115,6 +116,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         consume(streamsViewModel.directLoadingUnsupported, this::onDirectLinkUnsupported)
         consume(streamsViewModel.directLoaded) { onDirectLinkLoaded(it) }
         consume(streamsViewModel.linkLoadingError, this::onDirectLinkLoadingError)
+        consume(streamsViewModel.streamableInfo, this::onStreamableInfo)
     }
 
     override fun onStart() {
@@ -136,6 +138,25 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         super.onDestroy()
         vlc?.release()
         libVLC.release()
+    }
+
+    /**
+     * Info about the streamable is known, show its name in the UI.
+     */
+    private fun onStreamableInfo(info: StreamableInfo?) {
+        val name = when (info) {
+            is StreamableInfo.Episode -> showToDisplayName(info)
+            is StreamableInfo.Movie -> info.name
+            null -> ""
+        }
+        binding.includeStreamsSelection.titleStreamSelection.text = name
+        binding.textItemName.text = name
+    }
+
+    private fun showToDisplayName(item: StreamableInfo.Episode): String {
+        val showSeasonEpNum = "${item.showName} S${item.seasonNumber}:E${item.info.number}"
+        val episodeName = item.info.name?.let { " '$it'" } ?: ""
+        return showSeasonEpNum + episodeName
     }
 
     /**
