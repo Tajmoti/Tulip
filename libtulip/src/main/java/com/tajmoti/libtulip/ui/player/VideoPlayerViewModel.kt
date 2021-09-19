@@ -52,7 +52,7 @@ interface VideoPlayerViewModel {
     val buffering: StateFlow<Float?>
 
     /**
-     * Playing position or null if not playing
+     * Playing position or null if position should be hidden
      */
     val position: StateFlow<Position?>
 

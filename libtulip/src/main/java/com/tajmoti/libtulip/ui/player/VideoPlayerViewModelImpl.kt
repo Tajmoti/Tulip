@@ -66,15 +66,23 @@ class VideoPlayerViewModelImpl constructor(
     override val buffering = mediaPlayerState.map(viewModelScope) { state ->
         (state as? MediaPlayerHelper.State.Buffering)?.percent
     }
-    override val position = mediaPlayerState.map(viewModelScope) { state ->
-        when (state) {
-            is MediaPlayerHelper.State.Buffering -> state.position
-            is MediaPlayerHelper.State.Error -> null
-            is MediaPlayerHelper.State.Initializing -> null
-            is MediaPlayerHelper.State.Paused -> state.position
-            is MediaPlayerHelper.State.Playing -> state.position
+    override val position = mediaPlayerState
+        .map { state ->
+            when (state) {
+                is MediaPlayerHelper.State.Buffering -> state.position
+                is MediaPlayerHelper.State.Error -> null
+                is MediaPlayerHelper.State.Initializing -> null
+                is MediaPlayerHelper.State.Paused -> state.position
+                is MediaPlayerHelper.State.Playing -> state.position
+            }
         }
+        .filter { it == null || isValidPosition(it) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    private fun isValidPosition(it: Position): Boolean {
+        return (it.timeMs > 0 && it.fraction > 0.0f)
     }
+
     override val lastValidPosition = position.mapNotNull { it?.timeMs }
         .stateIn(viewModelScope, SharingStarted.Eagerly, 0L)
     override val isError = mediaPlayerState.map(viewModelScope) { state ->

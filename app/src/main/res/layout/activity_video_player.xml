@@ -93,7 +93,7 @@
                 style="@style/FullscreenImageButton"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:visibility="@{viewModel.showPlayButton != PlayButtonState.HIDE ? View.VISIBLE : View.GONE}"
+                android:visibility="@{viewModel.position == null ? View.GONE : View.VISIBLE}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/button_seek"
                 app:layout_constraintHorizontal_bias="0.5"
@@ -118,7 +118,7 @@
                 style="@style/FullscreenImageButton"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:visibility="@{viewModel.showPlayButton != PlayButtonState.HIDE ? View.VISIBLE : View.GONE}"
+                android:visibility="@{viewModel.position == null ? View.GONE : View.VISIBLE}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
@@ -156,6 +156,7 @@
                 android:visibility="@{!viewModel.isError() ? View.VISIBLE : View.GONE}"
                 app:layout_constraintBottom_toTopOf="@id/barrier_bottom_buttons"
                 app:layout_constraintEnd_toStartOf="@id/text_video_time"
+                app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toStartOf="parent" />
 
             <TextView
@@ -164,7 +165,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:minEms="3"
-                android:visibility="@{!viewModel.isError() ? View.VISIBLE : View.GONE}"
+                android:visibility="@{viewModel.lastValidPosition != 0L ? View.VISIBLE : View.GONE}"
                 app:layout_constraintBottom_toBottomOf="@id/seek_bar_video_progress"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/seek_bar_video_progress"
