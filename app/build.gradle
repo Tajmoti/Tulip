@@ -8,7 +8,7 @@ plugins {
 }
 
 // Development options
-def HTTP_DEBUG = true
+def HTTP_DEBUG = false
 
 android {
     compileSdkVersion 31
