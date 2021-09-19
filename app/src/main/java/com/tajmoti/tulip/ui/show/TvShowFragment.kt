@@ -22,7 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
-class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding, AndroidTvShowViewModel>(
+class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
     ActivityTabbedTvShowBinding::inflate
 ) {
     private val viewModel by viewModelsDelegated<TvShowViewModel, AndroidTvShowViewModel>()

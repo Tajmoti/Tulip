@@ -22,7 +22,7 @@ import com.tajmoti.tulip.ui.*
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class SearchFragment : BaseFragment<FragmentSearchBinding, AndroidSearchViewModel>(
+class SearchFragment : BaseFragment<FragmentSearchBinding>(
     FragmentSearchBinding::inflate
 ), SearchView.OnQueryTextListener {
     private lateinit var searchView: SearchView

@@ -15,7 +15,7 @@ import com.tajmoti.tulip.ui.viewModelsDelegated
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class LibraryFragment : BaseFragment<FragmentLibraryBinding, AndroidLibraryViewModel>(
+class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
     FragmentLibraryBinding::inflate
 ) {
     private val viewModel by viewModelsDelegated<LibraryViewModel, AndroidLibraryViewModel>()

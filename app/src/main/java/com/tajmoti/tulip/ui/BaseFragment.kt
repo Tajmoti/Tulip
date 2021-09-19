@@ -5,10 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.ViewDataBinding
-import androidx.lifecycle.ViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
-abstract class BaseFragment<B : ViewDataBinding, VM : ViewModel>(
+abstract class BaseFragment<B : ViewDataBinding>(
     private val bindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> B
 ) : BottomSheetDialogFragment() {
     protected lateinit var binding: B

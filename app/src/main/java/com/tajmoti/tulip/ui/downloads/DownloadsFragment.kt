@@ -6,7 +6,7 @@ import com.tajmoti.tulip.ui.BaseFragment
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class DownloadsFragment : BaseFragment<FragmentDownloadsBinding, DownloadsViewModel>(
+class DownloadsFragment : BaseFragment<FragmentDownloadsBinding>(
     FragmentDownloadsBinding::inflate
 ) {
     val viewModelUndelegated: DownloadsViewModel by viewModels()
