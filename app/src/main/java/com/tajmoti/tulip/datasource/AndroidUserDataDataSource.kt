@@ -5,12 +5,23 @@ import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.tulip.db.dao.userdata.FavoritesDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class AndroidUserDataDataSource @Inject constructor(
     private val userDataDao: FavoritesDao
 ) : UserDataDataSource {
+
+    override fun isFavorite(item: ItemKey): Flow<Boolean> {
+        return when (item) {
+            is ItemKey.Tmdb -> item.toDb()
+                .let { userDataDao.isTmdbFavorite(it.type, it.tmdbItemId) }
+            is ItemKey.Hosted -> item.toDb()
+                .let { userDataDao.isHostedFavorite(it.type, it.streamingService, it.key) }
+            else -> emptyFlow()
+        }
+    }
 
     override suspend fun getUserFavorites(): List<ItemKey> {
         val tmdbItems = userDataDao.getAllTmdbFavorites().map { it.fromDb() }

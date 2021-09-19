@@ -1,12 +1,17 @@
 package com.tajmoti.tulip.db.dao.userdata
 
 import androidx.room.*
+import com.tajmoti.libtulip.model.hosted.StreamingService
+import com.tajmoti.libtulip.model.info.ItemType
 import com.tajmoti.tulip.db.entity.userdata.DbFavoriteHostedItem
 import com.tajmoti.tulip.db.entity.userdata.DbFavoriteTmdbItem
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FavoritesDao {
+    @Query("SELECT EXISTS(SELECT * FROM DbFavoriteTmdbItem WHERE type = :type AND tmdbItemId = :tmdbItemId)")
+    fun isTmdbFavorite(type: ItemType, tmdbItemId: Long): Flow<Boolean>
+
     @Query("SELECT * FROM DbFavoriteTmdbItem")
     suspend fun getAllTmdbFavorites(): List<DbFavoriteTmdbItem>
 
@@ -18,6 +23,10 @@ interface FavoritesDao {
 
     @Delete
     suspend fun deleteTmdbFavorite(item: DbFavoriteTmdbItem)
+
+
+    @Query("SELECT EXISTS(SELECT * FROM DbFavoriteHostedItem WHERE type = :type AND streamingService = :streamingService AND key == :key)")
+    fun isHostedFavorite(type: ItemType, streamingService: StreamingService, key: String): Flow<Boolean>
 
     @Query("SELECT * FROM DbFavoriteHostedItem")
     suspend fun getAllHostedFavorites(): List<DbFavoriteHostedItem>

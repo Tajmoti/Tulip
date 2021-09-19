@@ -28,13 +28,13 @@ class TvShowViewModelImpl constructor(
         TvShowViewModel.State.Loading
     )
     override val name = MutableStateFlow<String?>(null)
-    override val isFavorite = MutableStateFlow(false)
+    override val isFavorite = favoritesRepository.isFavorite(itemKey)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
     override val error = state.map(viewModelScope) { it is TvShowViewModel.State.Error }
 
 
     init {
         fetchTvShowData()
-        attachFavorites()
     }
 
     /**
@@ -47,14 +47,6 @@ class TvShowViewModelImpl constructor(
     private fun fetchTvShowData() {
         viewModelScope.launch {
             state.emitAll(fetchSeasonsToState(itemKey))
-        }
-    }
-
-    private fun attachFavorites() {
-        viewModelScope.launch {
-            val flow = favoritesRepository.getUserFavoritesAsFlow()
-                .map { result -> result.any { it == itemKey } }
-            isFavorite.emitAll(flow)
         }
     }
 

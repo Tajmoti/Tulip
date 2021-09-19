@@ -10,6 +10,10 @@ class FavoriteRepositoryImpl @Inject constructor(
     private val repo: UserDataDataSource
 ) : FavoritesRepository {
 
+    override fun isFavorite(item: ItemKey): Flow<Boolean> {
+        return repo.isFavorite(item)
+    }
+
     override fun getUserFavoritesAsFlow(): Flow<List<ItemKey>> {
         return repo.getUserFavoritesAsFlow()
     }

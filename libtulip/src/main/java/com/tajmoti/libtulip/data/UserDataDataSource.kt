@@ -4,6 +4,7 @@ import com.tajmoti.libtulip.model.key.ItemKey
 import kotlinx.coroutines.flow.Flow
 
 interface UserDataDataSource {
+    fun isFavorite(item: ItemKey): Flow<Boolean>
 
     suspend fun getUserFavorites(): List<ItemKey>
 
