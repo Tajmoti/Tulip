@@ -2,6 +2,7 @@ package com.tajmoti.libtulip.misc
 
 import com.tajmoti.commonutils.logger
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.last
 
@@ -210,4 +211,11 @@ inline fun exceptionToNetworkError(exception: Throwable): NetworkResult.ErrorTyp
  */
 suspend inline fun <T> Flow<NetworkResult<out T>>.finalValueOrNull(): T? {
     return last().data
+}
+
+/**
+ * Returns the final value of the resource or null if it's not available.
+ */
+suspend inline fun <T> Flow<NetworkResult<out T>>.firstValueOrNull(): T? {
+    return first().data
 }

@@ -1,5 +1,6 @@
 package com.tajmoti.libtulip.repository
 
+import com.tajmoti.libtmdb.model.FindResult
 import com.tajmoti.libtmdb.model.movie.Movie
 import com.tajmoti.libtmdb.model.search.SearchMovieResponse
 import com.tajmoti.libtmdb.model.search.SearchTvResponse
@@ -7,8 +8,11 @@ import com.tajmoti.libtmdb.model.tv.Episode
 import com.tajmoti.libtmdb.model.tv.Season
 import com.tajmoti.libtmdb.model.tv.Tv
 import com.tajmoti.libtulip.misc.NetworkResult
-import com.tajmoti.libtulip.misc.finalValueOrNull
+import com.tajmoti.libtulip.misc.firstValueOrNull
+import com.tajmoti.libtulip.model.hosted.toMovieKey
+import com.tajmoti.libtulip.model.hosted.toTvKey
 import com.tajmoti.libtulip.model.key.EpisodeKey
+import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.model.tmdb.TmdbCompleteTvShow
@@ -28,17 +32,21 @@ interface TmdbTvDataRepository {
     suspend fun searchMovie(query: String, firstAirDateYear: Int?): Result<SearchMovieResponse>
 
 
-    fun getTvAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<out Tv>>
-
-    suspend fun getTv(key: TvShowKey.Tmdb): Tv? {
-        return getTvAsFlow(key).finalValueOrNull()
+    fun getItemAsFlow(key: TmdbItemId): Flow<NetworkResult<out FindResult>> {
+        return when (key) {
+            is TmdbItemId.Tv -> getTvAsFlow(key.toTvKey())
+            is TmdbItemId.Movie -> getMovieAsFlow(key.toMovieKey())
+        }
     }
+
+
+    fun getTvAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<out Tv>>
 
     fun getTvShowWithSeasonsAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<out TmdbCompleteTvShow>>
 
     fun getSeasonAsFlow(key: SeasonKey.Tmdb): Flow<NetworkResult<out Season>>
 
-    suspend fun getEpisodeAsFlow(key: EpisodeKey.Tmdb): Flow<NetworkResult<out Episode>>
+    fun getEpisodeAsFlow(key: EpisodeKey.Tmdb): Flow<NetworkResult<out Episode>>
 
     suspend fun getFullEpisodeData(key: EpisodeKey.Tmdb): Triple<Tv, Season, Episode>? {
         val tv = getTvShowWithSeasonsAsFlow(key.seasonKey.tvShowKey)
@@ -51,5 +59,9 @@ interface TmdbTvDataRepository {
     }
 
 
-    suspend fun getMovie(movieId: TmdbItemId.Movie): Movie?
+    suspend fun getMovie(movieId: TmdbItemId.Movie): Movie? {
+        return getMovieAsFlow(movieId.toMovieKey()).firstValueOrNull() // TODO
+    }
+
+    fun getMovieAsFlow(key: MovieKey.Tmdb): Flow<NetworkResult<out Movie>>
 }

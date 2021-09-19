@@ -15,8 +15,10 @@ import com.tajmoti.libtmdb.model.tv.Tv
 import com.tajmoti.libtulip.data.LocalTvDataSource
 import com.tajmoti.libtulip.misc.NetworkResult
 import com.tajmoti.libtulip.misc.TimedCache
+import com.tajmoti.libtulip.misc.getNetworkBoundResource
 import com.tajmoti.libtulip.misc.getNetworkBoundResourceVariable
 import com.tajmoti.libtulip.model.key.EpisodeKey
+import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.model.tmdb.TmdbCompleteTvShow
@@ -32,6 +34,9 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
     private val db: LocalTvDataSource
 ) : TmdbTvDataRepository {
     private val tvCache = TimedCache<TvShowKey.Tmdb, TmdbCompleteTvShow>(
+        timeout = CACHE_EXPIRY_MS, size = CACHE_SIZE
+    )
+    private val movieCache = TimedCache<MovieKey.Tmdb, Movie>(
         timeout = CACHE_EXPIRY_MS, size = CACHE_SIZE
     )
 
@@ -66,6 +71,7 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
     }
 
     override fun getTvAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<out Tv>> {
+        // TODO Common implementation with getTvShowWithSeasonsAsFlow
         val id = key.id.id
         logger.debug("Getting TV as flow")
         return getNetworkBoundResourceVariable(
@@ -122,7 +128,7 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun getEpisodeAsFlow(key: EpisodeKey.Tmdb): Flow<NetworkResult<out Episode>> {
+    override fun getEpisodeAsFlow(key: EpisodeKey.Tmdb): Flow<NetworkResult<out Episode>> {
         val tvId = key.seasonKey.tvShowKey.id.id
         val seasonNumber = key.seasonKey.seasonNumber
         logger.debug("Getting episode as flow")
@@ -145,11 +151,16 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
             ?.firstOrNull { e -> e.episodeNumber == key.episodeNumber }
     }
 
-    override suspend fun getMovie(movieId: TmdbItemId.Movie): Movie? {
-        return runCatching { service.getMovie(movieId.id) }
-            .onFailure { logger.warn("Failed to retrieve movie $movieId", it) }
-            .onSuccess { db.insertMovie(it) }
-            .getOrElse { db.getMovie(movieId.id) }
+    override fun getMovieAsFlow(key: MovieKey.Tmdb): Flow<NetworkResult<out Movie>> {
+        val id = key.id.id
+        logger.debug("Getting Movie as flow")
+        return getNetworkBoundResource(
+            { db.getMovie(id) },
+            { runCatching { service.getMovie(key.id.id) } },
+            { db.insertMovie(it) },
+            { movieCache[key] },
+            { movieCache[key] = it }
+        )
     }
 
     companion object {

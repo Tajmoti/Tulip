@@ -1,16 +1,17 @@
 package com.tajmoti.libtulip.ui.library
 
-import com.tajmoti.commonutils.mapToAsyncJobsPair
-import com.tajmoti.commonutils.parallelMap
 import com.tajmoti.commonutils.parallelMapBoth
+import com.tajmoti.libtmdb.model.FindResult
 import com.tajmoti.libtulip.data.HostedInfoDataSource
+import com.tajmoti.libtulip.misc.NetworkResult
 import com.tajmoti.libtulip.model.hosted.toItemKey
-import com.tajmoti.libtulip.model.hosted.toKey
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.repository.FavoritesRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 
 class LibraryViewModelImpl constructor(
@@ -20,45 +21,45 @@ class LibraryViewModelImpl constructor(
     viewModelScope: CoroutineScope
 ) : LibraryViewModel {
 
+    @OptIn(FlowPreview::class)
     override val favoriteItems = favoritesRepo.getUserFavoritesAsFlow()
-        .map { mapFavorites(it) }
+        .flatMapMerge { mapFavorites(it) }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
 
-    private suspend inline fun mapFavorites(favorites: List<ItemKey>): List<LibraryItem> {
-        val (tmdbShows, hostedItems) = mapToAsyncJobsPair(
-            { getTmdbFavorites(favorites.filterIsInstance(ItemKey.Tmdb::class.java)) },
-            { getHostedFavorites(favorites.filterIsInstance(ItemKey.Hosted::class.java)) }
-        )
-        return tmdbShows + hostedItems
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun mapFavorites(favorites: List<ItemKey>): Flow<List<LibraryItem>> {
+        val tmdbFavorites = favorites.filterIsInstance(ItemKey.Tmdb::class.java)
+        val hostedFavorites = favorites.filterIsInstance(ItemKey.Hosted::class.java)
+        val a = getTmdbFavorites(tmdbFavorites)
+        val b = flow<List<LibraryItem>> { getHostedFavorites(hostedFavorites) }
+        return merge(a, b)
     }
 
-    private suspend inline fun getHostedFavorites(
-        favorites: List<ItemKey.Hosted>
-    ): List<LibraryItem> {
-        val pairs = favorites
+    private suspend inline fun getHostedFavorites(items: List<ItemKey.Hosted>): List<LibraryItem> {
+        return items
             .parallelMapBoth { hostedRepo.getItemByKey(it) }
-        return pairs.mapNotNull { (key, item) ->
-            item ?: return@mapNotNull null
-            LibraryItem(key, item.name, null)
-        }
+            .mapNotNull { (key, item) -> item?.let { LibraryItem(key, item.name, null) } }
     }
 
-    private suspend inline fun getTmdbFavorites(
-        favorites: List<ItemKey.Tmdb>
-    ): List<LibraryItem> {
-        val tmdbTvIds = favorites.map { it.id }
-            .filterIsInstance(TmdbItemId.Tv::class.java)
-        val tmdbMovieIds = favorites.map { it.id }
-            .filterIsInstance(TmdbItemId.Movie::class.java)
-        val (tmdbShows, tmdbMovies) = mapToAsyncJobsPair(
-            { tmdbTvIds.parallelMap { it to tmdbRepo.getTv(it.toKey()) } },
-            { tmdbMovieIds.parallelMap { it to tmdbRepo.getMovie(it) } }
-        )
-        return (tmdbShows + tmdbMovies).mapNotNull { (id, item) ->
-            item ?: return@mapNotNull null
-            val posterPath = "https://image.tmdb.org/t/p/original" + item.posterPath
-            LibraryItem(id.toItemKey(), item.name, posterPath)
-        }
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    private fun getTmdbFavorites(keyFlow: List<ItemKey.Tmdb>): Flow<List<LibraryItem>> {
+        val tmdbTvIds = keyFlow
+            .map { it.id }
+            .map { tmdbRepo.getItemAsFlow(it).map { a -> it to a } }
+        return combine(*(tmdbTvIds).toTypedArray()) { it.toList() }
+            .map { it.mapNotNull { (id, result) -> netResultToLibraryItem(id, result) } }
+    }
+
+    private fun netResultToLibraryItem(
+        id: TmdbItemId,
+        result: NetworkResult<out FindResult>
+    ): LibraryItem? {
+        return result.data?.let { mapTmdbItemToLibraryItem(id, it) }
+    }
+
+    private fun mapTmdbItemToLibraryItem(id: TmdbItemId, item: FindResult): LibraryItem {
+        val posterPath = "https://image.tmdb.org/t/p/original" + item.posterPath
+        return LibraryItem(id.toItemKey(), item.name, posterPath)
     }
 }

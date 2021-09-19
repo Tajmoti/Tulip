@@ -24,8 +24,12 @@ inline fun TmdbItemId.toItemKey(): ItemKey.Tmdb {
     }
 }
 
-inline fun TmdbItemId.toKey(): TvShowKey.Tmdb {
+inline fun TmdbItemId.toTvKey(): TvShowKey.Tmdb {
     return TvShowKey.Tmdb(TmdbItemId.Tv(id))
+}
+
+inline fun TmdbItemId.toMovieKey(): MovieKey.Tmdb {
+    return MovieKey.Tmdb(TmdbItemId.Movie(id))
 }
 
 inline fun SlimSeason.toKey(tv: Tv): SeasonKey.Tmdb {
