@@ -3,6 +3,7 @@
 - Custom video player with support for changing streams mid-play and subtitles
 ### Changed
 - Fixed streams from Primewire sometimes loaded incorrectly
+- Fixed error video played when streaming from streamzz.to
 
 ## [0.7.0] - 2021-09-07
 ### Changed

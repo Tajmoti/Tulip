@@ -10,12 +10,14 @@ class StreamzzTo : ExtractorModule {
     override val supportedServiceNames = listOf("streamzz.to", "streamz.cc")
 
     override suspend fun extractVideoUrl(
-        url: String,
-        rawLoader: RawPageSourceLoader,
-        webDriverLoader: WebDriverPageSourceLoader
+            url: String,
+            rawLoader: RawPageSourceLoader,
+            webDriverLoader: WebDriverPageSourceLoader
     ): Either<ExtractionError, String> {
+        // This is needed to trick per-IP scraping protection
+        rawLoader.invoke("https://streamzz.to/count.php?bcd=1")
         return rawLoader(url)
-            .fold({ parseResults(it) }, { ExtractionError.Exception(it).left() })
+                .fold({ parseResults(it) }, { ExtractionError.Exception(it).left() })
     }
 
     private fun parseResults(source: String): Either<ExtractionError, String> {
@@ -33,8 +35,8 @@ class StreamzzTo : ExtractorModule {
     companion object {
         private val VIDEO_URL_REGEX = "video3\\|src\\|(.*)\\|type\\|video_3".toRegex()
         private val CAPTCHA_INFO = CaptchaInfo(
-            "https://streamzz.to/checkme.dll",
-            "https://streamzz.to/docheckme.dll"
+                "https://streamzz.to/checkme.dll",
+                "https://streamzz.to/docheckme.dll"
         )
     }
 }
