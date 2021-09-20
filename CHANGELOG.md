@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [0.8.0] - 2021-09-020
 ### Added
 - Custom video player with support for changing streams mid-play and subtitles
 ### Changed
@@ -54,6 +56,7 @@
 - Support for primewire.ag
 
 [Unreleased]: https://github.com/Tajmoti/Tulip/tree/main
+[0.7.0]: https://github.com/Tajmoti/Tulip/tree/v0.7.0
 [0.6.0]: https://github.com/Tajmoti/Tulip/tree/v0.6.0
 [0.5.0]: https://github.com/Tajmoti/Tulip/tree/v0.5.0
 [0.4.0]: https://github.com/Tajmoti/Tulip/tree/v0.4.0
