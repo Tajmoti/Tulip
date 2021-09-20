@@ -18,6 +18,9 @@ dependencies {
     // Business logic libs
     implementation "org.jsoup:jsoup:$jsoup_version"
 
+    // Arrow
+    implementation "io.arrow-kt:arrow-core:0.13.2"
+
     // Utils
     implementation project(':commonutils')
 }

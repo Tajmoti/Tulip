@@ -1,8 +1,10 @@
 package com.tajmoti.libtulip.repository.impl
 
+import arrow.core.Either
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.repository.StreamsRepository
 import com.tajmoti.libtvprovider.VideoStreamRef
+import com.tajmoti.libtvvideoextractor.ExtractionError
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
 import io.ktor.client.*
 import io.ktor.client.request.*
@@ -54,9 +56,9 @@ class StreamsRepositoryImpl @Inject constructor(
         return nextHost.contains(originalHost) || originalHost.contains(nextHost)
     }
 
-    override suspend fun extractVideoLink(info: VideoStreamRef.Resolved): Result<String> {
+    override suspend fun extractVideoLink(info: VideoStreamRef.Resolved):
+            Either<ExtractionError, String> {
         return linkExtractor.extractVideoLink(info.url, info.serviceName)
-            .onFailure { logger.warn("Link extraction for $info failed!", it) }
     }
 
     companion object {

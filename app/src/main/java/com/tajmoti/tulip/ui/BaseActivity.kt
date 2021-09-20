@@ -21,4 +21,9 @@ abstract class BaseActivity<B : ViewDataBinding>(
         binding = DataBindingUtil.setContentView(this, bindingInflater)
         binding.lifecycleOwner = this
     }
+
+    override fun onSupportNavigateUp(): Boolean {
+        finish()
+        return true
+    }
 }

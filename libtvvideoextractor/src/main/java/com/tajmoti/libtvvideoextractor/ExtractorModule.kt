@@ -1,5 +1,6 @@
 package com.tajmoti.libtvvideoextractor
 
+import arrow.core.Either
 import com.tajmoti.libtvvideoextractor.module.StreamzzTo
 
 /**
@@ -29,5 +30,5 @@ interface ExtractorModule {
         url: String,
         rawLoader: RawPageSourceLoader,
         webDriverLoader: WebDriverPageSourceLoader
-    ): Result<String>
+    ): Either<ExtractionError, String>
 }

@@ -7,12 +7,14 @@ import android.os.Bundle
 import android.view.View
 import android.widget.SeekBar
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tajmoti.libtulip.model.info.StreamableInfo
+import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
 import com.tajmoti.libtulip.ui.player.Position
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
@@ -23,6 +25,7 @@ import com.tajmoti.libtulip.ui.streams.StreamsViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ActivityVideoPlayerBinding
 import com.tajmoti.tulip.ui.*
+import com.tajmoti.tulip.ui.captcha.CaptchaSolverActivity
 import dagger.hilt.android.AndroidEntryPoint
 import org.videolan.libvlc.LibVLC
 import java.io.File
@@ -214,20 +217,51 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
      * or its direct video stream link.
      */
     private fun onDirectLinkLoadingError(link: FailedLink) {
-        if (link.download) {
-            Toast.makeText(this, R.string.direct_loading_failure, Toast.LENGTH_SHORT)
-                .show()
-        } else {
-            MaterialAlertDialogBuilder(this)
-                .setIcon(R.drawable.ic_sad_24)
-                .setTitle(R.string.direct_loading_failure)
-                .setMessage(R.string.direct_loading_failure_message)
-                .setPositiveButton(R.string.direct_loading_failure_yes) { _, _ ->
-                    startVideo(link.stream.url, false)
-                }
-                .setNegativeButton(R.string.direct_loading_failure_no) { _, _ -> }
-                .show()
+        when {
+            link.captchaInfo != null ->
+                handleCaptcha(link)
+            link.download ->
+                Toast.makeText(this, R.string.direct_loading_failure, Toast.LENGTH_SHORT)
+                    .show()
+            else ->
+                MaterialAlertDialogBuilder(this)
+                    .setIcon(R.drawable.ic_sad_24)
+                    .setTitle(R.string.direct_loading_failure)
+                    .setMessage(R.string.direct_loading_failure_message)
+                    .setPositiveButton(R.string.direct_loading_failure_yes) { _, _ ->
+                        startVideo(link.stream.url, false)
+                    }
+                    .setNegativeButton(R.string.direct_loading_failure_no) { _, _ -> }
+                    .show()
         }
+    }
+
+    /**
+     * Link which is waiting for its captcha to be solved.
+     */
+    private var lastLink: FailedLink? = null
+
+
+    private val captchaSolverLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                toast(R.string.captcha_solved)
+                lastLink?.let { link ->
+                    val ref = UnloadedVideoStreamRef(link.stream, true)
+                    streamsViewModel.onStreamClicked(ref, link.download)
+                }
+            } else {
+                toast(R.string.captcha_not_solved)
+            }
+        }
+
+    private fun handleCaptcha(link: FailedLink) {
+        lastLink = link
+        val info = link.captchaInfo!!
+        val from = Uri.parse(info.captchaUrl)
+        val to = Uri.parse(info.destinationUrl)
+        val intent = CaptchaSolverActivity.newInstance(this, from, to)
+        captchaSolverLauncher.launch(intent)
     }
 
     /**

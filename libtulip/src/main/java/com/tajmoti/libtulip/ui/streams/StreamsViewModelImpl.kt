@@ -8,6 +8,8 @@ import com.tajmoti.libtulip.repository.StreamsRepository
 import com.tajmoti.libtulip.service.*
 import com.tajmoti.libtulip.ui.doCancelableJob
 import com.tajmoti.libtvprovider.*
+import com.tajmoti.libtvvideoextractor.CaptchaInfo
+import com.tajmoti.libtvvideoextractor.ExtractionError
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -71,7 +73,7 @@ class StreamsViewModelImpl constructor(
     override val linkLoadingError = linkLoadingState
         .mapNotNull { state ->
             (state as? LinkLoadingState.Error)
-                ?.let { FailedLink(it.stream, it.download) }
+                ?.let { FailedLink(it.stream, it.download, it.captcha) }
         }
         .shareIn(viewModelScope, SharingStarted.Eagerly)
 
@@ -123,7 +125,7 @@ class StreamsViewModelImpl constructor(
         emit(LinkLoadingState.Loading(info, download, auto))
         streamsRepo.resolveStream(info)
             .onSuccess { emitAll(processResolvedLink(ref, it, download, auto)) }
-            .onFailure { emit(LinkLoadingState.Error(info, download, auto)) }
+            .onFailure { emit(LinkLoadingState.Error(info, download, null, auto)) }
     }
 
     private suspend fun processResolvedLink(
@@ -138,13 +140,16 @@ class StreamsViewModelImpl constructor(
         }
         emit(LinkLoadingState.LoadingDirect(info, download, auto))
         val result = streamsRepo.extractVideoLink(info)
-            .onSuccess { result -> if (download) downloadVideo(result) }
+            .map { result -> if (download) downloadVideo(result); result }
             .fold(
+                { LinkLoadingState.Error(info, download, captchaOrNull(it), auto) },
                 { LinkLoadingState.LoadedDirect(info, download, it, auto) },
-                { LinkLoadingState.Error(info, download, auto) }
             )
         emit(result)
     }
+
+    private fun captchaOrNull(it: ExtractionError) =
+        (it as? ExtractionError.Captcha)?.info
 
     private fun downloadVideo(link: String) {
         val state = streamLoadingState.value as State.Success
@@ -259,6 +264,7 @@ class StreamsViewModelImpl constructor(
         data class Error(
             val stream: VideoStreamRef,
             val download: Boolean,
+            val captcha: CaptchaInfo?,
             override val auto: Boolean
         ) : LinkLoadingState
     }

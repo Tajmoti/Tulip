@@ -1,5 +1,7 @@
 package com.tajmoti.libtvvideoextractor
 
+import arrow.core.Either
+import arrow.core.left
 import com.tajmoti.commonutils.logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,14 +18,11 @@ class VideoLinkExtractor(
     /**
      * Attempts to extract a direct video link from the provided [url].
      */
-    suspend fun extractVideoLink(url: String, serviceName: String?): Result<String> {
+    suspend fun extractVideoLink(url: String, serviceName: String?): Either<ExtractionError, String> {
         logger.debug("Extracting '$url'")
         val handler = getFirstUsableHandler(url)
             ?: serviceName?.let { getFirstUsableHandlerByName(serviceName) }
-        if (handler == null) {
-            logger.debug("No handler found for '$url'")
-            return Result.failure(Exception("No handler exists for url $url"))
-        }
+            ?: return ExtractionError.NoHandler.left()
         return withContext(Dispatchers.Default) {
             handler.extractVideoUrl(url, rawSourceLoader, webDriverSourceLoader)
         }

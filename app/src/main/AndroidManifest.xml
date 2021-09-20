@@ -19,8 +19,13 @@
         tools:ignore="UnusedAttribute">
         <activity
             android:name=".ui.player.VideoPlayerActivity"
-            android:exported="true"
+            android:exported="false"
             android:screenOrientation="userLandscape" />
+        <activity
+            android:name=".ui.captcha.CaptchaSolverActivity"
+            android:exported="false"
+            android:label="@string/solve_captcha_hint"
+            android:theme="@style/Theme.Tulip" />
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"

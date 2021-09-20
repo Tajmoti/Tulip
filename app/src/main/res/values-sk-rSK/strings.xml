@@ -30,4 +30,7 @@
     <string name="subtitles">Titulky</string>
     <string name="restart_video">Znovu načítať</string>
     <string name="change_source">Zmeniť zdroj</string>
+    <string name="solve_captcha_hint">Pre pokračovanie vyrieš túto captchu</string>
+    <string name="captcha_solved">Captcha bola vyriešená</string>
+    <string name="captcha_not_solved">Captcha nebola vyriešená, skús iný zdroj</string>
 </resources>
