@@ -1,11 +1,13 @@
 ## [Unreleased]
+
+## [0.9.0] - 2021-09-20
 ### Added
 - Option to disable subtitles once selected
 ### Changed
 - Fix subtitle delay calculation causing incorrect delay to be applied
 - Improve subtitle selection UI
 
-## [0.8.0] - 2021-09-020
+## [0.8.0] - 2021-09-20
 ### Added
 - Custom video player with support for changing streams mid-play and subtitles
 ### Changed
@@ -61,6 +63,8 @@
 - Support for primewire.ag
 
 [Unreleased]: https://github.com/Tajmoti/Tulip/tree/main
+[0.7.0]: https://github.com/Tajmoti/Tulip/tree/v0.9.0
+[0.7.0]: https://github.com/Tajmoti/Tulip/tree/v0.8.0
 [0.7.0]: https://github.com/Tajmoti/Tulip/tree/v0.7.0
 [0.6.0]: https://github.com/Tajmoti/Tulip/tree/v0.6.0
 [0.5.0]: https://github.com/Tajmoti/Tulip/tree/v0.5.0
