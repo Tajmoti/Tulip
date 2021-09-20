@@ -34,4 +34,5 @@
     <string name="captcha_solved">Captcha solved</string>
     <string name="captcha_not_solved">Captcha not solved, try another source</string>
     <string name="subtitle_delay_failed">Setting of subtitle delay failed</string>
+    <string name="label_no_subtitles">No subtitles</string>
 </resources>

@@ -83,7 +83,7 @@ interface VideoPlayerViewModel {
      * The user has selected which subtitles they wish to use.
      * The subtitles need to be downloaded before the video is played.
      */
-    fun onSubtitlesSelected(subtitleInfo: SubtitleInfo)
+    fun onSubtitlesSelected(subtitleInfo: SubtitleInfo?)
 
     /**
      * The user heard a word that they want to match to some text.

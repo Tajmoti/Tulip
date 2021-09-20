@@ -1,5 +1,6 @@
 package com.tajmoti.tulip.ui.player
 
+import android.app.Dialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
@@ -14,10 +15,14 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
+import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.ui.player.Position
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.streams.FailedLink
@@ -28,9 +33,17 @@ import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ActivityVideoPlayerBinding
 import com.tajmoti.tulip.ui.*
 import com.tajmoti.tulip.ui.captcha.CaptchaSolverActivity
+import com.tajmoti.tulip.ui.player.streams.AndroidStreamsViewModel
+import com.tajmoti.tulip.ui.player.streams.StreamsAdapter
+import com.tajmoti.tulip.ui.player.subtitles.SubtitleItem
+import com.tajmoti.tulip.ui.player.subtitles.SubtitleLanguageHeaderItem
+import com.xwray.groupie.ExpandableGroup
+import com.xwray.groupie.Group
+import com.xwray.groupie.GroupieAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import org.videolan.libvlc.LibVLC
 import java.io.File
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
@@ -140,7 +153,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     private fun setupFlowCollectors(adapter: StreamsAdapter) {
-        consume(playerViewModel.subtitleFile) { it?.let { onSubtitlesReady(it) } }
+        consume(playerViewModel.subtitleFile) { onSubtitlesChanged(it) }
         consume(playerViewModel.downloadingError) { if (it) toast(R.string.subtitle_download_failure) }
         consume(playerViewModel.subtitleOffset, this::onSubtitlesDelayChanged)
         consume(playerViewModel.showPlayButton, this::updatePlayPauseButton)
@@ -393,21 +406,64 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     private fun showSubtitleSelectionDialog() {
-        val subtitles = playerViewModel.subtitleList.value.sortedBy { it.language }
-        val labels = subtitles
-                .mapIndexed { index, item -> "#$index ${item.language}" }
-                .toTypedArray()
-        MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.select_subtitles)
-                .setItems(labels) { _, index ->
-                    playerViewModel.onSubtitlesSelected(subtitles[index])
-                }
-                .setNegativeButton(R.string.back, null)
-                .show()
+        var dialog: Dialog? = null
+        val callback: (SubtitleInfo?) -> Unit = {
+            dialog?.dismiss()
+            playerViewModel.onSubtitlesSelected(it)
+        }
+        val noSubItem = SubtitleItem(0, null, callback)
+        val groups = createSubtitleGroups(playerViewModel.subtitleList.value, callback)
+        val recycler = setupSubtitleRecycler(listOf(noSubItem) + groups)
+        dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.select_subtitles)
+            .setView(recycler)
+            .setNegativeButton(R.string.back, null)
+            .show()
     }
 
-    private fun onSubtitlesReady(file: File) {
-        vlc?.setSubtitles(Uri.fromFile(file).toString())
+    private fun setupSubtitleRecycler(its: List<Group>): RecyclerView {
+        val recycler = RecyclerView(this)
+        val adapter = GroupieAdapter()
+        recycler.adapter = adapter
+        recycler.layoutManager = LinearLayoutManager(this)
+        recycler.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
+        adapter.addAll(its)
+        return recycler
+    }
+
+    private fun createSubtitleGroups(
+        state: List<SubtitleInfo>,
+        callback: (SubtitleInfo?) -> Unit
+    ): List<Group> {
+        val groupedByLanguage = state
+            .map { Locale.forLanguageTag(it.language) to it }
+            .sortedBy { it.first.displayLanguage }
+            .groupBy { it.first }
+        return groupedByLanguage
+            .map {
+                val subtitleInfo = it.value.map { pair -> pair.second }
+                createSubtitleGroup(it.key, subtitleInfo, callback)
+            }
+    }
+
+    private fun createSubtitleGroup(
+        locale: Locale,
+        season: List<SubtitleInfo>,
+        callback: (SubtitleInfo?) -> Unit
+    ): ExpandableGroup {
+        val header = SubtitleLanguageHeaderItem(locale)
+        val group = ExpandableGroup(header)
+        val mapped = season.mapIndexed { index, info -> SubtitleItem(index, info, callback) }
+        group.addAll(mapped)
+        return group
+    }
+
+    private fun onSubtitlesChanged(file: File?) {
+        if (file != null) {
+            vlc?.setSubtitles(Uri.fromFile(file).toString())
+        } else {
+            vlc?.setSubtitles(null)
+        }
     }
 
     private fun onSubtitlesDelayChanged(delay: Long) {
@@ -422,9 +478,9 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     private fun reloadVideo(url: String) {
         vlc?.release()
         vlc = VlcMediaHelper(libVLC, url)
-                .also { it.attachAndPlay(binding.videoLayout) }
-                .also { playerViewModel.onMediaAttached(it) }
-        playerViewModel.subtitleFile.value?.let { onSubtitlesReady(it) }
+            .also { it.attachAndPlay(binding.videoLayout) }
+            .also { playerViewModel.onMediaAttached(it) }
+        onSubtitlesChanged(playerViewModel.subtitleFile.value)
     }
 
     inner class OnSeekBarChangeListener : SeekBar.OnSeekBarChangeListener {

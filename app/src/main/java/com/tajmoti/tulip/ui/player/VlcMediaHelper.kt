@@ -68,8 +68,12 @@ class VlcMediaHelper(
     override val length: Long
         get() = player.length
 
-    override fun setSubtitles(uri: String) {
-        player.addSlave(Media.Slave.Type.Subtitle, Uri.parse(uri), true)
+    override fun setSubtitles(uri: String?) {
+        if (uri != null) {
+            player.addSlave(Media.Slave.Type.Subtitle, Uri.parse(uri), true)
+        } else {
+            player.spuTrack = -1
+        }
     }
 
     override fun setSubtitleDelay(delay: Long): Boolean {

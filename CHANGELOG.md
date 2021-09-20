@@ -1,6 +1,9 @@
 ## [Unreleased]
+### Added
+- Option to disable subtitles once selected
 ### Changed
 - Fix subtitle delay calculation causing incorrect delay to be applied
+- Improve subtitle selection UI
 
 ## [0.8.0] - 2021-09-020
 ### Added

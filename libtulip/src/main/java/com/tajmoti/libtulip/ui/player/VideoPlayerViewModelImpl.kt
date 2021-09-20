@@ -141,10 +141,14 @@ class VideoPlayerViewModelImpl constructor(
             ?.let { media.time = it }
     }
 
-    override fun onSubtitlesSelected(subtitleInfo: SubtitleInfo) {
+    override fun onSubtitlesSelected(subtitleInfo: SubtitleInfo?) {
         subSyncState.value = null
         viewModelScope.doCancelableJob(this::subtitleDownloadJob, downloadingSubtitleFile) {
-            subtitleDownloadState.emitAll(downloadSubtitles(subtitleInfo))
+            if (subtitleInfo != null) {
+                subtitleDownloadState.emitAll(downloadSubtitles(subtitleInfo))
+            } else {
+                subtitleDownloadState.emit(SubtitleDownloadingState.Idle)
+            }
         }
     }
 

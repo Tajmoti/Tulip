@@ -1,4 +1,4 @@
-package com.tajmoti.tulip.ui.player
+package com.tajmoti.tulip.ui.player.streams
 
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
