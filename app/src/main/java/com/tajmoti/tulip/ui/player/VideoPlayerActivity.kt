@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
-    R.layout.activity_video_player
+        R.layout.activity_video_player
 ) {
     private val playerViewModel by viewModelsDelegated<VideoPlayerViewModel, AndroidVideoPlayerViewModel>()
     private val streamsViewModel by viewModelsDelegated<StreamsViewModel, AndroidStreamsViewModel>()
@@ -53,7 +53,6 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         super.onCreate(savedInstanceState)
         binding.viewModel = playerViewModel
         binding.streamsViewModel = streamsViewModel
-        binding.includeStreamsSelection.viewModel = streamsViewModel
         libVLC = LibVLC(this, arrayListOf("-vvv"))
 
         val adapter = StreamsAdapter(this::onStreamClickedDownload)
@@ -100,7 +99,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
             streamsViewModel.directLoaded.value?.let { reloadVideo(it.directLink) }
         }
         binding.buttonChangeSource.setOnClickListener {
-            binding.includeStreamsSelection.containerStreamSelection.isVisible = true
+            binding.containerStreamSelection.isVisible = true
         }
         binding.videoLayout.setOnClickListener {
             onVideoClicked()
@@ -108,10 +107,10 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         binding.buttonBack.setOnClickListener {
             finish()
         }
-        binding.includeStreamsSelection.titleStreamSelection.setOnClickListener {
-            binding.includeStreamsSelection.containerStreamSelection.isVisible = false
+        binding.recyclerSearch.setupWithAdapterAndDivider(adapter)
+        binding.buttonBackStreams.setOnClickListener {
+            binding.containerStreamSelection.isVisible = false
         }
-        binding.includeStreamsSelection.recyclerSearch.setupWithAdapterAndDivider(adapter)
     }
 
     private fun setupFlowCollectors(adapter: StreamsAdapter) {
@@ -158,7 +157,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
             is StreamableInfo.Movie -> info.name
             null -> ""
         }
-        binding.includeStreamsSelection.titleStreamSelection.text = name
+        binding.titleStreamSelection.text = name
         binding.textItemName.text = name
     }
 
@@ -172,6 +171,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
      * A video link was clicked, load it and play it.
      */
     private fun onStreamClickedPlay(stream: UnloadedVideoWithLanguage) {
+        binding.containerStreamSelection.isVisible = false
         streamsViewModel.onStreamClicked(stream.video, false)
     }
 
@@ -208,7 +208,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
             startVideo(it.stream.url, false)
         } else {
             Toast.makeText(this, R.string.stream_not_downloadable, Toast.LENGTH_SHORT)
-                .show()
+                    .show()
         }
     }
 
@@ -222,17 +222,17 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
                 handleCaptcha(link)
             link.download ->
                 Toast.makeText(this, R.string.direct_loading_failure, Toast.LENGTH_SHORT)
-                    .show()
+                        .show()
             else ->
                 MaterialAlertDialogBuilder(this)
-                    .setIcon(R.drawable.ic_sad_24)
-                    .setTitle(R.string.direct_loading_failure)
-                    .setMessage(R.string.direct_loading_failure_message)
-                    .setPositiveButton(R.string.direct_loading_failure_yes) { _, _ ->
-                        startVideo(link.stream.url, false)
-                    }
-                    .setNegativeButton(R.string.direct_loading_failure_no) { _, _ -> }
-                    .show()
+                        .setIcon(R.drawable.ic_sad_24)
+                        .setTitle(R.string.direct_loading_failure)
+                        .setMessage(R.string.direct_loading_failure_message)
+                        .setPositiveButton(R.string.direct_loading_failure_yes) { _, _ ->
+                            startVideo(link.stream.url, false)
+                        }
+                        .setNegativeButton(R.string.direct_loading_failure_no) { _, _ -> }
+                        .show()
         }
     }
 
@@ -243,17 +243,17 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
 
     private val captchaSolverLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                toast(R.string.captcha_solved)
-                lastLink?.let { link ->
-                    val ref = UnloadedVideoStreamRef(link.stream, true)
-                    streamsViewModel.onStreamClicked(ref, link.download)
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == RESULT_OK) {
+                    toast(R.string.captcha_solved)
+                    lastLink?.let { link ->
+                        val ref = UnloadedVideoStreamRef(link.stream, true)
+                        streamsViewModel.onStreamClicked(ref, link.download)
+                    }
+                } else {
+                    toast(R.string.captcha_not_solved)
                 }
-            } else {
-                toast(R.string.captcha_not_solved)
             }
-        }
 
     private fun handleCaptcha(link: FailedLink) {
         lastLink = link
@@ -296,11 +296,11 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
     private fun updatePlayPauseImage(showPause: Boolean) {
         binding.buttonPlayResume.setImageResource(
-            if (showPause) {
-                R.drawable.ic_baseline_pause_24
-            } else {
-                R.drawable.ic_baseline_play_arrow_24
-            }
+                if (showPause) {
+                    R.drawable.ic_baseline_pause_24
+                } else {
+                    R.drawable.ic_baseline_play_arrow_24
+                }
         )
     }
 
@@ -358,15 +358,15 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     private fun showSubtitleSelectionDialog() {
         val subtitles = playerViewModel.subtitleList.value.sortedBy { it.language }
         val labels = subtitles
-            .mapIndexed { index, item -> "#$index ${item.language}" }
-            .toTypedArray()
+                .mapIndexed { index, item -> "#$index ${item.language}" }
+                .toTypedArray()
         MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.select_subtitles)
-            .setItems(labels) { _, index ->
-                playerViewModel.onSubtitlesSelected(subtitles[index])
-            }
-            .setNegativeButton(R.string.back, null)
-            .show()
+                .setTitle(R.string.select_subtitles)
+                .setItems(labels) { _, index ->
+                    playerViewModel.onSubtitlesSelected(subtitles[index])
+                }
+                .setNegativeButton(R.string.back, null)
+                .show()
     }
 
     private fun onSubtitlesReady(file: File) {
@@ -387,8 +387,8 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     private fun reloadVideo(url: String) {
         vlc?.release()
         vlc = VlcMediaHelper(libVLC, url)
-            .also { it.attachAndPlay(binding.videoLayout) }
-            .also { playerViewModel.onMediaAttached(it) }
+                .also { it.attachAndPlay(binding.videoLayout) }
+                .also { playerViewModel.onMediaAttached(it) }
         playerViewModel.subtitleFile.value?.let { onSubtitlesReady(it) }
     }
 

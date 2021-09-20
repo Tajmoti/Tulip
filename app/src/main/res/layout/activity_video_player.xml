@@ -210,6 +210,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/activity_vertical_margin"
                 android:text="@string/change_source"
+                android:visibility="@{streamsViewModel.linksResult == null ? View.GONE : View.VISIBLE}"
                 app:icon="@drawable/ic_baseline_playlist_play_24"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -235,11 +236,70 @@
             android:visibility="@{streamsViewModel.linksLoading || streamsViewModel.loadingStreamOrDirectLink ? View.VISIBLE : View.GONE}"
             app:indicatorColor="@{streamsViewModel.linksLoading ? R.color.indicator_loading_streams : R.color.indicator_loading_link}" />
 
-        <include
-            android:id="@+id/include_streams_selection"
-            layout="@layout/fragment_streams"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/no_results"
+            android:visibility="@{streamsViewModel.linksNoResult ? View.VISIBLE : View.GONE}" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/container_stream_selection"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="gone" />
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <View
+                android:id="@+id/top_bar"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:background="?colorPrimary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/title_stream_selection"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:drawablePadding="@dimen/list_item_icon_padding"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:padding="@dimen/activity_vertical_margin"
+                android:textAllCaps="true"
+                android:textColor="?colorOnPrimary"
+                android:textSize="20sp"
+                app:drawableStartCompat="@drawable/ic_baseline_playlist_play_24"
+                app:drawableTint="?colorOnPrimary"
+                app:layout_constraintBottom_toBottomOf="@id/top_bar"
+                app:layout_constraintEnd_toStartOf="@id/button_back_streams"
+                app:layout_constraintStart_toStartOf="@id/top_bar"
+                app:layout_constraintTop_toTopOf="@id/top_bar"
+                tools:text="The Simpsons S1:E1 Example Name" />
+
+            <ImageButton
+                android:id="@+id/button_back_streams"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/activity_vertical_margin"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:layout_constraintBottom_toBottomOf="@id/top_bar"
+                app:layout_constraintEnd_toEndOf="@id/top_bar"
+                app:layout_constraintTop_toTopOf="@id/top_bar"
+                app:srcCompat="@drawable/ic_baseline_close_24" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_search"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@color/black"
+                app:layoutManager="LinearLayoutManager"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/top_bar" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </FrameLayout>
 </layout>
