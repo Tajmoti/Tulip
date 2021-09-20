@@ -4,6 +4,8 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Message
 import android.view.View
 import android.widget.SeekBar
 import android.widget.Toast
@@ -39,6 +41,20 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     private val streamsViewModel by viewModelsDelegated<StreamsViewModel, AndroidStreamsViewModel>()
 
     /**
+     * Handler used for hiding UI after a timeout
+     */
+    private lateinit var mainHandler: Handler
+
+    /**
+     * Hides the UI after a while if the video is playing or buffering
+     */
+    private val uiHider: () -> Unit = {
+        setupFullscreen()
+        if (playerViewModel.isPlayingOrBuffering.value)
+            binding.groupVideoControls.isVisible = false
+    }
+
+    /**
      * Instance of the VLC library
      */
     private lateinit var libVLC: LibVLC
@@ -51,6 +67,14 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        mainHandler = object : Handler(mainLooper) {
+            override fun handleMessage(msg: Message) {
+                super.handleMessage(msg)
+                if (msg.what == 5) {
+                    uiHider()
+                }
+            }
+        }
         binding.viewModel = playerViewModel
         binding.streamsViewModel = streamsViewModel
         libVLC = LibVLC(this, arrayListOf("-vvv"))
@@ -59,11 +83,13 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         adapter.callback = this::onStreamClickedPlay
         setupPlayerUi(adapter)
         setupFlowCollectors(adapter)
+        rescheduleVideoControlAutoHide()
     }
 
     override fun onUserInteraction() {
         super.onUserInteraction()
         setupFullscreen()
+        rescheduleVideoControlAutoHide()
     }
 
     private fun setupFullscreen() {
@@ -118,6 +144,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         consume(playerViewModel.downloadingError) { if (it) toast(R.string.subtitle_download_failure) }
         consume(playerViewModel.subtitleOffset, this::onSubtitlesDelayChanged)
         consume(playerViewModel.showPlayButton, this::updatePlayPauseButton)
+        consume(playerViewModel.isPlayingOrBuffering, this::onPlayingOrBufferingChanged)
         consume(playerViewModel.buffering, this::updateBuffering)
         consume(playerViewModel.position, this::updatePosition)
         consume(streamsViewModel.linksResult) { it?.let { adapter.items = it.streams } }
@@ -146,6 +173,11 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         super.onDestroy()
         vlc?.release()
         libVLC.release()
+    }
+
+    private fun rescheduleVideoControlAutoHide() {
+        mainHandler.removeMessages(5)
+        mainHandler.sendEmptyMessageDelayed(5, UI_HIDE_DELAY_MS)
     }
 
     /**
@@ -294,6 +326,11 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         }
     }
 
+    private fun onPlayingOrBufferingChanged(playing: Boolean) {
+        if (playing)
+            rescheduleVideoControlAutoHide()
+    }
+
     private fun updatePlayPauseImage(showPause: Boolean) {
         binding.buttonPlayResume.setImageResource(
                 if (showPause) {
@@ -409,6 +446,14 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     companion object {
+        /**
+         * After how many seconds the UI will be hidden
+         */
+        private const val UI_HIDE_DELAY_MS = 5000L
+
+        /**
+         * How much will be skipped when skipping backward or forward
+         */
         private const val REWIND_TIME_MS = 10_000
 
         /**

@@ -47,6 +47,11 @@ interface VideoPlayerViewModel {
     val showPlayButton: StateFlow<PlayButtonState>
 
     /**
+     * True if the video is currently playing or buffering
+     */
+    val isPlayingOrBuffering: StateFlow<Boolean>
+
+    /**
      * Buffering progress or null if not buffering
      */
     val buffering: StateFlow<Float?>

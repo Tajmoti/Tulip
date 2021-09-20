@@ -54,6 +54,9 @@ class VideoPlayerViewModelImpl constructor(
     private val mediaPlayerState = MutableStateFlow<MediaPlayerHelper.State>(
         MediaPlayerHelper.State.Initializing
     )
+    override val isPlayingOrBuffering = mediaPlayerState.map(viewModelScope) {
+        it is MediaPlayerHelper.State.Playing || it is MediaPlayerHelper.State.Buffering
+    }
     override val showPlayButton = mediaPlayerState.map(viewModelScope) {
         when (it) {
             is MediaPlayerHelper.State.Buffering -> VideoPlayerViewModel.PlayButtonState.HIDE
