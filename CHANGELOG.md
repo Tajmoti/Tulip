@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Changed
+- Fix subtitle delay calculation causing incorrect delay to be applied
 
 ## [0.8.0] - 2021-09-020
 ### Added

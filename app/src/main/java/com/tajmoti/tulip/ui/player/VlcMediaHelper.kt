@@ -73,7 +73,7 @@ class VlcMediaHelper(
     }
 
     override fun setSubtitleDelay(delay: Long): Boolean {
-        return delay == 0L || (player.isPlaying && player.setSpuDelay(-delay * 1000))
+        return delay == 0L || (player.isPlaying && player.setSpuDelay(delay * 1000))
     }
 
     fun release() {

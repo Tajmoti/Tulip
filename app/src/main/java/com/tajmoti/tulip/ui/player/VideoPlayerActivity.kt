@@ -411,10 +411,8 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     private fun onSubtitlesDelayChanged(delay: Long) {
-        if (delay != 0L)
-            toast("Applying subtitle delay of $delay ms")
         if (vlc?.setSubtitleDelay(delay) == false)
-            toast("Setting of subtitle delay failed")
+            toast(R.string.subtitle_delay_failed)
     }
 
     private fun onVideoClicked() {

@@ -37,7 +37,8 @@ interface VideoPlayerViewModel {
 
     /**
      * How much the subtitles should be offset.
-     * Positive values mean subtitles should be shown earlier.
+     * Positive values mean that subtitles must be delayed,
+     * negative values mean they need to be shown earlier.
      */
     val subtitleOffset: StateFlow<Long>
 

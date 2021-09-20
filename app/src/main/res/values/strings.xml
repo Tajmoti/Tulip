@@ -33,4 +33,5 @@
     <string name="solve_captcha_hint">Solve this captcha to continue</string>
     <string name="captcha_solved">Captcha solved</string>
     <string name="captcha_not_solved">Captcha not solved, try another source</string>
+    <string name="subtitle_delay_failed">Setting of subtitle delay failed</string>
 </resources>

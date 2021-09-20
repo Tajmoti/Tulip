@@ -33,4 +33,5 @@
     <string name="solve_captcha_hint">Pre pokračovanie vyrieš túto captchu</string>
     <string name="captcha_solved">Captcha bola vyriešená</string>
     <string name="captcha_not_solved">Captcha nebola vyriešená, skús iný zdroj</string>
+    <string name="subtitle_delay_failed">Nepodarilo sa nastaviť oneskorenie tituliek</string>
 </resources>
