@@ -29,6 +29,8 @@ android {
             buildConfigField 'boolean', 'HTTP_DEBUG', "false"
         }
         debug {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             buildConfigField 'boolean', 'HTTP_DEBUG', "${HTTP_DEBUG}"
         }
     }
