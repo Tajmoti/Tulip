@@ -20,6 +20,11 @@ interface MediaPlayerHelper {
     var progress: Float
     var time: Long
     val length: Long
-    fun setSubtitles(uri: String?, encoding: String? = null)
+    fun setSubtitles(info: SubtitleInfo?)
     fun setSubtitleDelay(delay: Long): Boolean
+
+    data class SubtitleInfo(
+        val uri: String,
+        val encoding: String? = null
+    )
 }

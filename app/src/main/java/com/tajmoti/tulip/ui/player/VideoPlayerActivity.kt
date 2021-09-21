@@ -23,6 +23,7 @@ import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
+import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
 import com.tajmoti.libtulip.ui.player.Position
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.streams.FailedLink
@@ -460,7 +461,8 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
     private fun onSubtitlesChanged(file: File?) {
         if (file != null) {
-            vlc?.setSubtitles(Uri.fromFile(file).toString())
+            val uri = Uri.fromFile(file).toString()
+            vlc?.setSubtitles(MediaPlayerHelper.SubtitleInfo(uri))
         } else {
             vlc?.setSubtitles(null)
         }

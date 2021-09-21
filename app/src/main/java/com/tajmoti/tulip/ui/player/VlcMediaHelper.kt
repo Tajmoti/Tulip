@@ -68,8 +68,9 @@ class VlcMediaHelper(
     override val length: Long
         get() = player.length
 
-    override fun setSubtitles(uri: String?, encoding: String?) {
-        if (uri != null) {
+    override fun setSubtitles(info: MediaPlayerHelper.SubtitleInfo?) {
+        if (info != null) {
+            val (uri, encoding) = info
             encoding?.let { player.media?.addOption(":subsdec-encoding=$encoding") }
             player.addSlave(Media.Slave.Type.Subtitle, Uri.parse(uri), true)
         } else {
