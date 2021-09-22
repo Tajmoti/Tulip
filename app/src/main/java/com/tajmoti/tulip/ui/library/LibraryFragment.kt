@@ -4,10 +4,12 @@ import android.os.Bundle
 import android.view.View
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.ui.library.LibraryItem
 import com.tajmoti.libtulip.ui.library.LibraryViewModel
+import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentLibraryBinding
 import com.tajmoti.tulip.ui.BaseFragment
 import com.tajmoti.tulip.ui.consume
@@ -25,20 +27,17 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
         super.onViewCreated(view, savedInstanceState)
         binding.viewModel = viewModel
 
-        val manager = GridLayoutManager(requireContext(), 2)
-        val adapter = FavoritesAdapter()
+        val columns = resources.getInteger(R.integer.library_columns)
+        val manager = GridLayoutManager(requireContext(), columns)
+        val adapter = LibraryAdapter(this::onItemImageClick, this::onDetailsClicked)
         binding.recyclerFavorites.layoutManager = manager
         binding.recyclerFavorites.adapter = adapter
-        adapter.callback = {
-            startItem(it)
-        }
-
         consume(viewModel.favoriteItems) { adapter.items = it }
     }
 
-    private fun startItem(it: LibraryItem) {
+    private fun onDetailsClicked(key: ItemKey) {
         val navController = findNavController()
-        when (val key = it.key) {
+        when (key) {
             is TvShowKey -> {
                 LibraryFragmentDirections.actionNavigationLibraryToTabbedTvShowActivity(key)
                     .let { navController.navigate(it) }
@@ -48,5 +47,16 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
                     .let { navController.navigate(it) }
             }
         }
+    }
+
+    private fun onItemImageClick(item: LibraryItem) {
+        val pos = item.lastPlayedPosition
+        if (pos == null) {
+            onDetailsClicked(item.key)
+            return
+        }
+        val key = pos.key
+        LibraryFragmentDirections.actionNavigationLibraryToVideoPlayerActivity(key)
+            .let { findNavController().navigate(it) }
     }
 }

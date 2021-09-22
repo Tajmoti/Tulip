@@ -1,39 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="@dimen/list_item_padding"
-    android:background="?colorBackgroundFloating"
+    android:layout_margin="@dimen/library_item_margin_half"
     android:elevation="4dp"
     android:foreground="?android:attr/selectableItemBackground"
     android:gravity="center_vertical"
-    android:minHeight="256dp"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:ignore="UnusedAttribute">
 
     <ImageView
         android:id="@+id/image_library_poster"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:minWidth="48dp"
-        android:minHeight="48dp" />
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitXY"
+        app:layout_constraintDimensionRatio="2:3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:layout_gravity="bottom"
-        android:background="@drawable/scrim_bottom" />
+    <ImageView
+        android:id="@+id/image_library_play_button"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        app:layout_constraintBottom_toTopOf="@id/scrim_bottom"
+        app:layout_constraintDimensionRatio="2:3"
+        app:layout_constraintEnd_toEndOf="@id/image_library_poster"
+        app:layout_constraintStart_toStartOf="@id/image_library_poster"
+        app:layout_constraintTop_toTopOf="@id/image_library_poster"
+        app:srcCompat="@drawable/ic_play_circle_filled_library_24" />
 
     <TextView
         android:id="@+id/text_library_name"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|start"
         android:layout_margin="6dp"
+        android:layout_marginTop="64dp"
         android:drawablePadding="@dimen/list_item_icon_padding"
         android:fontFamily="sans-serif-light"
+        android:gravity="center_horizontal"
         android:maxLines="1"
         android:textColor="?colorOnBackground"
-        android:textStyle="bold" />
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Futurama" />
 
-</FrameLayout>
+    <TextView
+        android:id="@+id/text_episode_number"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/item_content_margin"
+        android:drawablePadding="@dimen/list_item_icon_padding"
+        android:elevation="2dp"
+        android:fontFamily="sans-serif-light"
+        android:gravity="start"
+        android:maxLines="1"
+        android:textColor="?colorOnBackground"
+        app:layout_constraintBottom_toBottomOf="@id/button_details"
+        app:layout_constraintEnd_toStartOf="@id/button_details"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/button_details"
+        app:layout_constraintVertical_bias="0.5"
+        tools:text="S7:E10" />
+
+    <View
+        android:id="@+id/scrim_bottom"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@color/library_item_bottom_scrim"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/button_details" />
+
+    <View
+        android:id="@+id/progress_indicator_library"
+        android:layout_width="0dp"
+        android:layout_height="4dp"
+        android:background="?colorPrimary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_constraintWidth_percent="0.66" />
+
+    <ImageButton
+        android:id="@+id/button_details"
+        style="@style/LibraryItemButton"
+        android:foreground="?android:attr/selectableItemBackground"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/ic_baseline_more_vert_24" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

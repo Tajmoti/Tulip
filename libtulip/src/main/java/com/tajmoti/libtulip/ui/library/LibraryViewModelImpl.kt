@@ -1,11 +1,14 @@
 package com.tajmoti.libtulip.ui.library
 
+import com.tajmoti.commonutils.combine
 import com.tajmoti.commonutils.parallelMapBoth
 import com.tajmoti.libtulip.data.HostedInfoDataSource
 import com.tajmoti.libtulip.misc.NetworkResult
+import com.tajmoti.libtulip.model.history.LastPlayedPosition
 import com.tajmoti.libtulip.model.info.TulipItem
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.repository.FavoritesRepository
+import com.tajmoti.libtulip.repository.PlayingHistoryRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -14,14 +17,15 @@ import kotlinx.coroutines.flow.*
 
 class LibraryViewModelImpl constructor(
     favoritesRepo: FavoritesRepository,
+    private val historyRepository: PlayingHistoryRepository,
     private val hostedRepo: HostedInfoDataSource,
     private val tmdbRepo: TmdbTvDataRepository,
     viewModelScope: CoroutineScope
 ) : LibraryViewModel {
 
-    @OptIn(FlowPreview::class)
+    @OptIn(ExperimentalCoroutinesApi::class)
     override val favoriteItems = favoritesRepo.getUserFavoritesAsFlow()
-        .flatMapMerge { mapFavorites(it) }
+        .flatMapLatest { mapFavorites(it) }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
 
@@ -37,26 +41,33 @@ class LibraryViewModelImpl constructor(
     private suspend inline fun getHostedFavorites(items: List<ItemKey.Hosted>): List<LibraryItem> {
         return items
             .parallelMapBoth { hostedRepo.getItemByKey(it) }
-            .mapNotNull { (key, item) -> item?.let { LibraryItem(key, item.name ?: "", null) } }
+            .mapNotNull { (key, item) ->
+                val lastPlayedPosition = historyRepository.getLastPlayedPosition(key).firstOrNull()
+                item?.let { LibraryItem(key, item.name ?: "", null, lastPlayedPosition) }
+            }
     }
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     private fun getTmdbFavorites(keyFlow: List<ItemKey.Tmdb>): Flow<List<LibraryItem>> {
-        val tmdbTvIds = keyFlow
+        return keyFlow
             .map { tmdbRepo.getItemAsFlow(it).map { a -> it to a } }
-        return combine(*(tmdbTvIds).toTypedArray()) { it.toList() }
-            .map { it.mapNotNull { (id, result) -> netResultToLibraryItem(id, result) } }
+            .combine()
+            .flatMapLatest { keyToResultList ->
+                keyToResultList.map { (key, result) ->
+                    historyRepository.getLastPlayedPosition(key)
+                        .mapNotNull { netResultToLibraryItem(key, result, it) }
+                }.combine()
+            }
     }
 
     private fun netResultToLibraryItem(
         key: ItemKey.Tmdb,
-        result: NetworkResult<out TulipItem.Tmdb>
+        result: NetworkResult<out TulipItem.Tmdb>,
+        position: LastPlayedPosition?
     ): LibraryItem? {
-        return result.data?.let { mapTmdbItemToLibraryItem(key, it) }
-    }
-
-    private fun mapTmdbItemToLibraryItem(key: ItemKey.Tmdb, item: TulipItem.Tmdb): LibraryItem {
-        val posterPath = "https://image.tmdb.org/t/p/original" + item.posterPath
-        return LibraryItem(key, item.name, posterPath)
+        return result.data?.let {
+            val posterPath = "https://image.tmdb.org/t/p/original" + it.posterPath
+            LibraryItem(key, it.name, posterPath, position)
+        }
     }
 }

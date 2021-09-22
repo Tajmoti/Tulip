@@ -11,8 +11,11 @@ import com.tajmoti.tulip.databinding.ItemSearchBinding
 import com.tajmoti.tulip.ui.BaseAdapter
 import com.tajmoti.tulip.ui.languageToIcon
 
-class SearchAdapter : BaseAdapter<TulipSearchResult, ItemSearchBinding>(
-    ItemSearchBinding::inflate
+class SearchAdapter(
+    onSearchResultClickListener: (TulipSearchResult) -> Unit
+) : BaseAdapter<TulipSearchResult, ItemSearchBinding>(
+    ItemSearchBinding::inflate,
+    onSearchResultClickListener
 ) {
 
     override fun onBindViewHolder(

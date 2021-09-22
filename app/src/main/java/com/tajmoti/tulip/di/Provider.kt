@@ -25,6 +25,7 @@ import com.tajmoti.tulip.db.UserDataDatabase
 import com.tajmoti.tulip.db.dao.hosted.*
 import com.tajmoti.tulip.db.dao.tmdb.TmdbDao
 import com.tajmoti.tulip.db.dao.userdata.FavoritesDao
+import com.tajmoti.tulip.db.dao.userdata.PlayingHistoryDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -185,6 +186,12 @@ object Provider {
     @Singleton
     fun provideFavoritesDao(db: UserDataDatabase): FavoritesDao {
         return db.favoriteDao()
+    }
+
+    @Provides
+    @Singleton
+    fun providePlayingHistoryDao(db: UserDataDatabase): PlayingHistoryDao {
+        return db.playingHistoryDao()
     }
 
     @Provides

@@ -16,7 +16,8 @@
     <string name="season_specials">Špeciály</string>
     <string name="direct_loading_failure">Video sa nepodarilo prehrať</string>
     <string name="tv_show">Seriál</string>
-    <string name="library_empty_hint">Seriály pridané do obľúbených sa zobrazia tu</string>
+    <string name="library_empty_hint">Tvoja knižnica je prázdna</string>
+    <string name="library_empty_small">Vyhľadaj nejaké seriály a pridaj ich do obľúbených.</string>
     <string name="web_browser_not_installed">Nanašiel sa žiaden internetový prehliadač. Nainštaluj nejaký a skús to znova.</string>
     <string name="search_query_hint">Zadaj názov seriálu alebo filmu</string>
     <string name="direct_loading_failure_message">Mám otvoriť stránku s videom?</string>
@@ -34,4 +35,6 @@
     <string name="captcha_solved">Captcha bola vyriešená</string>
     <string name="captcha_not_solved">Captcha nebola vyriešená, skús iný zdroj</string>
     <string name="subtitle_delay_failed">Nepodarilo sa nastaviť oneskorenie tituliek</string>
+    <string name="label_no_subtitles">Žiadne titulky</string>
+    <string name="not_yet_watched">Zatiaľ nesledované</string>
 </resources>

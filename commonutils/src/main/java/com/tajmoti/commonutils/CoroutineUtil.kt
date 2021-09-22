@@ -128,6 +128,13 @@ inline fun <T, R> StateFlow<T>.map(
 }
 
 /**
+ * Combines a list of flows into a flow that contains the joined lists.
+ */
+inline fun <reified T> List<Flow<T>>.combine(): Flow<List<T>> {
+    return combine(*(this).toTypedArray()) { it.toList() }
+}
+
+/**
  * Performs a running fold on the pairs, which get accumulated into a map.
  * The initial empty map is not emitted.
  */

@@ -14,8 +14,12 @@
 
     <!-- Fullscreen errors -->
     <dimen name="error_screen_hint_spacing">16dp</dimen>
+    <dimen name="error_screen_secondary_hint_spacing">4dp</dimen>
     <dimen name="error_screen_image_size">72dp</dimen>
 
     <!-- Fullscreen buttons -->
     <dimen name="fullscreen_button_size">48dp</dimen>
+    <dimen name="library_item_margin_half">3dp</dimen>
+
+    <integer name="library_columns">2</integer>
 </resources>

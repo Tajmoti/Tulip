@@ -45,4 +45,21 @@
         <item name="android:layout_height">@dimen/fullscreen_button_size</item>
         <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
     </style>
+
+    <style name="LibraryItemButton">
+        <item name="android:layout_width">@dimen/fullscreen_button_size</item>
+        <item name="android:layout_height">@dimen/fullscreen_button_size</item>
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+    </style>
+
+    <style name="ErrorScreenTextPrimary">
+        <item name="android:textSize">18sp</item>
+        <item name="android:gravity">center_horizontal</item>
+    </style>
+
+    <style name="ErrorScreenTextSecondary">
+        <item name="android:textSize">14sp</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:alpha">0.66</item>
+    </style>
 </resources>

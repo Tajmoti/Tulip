@@ -17,7 +17,7 @@ class SubtitleRepositoryImpl @Inject constructor(
     private val openSubtitlesFallbackService: OpenSubtitlesFallbackService,
 ) : SubtitleRepository {
 
-    override suspend fun fetchAvailableSubtitles(itemId: StreamableKey.Tmdb): Result<List<SubtitleInfo>> {
+    override suspend fun fetchAvailableSubtitles(itemId: StreamableKey): Result<List<SubtitleInfo>> {
         val subtitleItems = fetchForTmdbId(itemId)
             .onFailure { logger.warn("Subtitle list fetch failed for $itemId", it) }
             .getOrElse { return Result.failure(it) }
@@ -26,7 +26,7 @@ class SubtitleRepositoryImpl @Inject constructor(
     }
 
     private suspend fun fetchForTmdbId(
-        itemId: StreamableKey.Tmdb
+        itemId: StreamableKey
     ): Result<SubtitlesResponse> {
         return when (itemId) {
             is EpisodeKey.Tmdb -> runCatching {
@@ -37,6 +37,12 @@ class SubtitleRepositoryImpl @Inject constructor(
             }
             is MovieKey.Tmdb -> runCatching {
                 openSubtitlesService.searchMovie(itemId.id.id)
+            }
+            is EpisodeKey.Hosted -> {
+                Result.failure(NotImplementedError()) // TODO
+            }
+            is MovieKey.Hosted -> {
+                Result.failure(NotImplementedError()) // TODO
             }
         }
     }

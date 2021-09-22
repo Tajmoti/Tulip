@@ -8,8 +8,12 @@ import com.tajmoti.tulip.ui.BaseAdapter
 import com.tajmoti.tulip.ui.languageToIcon
 
 class StreamsAdapter(
-    val downloadCallback: (UnloadedVideoWithLanguage) -> Unit
-) : BaseAdapter<UnloadedVideoWithLanguage, ItemStreamBinding>(ItemStreamBinding::inflate) {
+    onPlayClickedListener: (UnloadedVideoWithLanguage) -> Unit,
+    val onDownloadClickListener: (UnloadedVideoWithLanguage) -> Unit
+) : BaseAdapter<UnloadedVideoWithLanguage, ItemStreamBinding>(
+    ItemStreamBinding::inflate,
+    onPlayClickedListener
+) {
 
     override fun onBindViewHolder(
         vh: Holder<ItemStreamBinding>,
@@ -24,7 +28,7 @@ class StreamsAdapter(
             languageToIcon(item.language) ?: 0,
             0
         )
-        vh.binding.root.setOnLongClickListener { downloadCallback(item); true }
+        vh.binding.root.setOnLongClickListener { onDownloadClickListener(item); true }
     }
 
     private fun getDrawable(ref: UnloadedVideoStreamRef): Int {

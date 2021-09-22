@@ -10,10 +10,10 @@ import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tajmoti.libtulip.model.hosted.MappedSearchResult
-import com.tajmoti.libtulip.model.search.TulipSearchResult
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
+import com.tajmoti.libtulip.model.search.TulipSearchResult
 import com.tajmoti.libtulip.ui.search.SearchViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentSearchBinding
@@ -36,8 +36,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         fixLayoutCentering()
         binding.viewModel = viewModel
-        val adapter = SearchAdapter()
-            .apply { callback = this@SearchFragment::onSearchResultClicked }
+        val adapter = SearchAdapter(this@SearchFragment::onSearchResultClicked)
             .setToRecyclerWithDividers(binding.recyclerSearch)
         binding.recyclerSearch.itemAnimator = null
         consume(viewModel.results) { adapter.items = it }

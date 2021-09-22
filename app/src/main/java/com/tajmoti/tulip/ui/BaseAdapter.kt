@@ -1,5 +1,6 @@
 package com.tajmoti.tulip.ui
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -7,16 +8,33 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 
 abstract class BaseAdapter<T, B : ViewBinding>(
-    val bindingCreator: (LayoutInflater, ViewGroup, Boolean) -> B
+    private val bindingCreator: (LayoutInflater, ViewGroup, Boolean) -> B,
+    /**
+     * Callback to use for when the item is clicked.
+     */
+    private val callback: ((T) -> Unit)? = null
 ) : RecyclerView.Adapter<BaseAdapter.Holder<B>>() {
+    /**
+     * Items to display in this adapter.
+     * Diffs are calculated automatically.
+     */
     var items = listOf<T>()
         set(value) {
             val diffResult = DiffUtil.calculateDiff(EqualityDiffCallback(value, field))
             field = value
             diffResult.dispatchUpdatesTo(this)
         }
-    var callback: ((T) -> Unit)? = null
 
+    /**
+     * Context of the recycler.
+     */
+    protected lateinit var context: Context
+
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        context = recyclerView.context
+        super.onAttachedToRecyclerView(recyclerView)
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder<B> {
         val inflater = LayoutInflater.from(parent.context)
@@ -28,13 +46,20 @@ abstract class BaseAdapter<T, B : ViewBinding>(
         val item = items[position]
         callback?.let { cb -> holder.itemView.setOnClickListener { cb(item) } }
         onBindViewHolder(holder, item)
+        onBindViewHolder(holder.binding, item)
     }
 
     override fun getItemCount(): Int {
         return items.size
     }
 
-    abstract fun onBindViewHolder(vh: Holder<B>, item: T)
+    open fun onBindViewHolder(vh: Holder<B>, item: T) {
+
+    }
+
+    open fun onBindViewHolder(binding: B, item: T) {
+
+    }
 
     class Holder<B : ViewBinding>(val binding: B) : RecyclerView.ViewHolder(binding.root)
 

@@ -61,4 +61,8 @@ interface Binder {
     @Binds
     @Singleton
     fun provideSubtitleRepository(s: SubtitleRepositoryImpl): SubtitleRepository
+
+    @Binds
+    @Singleton
+    fun providePlayingHistoryRepository(s: PlayingHistoryRepositoryImpl): PlayingHistoryRepository
 }

@@ -3,6 +3,7 @@ package com.tajmoti.libtulip.ui.player
 import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
+import com.tajmoti.libtulip.repository.PlayingHistoryRepository
 import com.tajmoti.libtulip.repository.SubtitleRepository
 import com.tajmoti.libtulip.service.*
 import com.tajmoti.libtulip.ui.doCancelableJob
@@ -13,6 +14,7 @@ import java.io.File
 
 class VideoPlayerViewModelImpl constructor(
     private val subtitleRepository: SubtitleRepository,
+    private val playingHistoryRepository: PlayingHistoryRepository,
     private val subDirectory: File,
     private val viewModelScope: CoroutineScope,
     private val streamableKey: StreamableKey
@@ -21,9 +23,8 @@ class VideoPlayerViewModelImpl constructor(
     /**
      * State of subtitle list loading
      */
-    private val loadingSubtitlesState = MutableStateFlow<SubtitleListLoadingState>(
-        SubtitleListLoadingState.Idle
-    )
+    private val loadingSubtitlesState = loadSubtitlesList(streamableKey)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, SubtitleListLoadingState.Loading)
 
     /**
      * State of downloading of selected subtitles
@@ -51,10 +52,12 @@ class VideoPlayerViewModelImpl constructor(
      * Currently attached media player.
      */
     private val attachedMediaPlayer = MutableStateFlow<MediaPlayerHelper?>(null)
+
     /**
      * State of the currently attached media player.
      */
-    private val mediaPlayerState = attachedMediaPlayer.flatMapMerge {
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val mediaPlayerState = attachedMediaPlayer.flatMapLatest {
         it?.state ?: flowOf(MediaPlayerHelper.State.Idle)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, MediaPlayerHelper.State.Idle)
     override val isPlaying = mediaPlayerState.map(viewModelScope) {
@@ -87,12 +90,38 @@ class VideoPlayerViewModelImpl constructor(
         .filter { it == null || isValidPosition(it) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    /**
+     * Playing progress (as a real number from 0.0 to 1.0)
+     */
+    val progress = mediaPlayerState
+        .mapNotNull { state ->
+            when (state) {
+                is MediaPlayerHelper.State.Buffering -> state.position
+                is MediaPlayerHelper.State.Error -> null
+                is MediaPlayerHelper.State.Idle -> null
+                is MediaPlayerHelper.State.Paused -> state.position
+                is MediaPlayerHelper.State.Playing -> state.position
+                is MediaPlayerHelper.State.Finished -> null
+            }
+        }
+        .filter { isValidPosition(it) }
+        .map { it.fraction }
+
     private fun isValidPosition(it: Position): Boolean {
         return (it.timeMs > 0 && it.fraction > 0.0f)
     }
 
+    /**
+     * Persisted playing position, should be used only to resume playback state
+     * the first time the media is loaded.
+     */
+    private val persistedPlayingProgress = playingHistoryRepository
+        .getLastPlayedPosition(streamableKey)
+        .map { it?.progress }
+
     override val lastValidPosition = position.mapNotNull { it?.timeMs }
         .stateIn(viewModelScope, SharingStarted.Eagerly, 0L)
+
     override val isDonePlaying = mediaPlayerState.map(viewModelScope) { state ->
         state is MediaPlayerHelper.State.Finished
     }
@@ -112,29 +141,28 @@ class VideoPlayerViewModelImpl constructor(
     }
 
     /**
-     * Represents fetching of the list of available subtitles.
-     */
-    private var subtitleFetchJob: Job? = null
-
-    /**
      * Represents fetching of the selected subtitles.
      */
     private var subtitleDownloadJob: Job? = null
 
     init {
-        loadSubtitleListIfNeeded()
+        persistPlayingPosition()
     }
 
-    private fun loadSubtitleListIfNeeded() {
-        (streamableKey as? StreamableKey.Tmdb)?.let {
-            viewModelScope.doCancelableJob(this::subtitleFetchJob, loadingSubtitles) {
-                val subtitleListFlow = loadSubtitlesList(streamableKey)
-                loadingSubtitlesState.emitAll(subtitleListFlow)
+    /**
+     * Persists each playing position update to the DB.
+     * This allows us to resume playback later.
+     */
+    @OptIn(FlowPreview::class)
+    private fun persistPlayingPosition() {
+        viewModelScope.launch {
+            progress.sample(PLAY_POSITION_SAMPLE_PERIOD_MS).collect {
+                playingHistoryRepository.setLastPlayedPosition(streamableKey, it)
             }
         }
     }
 
-    private fun loadSubtitlesList(id: StreamableKey.Tmdb) = flow {
+    private fun loadSubtitlesList(id: StreamableKey) = flow {
         emit(SubtitleListLoadingState.Loading)
         val subtitles = subtitleRepository.fetchAvailableSubtitles(id)
             .getOrElse { emit(SubtitleListLoadingState.Error); return@flow }
@@ -143,9 +171,22 @@ class VideoPlayerViewModelImpl constructor(
 
     override fun onMediaAttached(media: MediaPlayerHelper) {
         attachedMediaPlayer.value = media
-        lastValidPosition.value
-            .takeIf { it != 0L }
-            ?.let { media.time = it }
+        viewModelScope.launch { restorePlayerPositionOrProgress() }
+    }
+
+    /**
+     * Loads the time where the playback was last at
+     * and restores it to the media player if it is still attached.
+     */
+    private suspend fun restorePlayerPositionOrProgress() {
+        val lastPosition = lastValidPosition.value.takeIf { it != 0L }
+        val persistedProgress = persistedPlayingProgress.first()
+        val player = attachedMediaPlayer.value ?: return
+        if (lastPosition != null) {
+            player.time = lastPosition
+        } else if (persistedProgress != null) {
+            player.progress = persistedProgress
+        }
     }
 
     override fun onMediaDetached() {
@@ -198,7 +239,6 @@ class VideoPlayerViewModelImpl constructor(
     }
 
     sealed interface SubtitleListLoadingState {
-        object Idle : SubtitleListLoadingState
         object Loading : SubtitleListLoadingState
         data class Success(val subtitles: List<SubtitleInfo>) : SubtitleListLoadingState
         object Error : SubtitleListLoadingState
@@ -222,5 +262,12 @@ class VideoPlayerViewModelImpl constructor(
         class Heard(val time: Long, override val offsetMs: Long) : SubtitleSyncState
         class Seen(val time: Long, override val offsetMs: Long) : SubtitleSyncState
         class OffsetUsed(override val offsetMs: Long) : SubtitleSyncState
+    }
+
+    companion object {
+        /**
+         * Playing position will be stored this often.
+         */
+        private const val PLAY_POSITION_SAMPLE_PERIOD_MS = 5000L
     }
 }

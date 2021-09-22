@@ -8,7 +8,7 @@ import java.io.InputStream
 
 interface SubtitleRepository {
 
-    suspend fun fetchAvailableSubtitles(itemId: StreamableKey.Tmdb): Result<List<SubtitleInfo>>
+    suspend fun fetchAvailableSubtitles(itemId: StreamableKey): Result<List<SubtitleInfo>>
 
     suspend fun downloadSubtitle(info: SubtitleInfo): Result<InputStream>
 

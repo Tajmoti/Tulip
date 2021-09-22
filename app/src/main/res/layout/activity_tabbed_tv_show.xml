@@ -49,7 +49,7 @@
                     android:layout_height="?attr/actionBarSize"
                     android:layout_alignTop="@+id/image"
                     android:layout_gravity="top"
-                    android:background="@drawable/scrim_top"
+                    android:background="@drawable/scrim_tv_show_top"
                     android:fitsSystemWindows="true" />
 
                 <View
@@ -57,7 +57,7 @@
                     android:layout_height="128dp"
                     android:layout_alignBottom="@+id/image"
                     android:layout_gravity="bottom"
-                    android:background="@drawable/scrim_bottom"
+                    android:background="@drawable/scrim_tv_show_bottom"
                     android:fitsSystemWindows="true" />
 
                 <androidx.appcompat.widget.Toolbar

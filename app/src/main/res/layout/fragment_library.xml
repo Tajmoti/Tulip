@@ -20,6 +20,8 @@
             android:id="@+id/recycler_favorites"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:padding="@dimen/library_item_margin_half"
             android:visibility="@{!viewModel.favoriteItems.empty}" />
 
         <ImageView
@@ -36,14 +38,31 @@
 
         <TextView
             android:id="@+id/text_library_error"
-            android:layout_width="wrap_content"
+            style="@style/ErrorScreenTextPrimary"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/activity_vertical_margin"
             android:layout_marginTop="@dimen/error_screen_hint_spacing"
+            android:layout_marginEnd="@dimen/activity_vertical_margin"
             android:text="@string/library_empty_hint"
             android:visibility="@{viewModel.favoriteItems.isEmpty()}"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/image_library_error" />
+
+        <TextView
+            android:id="@+id/text_library_error_description"
+            style="@style/ErrorScreenTextSecondary"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/activity_vertical_margin"
+            android:layout_marginTop="@dimen/error_screen_secondary_hint_spacing"
+            android:layout_marginEnd="@dimen/activity_vertical_margin"
+            android:text="@string/library_empty_small"
+            android:visibility="@{viewModel.favoriteItems.isEmpty()}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/text_library_error" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

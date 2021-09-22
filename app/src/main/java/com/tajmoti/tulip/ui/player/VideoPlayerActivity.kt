@@ -96,8 +96,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         binding.streamsViewModel = streamsViewModel
         libVLC = LibVLC(this, arrayListOf("-vvv"))
 
-        val adapter = StreamsAdapter(this::onStreamClickedDownload)
-        adapter.callback = this::onStreamClickedPlay
+        val adapter = StreamsAdapter(this::onStreamClickedPlay, this::onStreamClickedDownload)
         setupPlayerUi(adapter)
         setupFlowCollectors(adapter)
         rescheduleVideoControlAutoHide()

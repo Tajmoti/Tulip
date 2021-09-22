@@ -31,6 +31,11 @@ class VlcMediaHelper(
      */
     private var attached = false
 
+    /**
+     * Time that the media should seek to ASAP.
+     */
+    private var timeToSet: MediaPosition? = null
+
 
     fun attach(view: VLCVideoLayout) {
         if (!attached)
@@ -55,13 +60,21 @@ class VlcMediaHelper(
     override var progress: Float
         get() = player.time.toFloat() / player.length.toFloat()
         set(value) {
-            player.time = (value * player.length).toLong()
+            if (player.isPlaying) {
+                player.time = (value * player.length).toLong()
+            } else {
+                timeToSet = MediaPosition.Fraction(value)
+            }
         }
 
     override var time: Long
         get() = player.time
         set(value) {
-            player.time = value
+            if (player.isPlaying) {
+                player.time = value
+            } else {
+                timeToSet = MediaPosition.AbsoluteTime(value)
+            }
         }
 
     override val length: Long
@@ -105,8 +118,10 @@ class VlcMediaHelper(
                     )
                 }
             }
-            MediaPlayer.Event.Playing ->
+            MediaPlayer.Event.Playing -> {
+                onPlayingEvent()
                 MediaPlayerHelper.State.Playing(Position(player.position, player.time))
+            }
             MediaPlayer.Event.Paused ->
                 MediaPlayerHelper.State.Paused(Position(player.position, player.time))
             MediaPlayer.Event.EndReached ->
@@ -116,6 +131,18 @@ class VlcMediaHelper(
             else -> null
         }
         newState?.let { state.value = it }
+    }
+
+    private fun onPlayingEvent() {
+        timeToSet?.let { time = positionToTimeMs(it) }
+        timeToSet = null
+    }
+
+    private fun positionToTimeMs(it: MediaPosition): Long {
+        return when (it) {
+            is MediaPosition.AbsoluteTime -> it.timeMs
+            is MediaPosition.Fraction -> (it.progress * player.length).toLong()
+        }
     }
 
 
@@ -131,5 +158,10 @@ class VlcMediaHelper(
 
     init {
         player.setEventListener(this)
+    }
+
+    sealed interface MediaPosition {
+        class Fraction(val progress: Float) : MediaPosition
+        class AbsoluteTime(val timeMs: Long) : MediaPosition
     }
 }
