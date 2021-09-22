@@ -60,6 +60,13 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     private lateinit var mainHandler: Handler
 
     /**
+     * Function to be called for each registered message
+     */
+    private val messageHandlers = mapOf<Int, (Message) -> Unit>(
+        MESSAGE_HIDE_UI to { uiHider() }
+    )
+
+    /**
      * Hides the UI after a while if the video is playing or buffering
      */
     private val uiHider: () -> Unit = {
@@ -81,14 +88,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mainHandler = object : Handler(mainLooper) {
-            override fun handleMessage(msg: Message) {
-                super.handleMessage(msg)
-                if (msg.what == 5) {
-                    uiHider()
-                }
-            }
-        }
+        mainHandler = Handler(mainLooper, EasyHandler(messageHandlers))
         binding.viewModel = playerViewModel
         binding.streamsViewModel = streamsViewModel
         libVLC = LibVLC(this, arrayListOf("-vvv"))
@@ -192,8 +192,8 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     private fun rescheduleVideoControlAutoHide() {
-        mainHandler.removeMessages(5)
-        mainHandler.sendEmptyMessageDelayed(5, UI_HIDE_DELAY_MS)
+        mainHandler.removeMessages(MESSAGE_HIDE_UI)
+        mainHandler.sendEmptyMessageDelayed(MESSAGE_HIDE_UI, UI_HIDE_DELAY_MS)
     }
 
     /**
@@ -503,6 +503,8 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     companion object {
+        private const val MESSAGE_HIDE_UI = 1
+
         /**
          * After how many seconds the UI will be hidden
          */
