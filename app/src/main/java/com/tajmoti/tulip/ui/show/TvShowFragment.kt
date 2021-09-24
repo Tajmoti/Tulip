@@ -3,7 +3,6 @@ package com.tajmoti.tulip.ui.show
 import android.os.Bundle
 import android.view.View
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.bumptech.glide.Glide
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
@@ -26,21 +25,21 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
     ActivityTabbedTvShowBinding::inflate
 ) {
     private val viewModel by viewModelsDelegated<TvShowViewModel, AndroidTvShowViewModel>()
-    private val args: TvShowFragmentArgs by navArgs()
     private lateinit var adapter: GroupieAdapter
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.viewModel = viewModel
-        binding.fab.setOnClickListener { viewModel.toggleFavorites(args.itemKey) }
+        binding.fab.setOnClickListener { viewModel.toggleFavorites() }
         adapter = GroupieAdapter()
         binding.recyclerTvShow.adapter = adapter
         val divider = DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
         binding.recyclerTvShow.addItemDecoration(divider)
 
-        consume(viewModel.state) { onStateChanged(it) }
-        consume(viewModel.name) { onNameChanged(it) }
+        consume(viewModel.backdropPath) { it?.let { onBackdropPathChanged(it) } }
+        consume(viewModel.seasons) { it?.let { onSeasonsChanged(it) } }
+        consume(viewModel.name) { it?.let { onNameChanged(it) } }
     }
 
     override fun onStart() {
@@ -53,24 +52,19 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
         (requireActivity() as MainActivity).swapActionBar(null)
     }
 
-    private suspend fun onStateChanged(state: TvShowViewModel.State) {
-        if (state !is TvShowViewModel.State.Success)
-            return
-        onLoadingFinished(state)
-    }
-
-    private fun onNameChanged(name: String?) {
-        if (name == null)
-            return
+    private fun onNameChanged(name: String) {
         binding.toolbarLayout.title = name
     }
 
-    private suspend fun onLoadingFinished(state: TvShowViewModel.State.Success) {
-        Glide.with(this).load(state.backdropPath).into(binding.imgTvShow)
-        val seasons = withContext(Dispatchers.Default) {
-            state.seasons.map { season -> createEpisodeGroup(season) }
+    private fun onBackdropPathChanged(backdropPath: String) {
+        Glide.with(this).load(backdropPath).into(binding.imgTvShow)
+    }
+
+    private suspend fun onSeasonsChanged(seasons: List<TulipSeasonInfo>) {
+        val seasonGroups = withContext(Dispatchers.Default) {
+            seasons.map { season -> createEpisodeGroup(season) }
         }
-        adapter.update(seasons)
+        adapter.update(seasonGroups)
     }
 
     private fun createEpisodeGroup(season: TulipSeasonInfo): ExpandableGroup {

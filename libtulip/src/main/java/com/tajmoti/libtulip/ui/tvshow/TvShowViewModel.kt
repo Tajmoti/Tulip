@@ -1,7 +1,6 @@
 package com.tajmoti.libtulip.ui.tvshow
 
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
-import com.tajmoti.libtulip.model.key.TvShowKey
 import kotlinx.coroutines.flow.StateFlow
 
 interface TvShowViewModel {
@@ -11,9 +10,14 @@ interface TvShowViewModel {
     val name: StateFlow<String?>
 
     /**
-     * Data loading state
+     * Backdrop image path of this TV show
      */
-    val state: StateFlow<State>
+    val backdropPath: StateFlow<String?>
+
+    /**
+     * Seasons belonging to this TV show
+     */
+    val seasons: StateFlow<List<TulipSeasonInfo>?>
 
     /**
      * True if an error occurred during show loading
@@ -33,19 +37,5 @@ interface TvShowViewModel {
     /**
      * Adds or removes this show from favorites
      */
-    fun toggleFavorites(key: TvShowKey)
-
-    sealed interface State {
-        object Loading : State
-
-        data class Success(
-            val backdropPath: String?,
-            val seasons: List<TulipSeasonInfo>
-        ) : State
-
-        object Error : State
-
-        val success: Boolean
-            get() = this is Success
-    }
+    fun toggleFavorites()
 }
