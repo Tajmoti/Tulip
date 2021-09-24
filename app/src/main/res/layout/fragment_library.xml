@@ -20,14 +20,14 @@
             android:id="@+id/recycler_favorites"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="@{viewModel.favoriteItems.empty ? View.GONE : View.VISIBLE}" />
+            android:visibility="@{!viewModel.favoriteItems.empty}" />
 
         <ImageView
             android:id="@+id/image_library_error"
             android:layout_width="@dimen/error_screen_image_size"
             android:layout_height="@dimen/error_screen_image_size"
             android:src="@drawable/ic_baseline_star_24"
-            android:visibility="@{viewModel.favoriteItems.isEmpty() ? View.VISIBLE : View.GONE}"
+            android:visibility="@{viewModel.favoriteItems.isEmpty()}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
@@ -40,7 +40,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/error_screen_hint_spacing"
             android:text="@string/library_empty_hint"
-            android:visibility="@{viewModel.favoriteItems.isEmpty() ? View.VISIBLE : View.GONE}"
+            android:visibility="@{viewModel.favoriteItems.isEmpty()}"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/image_library_error" />

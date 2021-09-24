@@ -75,7 +75,7 @@
             android:layout_gravity="center"
             android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:visibility="@{viewModel.error ? View.VISIBLE : View.GONE}">
+            android:visibility="@{viewModel.error}">
 
             <ImageView
                 android:layout_width="72dp"
@@ -100,7 +100,7 @@
             android:id="@+id/recycler_tv_show"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="@{viewModel.error ? View.GONE : View.VISIBLE}"
+            android:visibility="@{!viewModel.error}"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 

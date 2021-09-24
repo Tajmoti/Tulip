@@ -1,11 +1,12 @@
 package com.tajmoti.tulip.ui;
 
 import android.graphics.drawable.Drawable;
+import android.view.View;
 import android.widget.ImageView;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.ColorRes;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewKt;
 import androidx.databinding.BindingAdapter;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -27,5 +28,10 @@ public class DataBindingAdapters {
     public static void setIndicatorColor(CircularProgressIndicator indicator, @ColorRes int colorRes) {
         int color = ContextCompat.getColor(indicator.getContext(), colorRes);
         indicator.setIndicatorColor(color);
+    }
+
+    @BindingAdapter("android:visibility")
+    public static void setVisibility(View view, Boolean value) {
+        ViewKt.setVisible(view, value);
     }
 }
