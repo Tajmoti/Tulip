@@ -63,13 +63,20 @@ class StreamsViewModelImpl constructor(
         }
         .shareIn(viewModelScope, SharingStarted.Eagerly)
 
-    override val directLoaded = linkLoadingState
-        .mapNotNull { state ->
+    override val videoLinkToPlay = linkLoadingState
+        .map { state ->
             (state as? LinkLoadingState.LoadedDirect)
-                ?.let { LoadedLink(it.stream, it.download, it.directLink) }
+                ?.takeIf { !it.download }
+                ?.let { LoadedLink(it.stream, it.directLink) }
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
-
+    override val videoLinkToDownload = linkLoadingState
+        .map { state ->
+            (state as? LinkLoadingState.LoadedDirect)
+                ?.takeIf { it.download }
+                ?.let { LoadedLink(it.stream, it.directLink) }
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
     override val linkLoadingError = linkLoadingState
         .mapNotNull { state ->
             (state as? LinkLoadingState.Error)
@@ -102,6 +109,7 @@ class StreamsViewModelImpl constructor(
             this::linkExtractionJob,
             loadingStreamOrDirectLink
         ) {
+            linkLoadingState.emit(LinkLoadingState.Idle)
             val flow = when (val info = stream.info) {
                 is VideoStreamRef.Resolved ->
                     processResolvedLink(stream, info, download, auto)

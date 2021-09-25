@@ -136,7 +136,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
             vlc?.let { playerViewModel.onWordHeard(it.time) }
         }
         binding.buttonRestartVideo.setOnClickListener {
-            streamsViewModel.directLoaded.value?.let { reloadVideo(it.directLink) }
+            onVideoToPlayChanged(streamsViewModel.videoLinkToPlay.value)
         }
         binding.buttonChangeSource.setOnClickListener {
             binding.containerStreamSelection.isVisible = true
@@ -164,7 +164,8 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         consume(playerViewModel.isDonePlaying, this::onDonePlayingChanged)
         consume(streamsViewModel.linksResult) { it?.let { adapter.items = it.streams } }
         consume(streamsViewModel.directLoadingUnsupported, this::onDirectLinkUnsupported)
-        consume(streamsViewModel.directLoaded) { onDirectLinkLoaded(it) }
+        consume(streamsViewModel.videoLinkToPlay) { onVideoToPlayChanged(it) }
+        consume(streamsViewModel.videoLinkToDownload) { onVideoToDownloadChanged(it) }
         consume(streamsViewModel.linkLoadingError, this::onDirectLinkLoadingError)
         consume(streamsViewModel.streamableInfo, this::onStreamableInfo)
     }
@@ -231,19 +232,28 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
     /**
      * If not null, a link to a direct video stream was selected and loaded,
-     * that means we can start playing or downloading.
+     * that means we can start playing.
      */
-    private fun onDirectLinkLoaded(it: LoadedLink?) {
-        if (it == null) {
-            binding.buttonRestartVideo.isVisible = false
-            return
-        }
-        binding.buttonRestartVideo.isVisible = true
-        if (!it.download) {
-            startVideo(it.directLink, true)
+    private fun onVideoToPlayChanged(it: LoadedLink?) {
+        if (it?.directLink != null) {
+            vlc?.release()
+            vlc = VlcMediaHelper(libVLC, it.directLink)
+                .also { it.attachAndPlay(binding.videoLayout) }
+                .also { playerViewModel.onMediaAttached(it) }
+            onSubtitlesChanged(playerViewModel.subtitleFile.value)
         } else {
-            toast(R.string.starting_download)
+            vlc?.release()
+            vlc = null
         }
+    }
+
+    /**
+     * If not null, a link to a direct video stream was selected and loaded,
+     * that means we can start downloading.
+     */
+    private fun onVideoToDownloadChanged(it: LoadedLink?) {
+        if (it != null)
+            toast(R.string.starting_download)
     }
 
     /**
@@ -252,10 +262,10 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
      */
     private fun onDirectLinkUnsupported(it: SelectedLink) {
         if (!it.download) {
-            startVideo(it.stream.url, false)
+            startVideoExternal(it.stream.url)
         } else {
             Toast.makeText(this, R.string.stream_not_downloadable, Toast.LENGTH_SHORT)
-                    .show()
+                .show()
         }
     }
 
@@ -269,17 +279,17 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
                 handleCaptcha(link)
             link.download ->
                 Toast.makeText(this, R.string.direct_loading_failure, Toast.LENGTH_SHORT)
-                        .show()
+                    .show()
             else ->
                 MaterialAlertDialogBuilder(this)
-                        .setIcon(R.drawable.ic_sad_24)
-                        .setTitle(R.string.direct_loading_failure)
-                        .setMessage(R.string.direct_loading_failure_message)
-                        .setPositiveButton(R.string.direct_loading_failure_yes) { _, _ ->
-                            startVideo(link.stream.url, false)
-                        }
-                        .setNegativeButton(R.string.direct_loading_failure_no) { _, _ -> }
-                        .show()
+                    .setIcon(R.drawable.ic_sad_24)
+                    .setTitle(R.string.direct_loading_failure)
+                    .setMessage(R.string.direct_loading_failure_message)
+                    .setPositiveButton(R.string.direct_loading_failure_yes) { _, _ ->
+                        startVideoExternal(link.stream.url)
+                    }
+                    .setNegativeButton(R.string.direct_loading_failure_no) { _, _ -> }
+                    .show()
         }
     }
 
@@ -290,17 +300,17 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
 
     private val captchaSolverLauncher =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == RESULT_OK) {
-                    toast(R.string.captcha_solved)
-                    lastLink?.let { link ->
-                        val ref = UnloadedVideoStreamRef(link.stream, true)
-                        streamsViewModel.onStreamClicked(ref, link.download)
-                    }
-                } else {
-                    toast(R.string.captcha_not_solved)
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                toast(R.string.captcha_solved)
+                lastLink?.let { link ->
+                    val ref = UnloadedVideoStreamRef(link.stream, true)
+                    streamsViewModel.onStreamClicked(ref, link.download)
                 }
+            } else {
+                toast(R.string.captcha_not_solved)
             }
+        }
 
     private fun handleCaptcha(link: FailedLink) {
         lastLink = link
@@ -312,22 +322,15 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     /**
-     * A link was clicked and its redirects resolved.
-     * If we also extracted a direct video link, play it here,
-     * otherwise open a web browser.
+     * Open a web browser to play a link to a hosting page.
      */
-    private fun startVideo(url: String, direct: Boolean) {
-        if (direct) {
-            reloadVideo(url)
-        } else {
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.data = Uri.parse(url)
-            try {
-                startActivity(intent)
-            } catch (e: ActivityNotFoundException) {
-                toast(R.string.web_browser_not_installed)
-            }
-            binding
+    private fun startVideoExternal(url: String) {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(url)
+        try {
+            startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            toast(R.string.web_browser_not_installed)
         }
     }
 
@@ -348,11 +351,11 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
     private fun updatePlayPauseImage(showPause: Boolean) {
         binding.buttonPlayResume.setImageResource(
-                if (showPause) {
-                    R.drawable.ic_baseline_pause_24
-                } else {
-                    R.drawable.ic_baseline_play_arrow_24
-                }
+            if (showPause) {
+                R.drawable.ic_baseline_pause_24
+            } else {
+                R.drawable.ic_baseline_play_arrow_24
+            }
         )
     }
 
@@ -481,14 +484,6 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
     private fun onVideoClicked() {
         binding.groupVideoControls.isVisible = !binding.groupVideoControls.isVisible
-    }
-
-    private fun reloadVideo(url: String) {
-        vlc?.release()
-        vlc = VlcMediaHelper(libVLC, url)
-            .also { it.attachAndPlay(binding.videoLayout) }
-            .also { playerViewModel.onMediaAttached(it) }
-        onSubtitlesChanged(playerViewModel.subtitleFile.value)
     }
 
     inner class OnSeekBarChangeListener : SeekBar.OnSeekBarChangeListener {

@@ -51,7 +51,12 @@ interface StreamsViewModel {
     /**
      * Selected item with direct link loaded.
      */
-    val directLoaded: StateFlow<LoadedLink?>
+    val videoLinkToPlay: StateFlow<LoadedLink?>
+
+    /**
+     * Selected item for playing is loaded
+     */
+    val videoLinkToDownload: StateFlow<LoadedLink?>
 
     /**
      * Selected item failed to load redirects or failed to load direct link.
