@@ -1,6 +1,7 @@
 ## [Unreleased]
 ### Changed
 - Fixed episode list not keeping its state when returning from another screen
+- Fixed last item in library not disappearing from library UI when removed
 
 ## [0.9.0] - 2021-09-20
 ### Added
