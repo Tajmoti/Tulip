@@ -71,7 +71,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
      */
     private val uiHider: () -> Unit = {
         setupFullscreen()
-        if (playerViewModel.isPlayingOrBuffering.value)
+        if (playerViewModel.isPlaying.value)
             binding.groupVideoControls.isVisible = false
     }
 
@@ -158,7 +158,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         consume(playerViewModel.downloadingError) { if (it) toast(R.string.subtitle_download_failure) }
         consume(playerViewModel.subtitleOffset, this::onSubtitlesDelayChanged)
         consume(playerViewModel.showPlayButton, this::updatePlayPauseButton)
-        consume(playerViewModel.isPlayingOrBuffering, this::onPlayingOrBufferingChanged)
+        consume(playerViewModel.isPlaying, this::onPlayingChanged)
         consume(playerViewModel.buffering, this::updateBuffering)
         consume(playerViewModel.position, this::updatePosition)
         consume(playerViewModel.isDonePlaying, this::onDonePlayingChanged)
@@ -348,7 +348,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         }
     }
 
-    private fun onPlayingOrBufferingChanged(playing: Boolean) {
+    private fun onPlayingChanged(playing: Boolean) {
         if (playing)
             rescheduleVideoControlAutoHide()
     }
