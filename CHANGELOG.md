@@ -9,6 +9,7 @@
 - Fixed missing ':' between hours and minutes in video player
 - Fixed issue where the video is restarted when returning from another application
 - Don't hide player UI automatically if the video is buffering
+- Increased size of the player back button and source selection exit button
 
 ## [0.9.0] - 2021-09-20
 ### Added

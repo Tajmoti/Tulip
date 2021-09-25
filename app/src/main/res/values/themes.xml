@@ -22,11 +22,11 @@
 
     <style name="Theme.Tulip.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
-    <style name="FullscreenButton" parent="Widget.AppCompat.Button.Borderless">
+    <style name="FullscreenTextButton" parent="Widget.AppCompat.Button.Borderless">
         <item name="android:background">?android:selectableItemBackground</item>
     </style>
 
-    <style name="FullscreenImageButton" parent="Widget.AppCompat.Button.Borderless">
+    <style name="FullscreenImageButtonLarge" parent="Widget.AppCompat.Button.Borderless">
         <item name="android:background">?android:selectableItemBackgroundBorderless</item>
         <item name="android:scaleType">fitCenter</item>
     </style>
@@ -38,5 +38,11 @@
     <style name="FullscreenIcon">
         <item name="android:scaleType">fitCenter</item>
         <item name="drawableTint">@color/white</item>
+    </style>
+
+    <style name="FullscreenImageButtonSmall">
+        <item name="android:layout_width">@dimen/fullscreen_button_size</item>
+        <item name="android:layout_height">@dimen/fullscreen_button_size</item>
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
     </style>
 </resources>
