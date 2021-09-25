@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Changed
+- Fixed episode list not keeping its state when returning from another screen
 
 ## [0.9.0] - 2021-09-20
 ### Added

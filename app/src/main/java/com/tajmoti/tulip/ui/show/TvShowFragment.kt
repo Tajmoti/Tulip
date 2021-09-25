@@ -27,9 +27,23 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
     private val viewModel by viewModelsDelegated<TvShowViewModel, AndroidTvShowViewModel>()
     private lateinit var adapter: GroupieAdapter
 
+    /**
+     * Seasons which are already set to the UI.
+     * Avoids useless Groupie adapter refreshes since they don't work properly.
+     */
+    private var appliedSeasons: List<TulipSeasonInfo>? = null
+
+    /**
+     * List of expanded season indices to restore when recreating the fragment.
+     * Cleared after the list is loaded the first time.
+     */
+    private var expandedIndices: List<Int>? = null
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        expandedIndices = savedInstanceState?.getIntArray(SAVED_STATE_EXPANDED_SEASONS)?.toList()
+
         binding.viewModel = viewModel
         binding.fab.setOnClickListener { viewModel.toggleFavorites() }
         adapter = GroupieAdapter()
@@ -40,6 +54,17 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
         consume(viewModel.backdropPath) { it?.let { onBackdropPathChanged(it) } }
         consume(viewModel.seasons) { it?.let { onSeasonsChanged(it) } }
         consume(viewModel.name) { it?.let { onNameChanged(it) } }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        val indices = getCurrentlyExpandedIndices().toIntArray()
+        outState.putIntArray(SAVED_STATE_EXPANDED_SEASONS, indices)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        appliedSeasons = null
     }
 
     override fun onStart() {
@@ -61,10 +86,36 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
     }
 
     private suspend fun onSeasonsChanged(seasons: List<TulipSeasonInfo>) {
+        if (appliedSeasons == seasons)
+            return
+        appliedSeasons = seasons
         val seasonGroups = withContext(Dispatchers.Default) {
             seasons.map { season -> createEpisodeGroup(season) }
         }
-        adapter.update(seasonGroups)
+        updateAndRestoreExpandState(seasonGroups)
+    }
+
+    private fun updateAndRestoreExpandState(seasonGroups: List<ExpandableGroup>) {
+        // Remember expanded positions
+        val expandedIndicesLocal = getInitiallyExpandedIndices() ?: getCurrentlyExpandedIndices()
+        adapter.replaceAll(seasonGroups)
+        // Re-expand them and ignore potential errors (very unlikely)
+        expandedIndicesLocal
+            .forEach { runCatching { getExpandableAtPos(it).onToggleExpanded() } }
+    }
+
+    private fun getInitiallyExpandedIndices(): List<Int>? {
+        return expandedIndices?.also { expandedIndices = null }
+    }
+
+    private fun getCurrentlyExpandedIndices(): List<Int> {
+        return (0 until adapter.groupCount)
+            .filter { getExpandableAtPos(it).isExpanded }
+    }
+
+    private fun getExpandableAtPos(it: Int): ExpandableGroup {
+        val group = adapter.getTopLevelGroup(it)
+        return group as ExpandableGroup
     }
 
     private fun createEpisodeGroup(season: TulipSeasonInfo): ExpandableGroup {
@@ -84,5 +135,9 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
     private fun goToStreamsScreen(episodeKey: EpisodeKey) {
         TvShowFragmentDirections.actionNavigationTvShowToVideoPlayerActivity(episodeKey)
             .let { findNavController().navigate(it) }
+    }
+
+    companion object {
+        private const val SAVED_STATE_EXPANDED_SEASONS = "expanded_seasons"
     }
 }
