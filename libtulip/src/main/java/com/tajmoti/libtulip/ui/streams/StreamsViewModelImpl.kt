@@ -41,7 +41,7 @@ class StreamsViewModelImpl constructor(
     override val linksResult = streamLoadingState
         .map { (it as? State.Success)?.streams }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
-
+    override val linksAnyResult = MutableStateFlow(false)
     override val linksNoResult = MutableStateFlow(false)
 
     override val linksLoading = streamLoadingState
@@ -165,6 +165,7 @@ class StreamsViewModelImpl constructor(
 
     private fun updateAnyErrorsValue() {
         val successState = (streamLoadingState.value as? State.Success)
+        linksAnyResult.value = successState?.streams?.streams?.any() ?: false
         linksNoResult.value = successState?.streams?.streams?.none() ?: false
     }
 

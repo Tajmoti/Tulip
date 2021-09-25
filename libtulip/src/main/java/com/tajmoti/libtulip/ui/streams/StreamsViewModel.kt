@@ -23,6 +23,11 @@ interface StreamsViewModel {
     val linksResult: StateFlow<StreamableInfoWithLangLinks?>
 
     /**
+     * True when loading is finished and at least one stream was found.
+     */
+    val linksAnyResult: StateFlow<Boolean>
+
+    /**
      * True when loading is finished, but no streams were found.
      */
     val linksNoResult: StateFlow<Boolean>
