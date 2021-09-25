@@ -4,10 +4,9 @@ import com.tajmoti.libtulip.model.hosted.StreamingService
 import java.io.Serializable
 
 sealed interface StreamableKey : Serializable {
-
     sealed interface Hosted : StreamableKey {
         val streamingService: StreamingService
-        val streamableKey: String
+        val id: String
     }
 
     sealed interface Tmdb : StreamableKey

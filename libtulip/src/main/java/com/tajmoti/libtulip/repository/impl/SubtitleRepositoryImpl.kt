@@ -4,9 +4,7 @@ import com.tajmoti.commonutils.logger
 import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libopensubtitles.OpenSubtitlesService
 import com.tajmoti.libopensubtitles.model.search.SubtitlesResponse
-import com.tajmoti.libtulip.model.key.EpisodeKey
-import com.tajmoti.libtulip.model.key.MovieKey
-import com.tajmoti.libtulip.model.key.StreamableKey
+import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.repository.SubtitleRepository
 import java.io.InputStream
@@ -32,8 +30,8 @@ class SubtitleRepositoryImpl @Inject constructor(
     ): Result<SubtitlesResponse> {
         return when (itemId) {
             is EpisodeKey.Tmdb -> runCatching {
-                val tvId = itemId.seasonKey.tvShowKey.id.id
-                val season = itemId.seasonKey.seasonNumber
+                val tvId = itemId.tvShowKey.id.id
+                val season = itemId.seasonNumber
                 val episode = itemId.episodeNumber
                 openSubtitlesService.searchEpisode(tvId, season, episode)
             }

@@ -6,6 +6,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.bumptech.glide.Glide
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
+import com.tajmoti.libtulip.model.info.seasonNumber
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import com.tajmoti.tulip.R
@@ -127,7 +128,7 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
         val header = ExpandableHeaderItem(seasonTitle)
         val groupAdapter = ExpandableGroup(header)
         val mapped = season.episodes
-            .map { EpisodeItem(it.first.number, it.first.name) { goToStreamsScreen(it.second) } }
+            .map { EpisodeItem(it.episodeNumber, it.name) { goToStreamsScreen(it.key) } }
         groupAdapter.addAll(mapped)
         return groupAdapter
     }

@@ -1,6 +1,6 @@
 package com.tajmoti.libtulip.ui.search
 
-import com.tajmoti.libtulip.model.info.TulipSearchResult
+import com.tajmoti.libtulip.model.search.TulipSearchResult
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import kotlinx.coroutines.flow.Flow

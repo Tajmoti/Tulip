@@ -2,9 +2,9 @@ package com.tajmoti.tulip.ui.search
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.tajmoti.libtulip.model.hosted.HostedItem
+import com.tajmoti.libtulip.model.hosted.MappedSearchResult
 import com.tajmoti.libtulip.model.info.LanguageCode
-import com.tajmoti.libtulip.model.info.TulipSearchResult
+import com.tajmoti.libtulip.model.search.TulipSearchResult
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.IconSearchResultLanguageBinding
 import com.tajmoti.tulip.databinding.ItemSearchBinding
@@ -21,7 +21,7 @@ class SearchAdapter : BaseAdapter<TulipSearchResult, ItemSearchBinding>(
     ) {
         val fstResult = item.results.first()
         val name = if (item.tmdbId != null) {
-            fstResult.name
+            fstResult.info.name
         } else {
             vh.itemView.context.getString(
                 R.string.other_results
@@ -32,17 +32,17 @@ class SearchAdapter : BaseAdapter<TulipSearchResult, ItemSearchBinding>(
         vh.binding.searchResultName.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, 0, 0, 0)
 
         val languages = item.results
-            .map { it.language }
+            .map { it.info.language }
             .distinct()
             .sorted()
             .map { LanguageCode(it) }
         inflateViewsForLanguages(languages, vh.binding.root)
     }
 
-    private fun getDrawableByType(item: HostedItem?): Int {
+    private fun getDrawableByType(item: MappedSearchResult?): Int {
         return when (item) {
-            is HostedItem.TvShow -> R.drawable.ic_baseline_live_tv_24
-            is HostedItem.Movie -> R.drawable.ic_baseline_local_movies_24
+            is MappedSearchResult.TvShow -> R.drawable.ic_baseline_live_tv_24
+            is MappedSearchResult.Movie -> R.drawable.ic_baseline_local_movies_24
             else -> R.drawable.ic_baseline_more_horiz_24
         }
     }

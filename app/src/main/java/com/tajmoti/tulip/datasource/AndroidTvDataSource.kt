@@ -1,10 +1,11 @@
 package com.tajmoti.tulip.datasource
 
-import com.tajmoti.libtmdb.model.movie.Movie
-import com.tajmoti.libtmdb.model.tv.Episode
-import com.tajmoti.libtmdb.model.tv.Season
-import com.tajmoti.libtmdb.model.tv.Tv
 import com.tajmoti.libtulip.data.LocalTvDataSource
+import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
+import com.tajmoti.libtulip.model.info.TulipMovie
+import com.tajmoti.libtulip.model.info.TulipSeasonInfo
+import com.tajmoti.libtulip.model.info.TulipTvShowInfo
+import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.tulip.db.dao.tmdb.TmdbDao
 import com.tajmoti.tulip.db.entity.tmdb.DbTmdbSeason
 import javax.inject.Inject
@@ -13,75 +14,71 @@ class AndroidTvDataSource @Inject constructor(
     private val dao: TmdbDao
 ) : LocalTvDataSource {
 
-    override suspend fun getTv(tvId: Long): Tv? {
-        return dao.getTv(tvId)?.let { tv ->
-            val seasons = getSeasons(tvId).map { season -> season.fromDb() }
-            tv.fromDb(seasons)
+    override suspend fun getTvShow(key: TvShowKey.Tmdb): TulipTvShowInfo.Tmdb? {
+        return dao.getTv(key.id.id)?.let { tv ->
+            val seasons = getSeasons(key).map { season -> season }
+            tv.fromDb(key, seasons)
         }
     }
 
-    override suspend fun insertTv(tv: Tv) {
+    private suspend fun insertTv(tv: TulipTvShowInfo.Tmdb) {
         dao.insertTv(tv.toDb())
     }
 
-    override suspend fun insertCompleteTv(tv: Tv, seasons: List<Season>) {
-        val episodes = seasons.flatMap { it.episodes }
+    override suspend fun insertTvShow(tv: TulipTvShowInfo.Tmdb) {
         insertTv(tv)
-        insertSeasons(tv.id, seasons)
-        insertEpisodes(tv.id, episodes)
+        insertSeasons(tv.key, tv.seasons)
     }
 
-    override suspend fun getSeason(tvId: Long, seasonNumber: Int): Season? {
-        return dao.getSeason(tvId, seasonNumber)
-            ?.let { getSeasonWithEpisodes(tvId, seasonNumber, it) }
+    override suspend fun getSeason(key: SeasonKey.Tmdb): TulipSeasonInfo.Tmdb? {
+        return dao.getSeason(key.tvShowKey.id.id, key.seasonNumber)
+            ?.let { getSeasonWithEpisodes(key, it) }
     }
 
     private suspend fun getSeasonWithEpisodes(
-        tvId: Long,
-        seasonNumber: Int,
+        seasonKey: SeasonKey.Tmdb,
         dbSeason: DbTmdbSeason
-    ): Season {
-        val episodes = getEpisodes(tvId, seasonNumber)
-        return dbSeason.fromDb(episodes)
+    ): TulipSeasonInfo.Tmdb {
+        val episodes = getEpisodes(seasonKey)
+        return dbSeason.fromDb(seasonKey, episodes)
     }
 
-    override suspend fun getSeasons(tvId: Long): List<Season> {
-        return dao.getSeasons(tvId).map { getSeasonWithEpisodes(tvId, it.seasonNumber, it) }
+    override suspend fun getSeasons(key: TvShowKey.Tmdb): List<TulipSeasonInfo.Tmdb> {
+        return dao.getSeasons(key.id.id)
+            .map {
+                val seasonKey = SeasonKey.Tmdb(key, it.seasonNumber)
+                getSeasonWithEpisodes(seasonKey, it)
+            }
     }
 
-    override suspend fun insertSeason(tvId: Long, season: Season) {
-        val episodes = season.episodes.map { it.toDb(tvId) }
-        dao.insertSeason(season.toDb(tvId))
-        dao.insertEpisodes(episodes)
-    }
-
-    override suspend fun insertSeasons(tvId: Long, seasons: List<Season>) {
-        val dbSeasons = seasons.map { season -> season.toDb(tvId) }
+    private suspend inline fun insertSeasons(
+        tvId: TvShowKey.Tmdb,
+        seasons: List<TulipSeasonInfo.Tmdb>
+    ) {
+        val dbSeasons = seasons.map { season -> season.toDb(tvId.id.id) }
         dao.insertSeasons(dbSeasons)
+        val episodes = seasons.flatMap { it.episodes }
+        insertEpisodes(tvId.id.id, episodes)
     }
 
-    override suspend fun getEpisode(tvId: Long, seasonNumber: Int, episodeNumber: Int): Episode? {
-        return dao.getEpisode(tvId, seasonNumber, episodeNumber)?.fromDb()
+    override suspend fun getEpisode(key: EpisodeKey.Tmdb): TulipEpisodeInfo.Tmdb? {
+        return dao.getEpisode(key.tvShowKey.id.id, key.seasonNumber, key.episodeNumber)?.fromDb(key)
     }
 
-    override suspend fun getEpisodes(tvId: Long, seasonNumber: Int): List<Episode> {
-        return dao.getEpisodes(tvId, seasonNumber).map { it.fromDb() }
+    override suspend fun getEpisodes(key: SeasonKey.Tmdb): List<TulipEpisodeInfo.Tmdb> {
+        return dao.getEpisodes(key.tvShowKey.id.id, key.seasonNumber).map { it.fromDb(key) }
     }
 
-    override suspend fun insertEpisode(tvId: Long, episode: Episode) {
-        dao.insertEpisode(episode.toDb(tvId))
-    }
-
-    override suspend fun insertEpisodes(tvId: Long, episodes: List<Episode>) {
+    private suspend inline fun insertEpisodes(tvId: Long, episodes: List<TulipEpisodeInfo.Tmdb>) {
         val dbEpisodes = episodes.map { it.toDb(tvId) }
         dao.insertEpisodes(dbEpisodes)
     }
 
-    override suspend fun getMovie(movieId: Long): Movie? {
-        return dao.getMovie(movieId)?.fromDb()
+    override suspend fun getMovie(key: MovieKey.Tmdb): TulipMovie.Tmdb? {
+        return dao.getMovie(key.id.id)?.fromDb()
     }
 
-    override suspend fun insertMovie(movie: Movie) {
+    override suspend fun insertMovie(movie: TulipMovie.Tmdb) {
         dao.insertMovie(movie.toDb())
     }
 }

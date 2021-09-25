@@ -8,17 +8,17 @@ interface TvProvider {
     suspend fun search(query: String): Result<List<SearchResult>>
 
     /**
-     * Retrieves TV show info by its [key].
+     * Retrieves TV show info by its [id].
      */
-    suspend fun getTvShow(key: String): Result<TvShowInfo>
+    suspend fun getTvShow(id: String): Result<TvShowInfo>
 
     /**
      * Retrieves a movie by its information.
      */
-    suspend fun getMovie(movieKey: String): Result<MovieInfo>
+    suspend fun getMovie(id: String): Result<MovieInfo>
 
     /**
      * Returns a list of links for the provided [MovieInfo] or [EpisodeInfo].
      */
-    suspend fun getStreamableLinks(episodeOrMovieKey: String): Result<List<VideoStreamRef>>
+    suspend fun getStreamableLinks(episodeOrMovieId: String): Result<List<VideoStreamRef>>
 }

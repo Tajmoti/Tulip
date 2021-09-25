@@ -2,24 +2,21 @@ package com.tajmoti.libtulip.model.key
 
 import java.io.Serializable
 
-sealed class SeasonKey : Serializable {
-    abstract val tvShowKey: TvShowKey
+sealed interface SeasonKey : Serializable {
+    val tvShowKey: TvShowKey
 
     /**
      * One-based season number or zero for "specials"
      */
-    abstract val seasonNumber: Int
+    val seasonNumber: Int
 
     data class Hosted(
         override val tvShowKey: TvShowKey.Hosted,
         override val seasonNumber: Int
-    ) : SeasonKey() {
-        val service = tvShowKey.streamingService
-        val tvShowId = tvShowKey.tvShowId
-    }
+    ) : SeasonKey
 
     data class Tmdb(
         override val tvShowKey: TvShowKey.Tmdb,
         override val seasonNumber: Int
-    ) : SeasonKey()
+    ) : SeasonKey
 }

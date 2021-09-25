@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.tajmoti.libtulip.model.hosted.StreamingService
-import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.tulip.db.entity.hosted.DbEpisode
 
 @Dao
@@ -16,10 +15,6 @@ interface EpisodeDao {
         tvShowKey: String,
         seasonNumber: Int
     ): List<DbEpisode>
-
-    suspend fun getForSeason(seasonKey: SeasonKey.Hosted): List<DbEpisode> {
-        return getForSeason(seasonKey.service, seasonKey.tvShowId, seasonKey.seasonNumber)
-    }
 
     @Query("SELECT * FROM DbEpisode WHERE service == :service AND tvShowKey == :tvShowKey AND seasonNumber == :seasonNumber AND key == :key LIMIT 1")
     suspend fun getByKey(

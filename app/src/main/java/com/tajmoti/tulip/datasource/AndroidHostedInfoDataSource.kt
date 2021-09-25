@@ -1,14 +1,11 @@
 package com.tajmoti.tulip.datasource
 
-import com.tajmoti.libtulip.model.hosted.HostedEpisode
-import com.tajmoti.libtulip.model.hosted.HostedItem
-import com.tajmoti.libtulip.model.hosted.HostedMovie
-import com.tajmoti.libtulip.model.hosted.HostedSeason
-import com.tajmoti.libtulip.model.key.EpisodeKey
-import com.tajmoti.libtulip.model.key.MovieKey
-import com.tajmoti.libtulip.model.key.SeasonKey
-import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.data.HostedInfoDataSource
+import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
+import com.tajmoti.libtulip.model.info.TulipMovie
+import com.tajmoti.libtulip.model.info.TulipSeasonInfo
+import com.tajmoti.libtulip.model.info.TulipTvShowInfo
+import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.tulip.db.dao.hosted.EpisodeDao
 import com.tajmoti.tulip.db.dao.hosted.MovieDao
 import com.tajmoti.tulip.db.dao.hosted.SeasonDao
@@ -22,78 +19,83 @@ class AndroidHostedInfoDataSource @Inject constructor(
     private val movieDao: MovieDao
 ) : HostedInfoDataSource {
 
-    override suspend fun getTvShowByKey(key: TvShowKey.Hosted): HostedItem.TvShow? {
-        return tvShowDao.getByKey(key.streamingService, key.key)
-            ?.fromDb()
+    override suspend fun getTvShowByKey(key: TvShowKey.Hosted): TulipTvShowInfo.Hosted? {
+        return tvShowDao.getByKey(key.streamingService, key.id)
+            ?.fromDb(key, getSeasonsByTvShow(key))
     }
 
-    override suspend fun getTvShowsByTmdbId(key: TvShowKey.Tmdb): List<HostedItem.TvShow> {
+    override suspend fun getTvShowsByTmdbId(key: TvShowKey.Tmdb): List<TulipTvShowInfo.Hosted> {
         return tvShowDao.getByTmdbId(key.id.id)
-            .map { it.fromDb() }
+            .map {
+                val tvShowKey = TvShowKey.Hosted(it.service, it.key)
+                it.fromDb(tvShowKey, getSeasonsByTvShow(tvShowKey))
+            }
     }
 
-    override suspend fun insertTvShow(show: HostedItem.TvShow) {
+    override suspend fun insertTvShow(show: TulipTvShowInfo.Hosted) {
         tvShowDao.insert(show.toDb(show.info))
+        insertSeasons(show.seasons)
     }
 
 
-    override suspend fun getSeasonsByTvShow(key: TvShowKey.Hosted): List<HostedSeason> {
-        return seasonDao.getForShow(key.streamingService, key.tvShowId)
-            .map { it.fromDb() }
+    override suspend fun getSeasonsByTvShow(key: TvShowKey.Hosted): List<TulipSeasonInfo.Hosted> {
+        return seasonDao.getForShow(key.streamingService, key.id)
+            .map {
+                val seasonKey = SeasonKey.Hosted(key, it.number)
+                it.fromDb(key, getEpisodesBySeason(seasonKey))
+            }
     }
 
-    override suspend fun getSeasonByKey(key: SeasonKey.Hosted): HostedSeason? {
-        return seasonDao.getBySeasonNumber(key.service, key.tvShowKey.key, key.seasonNumber)
-            ?.fromDb()
+    override suspend fun getSeasonByKey(key: SeasonKey.Hosted): TulipSeasonInfo.Hosted? {
+        return seasonDao.getBySeasonNumber(key.streamingService, key.tvShowKey.id, key.seasonNumber)
+            ?.fromDb(key.tvShowKey, getEpisodesBySeason(key))
     }
 
-    override suspend fun insertSeasons(seasons: List<HostedSeason>) {
+    private suspend inline fun insertSeasons(seasons: List<TulipSeasonInfo.Hosted>) {
         seasonDao.insert(seasons.map { it.toDb() })
+        insertEpisodes(seasons.flatMap { it.episodes })
     }
 
 
-    override suspend fun getEpisodesBySeason(key: SeasonKey.Hosted): List<HostedEpisode> {
-        return episodeDao.getForSeason(key.service, key.tvShowKey.key, key.seasonNumber)
-            .map { it.fromDb() }
+    override suspend fun getEpisodesBySeason(key: SeasonKey.Hosted): List<TulipEpisodeInfo.Hosted> {
+        return episodeDao.getForSeason(key.streamingService, key.tvShowKey.id, key.seasonNumber)
+            .map { it.fromDb(key) }
     }
 
-    override suspend fun getEpisodeByKey(key: EpisodeKey.Hosted): HostedEpisode? {
-        val seasonKey = key.seasonKey
-        val tvShowKey = seasonKey.tvShowKey
-        return episodeDao.getByKey(key.service, tvShowKey.key, seasonKey.seasonNumber, key.key)
+    override suspend fun getEpisodeByKey(key: EpisodeKey.Hosted): TulipEpisodeInfo.Hosted? {
+        return episodeDao.getByKey(key.streamingService, key.tvShowKey.id, key.seasonNumber, key.id)
             ?.fromDb()
     }
 
-    override suspend fun getEpisodeByTmdbId(key: EpisodeKey.Tmdb): List<HostedEpisode> {
-        val shows = getTvShowsByTmdbId(key.seasonKey.tvShowKey)
-        val season = key.seasonKey
+    override suspend fun getEpisodeByTmdbId(key: EpisodeKey.Tmdb): List<TulipEpisodeInfo.Hosted> {
+        val shows = getTvShowsByTmdbId(key.tvShowKey)
         return shows.mapNotNull { show ->
             episodeDao.getByNumber(
-                show.service,
-                show.info.key,
-                season.seasonNumber,
+                show.key.streamingService,
+                show.info.id,
+                key.seasonNumber,
                 key.episodeNumber
             )
                 ?.fromDb()
         }
     }
 
-    override suspend fun insertEpisodes(episodes: List<HostedEpisode>) {
+    private suspend inline fun insertEpisodes(episodes: List<TulipEpisodeInfo.Hosted>) {
         episodeDao.insert(episodes.map { it.toDb() })
     }
 
 
-    override suspend fun getMovieByKey(key: MovieKey.Hosted): HostedItem.Movie? {
-        return movieDao.getByKey(key.streamingService, key.key)
-            ?.fromDb2()
+    override suspend fun getMovieByKey(key: MovieKey.Hosted): TulipMovie.Hosted? {
+        return movieDao.getByKey(key.streamingService, key.id)
+            ?.fromDb(key)
     }
 
-    override suspend fun getMovieByTmdbKey(key: MovieKey.Tmdb): List<HostedMovie> {
+    override suspend fun getMovieByTmdbKey(key: MovieKey.Tmdb): List<TulipMovie.Hosted> {
         return movieDao.getByTmdbId(key.id.id)
             .map { it.fromDb() }
     }
 
-    override suspend fun insertMovie(movie: HostedItem.Movie) {
+    override suspend fun insertMovie(movie: TulipMovie.Hosted) {
         movieDao.insert(movie.toDb(movie.info))
     }
 }

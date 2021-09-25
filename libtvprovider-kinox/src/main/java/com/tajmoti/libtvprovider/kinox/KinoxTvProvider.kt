@@ -29,12 +29,12 @@ class KinoxTvProvider(
         return "$baseUrl/Search.html?q=$encoded"
     }
 
-    override suspend fun getTvShow(key: String): Result<TvShowInfo> {
-        return httpLoader(baseUrl + key)
+    override suspend fun getTvShow(id: String): Result<TvShowInfo> {
+        return httpLoader(baseUrl + id)
             .flatMapWithContext(Dispatchers.Default) {
                 val document = Jsoup.parse(it)
-                parseSeasonsBlocking(key, document)
-                    .map { seasons -> TvShowInfo(key, parseTvShowInfo(key, document), seasons) }
+                parseSeasonsBlocking(id, document)
+                    .map { seasons -> TvShowInfo(parseTvShowInfo(id, document), seasons) }
             }
     }
 
@@ -54,12 +54,12 @@ class KinoxTvProvider(
     }
 
 
-    override suspend fun getMovie(movieKey: String): Result<MovieInfo> {
+    override suspend fun getMovie(id: String): Result<MovieInfo> {
         TODO()
     }
 
-    override suspend fun getStreamableLinks(episodeOrMovieKey: String): Result<List<VideoStreamRef>> {
-        return httpLoader(baseUrl + episodeOrMovieKey)
+    override suspend fun getStreamableLinks(episodeOrMovieId: String): Result<List<VideoStreamRef>> {
+        return httpLoader(baseUrl + episodeOrMovieId)
             .flatMapWithContext(Dispatchers.Default) {
                 fetchSources(baseUrl, it, httpLoader)
             }

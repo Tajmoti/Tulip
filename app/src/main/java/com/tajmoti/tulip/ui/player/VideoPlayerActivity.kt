@@ -20,6 +20,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tajmoti.libtulip.model.info.StreamableInfo
+import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
+import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
+import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
@@ -201,17 +204,17 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
      */
     private fun onStreamableInfo(info: StreamableInfo?) {
         val name = when (info) {
-            is StreamableInfo.Episode -> showToDisplayName(info)
-            is StreamableInfo.Movie -> info.name
+            is TulipCompleteEpisodeInfo -> showToDisplayName(info)
+            is TulipMovie -> info.name
             null -> ""
         }
         binding.titleStreamSelection.text = name
         binding.textItemName.text = name
     }
 
-    private fun showToDisplayName(item: StreamableInfo.Episode): String {
-        val showSeasonEpNum = "${item.showName} S${item.seasonNumber}:E${item.info.number}"
-        val episodeName = item.info.name?.let { " '$it'" } ?: ""
+    private fun showToDisplayName(item: TulipCompleteEpisodeInfo): String {
+        val showSeasonEpNum = "${item.showName} S${item.seasonNumber}:E${item.episodeNumber}"
+        val episodeName = item.name?.let { " '$it'" } ?: ""
         return showSeasonEpNum + episodeName
     }
 

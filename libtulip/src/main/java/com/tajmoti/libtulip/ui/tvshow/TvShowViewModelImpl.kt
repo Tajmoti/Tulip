@@ -1,13 +1,10 @@
 package com.tajmoti.libtulip.ui.tvshow
 
 import com.tajmoti.commonutils.map
-import com.tajmoti.libtmdb.model.tv.Tv
 import com.tajmoti.libtulip.misc.NetworkResult
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
+import com.tajmoti.libtulip.model.info.TulipTvShowInfo
 import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtulip.model.pairSeasonInfoWithKey
-import com.tajmoti.libtulip.model.tmdb.TmdbCompleteTvShow
-import com.tajmoti.libtulip.model.toTulipSeasonInfo
 import com.tajmoti.libtulip.repository.FavoritesRepository
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
@@ -77,13 +74,9 @@ class TvShowViewModelImpl constructor(
                 return@flow
             }
         name.value = show.info.name
-        val result = hostedTvDataRepository.getSeasons(key)
-            .getOrElse {
-                emit(State.Error)
-                return@flow
-            }
-        val mapped = result.map { season -> season.pairSeasonInfoWithKey(key) }
-        emit(State.Success(null, mapped))
+        hostedTvDataRepository.getSeasons(key)
+            .onSuccess { emit(State.Success(null, it)) }
+            .onFailure { emit(State.Error) }
     }
 
     private suspend inline fun getTmdbTvShowAsState(key: TvShowKey.Tmdb): Flow<State> {
@@ -91,37 +84,29 @@ class TvShowViewModelImpl constructor(
             .onEach { result ->
                 if (result !is NetworkResult.Success)
                     return@onEach
-                name.value = result.data.tv.name
+                name.value = result.data.name
             }
             .map { result ->
                 withContext(Dispatchers.Default) {
-                    resultToState(result, key)
+                    resultToState(result)
                 }
             }
     }
 
-    private fun resultToState(
-        result: NetworkResult<out TmdbCompleteTvShow>,
-        key: TvShowKey.Tmdb
-    ): State {
+    private fun resultToState(result: NetworkResult<out TulipTvShowInfo.Tmdb>): State {
         return when (result) {
-            is NetworkResult.Success<out TmdbCompleteTvShow> ->
-                tvToStateFlow(key, result.data.tv, result.data.seasons)
+            is NetworkResult.Success<out TulipTvShowInfo.Tmdb> ->
+                tvToStateFlow(result.data)
             is NetworkResult.Error ->
                 State.Error
             is NetworkResult.Cached ->
-                tvToStateFlow(key, result.data.tv, result.data.seasons) // TODO
+                tvToStateFlow(result.data) // TODO
         }
     }
 
-    private fun tvToStateFlow(
-        key: TvShowKey.Tmdb,
-        show: Tv,
-        seasons: List<com.tajmoti.libtmdb.model.tv.Season>
-    ): State {
-        val tmdbSeasons = seasons.map { it.toTulipSeasonInfo(key) }
+    private fun tvToStateFlow(show: TulipTvShowInfo.Tmdb): State {
         val backdropUrl = "https://image.tmdb.org/t/p/original" + show.backdropPath
-        return State.Success(backdropUrl, tmdbSeasons)
+        return State.Success(backdropUrl, show.seasons)
     }
 
     sealed interface State {

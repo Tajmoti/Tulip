@@ -9,9 +9,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.tajmoti.libtulip.model.hosted.HostedItem
-import com.tajmoti.libtulip.model.hosted.toKey
-import com.tajmoti.libtulip.model.info.TulipSearchResult
+import com.tajmoti.libtulip.model.hosted.MappedSearchResult
+import com.tajmoti.libtulip.model.search.TulipSearchResult
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
@@ -78,12 +77,12 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
         }
     }
 
-    private fun onUnidentifiedResultClicked(variants: List<HostedItem>) {
+    private fun onUnidentifiedResultClicked(variants: List<MappedSearchResult>) {
         val labels = variants
-            .map { "[${it.info.language.uppercase()}][${it.service}] ${it.info.name}" }
+            .map { "[${it.info.language.uppercase()}][${it.key.streamingService}] ${it.info.name}" }
             .toTypedArray()
         MaterialAlertDialogBuilder(requireContext())
-            .setItems(labels) { _, index -> goToItemByKey(variants[index].toKey()) }
+            .setItems(labels) { _, index -> goToItemByKey(variants[index].key) }
             .setTitle(R.string.other_results)
             .setNeutralButton(R.string.back, null)
             .show()

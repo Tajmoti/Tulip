@@ -1,12 +1,9 @@
 package com.tajmoti.libtulip.repository
 
-import com.tajmoti.libtulip.model.hosted.HostedEpisode
-import com.tajmoti.libtulip.model.hosted.HostedMovie
-import com.tajmoti.libtulip.model.info.StreamableInfoWithLanguage
-import com.tajmoti.libtulip.model.info.TulipSearchResult
+import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.libtulip.model.key.*
-import com.tajmoti.libtvprovider.Season
-import com.tajmoti.libtvprovider.TvShowInfo
+import com.tajmoti.libtulip.model.search.TulipSearchResult
+import com.tajmoti.libtulip.model.stream.StreamableInfoWithLanguage
 import com.tajmoti.libtvprovider.VideoStreamRef
 
 /**
@@ -16,17 +13,19 @@ interface HostedTvDataRepository {
 
     suspend fun search(query: String): Result<List<TulipSearchResult>>
 
-    suspend fun getTvShow(key: TvShowKey.Hosted): Result<TvShowInfo>
+    suspend fun getTvShow(key: TvShowKey.Hosted): Result<TulipTvShowInfo.Hosted>
 
-    suspend fun getSeasons(key: TvShowKey.Hosted): Result<List<Season>>
+    suspend fun getSeasons(key: TvShowKey.Hosted): Result<List<TulipSeasonInfo.Hosted>>
 
-    suspend fun getSeason(key: SeasonKey.Hosted): Result<Season>
+    suspend fun getSeason(key: SeasonKey.Hosted): Result<TulipSeasonInfo.Hosted>
 
     suspend fun getStreamableInfo(key: StreamableKey.Hosted): Result<StreamableInfoWithLanguage>
 
-    suspend fun getEpisodeByTmdbId(key: EpisodeKey.Tmdb): Result<List<HostedEpisode>>
+    suspend fun getEpisodeByTmdbId(key: EpisodeKey.Tmdb): Result<List<TulipEpisodeInfo.Hosted>>
 
-    suspend fun getMovieByTmdbId(key: MovieKey.Tmdb): Result<List<HostedMovie>>
+    suspend fun getCompleteEpisodesByTmdbId(key: EpisodeKey.Tmdb): Result<List<TulipCompleteEpisodeInfo.Hosted>>
+
+    suspend fun getMovieByTmdbId(key: MovieKey.Tmdb): Result<List<TulipMovie.Hosted>>
 
     suspend fun prefetchTvShow(key: TvShowKey.Hosted): Result<Unit>
 

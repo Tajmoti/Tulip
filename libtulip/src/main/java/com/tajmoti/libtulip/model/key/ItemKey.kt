@@ -7,7 +7,7 @@ import java.io.Serializable
 interface ItemKey : Serializable {
     sealed interface Hosted : ItemKey {
         val streamingService: StreamingService
-        val key: String
+        val id: String
     }
 
     sealed interface Tmdb : ItemKey {

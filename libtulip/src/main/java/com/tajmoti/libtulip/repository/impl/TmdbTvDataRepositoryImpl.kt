@@ -2,7 +2,6 @@ package com.tajmoti.libtulip.repository.impl
 
 import com.tajmoti.commonutils.allOrNone
 import com.tajmoti.commonutils.logger
-import com.tajmoti.commonutils.mapToAsyncJobsPair
 import com.tajmoti.commonutils.parallelMap
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtmdb.model.movie.Movie
@@ -17,11 +16,11 @@ import com.tajmoti.libtulip.misc.NetworkResult
 import com.tajmoti.libtulip.misc.TimedCache
 import com.tajmoti.libtulip.misc.getNetworkBoundResource
 import com.tajmoti.libtulip.misc.getNetworkBoundResourceVariable
-import com.tajmoti.libtulip.model.key.EpisodeKey
-import com.tajmoti.libtulip.model.key.MovieKey
-import com.tajmoti.libtulip.model.key.SeasonKey
-import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtulip.model.tmdb.TmdbCompleteTvShow
+import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
+import com.tajmoti.libtulip.model.info.TulipMovie
+import com.tajmoti.libtulip.model.info.TulipSeasonInfo
+import com.tajmoti.libtulip.model.info.TulipTvShowInfo
+import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtvprovider.SearchResult
@@ -33,10 +32,10 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
     private val service: TmdbService,
     private val db: LocalTvDataSource
 ) : TmdbTvDataRepository {
-    private val tvCache = TimedCache<TvShowKey.Tmdb, TmdbCompleteTvShow>(
+    private val tvCache = TimedCache<TvShowKey.Tmdb, TulipTvShowInfo.Tmdb>(
         timeout = CACHE_EXPIRY_MS, size = CACHE_SIZE
     )
-    private val movieCache = TimedCache<MovieKey.Tmdb, Movie>(
+    private val movieCache = TimedCache<MovieKey.Tmdb, TulipMovie.Tmdb>(
         timeout = CACHE_EXPIRY_MS, size = CACHE_SIZE
     )
 
@@ -70,97 +69,101 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
         return runCatching { service.searchMovie(query, firstAirDateYear) }
     }
 
-    override fun getTvAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<out Tv>> {
-        // TODO Common implementation with getTvShowWithSeasonsAsFlow
-        val id = key.id.id
-        logger.debug("Getting TV as flow")
-        return getNetworkBoundResourceVariable(
-            { db.getTv(id) },
-            { fetchFullTvInfo(key) },
-            { db.insertCompleteTv(it.tv, it.seasons) },
-            { it.tv },
-            { tvCache[key] },
-            { tvCache[key] = it }
-        )
-    }
-
-    private suspend inline fun fetchFullTvInfo(key: TvShowKey.Tmdb): Result<TmdbCompleteTvShow> {
+    private suspend inline fun fetchFullTvInfo(key: TvShowKey.Tmdb): Result<TulipTvShowInfo.Tmdb> {
         logger.debug("Downloading full TV info")
         val tv = runCatching { service.getTv(key.id.id) }
             .getOrElse { return Result.failure(it) }
         return tv.seasons
-            .parallelMap { slim -> runCatching { service.getSeason(tv.id, slim.seasonNumber) } }
+            .parallelMap { slim ->
+                runCatching {
+                    service.getSeason(tv.id, slim.seasonNumber).fromNetwork(key)
+                }
+            }
             .allOrNone()
-            .map { TmdbCompleteTvShow(tv, it) }
+            .map { tv.fromNetwork(it) }
     }
 
-    override fun getTvShowWithSeasonsAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<out TmdbCompleteTvShow>> {
+    private fun Tv.fromNetwork(seasons: List<TulipSeasonInfo.Tmdb>): TulipTvShowInfo.Tmdb {
+        val key = TvShowKey.Tmdb(TmdbItemId.Tv(id))
+        return TulipTvShowInfo.Tmdb(key, name, null, posterPath, backdropPath, seasons)
+    }
+
+    private fun Season.fromNetwork(tvShowKey: TvShowKey.Tmdb): TulipSeasonInfo.Tmdb {
+        val key = SeasonKey.Tmdb(tvShowKey, seasonNumber)
+        val episodes = episodes.map { it.fromNetwork(key) }
+        return TulipSeasonInfo.Tmdb(key, name, overview, episodes)
+    }
+
+    private fun Episode.fromNetwork(seasonKey: SeasonKey.Tmdb): TulipEpisodeInfo.Tmdb {
+        val key = EpisodeKey.Tmdb(seasonKey, episodeNumber)
+        return TulipEpisodeInfo.Tmdb(key, name, overview)
+    }
+
+    override fun getTvShowWithSeasonsAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<out TulipTvShowInfo.Tmdb>> {
         logger.debug("Getting TV as flow")
         return getNetworkBoundResourceVariable(
-            { getFullTvFromDb(key) },
+            { db.getTvShow(key) },
             { fetchFullTvInfo(key) },
-            { db.insertCompleteTv(it.tv, it.seasons) },
+            { db.insertTvShow(it) },
             { it },
             { tvCache[key] },
             { tvCache[key] = it }
         )
     }
 
-    private suspend fun getFullTvFromDb(key: TvShowKey.Tmdb): TmdbCompleteTvShow? {
-        val (tv, seasons) = mapToAsyncJobsPair(
-            { db.getTv(key.id.id) },
-            { db.getSeasons(key.id.id) }
-        )
-        tv ?: return null
-        return TmdbCompleteTvShow(tv, seasons)
-    }
-
-    override fun getSeasonAsFlow(key: SeasonKey.Tmdb): Flow<NetworkResult<out Season>> {
-        val tvId = key.tvShowKey.id.id
+    override fun getSeasonAsFlow(key: SeasonKey.Tmdb): Flow<NetworkResult<out TulipSeasonInfo.Tmdb>> {
         logger.debug("Getting season as flow")
         return getNetworkBoundResourceVariable(
-            { db.getSeason(tvId, key.seasonNumber) },
+            { db.getSeason(key) },
             { fetchFullTvInfo(key.tvShowKey) },
-            { db.insertCompleteTv(it.tv, it.seasons) },
+            { db.insertTvShow(it) },
             { getCorrectSeason(it, key) },
             { tvCache[key.tvShowKey] },
             { tvCache[key.tvShowKey] = it }
         )
     }
 
-    override fun getEpisodeAsFlow(key: EpisodeKey.Tmdb): Flow<NetworkResult<out Episode>> {
-        val tvId = key.seasonKey.tvShowKey.id.id
-        val seasonNumber = key.seasonKey.seasonNumber
+    override fun getEpisodeAsFlow(key: EpisodeKey.Tmdb): Flow<NetworkResult<out TulipEpisodeInfo.Tmdb>> {
         logger.debug("Getting episode as flow")
         return getNetworkBoundResourceVariable(
-            { db.getEpisode(tvId, seasonNumber, key.episodeNumber) },
-            { fetchFullTvInfo(key.seasonKey.tvShowKey) },
-            { db.insertCompleteTv(it.tv, it.seasons) },
+            { db.getEpisode(key) },
+            { fetchFullTvInfo(key.tvShowKey) },
+            { db.insertTvShow(it) },
             { getCorrectEpisode(it, key) },
-            { tvCache[key.seasonKey.tvShowKey] },
-            { tvCache[key.seasonKey.tvShowKey] = it }
+            { tvCache[key.tvShowKey] },
+            { tvCache[key.tvShowKey] = it }
         )
     }
 
-    private fun getCorrectSeason(all: TmdbCompleteTvShow, key: SeasonKey.Tmdb): Season? {
-        return all.seasons.firstOrNull { s -> s.seasonNumber == key.seasonNumber }
+    private fun getCorrectSeason(
+        all: TulipTvShowInfo.Tmdb,
+        key: SeasonKey.Tmdb
+    ): TulipSeasonInfo.Tmdb? {
+        return all.seasons.firstOrNull { s -> s.key.seasonNumber == key.seasonNumber }
     }
 
-    private fun getCorrectEpisode(all: TmdbCompleteTvShow, key: EpisodeKey.Tmdb): Episode? {
+    private fun getCorrectEpisode(
+        all: TulipTvShowInfo.Tmdb,
+        key: EpisodeKey.Tmdb
+    ): TulipEpisodeInfo.Tmdb? {
         return getCorrectSeason(all, key.seasonKey)?.episodes
-            ?.firstOrNull { e -> e.episodeNumber == key.episodeNumber }
+            ?.firstOrNull { e -> e.key == key }
     }
 
-    override fun getMovieAsFlow(key: MovieKey.Tmdb): Flow<NetworkResult<out Movie>> {
-        val id = key.id.id
+    override fun getMovieAsFlow(key: MovieKey.Tmdb): Flow<NetworkResult<out TulipMovie.Tmdb>> {
         logger.debug("Getting Movie as flow")
         return getNetworkBoundResource(
-            { db.getMovie(id) },
-            { runCatching { service.getMovie(key.id.id) } },
+            { db.getMovie(key) },
+            { runCatching { service.getMovie(key.id.id).fromNetwork() } },
             { db.insertMovie(it) },
             { movieCache[key] },
             { movieCache[key] = it }
         )
+    }
+
+    private fun Movie.fromNetwork(): TulipMovie.Tmdb {
+        val key = MovieKey.Tmdb(TmdbItemId.Movie(id))
+        return TulipMovie.Tmdb(key, name, overview, posterPath, backdropPath)
     }
 
     companion object {

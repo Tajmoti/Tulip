@@ -1,35 +1,25 @@
 package com.tajmoti.libtulip.data
 
-import com.tajmoti.libtmdb.model.movie.Movie
-import com.tajmoti.libtmdb.model.tv.Episode
-import com.tajmoti.libtmdb.model.tv.Season
-import com.tajmoti.libtmdb.model.tv.Tv
+import com.tajmoti.libtulip.model.info.*
+import com.tajmoti.libtulip.model.key.EpisodeKey
+import com.tajmoti.libtulip.model.key.MovieKey
+import com.tajmoti.libtulip.model.key.SeasonKey
+import com.tajmoti.libtulip.model.key.TvShowKey
 
 interface LocalTvDataSource {
-    suspend fun getTv(tvId: Long): Tv?
+    suspend fun getTvShow(key: TvShowKey.Tmdb): TulipTvShowInfo.Tmdb?
 
-    suspend fun getSeason(tvId: Long, seasonNumber: Int): Season?
+    suspend fun getSeason(key: SeasonKey.Tmdb): TulipSeasonInfo.Tmdb?
 
-    suspend fun getSeasons(tvId: Long): List<Season>
+    suspend fun getSeasons(key: TvShowKey.Tmdb): List<TulipSeasonInfo.Tmdb>
 
-    suspend fun getEpisode(tvId: Long, seasonNumber: Int, episodeNumber: Int): Episode?
+    suspend fun getEpisode(key: EpisodeKey.Tmdb): TulipEpisodeInfo.Tmdb?
 
-    suspend fun getEpisodes(tvId: Long, seasonNumber: Int): List<Episode>
+    suspend fun getEpisodes(key: SeasonKey.Tmdb): List<TulipEpisodeInfo.Tmdb>
 
-    suspend fun getMovie(movieId: Long): Movie?
+    suspend fun getMovie(key: MovieKey.Tmdb): TulipMovie.Tmdb?
 
+    suspend fun insertTvShow(tv: TulipTvShowInfo.Tmdb)
 
-    suspend fun insertTv(tv: Tv)
-
-    suspend fun insertCompleteTv(tv: Tv, seasons: List<Season>)
-
-    suspend fun insertSeason(tvId: Long, season: Season)
-
-    suspend fun insertSeasons(tvId: Long, seasons: List<Season>)
-
-    suspend fun insertEpisode(tvId: Long, episode: Episode)
-
-    suspend fun insertEpisodes(tvId: Long, episodes: List<Episode>)
-
-    suspend fun insertMovie(movie: Movie)
+    suspend fun insertMovie(movie: TulipMovie.Tmdb)
 }

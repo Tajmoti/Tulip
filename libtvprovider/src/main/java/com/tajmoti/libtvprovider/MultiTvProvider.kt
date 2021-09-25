@@ -48,12 +48,12 @@ class MultiTvProvider<ID>(
         }
     }
 
-    suspend fun getShow(service: ID, key: String): Result<TvShowInfo> {
-        return providers[service]!!.getTvShow(key)
+    suspend fun getShow(service: ID, id: String): Result<TvShowInfo> {
+        return providers[service]!!.getTvShow(id)
     }
 
-    suspend fun getMovie(service: ID, key: String): Result<MovieInfo> {
-        return providers[service]!!.getMovie(key)
+    suspend fun getMovie(service: ID, id: String): Result<MovieInfo> {
+        return providers[service]!!.getMovie(id)
     }
 
     suspend fun getStreamableLinks(

@@ -6,6 +6,9 @@ import android.net.Uri
 import android.os.Environment
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.model.info.StreamableInfo
+import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
+import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
+import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.tulip.R
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -37,13 +40,13 @@ class DownloadManagerVideoDownloadService @Inject constructor(
 
     private fun buildDisplayName(item: StreamableInfo): String {
         return when (item) {
-            is StreamableInfo.Episode -> showToDownloadName(item)
-            is StreamableInfo.Movie -> item.name
+            is TulipCompleteEpisodeInfo -> showToDownloadName(item)
+            is TulipMovie -> item.name
         }
     }
 
-    private fun showToDownloadName(item: StreamableInfo.Episode): String {
-        val episode = item.info.number
+    private fun showToDownloadName(item: TulipCompleteEpisodeInfo): String {
+        val episode = item.episodeNumber
         val prefix = "${item.showName} S${pad(item.seasonNumber)}"
         val name = "E${pad(episode)}"
         return prefix + name
@@ -51,19 +54,19 @@ class DownloadManagerVideoDownloadService @Inject constructor(
 
     private fun getSavePath(item: StreamableInfo): String {
         val path = when (item) {
-            is StreamableInfo.Episode -> showToSavePath(item)
-            is StreamableInfo.Movie -> normalize(item.name)
+            is TulipCompleteEpisodeInfo -> showToSavePath(item)
+            is TulipMovie -> normalize(item.name)
         }
         return context.getString(R.string.app_name) + File.separator + path + FILE_EXTENSION
     }
 
-    private fun showToSavePath(item: StreamableInfo.Episode): String {
+    private fun showToSavePath(item: TulipCompleteEpisodeInfo): String {
         val sep = File.separator
         val ss = pad(item.seasonNumber)
-        val ep = item.info.number
+        val ep = item.episodeNumber
         val prefix = "${normalize(item.showName)}$sep$SEASON_DIRECTORY_NAME $ss$sep"
         var fileName = pad(ep)
-        val epName = item.info.name
+        val epName = item.name
         if (epName != null)
             fileName += " - $epName"
         return prefix + fileName

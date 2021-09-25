@@ -1,12 +1,10 @@
 package com.tajmoti.libtulip.ui.library
 
 import com.tajmoti.commonutils.parallelMapBoth
-import com.tajmoti.libtmdb.model.FindResult
 import com.tajmoti.libtulip.data.HostedInfoDataSource
 import com.tajmoti.libtulip.misc.NetworkResult
-import com.tajmoti.libtulip.model.hosted.toItemKey
+import com.tajmoti.libtulip.model.info.TulipItem
 import com.tajmoti.libtulip.model.key.ItemKey
-import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.repository.FavoritesRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import kotlinx.coroutines.CoroutineScope
@@ -39,27 +37,26 @@ class LibraryViewModelImpl constructor(
     private suspend inline fun getHostedFavorites(items: List<ItemKey.Hosted>): List<LibraryItem> {
         return items
             .parallelMapBoth { hostedRepo.getItemByKey(it) }
-            .mapNotNull { (key, item) -> item?.let { LibraryItem(key, item.name, null) } }
+            .mapNotNull { (key, item) -> item?.let { LibraryItem(key, item.name ?: "", null) } }
     }
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     private fun getTmdbFavorites(keyFlow: List<ItemKey.Tmdb>): Flow<List<LibraryItem>> {
         val tmdbTvIds = keyFlow
-            .map { it.id }
             .map { tmdbRepo.getItemAsFlow(it).map { a -> it to a } }
         return combine(*(tmdbTvIds).toTypedArray()) { it.toList() }
             .map { it.mapNotNull { (id, result) -> netResultToLibraryItem(id, result) } }
     }
 
     private fun netResultToLibraryItem(
-        id: TmdbItemId,
-        result: NetworkResult<out FindResult>
+        key: ItemKey.Tmdb,
+        result: NetworkResult<out TulipItem.Tmdb>
     ): LibraryItem? {
-        return result.data?.let { mapTmdbItemToLibraryItem(id, it) }
+        return result.data?.let { mapTmdbItemToLibraryItem(key, it) }
     }
 
-    private fun mapTmdbItemToLibraryItem(id: TmdbItemId, item: FindResult): LibraryItem {
+    private fun mapTmdbItemToLibraryItem(key: ItemKey.Tmdb, item: TulipItem.Tmdb): LibraryItem {
         val posterPath = "https://image.tmdb.org/t/p/original" + item.posterPath
-        return LibraryItem(id.toItemKey(), item.name, posterPath)
+        return LibraryItem(key, item.name, posterPath)
     }
 }

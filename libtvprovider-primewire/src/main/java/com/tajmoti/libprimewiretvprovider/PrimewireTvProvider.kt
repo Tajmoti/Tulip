@@ -35,16 +35,16 @@ class PrimewireTvProvider(
         return "$baseUrl?s=$encoded&t=y&m=m&w=q"
     }
 
-    override suspend fun getTvShow(key: String): Result<TvShowInfo> {
-        return httpLoader(baseUrl + key)
+    override suspend fun getTvShow(id: String): Result<TvShowInfo> {
+        return httpLoader(baseUrl + id)
             .flatMapWithContext(Dispatchers.Default) { source ->
                 val document = Jsoup.parse(source)
-                parseSearchResultPageBlockingSeason(key, document)
+                parseSearchResultPageBlockingSeason(id, document)
                     .map { seasons -> document to seasons }
             }
             .mapWithContext(Dispatchers.Default) { (document, seasons) ->
-                val tvItemInfo = parseTvItemInfo(key, document)
-                TvShowInfo(key, tvItemInfo, seasons)
+                val tvItemInfo = parseTvItemInfo(id, document)
+                TvShowInfo(tvItemInfo, seasons)
             }
     }
 
@@ -59,12 +59,12 @@ class PrimewireTvProvider(
         return TvItemInfo(key, name, "en", yearStr.toString().toInt())
     }
 
-    override suspend fun getMovie(movieKey: String): Result<MovieInfo> {
+    override suspend fun getMovie(id: String): Result<MovieInfo> {
         TODO("Not yet implemented")
     }
 
-    override suspend fun getStreamableLinks(episodeOrMovieKey: String): Result<List<VideoStreamRef>> {
-        return pageLoader.invoke(baseUrl + episodeOrMovieKey, this::shouldAllowUrl, LINK_PAGE_HTML_SUBMIT_TRIGGER)
+    override suspend fun getStreamableLinks(episodeOrMovieId: String): Result<List<VideoStreamRef>> {
+        return pageLoader.invoke(baseUrl + episodeOrMovieId, this::shouldAllowUrl, LINK_PAGE_HTML_SUBMIT_TRIGGER)
             .flatMapWithContext(Dispatchers.Default) {
                 getVideoStreamsBlocking(it, baseUrl)
             }

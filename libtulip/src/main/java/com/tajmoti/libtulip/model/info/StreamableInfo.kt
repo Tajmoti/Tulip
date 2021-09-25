@@ -1,14 +1,16 @@
 package com.tajmoti.libtulip.model.info
 
-sealed class StreamableInfo {
+import com.tajmoti.libtulip.model.key.StreamableKey
 
-    data class Episode(
-        val showName: String,
-        val seasonNumber: Int,
-        val info: TulipEpisodeInfo
-    ) : StreamableInfo()
+sealed interface StreamableInfo {
+    val key: StreamableKey
+    val name: String?
 
-    data class Movie(
-        val name: String
-    ) : StreamableInfo()
+    sealed interface Tmdb : StreamableInfo {
+        override val key: StreamableKey.Tmdb
+    }
+
+    sealed interface Hosted : StreamableInfo {
+        override val key: StreamableKey.Hosted
+    }
 }
