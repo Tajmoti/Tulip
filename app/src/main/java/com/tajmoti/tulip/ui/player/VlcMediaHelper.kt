@@ -91,14 +91,21 @@ class VlcMediaHelper(
     override fun onEvent(event: MediaPlayer.Event) {
         if (!event.isSpam)
             logger.debug("VLC event ${event.format()}")
-        val state = when (event.type) {
+        val newState = when (event.type) {
             MediaPlayer.Event.PositionChanged ->
                 MediaPlayerHelper.State.Playing(Position(event.positionChanged, player.time))
-            MediaPlayer.Event.Buffering ->
-                MediaPlayerHelper.State.Buffering(
-                    Position(player.position, player.time),
-                    event.buffering
-                )
+            MediaPlayer.Event.Buffering -> {
+                // We don't care about buffering events when the video is paused,
+                // only when it's in the playing state
+                if (state.value is MediaPlayerHelper.State.Paused) {
+                    null
+                } else {
+                    MediaPlayerHelper.State.Buffering(
+                        Position(player.position, player.time),
+                        event.buffering
+                    )
+                }
+            }
             MediaPlayer.Event.Playing ->
                 MediaPlayerHelper.State.Playing(Position(player.position, player.time))
             MediaPlayer.Event.Paused ->
@@ -109,7 +116,7 @@ class VlcMediaHelper(
                 MediaPlayerHelper.State.Error
             else -> null
         }
-        state?.let { this.state.value = it }
+        newState?.let { state.value = it }
     }
 
 

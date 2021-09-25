@@ -5,6 +5,7 @@
 - Close video player when the video is done playing
 - Don't show irrelevant video player UI elements during loading
 - Fixed weird video player UI state when switching sources
+- Fixed play button not visible anymore if buffering occurs while the player is paused
 
 ## [0.9.0] - 2021-09-20
 ### Added
