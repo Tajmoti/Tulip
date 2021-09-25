@@ -379,7 +379,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         mutableTimeMs -= TimeUnit.MINUTES.toMillis(minutes)
         val seconds = TimeUnit.MILLISECONDS.toSeconds(mutableTimeMs)
         return when {
-            hours > 0 -> hours.toString() + timePad(minutes) + ':' + timePad(seconds)
+            hours > 0 -> hours.toString() + ':' + timePad(minutes) + ':' + timePad(seconds)
             minutes > 0 -> timePad(minutes) + ':' + timePad(seconds)
             else -> "0:" + timePad(seconds)
         }
