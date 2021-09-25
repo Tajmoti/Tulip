@@ -136,7 +136,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
             vlc?.let { playerViewModel.onWordHeard(it.time) }
         }
         binding.buttonRestartVideo.setOnClickListener {
-            onVideoToPlayChanged(streamsViewModel.videoLinkToPlay.value)
+            onVideoToPlayChanged(streamsViewModel.videoLinkToPlay.value, forceReload = true)
         }
         binding.buttonChangeSource.setOnClickListener {
             binding.containerStreamSelection.isVisible = true
@@ -172,7 +172,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
     override fun onStart() {
         super.onStart()
-        vlc?.attachAndPlay(binding.videoLayout)
+        vlc?.attach(binding.videoLayout)
     }
 
     override fun onResume() {
@@ -234,11 +234,15 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
      * If not null, a link to a direct video stream was selected and loaded,
      * that means we can start playing.
      */
-    private fun onVideoToPlayChanged(it: LoadedLink?) {
+    private fun onVideoToPlayChanged(it: LoadedLink?, forceReload: Boolean = false) {
         if (it?.directLink != null) {
+            // Don't relaunch the video if it's already set TODO media should be in the ViewModel
+            if (it.directLink == vlc?.videoUrl && !forceReload)
+                return
             vlc?.release()
             vlc = VlcMediaHelper(libVLC, it.directLink)
-                .also { it.attachAndPlay(binding.videoLayout) }
+                .apply { attach(binding.videoLayout) }
+                .apply { playOrPause() }
                 .also { playerViewModel.onMediaAttached(it) }
             onSubtitlesChanged(playerViewModel.subtitleFile.value)
         } else {
@@ -408,7 +412,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     private fun onPlayPausePressed() {
-        vlc?.playOrResume()
+        vlc?.playOrPause()
     }
 
     private fun setMediaProgress(progress: Int) {

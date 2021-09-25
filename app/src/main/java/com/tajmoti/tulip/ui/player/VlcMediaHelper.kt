@@ -12,7 +12,7 @@ import org.videolan.libvlc.util.VLCVideoLayout
 
 class VlcMediaHelper(
     lib: LibVLC,
-    private val videoUrl: String
+    val videoUrl: String
 ) : MediaPlayer.EventListener, MediaPlayerHelper {
     /**
      * Current state of the player and the media being played
@@ -32,11 +32,10 @@ class VlcMediaHelper(
     private var attached = false
 
 
-    fun attachAndPlay(view: VLCVideoLayout) {
+    fun attach(view: VLCVideoLayout) {
         if (!attached)
             player.attachViews(view, null, true, false)
         attached = true
-        player.play()
     }
 
     fun detachAndPause() {
@@ -45,7 +44,7 @@ class VlcMediaHelper(
         attached = false
     }
 
-    override fun playOrResume() {
+    override fun playOrPause() {
         if (player.isPlaying) {
             player.pause()
         } else {

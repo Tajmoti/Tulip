@@ -40,7 +40,7 @@ interface MediaPlayerHelper {
         object Error : State
     }
 
-    fun playOrResume()
+    fun playOrPause()
     var progress: Float
     var time: Long
     val length: Long
