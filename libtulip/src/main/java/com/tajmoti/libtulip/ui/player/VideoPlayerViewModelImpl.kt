@@ -48,11 +48,15 @@ class VideoPlayerViewModelImpl constructor(
     }
 
     /**
+     * Currently attached media player.
+     */
+    private val attachedMediaPlayer = MutableStateFlow<MediaPlayerHelper?>(null)
+    /**
      * State of the currently attached media player.
      */
-    private val mediaPlayerState = MutableStateFlow<MediaPlayerHelper.State>(
-        MediaPlayerHelper.State.Idle
-    )
+    private val mediaPlayerState = attachedMediaPlayer.flatMapMerge {
+        it?.state ?: flowOf(MediaPlayerHelper.State.Idle)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, MediaPlayerHelper.State.Idle)
     override val isPlaying = mediaPlayerState.map(viewModelScope) {
         it is MediaPlayerHelper.State.Playing
     }
@@ -138,12 +142,14 @@ class VideoPlayerViewModelImpl constructor(
     }
 
     override fun onMediaAttached(media: MediaPlayerHelper) {
-        viewModelScope.launch {
-            mediaPlayerState.emitAll(media.state)
-        }
+        attachedMediaPlayer.value = media
         lastValidPosition.value
             .takeIf { it != 0L }
             ?.let { media.time = it }
+    }
+
+    override fun onMediaDetached() {
+        attachedMediaPlayer.value = null
     }
 
     override fun onSubtitlesSelected(subtitleInfo: SubtitleInfo?) {

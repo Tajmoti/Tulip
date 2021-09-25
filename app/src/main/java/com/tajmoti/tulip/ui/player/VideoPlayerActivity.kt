@@ -187,7 +187,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
     override fun onDestroy() {
         super.onDestroy()
-        vlc?.release()
+        releaseMedia()
         libVLC.release()
     }
 
@@ -239,16 +239,21 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
             // Don't relaunch the video if it's already set TODO media should be in the ViewModel
             if (it.directLink == vlc?.videoUrl && !forceReload)
                 return
-            vlc?.release()
+            releaseMedia()
             vlc = VlcMediaHelper(libVLC, it.directLink)
                 .apply { attach(binding.videoLayout) }
                 .apply { playOrPause() }
                 .also { playerViewModel.onMediaAttached(it) }
             onSubtitlesChanged(playerViewModel.subtitleFile.value)
         } else {
-            vlc?.release()
-            vlc = null
+            releaseMedia()
         }
+    }
+
+    private fun releaseMedia() {
+        playerViewModel.onMediaDetached()
+        vlc?.release()
+        vlc = null
     }
 
     /**

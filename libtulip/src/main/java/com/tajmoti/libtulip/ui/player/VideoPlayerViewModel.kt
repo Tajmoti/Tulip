@@ -85,6 +85,11 @@ interface VideoPlayerViewModel {
     fun onMediaAttached(media: MediaPlayerHelper)
 
     /**
+     * The existing media is detached.
+     */
+    fun onMediaDetached()
+
+    /**
      * The user has selected which subtitles they wish to use.
      * The subtitles need to be downloaded before the video is played.
      */
