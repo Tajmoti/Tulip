@@ -2,6 +2,7 @@
 ### Changed
 - Fixed episode list not keeping its state when returning from another screen
 - Fixed last item in library not disappearing from library UI when removed
+- Close video player when the video is done playing
 
 ## [0.9.0] - 2021-09-20
 ### Added

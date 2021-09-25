@@ -68,6 +68,11 @@ interface VideoPlayerViewModel {
     val lastValidPosition: StateFlow<Long>
 
     /**
+     * Whether the media has successfully played until the end
+     */
+    val isDonePlaying: StateFlow<Boolean>
+
+    /**
      * True if an error was encountered and the player was canceled
      */
     val isError: StateFlow<Boolean>

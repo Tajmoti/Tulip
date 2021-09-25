@@ -18,7 +18,7 @@ class VlcMediaHelper(
      * Current state of the player and the media being played
      */
     override val state = MutableStateFlow<MediaPlayerHelper.State>(
-        MediaPlayerHelper.State.Initializing
+        MediaPlayerHelper.State.Idle
     )
 
     /**
@@ -103,8 +103,8 @@ class VlcMediaHelper(
                 MediaPlayerHelper.State.Playing(Position(player.position, player.time))
             MediaPlayer.Event.Paused ->
                 MediaPlayerHelper.State.Paused(Position(player.position, player.time))
-            MediaPlayer.Event.Stopped ->
-                MediaPlayerHelper.State.Error
+            MediaPlayer.Event.EndReached ->
+                MediaPlayerHelper.State.Finished
             MediaPlayer.Event.EncounteredError ->
                 MediaPlayerHelper.State.Error
             else -> null

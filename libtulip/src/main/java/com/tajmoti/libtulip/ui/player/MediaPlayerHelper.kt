@@ -9,10 +9,34 @@ interface MediaPlayerHelper {
     val state: MutableStateFlow<State>
 
     sealed interface State {
-        object Initializing : State
+        /**
+         * No media is selected.
+         */
+        object Idle : State
+
+        /**
+         * Some media is actively being played.
+         */
         class Playing(val position: Position) : State
+
+        /**
+         * Some media is paused.
+         */
         class Paused(val position: Position) : State
+
+        /**
+         * Some media is buffering.
+         */
         class Buffering(val position: Position, val percent: Float) : State
+
+        /**
+         * The media is done playing.
+         */
+        object Finished: State
+
+        /**
+         * There is an error with the player or media.
+         */
         object Error : State
     }
 

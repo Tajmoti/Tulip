@@ -51,7 +51,7 @@ class VideoPlayerViewModelImpl constructor(
      * State of the currently attached media player.
      */
     private val mediaPlayerState = MutableStateFlow<MediaPlayerHelper.State>(
-        MediaPlayerHelper.State.Initializing
+        MediaPlayerHelper.State.Idle
     )
     override val isPlayingOrBuffering = mediaPlayerState.map(viewModelScope) {
         it is MediaPlayerHelper.State.Playing || it is MediaPlayerHelper.State.Buffering
@@ -60,9 +60,10 @@ class VideoPlayerViewModelImpl constructor(
         when (it) {
             is MediaPlayerHelper.State.Buffering -> VideoPlayerViewModel.PlayButtonState.HIDE
             is MediaPlayerHelper.State.Error -> VideoPlayerViewModel.PlayButtonState.HIDE
-            is MediaPlayerHelper.State.Initializing -> VideoPlayerViewModel.PlayButtonState.HIDE
+            is MediaPlayerHelper.State.Idle -> VideoPlayerViewModel.PlayButtonState.HIDE
             is MediaPlayerHelper.State.Paused -> VideoPlayerViewModel.PlayButtonState.SHOW_PLAY
             is MediaPlayerHelper.State.Playing -> VideoPlayerViewModel.PlayButtonState.SHOW_PAUSE
+            is MediaPlayerHelper.State.Finished -> VideoPlayerViewModel.PlayButtonState.SHOW_PLAY
         }
     }
     override val buffering = mediaPlayerState.map(viewModelScope) { state ->
@@ -73,9 +74,10 @@ class VideoPlayerViewModelImpl constructor(
             when (state) {
                 is MediaPlayerHelper.State.Buffering -> state.position
                 is MediaPlayerHelper.State.Error -> null
-                is MediaPlayerHelper.State.Initializing -> null
+                is MediaPlayerHelper.State.Idle -> null
                 is MediaPlayerHelper.State.Paused -> state.position
                 is MediaPlayerHelper.State.Playing -> state.position
+                is MediaPlayerHelper.State.Finished -> null
             }
         }
         .filter { it == null || isValidPosition(it) }
@@ -87,6 +89,9 @@ class VideoPlayerViewModelImpl constructor(
 
     override val lastValidPosition = position.mapNotNull { it?.timeMs }
         .stateIn(viewModelScope, SharingStarted.Eagerly, 0L)
+    override val isDonePlaying = mediaPlayerState.map(viewModelScope) { state ->
+        state is MediaPlayerHelper.State.Finished
+    }
     override val isError = mediaPlayerState.map(viewModelScope) { state ->
         state is MediaPlayerHelper.State.Error
     }

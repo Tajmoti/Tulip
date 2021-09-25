@@ -161,6 +161,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         consume(playerViewModel.isPlayingOrBuffering, this::onPlayingOrBufferingChanged)
         consume(playerViewModel.buffering, this::updateBuffering)
         consume(playerViewModel.position, this::updatePosition)
+        consume(playerViewModel.isDonePlaying, this::onDonePlayingChanged)
         consume(streamsViewModel.linksResult) { it?.let { adapter.items = it.streams } }
         consume(streamsViewModel.directLoadingUnsupported, this::onDirectLinkUnsupported)
         consume(streamsViewModel.directLoaded) { onDirectLinkLoaded(it) }
@@ -360,6 +361,11 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         binding.seekBarVideoProgress.visibility = if (hasPosition) View.VISIBLE else View.INVISIBLE
         position?.let { binding.seekBarVideoProgress.progress = convertToUiProgress(it.fraction) }
         position?.let { binding.textVideoTime.text = formatTimeForDisplay(it.timeMs) }
+    }
+
+    private fun onDonePlayingChanged(done: Boolean) {
+        if (done)
+            finish()
     }
 
     private fun formatTimeForDisplay(timeMs: Long): String {
