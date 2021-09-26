@@ -217,7 +217,7 @@ object Provider {
         return TulipConfiguration(
             tmdbCacheParams = TulipConfiguration.CacheParameters(60 * 60 * 1000L, 256),
             hostedItemCacheParams = TulipConfiguration.CacheParameters(60 * 60 * 1000L, 256),
-            streamCacheParams = TulipConfiguration.CacheParameters(15 * 1000L, 256)
+            streamCacheParams = TulipConfiguration.CacheParameters(60 * 60 * 1000L, 256)
         )
     }
 }
