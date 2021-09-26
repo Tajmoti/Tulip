@@ -1,5 +1,7 @@
 package com.tajmoti.libtulip.misc
 
+import arrow.core.Option
+import arrow.core.Some
 import com.tajmoti.commonutils.logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -28,7 +30,7 @@ inline fun <T> getNetworkBoundResource(
     /**
      * Retrieves the item from the cache
      */
-    crossinline cacheGetter: () -> T?,
+    crossinline cacheGetter: () -> Option<T>,
     /**
      * Updates the cache
      */
@@ -46,14 +48,14 @@ inline fun <T> getNetworkBoundResource(
 ): Flow<NetworkResult<T>> {
     return flow {
         // First try to emit a cached value
-        val cached = cacheGetter()?.let { cached ->
+        val cached = cacheGetter()
+        if (cached is Some) {
             // Cached value available, try to convert it
             logger.debug("Emitting cached value #1")
-            emit(NetworkResult.Success<T>(cached))
+            emit(NetworkResult.Success<T>(cached.value))
             // If we are fine with cached-only, get out of here
             if (finishIfCached)
                 return@flow
-            cached
         }
         // Then try to emit an item from the DB
         val dbItem = dbProducer().onValue { dbResult ->
@@ -73,9 +75,9 @@ inline fun <T> getNetworkBoundResource(
             .onFailure { netErr ->
                 val error = errorConverter(netErr)
                 // If we have a cached value, return it
-                cached.onValue { cached ->
+                if (cached is Some) {
                     logger.debug("Emitting cached value #3")
-                    emit(NetworkResult.Cached<T>(cached, error))
+                    emit(NetworkResult.Cached<T>(cached.value, error))
                     return@flow
                 }
                 // Cached value not available, try DB value

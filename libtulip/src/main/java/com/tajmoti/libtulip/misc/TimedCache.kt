@@ -1,5 +1,7 @@
 package com.tajmoti.libtulip.misc
 
+import arrow.core.Option
+import arrow.core.none
 import io.ktor.util.date.*
 
 /**
@@ -25,11 +27,11 @@ class TimedCache<K, V>(
     }
 
     @Synchronized
-    override fun get(k: K): V? {
+    override fun get(k: K): Option<V> {
         clean()
-        val pair = map[k] ?: return null
+        val pair = map[k] ?: return none()
         val (value, time) = pair
-        return value.takeIf { isStillFresh(time) }
+        return Option(value).filter { isStillFresh(time) }
     }
 
     private fun isStillFresh(time: Long): Boolean {
