@@ -6,6 +6,7 @@ import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libopensubtitles.OpenSubtitlesService
 import com.tajmoti.libprimewiretvprovider.PrimewireTvProvider
 import com.tajmoti.libtmdb.TmdbService
+import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.kinox.KinoxTvProvider
@@ -208,5 +209,15 @@ object Provider {
     @Singleton
     fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
         return createAppOkHttpClient(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTulipConfiguration(): TulipConfiguration {
+        return TulipConfiguration(
+            tmdbCacheParams = TulipConfiguration.CacheParameters(60 * 60 * 1000L, 16),
+            hostedItemCacheParams = TulipConfiguration.CacheParameters(60 * 60 * 1000L, 16),
+            streamCacheParams = TulipConfiguration.CacheParameters(15 * 1000L, 16)
+        )
     }
 }

@@ -11,6 +11,7 @@ import com.tajmoti.libtmdb.model.search.SearchTvResponse
 import com.tajmoti.libtmdb.model.tv.Episode
 import com.tajmoti.libtmdb.model.tv.Season
 import com.tajmoti.libtmdb.model.tv.Tv
+import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.LocalTvDataSource
 import com.tajmoti.libtulip.misc.*
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
@@ -26,16 +27,17 @@ import javax.inject.Inject
 
 class TmdbTvDataRepositoryImpl @Inject constructor(
     private val service: TmdbService,
-    private val db: LocalTvDataSource
+    private val db: LocalTvDataSource,
+    config: TulipConfiguration
 ) : TmdbTvDataRepository {
     private val tvCache = TimedCache<TvShowKey.Tmdb, TulipTvShowInfo.Tmdb>(
-        timeout = CACHE_EXPIRY_MS, size = CACHE_SIZE
+        timeout = config.tmdbCacheParams.validityMs, size = config.tmdbCacheParams.size
     )
     private val movieCache = TimedCache<MovieKey.Tmdb, TulipMovie.Tmdb>(
-        timeout = CACHE_EXPIRY_MS, size = CACHE_SIZE
+        timeout = config.tmdbCacheParams.validityMs, size = config.tmdbCacheParams.size
     )
     private val tmdbTvIdCache = TimedCache<SearchResult, TmdbItemId?>(
-        timeout = CACHE_EXPIRY_MS, size = CACHE_SIZE
+        timeout = config.tmdbCacheParams.validityMs, size = config.tmdbCacheParams.size
     )
 
     override suspend fun findTmdbIdAsFlow(searchResult: SearchResult): Flow<NetworkResult<TmdbItemId?>> {
@@ -176,18 +178,5 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
     private fun Movie.fromNetwork(): TulipMovie.Tmdb {
         val key = MovieKey.Tmdb(TmdbItemId.Movie(id))
         return TulipMovie.Tmdb(key, name, overview, posterPath, backdropPath)
-    }
-
-    companion object {
-        /**
-         * How many TV shows will be cached in memory at max.
-         */
-        private const val CACHE_SIZE = 16
-
-        /**
-         * The memory cache is valid for one hour.
-         * After that, the data will be invalidated on the next retrieval.
-         */
-        private const val CACHE_EXPIRY_MS = 60 * 60 * 1000L
     }
 }

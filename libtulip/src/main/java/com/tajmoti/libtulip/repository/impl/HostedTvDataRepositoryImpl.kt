@@ -1,6 +1,7 @@
 package com.tajmoti.libtulip.repository.impl
 
 import com.tajmoti.commonutils.*
+import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.HostedInfoDataSource
 import com.tajmoti.libtulip.misc.*
 import com.tajmoti.libtulip.model.MissingEntityException
@@ -23,16 +24,17 @@ import javax.inject.Inject
 class HostedTvDataRepositoryImpl @Inject constructor(
     private val hostedTvDataRepo: HostedInfoDataSource,
     private val tvProvider: MultiTvProvider<StreamingService>,
-    private val tmdbRepo: TmdbTvDataRepository
+    private val tmdbRepo: TmdbTvDataRepository,
+    config: TulipConfiguration
 ) : HostedTvDataRepository {
     private val tvCache = TimedCache<TvShowKey.Hosted, TulipTvShowInfo.Hosted>(
-        timeout = CACHE_EXPIRY_MS, size = CACHE_SIZE
+        timeout = config.hostedItemCacheParams.validityMs, size = config.hostedItemCacheParams.size
     )
     private val movieCache = TimedCache<MovieKey.Hosted, TulipMovie.Hosted>(
-        timeout = CACHE_EXPIRY_MS, size = CACHE_SIZE
+        timeout = config.hostedItemCacheParams.validityMs, size = config.hostedItemCacheParams.size
     )
     private val streamCache = TimedCache<StreamableKey.Hosted, List<VideoStreamRef>>(
-        timeout = CACHE_EXPIRY_MS, size = CACHE_SIZE
+        timeout = config.streamCacheParams.validityMs, size = config.streamCacheParams.size
     )
 
 
@@ -314,19 +316,5 @@ class HostedTvDataRepositoryImpl @Inject constructor(
         val result = fetchStreamsAsFlow(key).firstOrNull()?.toResult()
             ?: Result.failure(MissingEntityException)
         return result.onFailure { logger.warn("Failed to fetch streams for $key", it) }
-    }
-
-
-    companion object {
-        /**
-         * How many TV shows will be cached in memory at max.
-         */
-        private const val CACHE_SIZE = 16
-
-        /**
-         * The memory cache is valid for one hour.
-         * After that, the data will be invalidated on the next retrieval.
-         */
-        private const val CACHE_EXPIRY_MS = 60 * 60 * 1000L
     }
 }
