@@ -25,7 +25,7 @@ interface FavoritesDao {
     suspend fun deleteTmdbFavorite(item: DbFavoriteTmdbItem)
 
 
-    @Query("SELECT EXISTS(SELECT * FROM DbFavoriteHostedItem WHERE type = :type AND streamingService = :streamingService AND key == :key)")
+    @Query("SELECT EXISTS(SELECT * FROM DbFavoriteHostedItem WHERE type = :type AND streamingService = :streamingService AND `key` == :key)")
     fun isHostedFavorite(type: ItemType, streamingService: StreamingService, key: String): Flow<Boolean>
 
     @Query("SELECT * FROM DbFavoriteHostedItem")

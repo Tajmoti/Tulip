@@ -12,10 +12,7 @@ import com.tajmoti.libtmdb.model.tv.Episode
 import com.tajmoti.libtmdb.model.tv.Season
 import com.tajmoti.libtmdb.model.tv.Tv
 import com.tajmoti.libtulip.data.LocalTvDataSource
-import com.tajmoti.libtulip.misc.NetworkResult
-import com.tajmoti.libtulip.misc.TimedCache
-import com.tajmoti.libtulip.misc.getNetworkBoundResource
-import com.tajmoti.libtulip.misc.getNetworkBoundResourceVariable
+import com.tajmoti.libtulip.misc.*
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
@@ -24,7 +21,6 @@ import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtvprovider.SearchResult
-import com.tajmoti.libtvprovider.TvItemInfo
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -38,20 +34,36 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
     private val movieCache = TimedCache<MovieKey.Tmdb, TulipMovie.Tmdb>(
         timeout = CACHE_EXPIRY_MS, size = CACHE_SIZE
     )
+    private val tmdbTvIdCache = TimedCache<SearchResult, TmdbItemId?>(
+        timeout = CACHE_EXPIRY_MS, size = CACHE_SIZE
+    )
 
+    override suspend fun findTmdbIdAsFlow(searchResult: SearchResult): Flow<NetworkResult<TmdbItemId?>> {
+        return getNetworkBoundResource(
+            { null },
+            { fetchSearchResult(searchResult) },
+            { },
+            { tmdbTvIdCache[searchResult] },
+            { tmdbTvIdCache[searchResult] = it }
+        )
+    }
 
-    override suspend fun findTmdbId(type: SearchResult.Type, info: TvItemInfo): TmdbItemId? {
+    override suspend fun findTmdbId(searchResult: SearchResult): TmdbItemId? {
+        return findTmdbIdAsFlow(searchResult).firstValueOrNull()
+    }
+
+    private suspend fun fetchSearchResult(searchResult: SearchResult): Result<TmdbItemId?> {
         return runCatching {
-            when (type) {
+            val info = searchResult.info
+            when (searchResult.type) {
                 SearchResult.Type.TV_SHOW -> searchTv(info.name, info.firstAirDateYear)
                     .map { firstResultIdOrNull(it) }.getOrNull()?.let { TmdbItemId.Tv(it) }
                 SearchResult.Type.MOVIE -> searchMovie(info.name, info.firstAirDateYear)
                     .map { firstResultIdOrNull(it) }.getOrNull()?.let { TmdbItemId.Movie(it) }
             }
-        }
-            .onFailure { logger.warn("Exception searching $type $info") }
-            .getOrNull()
+        }.onFailure { logger.warn("Exception searching $searchResult") }
     }
+
 
     private fun firstResultIdOrNull(r: SearchResponse): Long? {
         return r.results.firstOrNull()?.id

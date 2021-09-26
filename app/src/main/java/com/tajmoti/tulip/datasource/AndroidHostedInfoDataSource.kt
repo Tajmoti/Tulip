@@ -6,29 +6,30 @@ import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
 import com.tajmoti.libtulip.model.info.TulipTvShowInfo
 import com.tajmoti.libtulip.model.key.*
-import com.tajmoti.tulip.db.dao.hosted.EpisodeDao
-import com.tajmoti.tulip.db.dao.hosted.MovieDao
-import com.tajmoti.tulip.db.dao.hosted.SeasonDao
-import com.tajmoti.tulip.db.dao.hosted.TvShowDao
+import com.tajmoti.libtulip.model.tmdb.TmdbItemId
+import com.tajmoti.tulip.db.dao.hosted.*
+import com.tajmoti.tulip.db.entity.hosted.DbTmdbMapping
 import javax.inject.Inject
 
 class AndroidHostedInfoDataSource @Inject constructor(
     private val tvShowDao: TvShowDao,
     private val seasonDao: SeasonDao,
     private val episodeDao: EpisodeDao,
-    private val movieDao: MovieDao
+    private val movieDao: MovieDao,
+    private val tmdbMappingDao: TmdbMappingDao
 ) : HostedInfoDataSource {
 
     override suspend fun getTvShowByKey(key: TvShowKey.Hosted): TulipTvShowInfo.Hosted? {
+        val tmdbId = tmdbMappingDao.getTmdbIdByHostedKey(key.streamingService, key.id)
         return tvShowDao.getByKey(key.streamingService, key.id)
-            ?.fromDb(key, getSeasonsByTvShow(key))
+            ?.fromDb(key, tmdbId?.tmdbId, getSeasonsByTvShow(key))
     }
 
     override suspend fun getTvShowsByTmdbId(key: TvShowKey.Tmdb): List<TulipTvShowInfo.Hosted> {
         return tvShowDao.getByTmdbId(key.id.id)
             .map {
                 val tvShowKey = TvShowKey.Hosted(it.service, it.key)
-                it.fromDb(tvShowKey, getSeasonsByTvShow(tvShowKey))
+                it.fromDb(tvShowKey, key.id.id, getSeasonsByTvShow(tvShowKey))
             }
     }
 
@@ -86,16 +87,32 @@ class AndroidHostedInfoDataSource @Inject constructor(
 
 
     override suspend fun getMovieByKey(key: MovieKey.Hosted): TulipMovie.Hosted? {
+        val tmdbId = tmdbMappingDao.getTmdbIdByHostedKey(key.streamingService, key.id)
         return movieDao.getByKey(key.streamingService, key.id)
-            ?.fromDb(key)
+            ?.fromDb(key, tmdbId?.tmdbId)
     }
 
     override suspend fun getMovieByTmdbKey(key: MovieKey.Tmdb): List<TulipMovie.Hosted> {
         return movieDao.getByTmdbId(key.id.id)
-            .map { it.fromDb() }
+            .map { it.fromDb(key.id.id) }
     }
 
     override suspend fun insertMovie(movie: TulipMovie.Hosted) {
         movieDao.insert(movie.toDb(movie.info))
+    }
+
+
+    override suspend fun createTmdbMapping(hosted: ItemKey.Hosted, tmdb: TmdbItemId) {
+        tmdbMappingDao.insert(DbTmdbMapping(hosted.streamingService, hosted.id, tmdb.id))
+    }
+
+    override suspend fun getTmdbMappingForTvShow(tmdb: TmdbItemId.Tv): List<TvShowKey.Hosted> {
+        return tmdbMappingDao.getHostedKeysByTmdbId(tmdb.id)
+            .map { TvShowKey.Hosted(it.service, it.key) }
+    }
+
+    override suspend fun getTmdbMappingForMovie(tmdb: TmdbItemId.Movie): List<MovieKey.Hosted> {
+        return tmdbMappingDao.getHostedKeysByTmdbId(tmdb.id)
+            .map { MovieKey.Hosted(it.service, it.key) }
     }
 }

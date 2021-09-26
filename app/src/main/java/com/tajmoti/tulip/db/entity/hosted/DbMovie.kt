@@ -9,6 +9,5 @@ data class DbMovie(
     val key: String,
     val name: String,
     val language: String,
-    val firstAirDateYear: Int?,
-    val tmdbId: Long?
+    val firstAirDateYear: Int?
 )

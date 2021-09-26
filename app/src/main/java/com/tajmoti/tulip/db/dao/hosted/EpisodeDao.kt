@@ -16,7 +16,7 @@ interface EpisodeDao {
         seasonNumber: Int
     ): List<DbEpisode>
 
-    @Query("SELECT * FROM DbEpisode WHERE service == :service AND tvShowKey == :tvShowKey AND seasonNumber == :seasonNumber AND key == :key LIMIT 1")
+    @Query("SELECT * FROM DbEpisode WHERE service == :service AND tvShowKey == :tvShowKey AND seasonNumber == :seasonNumber AND `key` == :key LIMIT 1")
     suspend fun getByKey(
         service: StreamingService,
         tvShowKey: String,

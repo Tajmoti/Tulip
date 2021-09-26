@@ -21,10 +21,7 @@ import com.tajmoti.tulip.createTmdbRetrofit
 import com.tajmoti.tulip.db.AppDatabase
 import com.tajmoti.tulip.db.TmdbDatabase
 import com.tajmoti.tulip.db.UserDataDatabase
-import com.tajmoti.tulip.db.dao.hosted.EpisodeDao
-import com.tajmoti.tulip.db.dao.hosted.MovieDao
-import com.tajmoti.tulip.db.dao.hosted.SeasonDao
-import com.tajmoti.tulip.db.dao.hosted.TvShowDao
+import com.tajmoti.tulip.db.dao.hosted.*
 import com.tajmoti.tulip.db.dao.tmdb.TmdbDao
 import com.tajmoti.tulip.db.dao.userdata.FavoritesDao
 import dagger.Module
@@ -169,6 +166,12 @@ object Provider {
     @Singleton
     fun provideMovieDao(db: AppDatabase): MovieDao {
         return db.movieDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTmdbMappingDao(db: AppDatabase): TmdbMappingDao {
+        return db.tmdbMappingDao()
     }
 
     @Provides

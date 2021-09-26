@@ -9,10 +9,10 @@ import com.tajmoti.tulip.db.entity.hosted.DbMovie
 
 @Dao
 interface MovieDao {
-    @Query("SELECT * FROM DbMovie WHERE service == :service AND key == :key LIMIT 1")
+    @Query("SELECT * FROM DbMovie WHERE service == :service AND `key` == :key LIMIT 1")
     suspend fun getByKey(service: StreamingService, key: String): DbMovie?
 
-    @Query("SELECT * FROM DbMovie WHERE tmdbId == :tmdbId")
+    @Query("SELECT * FROM DbMovie INNER JOIN DbTmdbMapping mapping ON mapping.`key` == DbMovie.`key` WHERE tmdbId == :tmdbId")
     suspend fun getByTmdbId(tmdbId: Long): List<DbMovie>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -2,6 +2,7 @@ package com.tajmoti.libtulip.data
 
 import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.libtulip.model.key.*
+import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 
 interface HostedInfoDataSource {
 
@@ -37,4 +38,11 @@ interface HostedInfoDataSource {
     suspend fun getMovieByTmdbKey(key: MovieKey.Tmdb): List<TulipMovie.Hosted>
 
     suspend fun insertMovie(movie: TulipMovie.Hosted)
+
+
+    suspend fun createTmdbMapping(hosted: ItemKey.Hosted, tmdb: TmdbItemId)
+
+    suspend fun getTmdbMappingForTvShow(tmdb: TmdbItemId.Tv): List<TvShowKey.Hosted>
+
+    suspend fun getTmdbMappingForMovie(tmdb: TmdbItemId.Movie): List<MovieKey.Hosted>
 }

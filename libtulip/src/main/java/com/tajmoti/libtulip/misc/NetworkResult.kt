@@ -30,4 +30,22 @@ sealed class NetworkResult<T> {
      * Data of this result or null if not available
      */
     abstract val data: T?
+
+    /**
+     * Turn this network result into a Kotlin stdlib Result type.
+     */
+    fun toResult(): Result<T> {
+        return when (this) {
+            is Error<T> -> Result.failure<T>(Throwable("Unsuccessful NetworkResult $error"))
+            else -> Result.success(data!!)
+        }
+    }
+
+    fun <S> map(func: (T) -> S): NetworkResult<S> {
+        return when (this) {
+            is Success<T> -> Success(func(data))
+            is Error<T> -> Error(error)
+            is Cached<T> -> Cached(func(data), error)
+        }
+    }
 }

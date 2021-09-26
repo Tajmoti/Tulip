@@ -14,7 +14,9 @@ import kotlinx.coroutines.flow.last
 
 interface TmdbTvDataRepository {
 
-    suspend fun findTmdbId(type: SearchResult.Type, info: TvItemInfo): TmdbItemId?
+    suspend fun findTmdbIdAsFlow(searchResult: SearchResult): Flow<NetworkResult<TmdbItemId?>>
+
+    suspend fun findTmdbId(searchResult: SearchResult): TmdbItemId?
 
 
     suspend fun searchTv(query: String, firstAirDateYear: Int?): Result<SearchTvResponse>
