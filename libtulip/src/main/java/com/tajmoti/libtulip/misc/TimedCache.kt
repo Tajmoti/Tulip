@@ -18,11 +18,13 @@ class TimedCache<K, V>(
     private val map = hashMapOf<K, Pair<V, Long>>()
 
 
+    @Synchronized
     override fun set(k: K, v: V) {
         clean()
         map[k] = v to getTimeMillis()
     }
 
+    @Synchronized
     override fun get(k: K): V? {
         clean()
         val pair = map[k] ?: return null
