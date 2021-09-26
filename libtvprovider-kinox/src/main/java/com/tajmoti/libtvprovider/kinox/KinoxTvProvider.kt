@@ -1,10 +1,10 @@
 package com.tajmoti.libtvprovider.kinox
 
 import com.tajmoti.commonutils.flatMapWithContext
+import com.tajmoti.commonutils.mapWithContext
 import com.tajmoti.libtvprovider.*
 import kotlinx.coroutines.Dispatchers
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import java.net.URLEncoder
 
 class KinoxTvProvider(
@@ -38,24 +38,12 @@ class KinoxTvProvider(
             }
     }
 
-    private fun parseTvShowInfo(key: String, document: Document): TvItemInfo {
-        val name =
-            document.selectFirst("div.leftOpt:nth-child(3) > h1:nth-child(1) > span:nth-child(1)")!!
-                .ownText()
-        val yearStr = document.selectFirst(".Year")!!
-            .ownText()
-        val year = yearStr.replace("(", "").replace(")", "")
-        val flag = document.select(".Flag > img:nth-child(1)").attr("src")
-            .removeSuffix(".png")
-            .replaceBeforeLast("/", "")
-            .substring(1)
-            .toInt()
-        return TvItemInfo(key, name, languageNumberToLanguageCode(flag), year.toInt())
-    }
-
-
     override suspend fun getMovie(id: String): Result<MovieInfo> {
-        TODO()
+        return httpLoader(baseUrl + id)
+            .mapWithContext(Dispatchers.Default) {
+                val document = Jsoup.parse(it)
+                MovieInfo(id, parseTvShowInfo(id, document))
+            }
     }
 
     override suspend fun getStreamableLinks(episodeOrMovieId: String): Result<List<VideoStreamRef>> {

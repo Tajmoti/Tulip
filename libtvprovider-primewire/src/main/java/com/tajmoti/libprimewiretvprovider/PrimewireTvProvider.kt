@@ -5,7 +5,6 @@ import com.tajmoti.commonutils.mapWithContext
 import com.tajmoti.libtvprovider.*
 import kotlinx.coroutines.Dispatchers
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import java.net.URLEncoder
 
 class PrimewireTvProvider(
@@ -48,23 +47,20 @@ class PrimewireTvProvider(
             }
     }
 
-    private fun parseTvItemInfo(key: String, page: Document): TvItemInfo {
-        val title =
-            page.selectFirst(".stage_navigation > h1:nth-child(1) > span:nth-child(1) > a:nth-child(1)")!!
-                .attr("title")
-        val yearStart = title.indexOfLast { it == '(' }
-        val yearEnd = title.indexOfLast { it == ')' }
-        val yearStr = title.subSequence(yearStart + 1, yearEnd)
-        val name = title.substring(0, yearStart - 1)
-        return TvItemInfo(key, name, "en", yearStr.toString().toInt())
-    }
-
     override suspend fun getMovie(id: String): Result<MovieInfo> {
-        TODO("Not yet implemented")
+        return httpLoader(baseUrl + id)
+            .mapWithContext(Dispatchers.Default) { source ->
+                val tvItemInfo = parseTvItemInfo(id, Jsoup.parse(source))
+                MovieInfo(id, tvItemInfo)
+            }
     }
 
     override suspend fun getStreamableLinks(episodeOrMovieId: String): Result<List<VideoStreamRef>> {
-        return pageLoader.invoke(baseUrl + episodeOrMovieId, this::shouldAllowUrl, LINK_PAGE_HTML_SUBMIT_TRIGGER)
+        return pageLoader.invoke(
+            baseUrl + episodeOrMovieId,
+            this::shouldAllowUrl,
+            LINK_PAGE_HTML_SUBMIT_TRIGGER
+        )
             .flatMapWithContext(Dispatchers.Default) {
                 getVideoStreamsBlocking(it, baseUrl)
             }
