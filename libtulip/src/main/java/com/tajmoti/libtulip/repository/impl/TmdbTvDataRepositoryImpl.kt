@@ -23,6 +23,7 @@ import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtvprovider.SearchResult
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class TmdbTvDataRepositoryImpl @Inject constructor(
@@ -41,6 +42,7 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
     )
 
     override suspend fun findTmdbIdAsFlow(searchResult: SearchResult): Flow<NetworkResult<TmdbItemId?>> {
+        logger.debug("Retrieving $searchResult")
         return getNetworkBoundResource(
             { null },
             { fetchSearchResult(searchResult) },
@@ -84,7 +86,7 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
     }
 
     private suspend inline fun fetchFullTvInfo(key: TvShowKey.Tmdb): Result<TulipTvShowInfo.Tmdb> {
-        logger.debug("Downloading full TV info")
+        logger.debug("Downloading full TV info of $key")
         val tv = runCatching { service.getTv(key.id.id) }
             .getOrElse { return Result.failure(it) }
         return tv.seasons
@@ -114,39 +116,36 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
     }
 
     override fun getTvShowWithSeasonsAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<out TulipTvShowInfo.Tmdb>> {
-        logger.debug("Getting TV as flow")
-        return getNetworkBoundResourceVariable(
+        logger.debug("Retrieving $key")
+        return getNetworkBoundResource(
             { db.getTvShow(key) },
             { fetchFullTvInfo(key) },
             { db.insertTvShow(it) },
-            { it },
             { tvCache[key] },
             { tvCache[key] = it }
         )
     }
 
     override fun getSeasonAsFlow(key: SeasonKey.Tmdb): Flow<NetworkResult<out TulipSeasonInfo.Tmdb>> {
-        logger.debug("Getting season as flow")
-        return getNetworkBoundResourceVariable(
-            { db.getSeason(key) },
-            { fetchFullTvInfo(key.tvShowKey) },
-            { db.insertTvShow(it) },
-            { getCorrectSeason(it, key) },
-            { tvCache[key.tvShowKey] },
-            { tvCache[key.tvShowKey] = it }
-        )
+        logger.debug("Retrieving $key")
+        return getTvShowWithSeasonsAsFlow(key.tvShowKey)
+            .map {
+                it.convert { tvShow ->
+                    getCorrectSeason(tvShow, key)
+                        .onNull { logger.warn("Season $key not found in $tvShow") }
+                }
+            }
     }
 
     override fun getEpisodeAsFlow(key: EpisodeKey.Tmdb): Flow<NetworkResult<out TulipEpisodeInfo.Tmdb>> {
-        logger.debug("Getting episode as flow")
-        return getNetworkBoundResourceVariable(
-            { db.getEpisode(key) },
-            { fetchFullTvInfo(key.tvShowKey) },
-            { db.insertTvShow(it) },
-            { getCorrectEpisode(it, key) },
-            { tvCache[key.tvShowKey] },
-            { tvCache[key.tvShowKey] = it }
-        )
+        logger.debug("Retrieving $key")
+        return getTvShowWithSeasonsAsFlow(key.tvShowKey)
+            .map {
+                it.convert { tvShow ->
+                    getCorrectEpisode(tvShow, key)
+                        .onNull { logger.warn("Episode $key not found in $tvShow") }
+                }
+            }
     }
 
     private fun getCorrectSeason(
@@ -165,7 +164,7 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
     }
 
     override fun getMovieAsFlow(key: MovieKey.Tmdb): Flow<NetworkResult<out TulipMovie.Tmdb>> {
-        logger.debug("Getting Movie as flow")
+        logger.debug("Retrieving $key")
         return getNetworkBoundResource(
             { db.getMovie(key) },
             { runCatching { service.getMovie(key.id.id).fromNetwork() } },

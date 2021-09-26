@@ -137,11 +137,10 @@ class HostedTvDataRepositoryImpl @Inject constructor(
 
     override suspend fun getTvShowAsFlow(key: TvShowKey.Hosted): NetFlow<out TulipTvShowInfo.Hosted> {
         logger.debug("Retrieving $key")
-        return getNetworkBoundResourceVariable(
+        return getNetworkBoundResource(
             { hostedTvDataRepo.getTvShowByKey(key) },
             { fetchTvShow(key) },
             { hostedTvDataRepo.insertTvShow(it) },
-            { it },
             { tvCache[key] },
             { tvCache[key] = it }
         )
@@ -212,11 +211,10 @@ class HostedTvDataRepositoryImpl @Inject constructor(
 
     private suspend fun getMovieInfoAsFlow(key: MovieKey.Hosted): NetFlow<out TulipMovie.Hosted> {
         logger.debug("Retrieving $key")
-        return getNetworkBoundResourceVariable(
+        return getNetworkBoundResource(
             { hostedTvDataRepo.getMovieByKey(key) },
             { fetchMovie(key) },
             { hostedTvDataRepo.insertMovie(it) },
-            { it },
             { movieCache[key] },
             { movieCache[key] = it }
         )

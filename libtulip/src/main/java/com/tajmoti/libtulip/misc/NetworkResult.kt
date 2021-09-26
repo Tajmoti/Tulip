@@ -48,4 +48,26 @@ sealed class NetworkResult<T> {
             is Cached<T> -> Cached(func(data), error)
         }
     }
+
+    fun <S> convert(func: (T) -> S?): NetworkResult<S> {
+        return when (this) {
+            is Success<T> -> {
+                val converted = func(data)
+                if (converted != null) {
+                    Success(converted)
+                } else {
+                    Error(ErrorType.CONVERSION_FAILED)
+                }
+            }
+            is Error<T> -> Error(error)
+            is Cached<T> -> {
+                val converted = func(data)
+                if (converted != null) {
+                    Cached(converted, error)
+                } else {
+                    Error(ErrorType.CONVERSION_FAILED)
+                }
+            }
+        }
+    }
 }
