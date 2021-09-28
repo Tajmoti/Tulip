@@ -1,8 +1,9 @@
 package com.tajmoti.libtvprovider
 
 import com.tajmoti.commonutils.logger
-import com.tajmoti.commonutils.parallelMap
+import com.tajmoti.commonutils.parallelMapToFlow
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withTimeout
 
 class MultiTvProvider<ID>(
@@ -16,12 +17,11 @@ class MultiTvProvider<ID>(
     /**
      * Searches [query] using all TV providers in parallel.
      */
-    suspend fun search(query: String): Map<ID, Result<List<SearchResult>>> {
-        val results = providers.parallelMap { key, value ->
-            searchAsync(query, key, value)
+    suspend fun search(query: String): Flow<Pair<ID, Result<List<SearchResult>>>> {
+        val results = providers.parallelMapToFlow { key, value ->
+            key to searchAsync(query, key, value)
         }
-        val ids = providers.map { it.key }
-        return ids.zip(results).toMap()
+        return results
     }
 
     private suspend inline fun searchAsync(

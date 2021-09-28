@@ -40,6 +40,20 @@ suspend inline fun <R, S> List<R>.parallelMapToFlow(
     }
 }
 
+suspend inline fun <P, R, S> Map<P, R>.parallelMapToFlow(
+    crossinline block: suspend CoroutineScope.(P, R) -> S
+): Flow<S> {
+    return channelFlow {
+        coroutineScope {
+            map { (key, value) ->
+                async {
+                    send(block.invoke(this, key, value))
+                }
+            }
+        }
+    }
+}
+
 suspend inline fun <P, R, S> Map<P, R>.parallelMap(
     crossinline block: suspend CoroutineScope.(P, R) -> S
 ): List<S> {
@@ -111,4 +125,90 @@ inline fun <T, R> StateFlow<T>.map(
         return@transform emit(transformed)
     }
     return flow.stateIn(scope, SharingStarted.Eagerly, initial)
+}
+
+/**
+ * Performs a running fold on the pairs, which get accumulated into a map.
+ * The initial empty map is not emitted.
+ */
+fun <K, V> Flow<Pair<K, V>>.runningFoldConcatDropInitial(): Flow<Map<K, V>> {
+    val initial = emptyMap<K, V>()
+    return runningFold(initial) { a, b -> a + b }
+        .filter { it.isNotEmpty() }
+}
+
+/**
+ * Maps not-null values, nulls are passed on.
+ */
+inline fun <T, S> Flow<T?>.mapNotNulls(crossinline transform: suspend (T) -> S): Flow<S?> {
+    return map {
+        if (it != null) {
+            transform(it)
+        } else {
+            null
+        }
+    }
+}
+
+/**
+ * Performs the [action] on each non-null item.
+ */
+inline fun <T> Flow<T?>.onEachNotNull(crossinline action: suspend (T) -> Unit): Flow<T?> {
+    return onEach { if (it != null) action(it) }
+}
+
+/**
+ * Performs the [action] on each null item.
+ */
+inline fun <T> Flow<T?>.onEachNull(crossinline action: suspend () -> Unit): Flow<T?> {
+    return onEach { if (it == null) action() }
+}
+
+/**
+ * Maps the items on the provided dispatcher.
+ */
+inline fun <T, R> Flow<T>.mapWithContext(
+    dispatcher: CoroutineDispatcher,
+    crossinline transform: suspend (value: T) -> R
+): Flow<R> {
+    return map {
+        withContext(dispatcher) {
+            transform(it)
+        }
+    }
+}
+
+
+/**
+ * Maps not-null values, nulls are passed on.
+ */
+inline fun <T, S> Flow<T?>.mapNotNullsWithContext(
+    dispatcher: CoroutineDispatcher,
+    crossinline transform: suspend (T) -> S
+): Flow<S?> {
+    return map {
+        if (it != null) {
+            withContext(dispatcher) {
+                transform(it)
+            }
+        } else {
+            null
+        }
+    }
+}
+
+/**
+ * Maps the items on the provided dispatcher.
+ */
+inline fun <T, R> Flow<T?>.mapFold(
+    crossinline onValue: (T) -> R,
+    crossinline onNull: () -> R
+): Flow<R> {
+    return map {
+        if (it != null) {
+            onValue(it)
+        } else {
+            onNull()
+        }
+    }
 }

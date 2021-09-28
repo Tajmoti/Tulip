@@ -16,9 +16,8 @@ import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtvprovider.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class HostedTvDataRepositoryImpl @Inject constructor(
@@ -38,19 +37,17 @@ class HostedTvDataRepositoryImpl @Inject constructor(
     )
 
 
-    override suspend fun search(query: String): Result<List<TulipSearchResult>> {
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override suspend fun search(query: String): Flow<Result<List<TulipSearchResult>>> {
         logger.debug("Searching '{}'", query)
-        val searchResult = tvProvider.search(query)
-        if (searchResult.none { it.value.isSuccess }) {
-            logger.warn("No successful results!")
-            return Result.failure(NoSuccessfulResultsException)
-        }
-        logExceptions(searchResult)
-        val mapped = withContext(Dispatchers.Default) {
-            handleSearchResult(searchResult)
-        }
-        createTmdbMappings(mapped)
-        return Result.success(mapped)
+        return tvProvider.search(query)
+            .onEach(this::logExceptions)
+            .runningFoldConcatDropInitial()
+            .map { resMap -> resMap.takeUnless { it.all { (_, v) -> v.isFailure } } }
+            .mapNotNullsWithContext(Dispatchers.Default, this::handleSearchResult)
+            .onEachNotNull(this::createTmdbMappings)
+            .onEachNull { logger.warn("No successful results!") }
+            .mapFold({ Result.success(it) }, { Result.failure(NoSuccessfulResultsException) })
     }
 
     private suspend fun createTmdbMappings(mapped: List<TulipSearchResult>) {
@@ -240,11 +237,10 @@ class HostedTvDataRepositoryImpl @Inject constructor(
             .firstOrNull()?.toResult() ?: Result.failure(MissingEntityException)
     }
 
-    private fun logExceptions(searchResult: Map<StreamingService, Result<List<SearchResult>>>) {
-        for ((service, result) in searchResult) {
-            val exception = result.exceptionOrNull() ?: continue
-            logger.warn("{} failed with", service, exception)
-        }
+    private fun logExceptions(searchResult: Pair<StreamingService, Result<List<SearchResult>>>) {
+        val (service, result) = searchResult
+        val exception = result.exceptionOrNull() ?: return
+        logger.warn("{} failed with", service, exception)
     }
 
     override suspend fun getEpisodeByTmdbId(key: EpisodeKey.Tmdb): Result<List<TulipEpisodeInfo.Hosted>> {

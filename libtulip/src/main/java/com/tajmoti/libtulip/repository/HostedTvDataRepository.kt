@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
  */
 interface HostedTvDataRepository {
 
-    suspend fun search(query: String): Result<List<TulipSearchResult>>
+    suspend fun search(query: String): Flow<Result<List<TulipSearchResult>>>
 
     suspend fun getTvShowAsFlow(key: TvShowKey.Hosted): Flow<NetworkResult<out TulipTvShowInfo.Hosted>>
 

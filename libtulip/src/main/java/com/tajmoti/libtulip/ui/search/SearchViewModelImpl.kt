@@ -2,8 +2,8 @@ package com.tajmoti.libtulip.ui.search
 
 import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.model.hosted.toItemKey
-import com.tajmoti.libtulip.model.search.TulipSearchResult
 import com.tajmoti.libtulip.model.key.ItemKey
+import com.tajmoti.libtulip.model.search.TulipSearchResult
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.ui.doCancelableJob
@@ -93,9 +93,9 @@ class SearchViewModelImpl @Inject constructor(
 
     private suspend fun startSearchAsync(query: String) = flow {
         emit(State.Searching)
-        repository.search(query)
-            .onSuccess { emit(State.Success(it)) }
-            .getOrElse { emit(State.Error) }
+        val flowOfStates = repository.search(query)
+            .map { result -> result.fold({ State.Success(it) }, { State.Error }) }
+        emitAll(flowOfStates)
     }
 
     sealed interface State {
