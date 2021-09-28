@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Changed
+- Increase thumb size on seekbar in video player
 
 ## [0.9.1] - 2021-09-25
 ### Changed

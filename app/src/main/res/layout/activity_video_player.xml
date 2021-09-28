@@ -148,6 +148,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
+                android:thumb="@drawable/seekbar_drawable_thumb_video_player"
                 android:visibility="@{!viewModel.isError()}"
                 app:layout_constraintBottom_toTopOf="@id/barrier_bottom_buttons"
                 app:layout_constraintEnd_toStartOf="@id/text_video_time"
