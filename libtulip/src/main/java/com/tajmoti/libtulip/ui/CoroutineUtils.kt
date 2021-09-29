@@ -22,3 +22,10 @@ fun CoroutineScope.doCancelableJob(
     }
     job.set(newJob)
 }
+
+fun CoroutineScope.doCancelableJob(
+    job: KMutableProperty0<Job?>,
+    task: suspend () -> Unit
+) {
+    doCancelableJob(job, null, task)
+}

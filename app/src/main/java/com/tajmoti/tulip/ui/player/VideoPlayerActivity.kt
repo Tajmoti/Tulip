@@ -21,7 +21,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
-import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
@@ -52,7 +51,7 @@ import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
-        R.layout.activity_video_player
+    R.layout.activity_video_player
 ) {
     private val playerViewModel by viewModelsDelegated<VideoPlayerViewModel, AndroidVideoPlayerViewModel>()
     private val streamsViewModel by viewModelsDelegated<StreamsViewModel, AndroidStreamsViewModel>()
@@ -170,6 +169,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         consume(streamsViewModel.videoLinkToDownload) { onVideoToDownloadChanged(it) }
         consume(streamsViewModel.linkLoadingError, this::onDirectLinkLoadingError)
         consume(streamsViewModel.streamableInfo, this::onStreamableInfo)
+        consume(playerViewModel.streamableKey) { streamsViewModel.onStreamClicked(it) } // TODO
     }
 
     override fun onStart() {

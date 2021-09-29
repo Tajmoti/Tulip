@@ -24,6 +24,8 @@
 
     <style name="FullscreenTextButton" parent="Widget.AppCompat.Button.Borderless">
         <item name="android:background">?android:selectableItemBackground</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:layout_margin">4dp</item>
     </style>
 
     <style name="FullscreenImageButtonLarge" parent="Widget.AppCompat.Button.Borderless">

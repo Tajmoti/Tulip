@@ -3,8 +3,10 @@ package com.tajmoti.tulip.ui.player
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.repository.PlayingHistoryRepository
 import com.tajmoti.libtulip.repository.SubtitleRepository
+import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModelImpl
 import com.tajmoti.tulip.ui.DelegatingViewModel
@@ -17,6 +19,8 @@ class AndroidVideoPlayerViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     subtitleRepository: SubtitleRepository,
     playingHistoryRepository: PlayingHistoryRepository,
+    tmdbTvDataRepository: TmdbTvDataRepository,
+    hostedTvDataRepository: HostedTvDataRepository,
     @ApplicationContext
     context: Context
 ) : DelegatingViewModel<VideoPlayerViewModel>() {
@@ -25,6 +29,8 @@ class AndroidVideoPlayerViewModel @Inject constructor(
         VideoPlayerViewModelImpl(
             subtitleRepository,
             playingHistoryRepository,
+            tmdbTvDataRepository,
+            hostedTvDataRepository,
             context.getExternalFilesDir(null)!!,
             viewModelScope,
             args.streamableKey

@@ -37,4 +37,6 @@
     <string name="subtitle_delay_failed">Setting of subtitle delay failed</string>
     <string name="label_no_subtitles">No subtitles</string>
     <string name="not_yet_watched">Never watched</string>
+    <string name="next_episode">Next episode</string>
+    <string name="episodes">Episodes</string>
 </resources>

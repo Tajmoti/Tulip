@@ -1,6 +1,7 @@
 package com.tajmoti.libtulip.ui.streams
 
 import com.tajmoti.libtulip.model.info.StreamableInfo
+import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.stream.StreamableInfoWithLangLinks
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import kotlinx.coroutines.flow.SharedFlow
@@ -37,6 +38,11 @@ interface StreamsViewModel {
      * The user has clicked a link, it needs to be resolved and played.
      */
     fun onStreamClicked(stream: UnloadedVideoStreamRef, download: Boolean)
+
+    /**
+     * A new stream needs to be resolved and played by its key.
+     */
+    fun onStreamClicked(key: StreamableKey)
 
     /**
      * Whether redirects are being resolved or a direct link is being loaded right now.

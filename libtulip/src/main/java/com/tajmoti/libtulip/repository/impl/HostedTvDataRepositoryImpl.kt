@@ -132,7 +132,7 @@ class HostedTvDataRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getTvShowAsFlow(key: TvShowKey.Hosted): NetFlow<out TulipTvShowInfo.Hosted> {
+    override fun getTvShowAsFlow(key: TvShowKey.Hosted): NetFlow<out TulipTvShowInfo.Hosted> {
         logger.debug("Retrieving $key")
         return getNetworkBoundResource(
             { hostedTvDataRepo.getTvShowByKey(key) },
@@ -158,14 +158,23 @@ class HostedTvDataRepositoryImpl @Inject constructor(
         return tmdbRepo.findTmdbId(result) as? TmdbItemId.Tv
     }
 
+    override fun getSeasonAsFlow(key: SeasonKey.Hosted): Flow<NetworkResult<out TulipSeasonInfo.Hosted>> {
+        logger.debug("Retrieving $key")
+        return getTvShowAsFlow(key.tvShowKey)
+            .map { it.convert { showInfo -> getCorrectSeasonOrNull(showInfo, key) } }
+    }
+
     override suspend fun getSeason(key: SeasonKey.Hosted): Result<TulipSeasonInfo.Hosted> {
         logger.debug("Retrieving $key")
-        return getTvShow(key.tvShowKey)
-            .flatMap {
-                it.seasons.firstOrNull { season -> season.key == key }
-                    ?.let { season -> Result.success(season) }
-                    ?: Result.failure(MissingEntityException)
-            }
+        return getSeasonAsFlow(key).map { it.toResult() }.firstOrNull()
+            ?: Result.failure(MissingEntityException)
+    }
+
+    private fun getCorrectSeasonOrNull(
+        it: TulipTvShowInfo.Hosted,
+        key: SeasonKey.Hosted
+    ): TulipSeasonInfo.Hosted? {
+        return it.seasons.firstOrNull { season -> season.key == key }
     }
 
     override suspend fun getSeasonsAsFlow(key: TvShowKey.Hosted): NetFlow<List<TulipSeasonInfo.Hosted>> {

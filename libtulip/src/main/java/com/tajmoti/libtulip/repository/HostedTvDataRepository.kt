@@ -15,13 +15,15 @@ interface HostedTvDataRepository {
 
     suspend fun search(query: String): Flow<Result<List<TulipSearchResult>>>
 
-    suspend fun getTvShowAsFlow(key: TvShowKey.Hosted): Flow<NetworkResult<out TulipTvShowInfo.Hosted>>
+    fun getTvShowAsFlow(key: TvShowKey.Hosted): Flow<NetworkResult<out TulipTvShowInfo.Hosted>>
 
     suspend fun getTvShow(key: TvShowKey.Hosted): Result<TulipTvShowInfo.Hosted>
 
     suspend fun getSeasonsAsFlow(key: TvShowKey.Hosted): Flow<NetworkResult<List<TulipSeasonInfo.Hosted>>>
 
     suspend fun getSeasons(key: TvShowKey.Hosted): Result<List<TulipSeasonInfo.Hosted>>
+
+    fun getSeasonAsFlow(key: SeasonKey.Hosted): Flow<NetworkResult<out TulipSeasonInfo.Hosted>>
 
     suspend fun getSeason(key: SeasonKey.Hosted): Result<TulipSeasonInfo.Hosted>
 

@@ -161,7 +161,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:minEms="3"
-                android:visibility="@{viewModel.lastValidPosition != 0L}"
+                android:visibility="@{viewModel.position != null}"
                 app:layout_constraintBottom_toBottomOf="@id/seek_bar_video_progress"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/seek_bar_video_progress"
@@ -181,7 +181,6 @@
                 style="@style/FullscreenTextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/activity_vertical_margin"
                 android:text="@string/subtitles"
                 android:visibility="@{streamsViewModel.linksAnyResult &amp;&amp; viewModel.subtitlesReadyToSelect}"
                 app:icon="@drawable/ic_baseline_subtitles_24"
@@ -195,7 +194,6 @@
                 style="@style/FullscreenTextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/activity_vertical_margin"
                 android:text="@string/restart_video"
                 android:visibility="@{streamsViewModel.videoLinkToPlay != null}"
                 app:icon="@drawable/ic_baseline_refresh_24"
@@ -209,14 +207,40 @@
                 style="@style/FullscreenTextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/activity_vertical_margin"
                 android:text="@string/change_source"
                 android:visibility="@{streamsViewModel.linksAnyResult}"
+                app:icon="@drawable/ic_baseline_tap_and_play_24"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/button_episode_list"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@id/button_restart_video" />
+
+            <Button
+                android:id="@+id/button_episode_list"
+                style="@style/FullscreenTextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/episodes"
+                android:visibility="@{viewModel.episodeList != null}"
                 app:icon="@drawable/ic_baseline_playlist_play_24"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/button_next_episode"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@id/button_change_source" />
+
+            <Button
+                android:id="@+id/button_next_episode"
+                style="@style/FullscreenTextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="@{(v) -> viewModel.goToNextEpisode()}"
+                android:text="@string/next_episode"
+                android:visibility="@{viewModel.nextEpisode != null}"
+                app:icon="@drawable/ic_baseline_skip_next_24"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toEndOf="@+id/button_restart_video" />
+                app:layout_constraintStart_toEndOf="@id/button_episode_list" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

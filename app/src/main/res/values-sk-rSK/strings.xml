@@ -37,4 +37,6 @@
     <string name="subtitle_delay_failed">Nepodarilo sa nastaviť oneskorenie tituliek</string>
     <string name="label_no_subtitles">Žiadne titulky</string>
     <string name="not_yet_watched">Zatiaľ nesledované</string>
+    <string name="next_episode">Ďalšia epizóda</string>
+    <string name="episodes">Epizódy</string>
 </resources>
