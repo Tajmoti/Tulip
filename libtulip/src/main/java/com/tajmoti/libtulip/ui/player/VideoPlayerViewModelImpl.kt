@@ -74,13 +74,18 @@ class VideoPlayerViewModelImpl constructor(
     )
 
     override val loadingSubtitles = MutableStateFlow(false)
+
     override val downloadingSubtitleFile = MutableStateFlow(false)
+
     override val subtitleList = loadingSubtitlesState
         .map(viewModelScope) { (it as? SubtitleListLoadingState.Success)?.subtitles ?: emptyList() }
+
     override val subtitlesReadyToSelect = loadingSubtitlesState
         .map(viewModelScope) { it is SubtitleListLoadingState.Success }
+
     override val downloadingError = subtitleDownloadState
         .map(viewModelScope) { it is SubtitleDownloadingState.Error }
+
     override val subtitleFile = subtitleDownloadState
         .map(viewModelScope) { (it as? SubtitleDownloadingState.Success)?.subtitles }
 
@@ -93,9 +98,7 @@ class VideoPlayerViewModelImpl constructor(
      * State of the currently attached media player.
      */
     private val mediaPlayerState = attachedMediaPlayer
-        .flatMapLatest {
-            it?.state ?: flowOf(MediaPlayerHelper.State.Idle)
-        }
+        .flatMapLatest { it?.state ?: flowOf(MediaPlayerHelper.State.Idle) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, MediaPlayerHelper.State.Idle)
 
     override val isPlaying = mediaPlayerState.map(viewModelScope) {
@@ -115,9 +118,7 @@ class VideoPlayerViewModelImpl constructor(
         }
 
     override val buffering = mediaPlayerState
-        .map(viewModelScope) { state ->
-            (state as? MediaPlayerHelper.State.Buffering)?.percent
-        }
+        .map(viewModelScope) { state -> (state as? MediaPlayerHelper.State.Buffering)?.percent }
 
     override val position = mediaPlayerState
         .map { state ->

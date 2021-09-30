@@ -95,7 +95,9 @@ class StreamsViewModelImpl constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
 
-    override val loadingStreamOrDirectLink = MutableStateFlow(false)
+    override val loadingStreamOrDirectLink = linkLoadingState
+        .map { it is LinkLoadingState.Loading || it is LinkLoadingState.LoadingDirect }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     override val directLoadingUnsupported = linkLoadingState
         .mapNotNull { state ->
