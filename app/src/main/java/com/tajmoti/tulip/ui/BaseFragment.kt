@@ -5,11 +5,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.ViewDataBinding
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import androidx.fragment.app.Fragment
 
 abstract class BaseFragment<B : ViewDataBinding>(
     private val bindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> B
-) : BottomSheetDialogFragment() {
+) : Fragment() {
     protected lateinit var binding: B
 
     override fun onCreateView(

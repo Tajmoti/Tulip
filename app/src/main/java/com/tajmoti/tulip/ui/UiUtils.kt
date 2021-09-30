@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import com.tajmoti.libtulip.model.info.LanguageCode
+import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
 import com.tajmoti.tulip.R
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -18,6 +19,12 @@ fun languageToIcon(language: LanguageCode): Int? {
         "de" -> R.drawable.ic_flag_de
         else -> null
     }
+}
+
+fun showToDisplayName(item: TulipCompleteEpisodeInfo): String {
+    val showSeasonEpNum = "${item.showName} S${item.seasonNumber}:E${item.episodeNumber}"
+    val episodeName = item.name?.let { " '$it'" } ?: ""
+    return showSeasonEpNum + episodeName
 }
 
 inline fun <T> Fragment.consume(flow: Flow<T>, crossinline action: suspend (value: T) -> Unit) {

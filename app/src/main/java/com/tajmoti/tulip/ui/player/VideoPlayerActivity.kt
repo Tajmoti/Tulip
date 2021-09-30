@@ -15,6 +15,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
+import androidx.fragment.app.commit
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -23,7 +24,6 @@ import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
-import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
 import com.tajmoti.libtulip.ui.player.Position
@@ -37,7 +37,7 @@ import com.tajmoti.tulip.databinding.ActivityVideoPlayerBinding
 import com.tajmoti.tulip.ui.*
 import com.tajmoti.tulip.ui.captcha.CaptchaSolverActivity
 import com.tajmoti.tulip.ui.player.streams.AndroidStreamsViewModel
-import com.tajmoti.tulip.ui.player.streams.StreamsAdapter
+import com.tajmoti.tulip.ui.player.streams.StreamsFragment
 import com.tajmoti.tulip.ui.player.subtitles.SubtitleItem
 import com.tajmoti.tulip.ui.player.subtitles.SubtitleLanguageHeaderItem
 import com.xwray.groupie.ExpandableGroup
@@ -95,9 +95,8 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         binding.streamsViewModel = streamsViewModel
         libVLC = LibVLC(this, arrayListOf("-vvv"))
 
-        val adapter = StreamsAdapter(this::onStreamClickedPlay, this::onStreamClickedDownload)
-        setupPlayerUi(adapter)
-        setupFlowCollectors(adapter)
+        setupPlayerUi()
+        setupFlowCollectors()
         rescheduleVideoControlAutoHide()
     }
 
@@ -114,7 +113,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         ctl.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 
-    private fun setupPlayerUi(adapter: StreamsAdapter) {
+    private fun setupPlayerUi() {
         binding.seekBarVideoProgress.max = UI_PROGRESS_STEPS
         binding.progressBarBuffering.max = UI_PROGRESS_STEPS
         binding.seekBarVideoProgress.setOnSeekBarChangeListener(OnSeekBarChangeListener())
@@ -140,7 +139,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
             onVideoToPlayChanged(streamsViewModel.videoLinkToPlay.value, forceReload = true)
         }
         binding.buttonChangeSource.setOnClickListener {
-            binding.containerStreamSelection.isVisible = true
+            showStreamsSelection()
         }
         binding.videoLayout.setOnClickListener {
             onVideoClicked()
@@ -148,13 +147,21 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         binding.buttonBack.setOnClickListener {
             finish()
         }
-        binding.recyclerSearch.setupWithAdapterAndDivider(adapter)
-        binding.buttonBackStreams.setOnClickListener {
-            binding.containerStreamSelection.isVisible = false
+    }
+
+    private fun showStreamsSelection() {
+        supportFragmentManager.commit {
+            setCustomAnimations(
+                R.anim.slide_from_top_enter,
+                R.anim.slide_from_top_exit,
+                R.anim.slide_from_top_enter,
+                R.anim.slide_from_top_exit
+            )
+            replace(R.id.container_fragment_streams, StreamsFragment())
         }
     }
 
-    private fun setupFlowCollectors(adapter: StreamsAdapter) {
+    private fun setupFlowCollectors() {
         consume(playerViewModel.subtitleFile) { onSubtitlesChanged(it) }
         consume(playerViewModel.downloadingError) { if (it) toast(R.string.subtitle_download_failure) }
         consume(playerViewModel.subtitleOffset, this::onSubtitlesDelayChanged)
@@ -163,7 +170,6 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         consume(playerViewModel.buffering, this::updateBuffering)
         consume(playerViewModel.position, this::updatePosition)
         consume(playerViewModel.isDonePlaying, this::onDonePlayingChanged)
-        consume(streamsViewModel.linksResult) { it?.let { adapter.items = it.streams } }
         consume(streamsViewModel.directLoadingUnsupported, this::onDirectLinkUnsupported)
         consume(streamsViewModel.videoLinkToPlay) { onVideoToPlayChanged(it) }
         consume(streamsViewModel.videoLinkToDownload) { onVideoToDownloadChanged(it) }
@@ -207,29 +213,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
             is TulipMovie -> info.name
             null -> ""
         }
-        binding.titleStreamSelection.text = name
         binding.textItemName.text = name
-    }
-
-    private fun showToDisplayName(item: TulipCompleteEpisodeInfo): String {
-        val showSeasonEpNum = "${item.showName} S${item.seasonNumber}:E${item.episodeNumber}"
-        val episodeName = item.name?.let { " '$it'" } ?: ""
-        return showSeasonEpNum + episodeName
-    }
-
-    /**
-     * A video link was clicked, load it and play it.
-     */
-    private fun onStreamClickedPlay(stream: UnloadedVideoWithLanguage) {
-        binding.containerStreamSelection.isVisible = false
-        streamsViewModel.onStreamClicked(stream.video, false)
-    }
-
-    /**
-     * A video link was long-clicked which means download.
-     */
-    private fun onStreamClickedDownload(stream: UnloadedVideoWithLanguage) {
-        streamsViewModel.onStreamClicked(stream.video, true)
     }
 
     /**

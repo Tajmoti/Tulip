@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <integer name="screen_transition_duration">500</integer>
+    <integer name="screen_transition_duration">@android:integer/config_mediumAnimTime</integer>
 </resources>
