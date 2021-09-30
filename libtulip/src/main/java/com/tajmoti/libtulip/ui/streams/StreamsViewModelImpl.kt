@@ -22,10 +22,17 @@ class StreamsViewModelImpl constructor(
     private val streamableKey = MutableSharedFlow<StreamableKey>()
 
     /**
+     * Streamable key to loading state of the list of available streams.
+     */
+    private val streamLoadingStateWithKey = streamableKey
+        .flatMapLatest { key -> fetchStreams(key).map { key to it } }
+        .shareIn(viewModelScope, SharingStarted.Eagerly)
+
+    /**
      * Loading state of the list of available streams
      */
-    private val streamLoadingState = streamableKey
-        .flatMapLatest { fetchStreams(it) }
+    private val streamLoadingState = streamLoadingStateWithKey
+        .map { (_, state) -> state }
         .stateIn(viewModelScope, SharingStarted.Eagerly, State.Idle)
 
     /**
@@ -36,15 +43,18 @@ class StreamsViewModelImpl constructor(
     /**
      * Auto-selected stream to play.
      */
-    private val autoStream = streamLoadingState
-        .mapNotNull { it as? State.Success }
-        .filter { it.streams.streams.any { s -> s.video.linkExtractionSupported } }
-        .map {
-            it.streams.streams
-                .firstOrNull { video -> video.video.linkExtractionSupported }
-                ?.let { video -> video.video to false }
-        }
+    private val autoStream = streamLoadingStateWithKey
+        .mapNotNull { (key, state) -> (state as? State.Success)?.let { key to state.streams } }
+        .filter { (_, streams) -> anyGoodStreams(streams) }
+        .distinctUntilChangedBy { (key, _) -> key }
+        .map { (_, streams) -> firstGoodStream(streams).let { video -> video.video to false } }
         .shareIn(viewModelScope, SharingStarted.Lazily)
+
+    private fun firstGoodStream(it: StreamableInfoWithLangLinks) =
+        it.streams.first { video -> video.video.linkExtractionSupported }
+
+    private fun anyGoodStreams(it: StreamableInfoWithLangLinks) =
+        it.streams.any { s -> s.video.linkExtractionSupported }
 
     /**
      * The stream that should actually be played.
