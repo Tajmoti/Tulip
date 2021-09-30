@@ -93,7 +93,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         mainHandler = Handler(mainLooper, EasyHandler(messageHandlers))
         binding.viewModel = playerViewModel
         binding.streamsViewModel = streamsViewModel
-        libVLC = LibVLC(this, arrayListOf("-vvv"))
+        libVLC = LibVLC(this)
 
         setupPlayerUi()
         setupFlowCollectors()
