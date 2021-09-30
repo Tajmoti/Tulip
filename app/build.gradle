@@ -89,7 +89,7 @@ dependencies {
     implementation "com.github.lisawray.groupie:groupie-viewbinding:$groupie_version"
     implementation "com.github.lisawray.groupie:groupie-databinding:$groupie_version"
     implementation 'com.github.bumptech.glide:glide:4.10.0'
-    implementation "org.videolan.android:libvlc-all:3.1.12"
+    implementation "org.videolan.android:libvlc-all:3.4.1"
 
     // DI
     implementation "com.google.dagger:hilt-android:$hilt_version"

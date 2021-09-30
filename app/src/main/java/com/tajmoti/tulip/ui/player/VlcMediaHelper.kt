@@ -5,13 +5,14 @@ import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
 import com.tajmoti.libtulip.ui.player.Position
 import kotlinx.coroutines.flow.MutableStateFlow
-import org.videolan.libvlc.LibVLC
 import org.videolan.libvlc.Media
 import org.videolan.libvlc.MediaPlayer
+import org.videolan.libvlc.interfaces.ILibVLC
+import org.videolan.libvlc.interfaces.IMedia
 import org.videolan.libvlc.util.VLCVideoLayout
 
 class VlcMediaHelper(
-    lib: LibVLC,
+    lib: ILibVLC,
     val videoUrl: String
 ) : MediaPlayer.EventListener, MediaPlayerHelper {
     /**
@@ -84,7 +85,7 @@ class VlcMediaHelper(
         if (info != null) {
             val (uri, encoding) = info
             encoding?.let { player.media?.addOption(":subsdec-encoding=$encoding") }
-            player.addSlave(Media.Slave.Type.Subtitle, Uri.parse(uri), true)
+            player.addSlave(IMedia.Slave.Type.Subtitle, Uri.parse(uri), true)
         } else {
             player.spuTrack = -1
         }
@@ -146,11 +147,11 @@ class VlcMediaHelper(
     }
 
 
-    private fun setupPlayer(lib: LibVLC): MediaPlayer {
+    private fun setupPlayer(lib: ILibVLC): MediaPlayer {
         return MediaPlayer(lib).also { setMedia(lib, it, Uri.parse(videoUrl)) }
     }
 
-    private fun setMedia(lib: LibVLC, player: MediaPlayer, uri: Uri) {
+    private fun setMedia(lib: ILibVLC, player: MediaPlayer, uri: Uri) {
         val media = Media(lib, uri)
         player.media = media
         media.release()
