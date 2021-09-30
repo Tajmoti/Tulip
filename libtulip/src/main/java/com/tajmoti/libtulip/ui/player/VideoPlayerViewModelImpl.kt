@@ -29,6 +29,9 @@ class VideoPlayerViewModelImpl constructor(
 ) : VideoPlayerViewModel {
     override val streamableKey = MutableStateFlow(streamableKeyInitial)
 
+    override val isTvShow = streamableKey
+        .map(viewModelScope) { it is EpisodeKey }
+
     override val episodeList = streamableKey
         .flatMapLatest { getSeasonFlow(it) }
         .map { it?.data?.episodes }

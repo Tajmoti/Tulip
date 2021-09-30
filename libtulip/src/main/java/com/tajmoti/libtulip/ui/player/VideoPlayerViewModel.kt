@@ -13,6 +13,11 @@ interface VideoPlayerViewModel {
      */
     val streamableKey: StateFlow<StreamableKey>
 
+    /**
+     * True if the playing item is a TV show, false if it is a movie.
+     */
+    val isTvShow: StateFlow<Boolean>
+
 
     /**
      * All episodes from the playing season or null if a movie is being played.
