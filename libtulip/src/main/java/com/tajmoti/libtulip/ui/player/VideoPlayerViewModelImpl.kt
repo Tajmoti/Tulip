@@ -188,6 +188,7 @@ class VideoPlayerViewModelImpl constructor(
 
     init {
         persistPlayingPosition()
+        viewModelScope.launch { restorePlayerProgress() }
     }
 
     /**
@@ -218,20 +219,21 @@ class VideoPlayerViewModelImpl constructor(
 
     override fun onMediaAttached(media: MediaPlayerHelper) {
         attachedMediaPlayer.value = media
-        viewModelScope.launch { restorePlayerPositionOrProgress() }
     }
 
     /**
      * Loads the time where the playback was last at
      * and restores it to the media player if it is still attached.
      */
-    private suspend fun restorePlayerPositionOrProgress() {
-        val (key, persistedProgress) = persistedPlayingProgress.first()
-        persistedProgress ?: return
-        val player = attachedMediaPlayer.value
-            ?: return
-        if (key == streamableKey.value)
-            player.progress = persistedProgress
+    private suspend fun restorePlayerProgress() {
+        val player = attachedMediaPlayer.filterNotNull()
+        val key = streamableKey
+        val progress = persistedPlayingProgress
+        combine(player, key, progress) { a, b, c -> Triple(a, b, c) }
+            .distinctUntilChanged { a, b -> a.first == b.first && a.second == b.second }
+            .filter { (_, key, keyToProgress) -> key == keyToProgress.first }
+            .mapNotNull { (player, _, keyPos) -> keyPos.second?.let { player to it } }
+            .collect { (player, pos) -> player.progress = pos }
     }
 
     override fun onMediaDetached() {
