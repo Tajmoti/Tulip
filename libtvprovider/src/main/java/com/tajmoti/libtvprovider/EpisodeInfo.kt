@@ -12,5 +12,9 @@ data class EpisodeInfo(
     /**
      * Name of the episode or null if unknown
      */
-    val name: String?
+    val name: String?,
+    /**
+     * Episode overview or null if none
+     */
+    val overview: String?
 )

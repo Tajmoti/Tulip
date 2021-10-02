@@ -7,7 +7,7 @@
     <dimen name="item_content_margin">6sp</dimen>
 
     <!-- TV Show fragment -->
-    <dimen name="tv_show_app_bar_height">220dp</dimen>
+    <dimen name="tv_show_title_margin">32dp</dimen>
 
     <!-- Streams fragment -->
     <dimen name="streams_error_margin">64dp</dimen>

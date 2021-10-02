@@ -16,5 +16,7 @@ data class DbTmdbEpisode(
     val seasonNumber: Int,
     val episodeNumber: Int,
     val name: String,
-    val overview: String?
+    val overview: String?,
+    val stillPath: String?,
+    val voteAverage: Float?
 )

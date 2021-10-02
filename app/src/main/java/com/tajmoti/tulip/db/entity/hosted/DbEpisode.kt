@@ -18,5 +18,6 @@ data class DbEpisode(
     val seasonNumber: Int,
     val key: String,
     val number: Int,
-    val name: String?
+    val name: String?,
+    val overview: String?
 )

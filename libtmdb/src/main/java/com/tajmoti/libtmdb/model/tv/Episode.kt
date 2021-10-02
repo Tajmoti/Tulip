@@ -10,5 +10,9 @@ data class Episode(
     @field:Json(name = "name")
     val name: String,
     @field:Json(name = "overview")
-    val overview: String?
+    val overview: String?,
+    @field:Json(name = "still_path")
+    val stillPath: String?,
+    @field:Json(name = "vote_average")
+    val voteAverage: Float?
 )

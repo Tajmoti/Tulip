@@ -1,57 +1,65 @@
 package com.tajmoti.tulip.ui.show
 
+import android.content.Context
 import android.os.Bundle
 import android.view.View
+import android.widget.AdapterView
+import android.widget.AdapterView.OnItemSelectedListener
+import android.widget.ArrayAdapter
+import androidx.appcompat.widget.Toolbar
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.bumptech.glide.Glide
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
 import com.tajmoti.libtulip.model.info.seasonNumber
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ActivityTabbedTvShowBinding
-import com.tajmoti.tulip.ui.BaseFragment
-import com.tajmoti.tulip.ui.MainActivity
-import com.tajmoti.tulip.ui.consume
-import com.tajmoti.tulip.ui.viewModelsDelegated
-import com.xwray.groupie.ExpandableGroup
-import com.xwray.groupie.GroupieAdapter
+import com.tajmoti.tulip.ui.*
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
     ActivityTabbedTvShowBinding::inflate
 ) {
     private val viewModel by viewModelsDelegated<TvShowViewModel, AndroidTvShowViewModel>()
-    private lateinit var adapter: GroupieAdapter
 
     /**
-     * Seasons which are already set to the UI.
-     * Avoids useless Groupie adapter refreshes since they don't work properly.
+     * Adapter for the spinner of seasons
      */
-    private var appliedSeasons: List<TulipSeasonInfo>? = null
+    private lateinit var seasonsAdapter: ArrayAdapter<String>
 
     /**
-     * List of expanded season indices to restore when recreating the fragment.
-     * Cleared after the list is loaded the first time.
+     * Adapter for the recycler of episodes
      */
-    private var expandedIndices: List<Int>? = null
+    private lateinit var episodesAdapter: EpisodesAdapter
+
+    /**
+     * Toolbar included in the layout.
+     */
+    private lateinit var toolbar: Toolbar
+
+    /**
+     * Previously selected season (restore on re-creation)
+     */
+    private var selectedSeasonIndex: Int? = null
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        expandedIndices = savedInstanceState?.getIntArray(SAVED_STATE_EXPANDED_SEASONS)?.toList()
-
+        selectedSeasonIndex = savedInstanceState
+            ?.getInt(SAVED_STATE_SELECTED_SEASON, -1)
+            .takeIf { it != -1 }
+        binding.root.systemUiVisibility =
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
         binding.viewModel = viewModel
-        binding.fab.setOnClickListener { viewModel.toggleFavorites() }
-        adapter = GroupieAdapter()
-        binding.recyclerTvShow.adapter = adapter
+        setupHeader(view.context)
+        binding.recyclerTvShow.adapter = episodesAdapter
         val divider = DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
         binding.recyclerTvShow.addItemDecoration(divider)
-
         consume(viewModel.backdropPath) { it?.let { onBackdropPathChanged(it) } }
         consume(viewModel.seasons) { it?.let { onSeasonsChanged(it) } }
         consume(viewModel.name) { it?.let { onNameChanged(it) } }
@@ -59,18 +67,38 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        val indices = getCurrentlyExpandedIndices().toIntArray()
-        outState.putIntArray(SAVED_STATE_EXPANDED_SEASONS, indices)
+        val selectedSeason = binding.header.spinnerSelectSeason.selectedItemPosition
+        outState.putInt(SAVED_STATE_SELECTED_SEASON, selectedSeason)
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        appliedSeasons = null
+    private fun setupHeader(context: Context) {
+        val binding = binding.header
+        toolbar = binding.toolbar
+        binding.viewModel = viewModel
+        binding.fab.setOnClickListener { viewModel.toggleFavorites() }
+        seasonsAdapter = ArrayAdapter<String>(
+            context,
+            android.R.layout.simple_spinner_dropdown_item
+        )
+        episodesAdapter = EpisodesAdapter({ goToStreamsScreen(it.key) }, this::goToDetailsScreen)
+        binding.spinnerSelectSeason.adapter = seasonsAdapter
+        binding.spinnerSelectSeason.onItemSelectedListener = SpinnerListener()
+    }
+
+    inner class SpinnerListener : OnItemSelectedListener {
+        override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
+            onSeasonClicked(p2)
+        }
+
+        override fun onNothingSelected(p0: AdapterView<*>?) {
+
+        }
     }
 
     override fun onStart() {
         super.onStart()
-        (requireActivity() as MainActivity).swapActionBar(binding.toolbar)
+        (requireActivity() as MainActivity).swapActionBar(toolbar)
+        toolbar.title = ""
     }
 
     override fun onStop() {
@@ -79,58 +107,38 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
     }
 
     private fun onNameChanged(name: String) {
-        binding.toolbarLayout.title = name
+        binding.header.title.text = name
     }
 
     private fun onBackdropPathChanged(backdropPath: String) {
-        Glide.with(this).load(backdropPath).into(binding.imgTvShow)
+        Glide.with(this).load(backdropPath).into(binding.header.imgTvShow)
     }
 
-    private suspend fun onSeasonsChanged(seasons: List<TulipSeasonInfo>) {
-        if (appliedSeasons == seasons)
-            return
-        appliedSeasons = seasons
-        val seasonGroups = withContext(Dispatchers.Default) {
-            seasons.map { season -> createEpisodeGroup(season) }
-        }
-        updateAndRestoreExpandState(seasonGroups)
+    private fun onSeasonsChanged(seasons: List<TulipSeasonInfo>) {
+        val oldPos = selectedSeasonIndex ?: binding.header.spinnerSelectSeason.selectedItemPosition
+        selectedSeasonIndex = null
+        seasonsAdapter.clear()
+        seasonsAdapter.addAll(seasons.map { getSeasonTitle(it) })
+        if (oldPos < seasons.size)
+            binding.header.spinnerSelectSeason.setSelection(oldPos)
     }
 
-    private fun updateAndRestoreExpandState(seasonGroups: List<ExpandableGroup>) {
-        // Remember expanded positions
-        val expandedIndicesLocal = getInitiallyExpandedIndices() ?: getCurrentlyExpandedIndices()
-        adapter.replaceAll(seasonGroups)
-        // Re-expand them and ignore potential errors (very unlikely)
-        expandedIndicesLocal
-            .forEach { runCatching { getExpandableAtPos(it).onToggleExpanded() } }
+    private fun onSeasonClicked(index: Int) {
+        val item = viewModel.seasons.value?.getOrNull(index) ?: return
+        onSeasonChanged(item.episodes)
     }
 
-    private fun getInitiallyExpandedIndices(): List<Int>? {
-        return expandedIndices?.also { expandedIndices = null }
+    private fun onSeasonChanged(episodes: List<TulipEpisodeInfo>) {
+        episodesAdapter.items = episodes
     }
 
-    private fun getCurrentlyExpandedIndices(): List<Int> {
-        return (0 until adapter.groupCount)
-            .filter { getExpandableAtPos(it).isExpanded }
-    }
-
-    private fun getExpandableAtPos(it: Int): ExpandableGroup {
-        val group = adapter.getTopLevelGroup(it)
-        return group as ExpandableGroup
-    }
-
-    private fun createEpisodeGroup(season: TulipSeasonInfo): ExpandableGroup {
+    private fun getSeasonTitle(season: TulipSeasonInfo): String {
         val seasonTitle = if (season.seasonNumber == 0) {
             getString(R.string.season_specials)
         } else {
             getString(R.string.season_no, season.seasonNumber)
         }
-        val header = ExpandableHeaderItem(seasonTitle)
-        val groupAdapter = ExpandableGroup(header)
-        val mapped = season.episodes
-            .map { EpisodeItem(it.episodeNumber, it.name) { goToStreamsScreen(it.key) } }
-        groupAdapter.addAll(mapped)
-        return groupAdapter
+        return seasonTitle
     }
 
     private fun goToStreamsScreen(episodeKey: EpisodeKey) {
@@ -138,7 +146,16 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
             .let { findNavController().navigate(it) }
     }
 
+    private fun goToDetailsScreen(episodeInfo: TulipEpisodeInfo) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setIcon(R.drawable.ic_baseline_live_tv_24)
+            .setTitle(episodeToLabel(episodeInfo))
+            .setMessage(episodeInfo.overview ?: "")
+            .setPositiveButton(R.string.dismiss, null)
+            .show()
+    }
+
     companion object {
-        private const val SAVED_STATE_EXPANDED_SEASONS = "expanded_seasons"
+        private const val SAVED_STATE_SELECTED_SEASON = "selected_season"
     }
 }

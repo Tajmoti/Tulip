@@ -53,5 +53,5 @@ private fun elemToEpisode(element: Element): EpisodeInfo {
         .getElementsByTag("a")
         .first()!!
         .attr("href")
-    return EpisodeInfo(url, number ?: 0, name)
+    return EpisodeInfo(url, number ?: 0, name, null) // TODO Overview
 }

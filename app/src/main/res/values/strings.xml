@@ -39,4 +39,9 @@
     <string name="not_yet_watched">Never watched</string>
     <string name="next_episode">Next episode</string>
     <string name="episodes">Episodes</string>
+    <string name="library_add">Add to library</string>
+    <string name="library_remove">Remove from library</string>
+    <string name="no_rating">No rating</string>
+    <string name="rating_format">Rating: %.1f/10</string>
+    <string name="dismiss">Dismiss</string>
 </resources>

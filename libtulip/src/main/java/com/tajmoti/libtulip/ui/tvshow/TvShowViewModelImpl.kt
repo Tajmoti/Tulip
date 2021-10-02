@@ -4,6 +4,7 @@ import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.misc.NetworkResult
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
 import com.tajmoti.libtulip.model.info.TulipTvShowInfo
+import com.tajmoti.libtulip.model.info.seasonNumber
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.repository.FavoritesRepository
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
@@ -26,7 +27,7 @@ class TvShowViewModelImpl constructor(
     override val backdropPath = state
         .map(viewModelScope) { (it as? State.Success)?.backdropPath }
     override val seasons = state
-        .map(viewModelScope) { (it as? State.Success)?.seasons }
+        .map(viewModelScope) { (it as? State.Success)?.seasons?.let { s -> sortSpecialsLast(s) } }
     override val isFavorite = favoritesRepository.isFavorite(itemKey)
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
     override val error = state
@@ -108,6 +109,13 @@ class TvShowViewModelImpl constructor(
         val backdropUrl = "https://image.tmdb.org/t/p/original" + show.backdropPath
         return State.Success(backdropUrl, show.seasons)
     }
+
+    private fun sortSpecialsLast(seasons: List<TulipSeasonInfo>) =
+        seasons.sortedWith { a, b ->
+            val ax = a.seasonNumber.takeUnless { it == 0 } ?: Int.MAX_VALUE
+            val bx = b.seasonNumber.takeUnless { it == 0 } ?: Int.MAX_VALUE
+            ax.compareTo(bx)
+        }
 
     sealed interface State {
         object Loading : State

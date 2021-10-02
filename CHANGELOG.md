@@ -5,6 +5,7 @@
 ### Changed
 - Increase thumb size on seekbar in video player
 - Search results now appear as they load instead of waiting for the last one before they are shown
+- Library and TV show UI rework
 
 ## [0.9.1] - 2021-09-25
 ### Changed

@@ -34,5 +34,5 @@ private fun episodeNumToEpisode(
     rel: String
 ): EpisodeInfo {
     val episodeUrl = "/aGET/MirrorByEpisode/$rel&Season=$season&Episode=$episode"
-    return EpisodeInfo(episodeUrl, episode, "Kinox Episode")
+    return EpisodeInfo(episodeUrl, episode, "Kinox Episode", null) // TODO Overview
 }

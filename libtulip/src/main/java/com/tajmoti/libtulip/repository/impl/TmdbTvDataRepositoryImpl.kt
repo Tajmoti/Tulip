@@ -112,7 +112,12 @@ class TmdbTvDataRepositoryImpl @Inject constructor(
 
     private fun Episode.fromNetwork(seasonKey: SeasonKey.Tmdb): TulipEpisodeInfo.Tmdb {
         val key = EpisodeKey.Tmdb(seasonKey, episodeNumber)
-        return TulipEpisodeInfo.Tmdb(key, name, overview)
+        return TulipEpisodeInfo.Tmdb(
+            key,
+            name,
+            overview,
+            stillPath,
+            voteAverage.takeUnless { it == 0.0f })
     }
 
     override fun getTvShowWithSeasonsAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<out TulipTvShowInfo.Tmdb>> {

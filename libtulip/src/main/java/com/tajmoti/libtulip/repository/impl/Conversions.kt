@@ -45,7 +45,7 @@ inline fun MovieInfo.fromNetwork(
 
 inline fun EpisodeInfo.fromNetwork(seasonKey: SeasonKey.Hosted): TulipEpisodeInfo.Hosted {
     val key = EpisodeKey.Hosted(seasonKey, key)
-    return TulipEpisodeInfo.Hosted(key, number, name)
+    return TulipEpisodeInfo.Hosted(key, number, name, overview)
 }
 
 inline fun Season.fromNetwork(tvShowKey: TvShowKey.Hosted): TulipSeasonInfo.Hosted {

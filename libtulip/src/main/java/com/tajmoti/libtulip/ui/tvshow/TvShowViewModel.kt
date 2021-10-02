@@ -15,7 +15,8 @@ interface TvShowViewModel {
     val backdropPath: StateFlow<String?>
 
     /**
-     * Seasons belonging to this TV show
+     * Seasons belonging to this TV show.
+     * The list is sorted - specials come after all real seasons.
      */
     val seasons: StateFlow<List<TulipSeasonInfo>?>
 

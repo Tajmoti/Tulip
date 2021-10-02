@@ -39,4 +39,9 @@
     <string name="not_yet_watched">Zatiaľ nesledované</string>
     <string name="next_episode">Ďalšia epizóda</string>
     <string name="episodes">Epizódy</string>
+    <string name="library_add">Pridať do knižnice</string>
+    <string name="library_remove">Odobrať z knižnice</string>
+    <string name="no_rating">Žiadne hodnotenie</string>
+    <string name="rating_format">Hodnotenie: %.1f/10</string>
+    <string name="dismiss">Zavrieť</string>
 </resources>

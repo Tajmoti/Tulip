@@ -1,39 +1,87 @@
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
         <variable
-            name="episodeNumber"
-            type="int" />
+            name="episodeNumberAndTitle"
+            type="String" />
 
         <variable
-            name="episodeTitle"
+            name="episodeRatingStr"
+            type="String" />
+
+        <variable
+            name="episodeDescription"
             type="String" />
     </data>
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?android:attr/selectableItemBackground"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
         android:padding="@dimen/list_item_padding">
 
-        <TextView
-            android:id="@+id/text_episode_number"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:minWidth="48sp"
-            android:text="@{String.valueOf(episodeNumber)}" />
+        <ImageButton
+            android:id="@+id/image_episode"
+            android:layout_width="128dp"
+            android:layout_height="72dp"
+            android:adjustViewBounds="true"
+            android:foreground="?selectableItemBackground"
+            android:scaleType="fitCenter"
+            app:layout_constraintBottom_toTopOf="@id/text_episode_description"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_play_circle_filled_library_24"
+            tools:ignore="UnusedAttribute" />
 
         <TextView
-            android:id="@+id/text_episode_title"
+            android:id="@+id/text_episode_number_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/item_content_margin"
+            android:layout_marginStart="@dimen/list_item_padding"
+            android:fontFamily="sans-serif-condensed-light"
             android:gravity="center_vertical"
-            android:text="@{episodeTitle}"
-            android:textColor="?android:textColorPrimary" />
-    </LinearLayout>
+            android:text="@{episodeNumberAndTitle}"
+            android:textColor="?android:textColorPrimary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@id/text_episode_rating"
+            app:layout_constraintStart_toEndOf="@id/image_episode"
+            app:layout_constraintTop_toTopOf="@id/image_episode"
+            tools:text="1. The Simpsons are here" />
+
+        <TextView
+            android:id="@+id/text_episode_rating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/list_item_padding"
+            android:fontFamily="sans-serif-condensed-light"
+            android:gravity="center_vertical"
+            android:text="@{episodeRatingStr}"
+            android:textColor="?android:textColorSecondary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@id/image_episode"
+            app:layout_constraintStart_toEndOf="@id/image_episode"
+            app:layout_constraintTop_toBottomOf="@id/text_episode_number_title"
+            tools:text="Rating: 5.3/10" />
+
+        <TextView
+            android:id="@+id/text_episode_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/list_item_icon_padding"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:text="@{episodeDescription}"
+            android:textColor="?android:textColorSecondary"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/image_episode"
+            tools:text="Homer uses his medical insurance to buy Dimoxinil, a miracle hair-growth formula. After growing luxurious locks, he's given a promotion which allows him to hire a secretary named Karl and makes grand promises to his family at home." />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
