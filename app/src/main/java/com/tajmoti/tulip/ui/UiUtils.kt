@@ -2,6 +2,7 @@
 
 package com.tajmoti.tulip.ui
 
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
@@ -34,6 +35,14 @@ fun showToDisplayName(item: TulipCompleteEpisodeInfo): String {
     val episodeName = item.name?.let { " '$it'" } ?: ""
     return showSeasonEpNum + episodeName
 }
+
+inline val AppCompatActivity.isInPipModeCompat: Boolean
+    get() = run {
+        var isInPipMode = false
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+            isInPipMode = isInPictureInPictureMode
+        isInPipMode
+    }
 
 inline fun <T> Fragment.consume(flow: Flow<T>, crossinline action: suspend (value: T) -> Unit) {
     viewLifecycleOwner.lifecycleScope.launch {

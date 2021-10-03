@@ -19,8 +19,14 @@
         tools:ignore="UnusedAttribute">
         <activity
             android:name=".ui.player.VideoPlayerActivity"
+            android:autoRemoveFromRecents="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
+            android:excludeFromRecents="true"
             android:exported="false"
-            android:screenOrientation="userLandscape" />
+            android:launchMode="singleTask"
+            android:noHistory="true"
+            android:screenOrientation="userLandscape"
+            android:supportsPictureInPicture="true" />
         <activity
             android:name=".ui.captcha.CaptchaSolverActivity"
             android:exported="false"

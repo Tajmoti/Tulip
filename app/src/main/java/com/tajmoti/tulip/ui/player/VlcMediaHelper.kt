@@ -3,6 +3,7 @@ package com.tajmoti.tulip.ui.player
 import android.net.Uri
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
+import com.tajmoti.libtulip.ui.player.MediaPlayerState
 import com.tajmoti.libtulip.ui.player.Position
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.videolan.libvlc.Media
@@ -18,8 +19,8 @@ class VlcMediaHelper(
     /**
      * Current state of the player and the media being played
      */
-    override val state = MutableStateFlow<MediaPlayerHelper.State>(
-        MediaPlayerHelper.State.Idle
+    override val state = MutableStateFlow<MediaPlayerState>(
+        MediaPlayerState.Idle
     )
 
     /**
@@ -48,6 +49,14 @@ class VlcMediaHelper(
         player.pause()
         player.detachViews()
         attached = false
+    }
+
+    override fun play() {
+        player.play()
+    }
+
+    override fun pause() {
+        player.pause()
     }
 
     override fun playOrPause() {
@@ -106,14 +115,14 @@ class VlcMediaHelper(
             logger.debug("VLC event ${event.format()}")
         val newState = when (event.type) {
             MediaPlayer.Event.PositionChanged ->
-                MediaPlayerHelper.State.Playing(Position(event.positionChanged, player.time))
+                MediaPlayerState.Playing(Position(event.positionChanged, player.time))
             MediaPlayer.Event.Buffering -> {
                 // We don't care about buffering events when the video is paused,
                 // only when it's in the playing state
-                if (state.value is MediaPlayerHelper.State.Paused) {
+                if (state.value is MediaPlayerState.Paused) {
                     null
                 } else {
-                    MediaPlayerHelper.State.Buffering(
+                    MediaPlayerState.Buffering(
                         Position(player.position, player.time),
                         event.buffering
                     )
@@ -121,14 +130,14 @@ class VlcMediaHelper(
             }
             MediaPlayer.Event.Playing -> {
                 onPlayingEvent()
-                MediaPlayerHelper.State.Playing(Position(player.position, player.time))
+                MediaPlayerState.Playing(Position(player.position, player.time))
             }
             MediaPlayer.Event.Paused ->
-                MediaPlayerHelper.State.Paused(Position(player.position, player.time))
+                MediaPlayerState.Paused(Position(player.position, player.time))
             MediaPlayer.Event.EndReached ->
-                MediaPlayerHelper.State.Finished
+                MediaPlayerState.Finished
             MediaPlayer.Event.EncounteredError ->
-                MediaPlayerHelper.State.Error
+                MediaPlayerState.Error
             else -> null
         }
         newState?.let { state.value = it }

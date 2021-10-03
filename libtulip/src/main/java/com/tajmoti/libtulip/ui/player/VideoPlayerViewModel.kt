@@ -89,6 +89,11 @@ interface VideoPlayerViewModel {
     val position: StateFlow<Position?>
 
     /**
+     * State of the playback.
+     */
+    val mediaPlayerState: StateFlow<MediaPlayerState>
+
+    /**
      * Whether the media has successfully played until the end
      */
     val isDonePlaying: StateFlow<Boolean>
@@ -103,6 +108,12 @@ interface VideoPlayerViewModel {
      * if there's none or this is a movie.
      */
     fun goToNextEpisode()
+
+    /**
+     * Cancels playback of the previous streamable
+     * and starts playing the one by [key].
+     */
+    fun changeStreamable(key: StreamableKey)
 
     /**
      * A new media is attached and starting to be played.

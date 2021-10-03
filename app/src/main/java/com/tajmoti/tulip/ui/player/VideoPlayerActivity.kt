@@ -1,12 +1,18 @@
 package com.tajmoti.tulip.ui.player
 
 import android.app.Dialog
+import android.app.PictureInPictureParams
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.view.View
 import android.widget.SeekBar
 import android.widget.Toast
@@ -26,6 +32,7 @@ import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
+import com.tajmoti.libtulip.ui.player.MediaPlayerState
 import com.tajmoti.libtulip.ui.player.Position
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.streams.FailedLink
@@ -57,6 +64,11 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     private val streamsViewModel by viewModelsDelegated<StreamsViewModel, AndroidStreamsViewModel>()
 
     /**
+     * Media session used to control the video from PIP mode
+     */
+    private lateinit var mediaSession: MediaSessionCompat
+
+    /**
      * Handler used for hiding UI after a timeout
      */
     private lateinit var mainHandler: Handler
@@ -72,7 +84,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
      * Hides the UI after a while if the video is playing or buffering
      */
     private val uiHider: () -> Unit = {
-        setupFullscreen()
+        setupFullscreenIfNotInPip()
         if (playerViewModel.isPlaying.value)
             binding.groupVideoControls.isVisible = false
     }
@@ -86,6 +98,10 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
      * Media currently being played
      */
     private var vlc: VlcMediaHelper? = null
+        set(value) {
+            mediaSession.setCallback(value?.let { VlcMediaSessionCallback(it) })
+            field = value
+        }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -94,19 +110,28 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         binding.viewModel = playerViewModel
         binding.streamsViewModel = streamsViewModel
         libVLC = LibVLC(this)
+        mediaSession = MediaSessionCompat(this, "Tulip")
 
         setupPlayerUi()
         setupFlowCollectors()
         rescheduleVideoControlAutoHide()
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val args = VideoPlayerActivityArgs.fromBundle(intent.extras!!)
+        playerViewModel.changeStreamable(args.streamableKey)
+    }
+
     override fun onUserInteraction() {
         super.onUserInteraction()
-        setupFullscreen()
+        setupFullscreenIfNotInPip()
         rescheduleVideoControlAutoHide()
     }
 
-    private fun setupFullscreen() {
+    private fun setupFullscreenIfNotInPip() {
+        if (isInPipModeCompat)
+            return
         WindowCompat.setDecorFitsSystemWindows(window, false)
         val ctl = WindowInsetsControllerCompat(window, binding.root)
         ctl.hide(WindowInsetsCompat.Type.systemBars())
@@ -145,6 +170,41 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
             onVideoClicked()
         }
         binding.buttonBack.setOnClickListener {
+            switchToPipModeIfAvailable(true)
+        }
+    }
+
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration
+    ) {
+        binding.groupVideoControls.isVisible = !isInPictureInPictureMode
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+    }
+
+    override fun onBackPressed() {
+        switchToPipModeIfAvailable(true)
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        switchToPipModeIfAvailable(true)
+        return true
+    }
+
+    override fun onUserLeaveHint() {
+        switchToPipModeIfAvailable(false)
+    }
+
+    private fun switchToPipModeIfAvailable(shouldOtherwiseFinish: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
+            packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+        ) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                enterPictureInPictureMode(PictureInPictureParams.Builder().build())
+            } else {
+                enterPictureInPictureMode()
+            }
+        } else if (shouldOtherwiseFinish) {
             finish()
         }
     }
@@ -175,21 +235,47 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         consume(streamsViewModel.linkLoadingError, this::onDirectLinkLoadingError)
         consume(streamsViewModel.streamableInfo, this::onStreamableInfo)
         consume(playerViewModel.streamableKey) { streamsViewModel.onStreamClicked(it) } // TODO
+        consume(playerViewModel.mediaPlayerState) { onMediaStateChanged(it) }
     }
+
+    private fun onMediaStateChanged(it: MediaPlayerState) {
+        val (state, pos) = appStateToAndroidState(it)
+        val capabilities = PlaybackStateCompat.ACTION_SEEK_TO or
+                PlaybackStateCompat.ACTION_PLAY or
+                PlaybackStateCompat.ACTION_PAUSE
+        mediaSession.setPlaybackState(
+            PlaybackStateCompat.Builder()
+                .setActions(capabilities)
+                .setState(state, pos, 1.0f)
+                .build()
+        )
+    }
+
+    private fun appStateToAndroidState(it: MediaPlayerState) =
+        when (it) {
+            is MediaPlayerState.Buffering -> PlaybackStateCompat.STATE_BUFFERING to it.position.timeMs
+            is MediaPlayerState.Error -> PlaybackStateCompat.STATE_ERROR to -1L
+            is MediaPlayerState.Finished -> PlaybackStateCompat.STATE_NONE to -1L
+            is MediaPlayerState.Idle -> PlaybackStateCompat.STATE_NONE to -1L
+            is MediaPlayerState.Paused -> PlaybackStateCompat.STATE_PAUSED to it.position.timeMs
+            is MediaPlayerState.Playing -> PlaybackStateCompat.STATE_PLAYING to it.position.timeMs
+        }
 
     override fun onStart() {
         super.onStart()
         vlc?.attach(binding.videoLayout)
+        mediaSession.isActive = true
     }
 
     override fun onResume() {
         super.onResume()
-        setupFullscreen()
+        setupFullscreenIfNotInPip()
     }
 
     override fun onStop() {
         super.onStop()
         vlc?.detachAndPause()
+        mediaSession.isActive = false
     }
 
     override fun onDestroy() {
@@ -477,7 +563,8 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     private fun onVideoClicked() {
-        binding.groupVideoControls.isVisible = !binding.groupVideoControls.isVisible
+        if (!isInPipModeCompat)
+            binding.groupVideoControls.isVisible = !binding.groupVideoControls.isVisible
     }
 
     inner class OnSeekBarChangeListener : SeekBar.OnSeekBarChangeListener {

@@ -97,38 +97,38 @@ class VideoPlayerViewModelImpl constructor(
     /**
      * State of the currently attached media player.
      */
-    private val mediaPlayerState = attachedMediaPlayer
-        .flatMapLatest { it?.state ?: flowOf(MediaPlayerHelper.State.Idle) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, MediaPlayerHelper.State.Idle)
+    override val mediaPlayerState = attachedMediaPlayer
+        .flatMapLatest { it?.state ?: flowOf(MediaPlayerState.Idle) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, MediaPlayerState.Idle)
 
-    override val isPlaying = mediaPlayerState.map(viewModelScope) {
-        it is MediaPlayerHelper.State.Playing
+    override val isPlaying = this.mediaPlayerState.map(viewModelScope) {
+        it is MediaPlayerState.Playing
     }
 
-    override val showPlayButton = mediaPlayerState
+    override val showPlayButton = this.mediaPlayerState
         .map(viewModelScope) {
             when (it) {
-                is MediaPlayerHelper.State.Buffering -> VideoPlayerViewModel.PlayButtonState.HIDE
-                is MediaPlayerHelper.State.Error -> VideoPlayerViewModel.PlayButtonState.HIDE
-                is MediaPlayerHelper.State.Idle -> VideoPlayerViewModel.PlayButtonState.HIDE
-                is MediaPlayerHelper.State.Paused -> VideoPlayerViewModel.PlayButtonState.SHOW_PLAY
-                is MediaPlayerHelper.State.Playing -> VideoPlayerViewModel.PlayButtonState.SHOW_PAUSE
-                is MediaPlayerHelper.State.Finished -> VideoPlayerViewModel.PlayButtonState.HIDE
+                is MediaPlayerState.Buffering -> VideoPlayerViewModel.PlayButtonState.HIDE
+                is MediaPlayerState.Error -> VideoPlayerViewModel.PlayButtonState.HIDE
+                is MediaPlayerState.Idle -> VideoPlayerViewModel.PlayButtonState.HIDE
+                is MediaPlayerState.Paused -> VideoPlayerViewModel.PlayButtonState.SHOW_PLAY
+                is MediaPlayerState.Playing -> VideoPlayerViewModel.PlayButtonState.SHOW_PAUSE
+                is MediaPlayerState.Finished -> VideoPlayerViewModel.PlayButtonState.HIDE
             }
         }
 
-    override val buffering = mediaPlayerState
-        .map(viewModelScope) { state -> (state as? MediaPlayerHelper.State.Buffering)?.percent }
+    override val buffering = this.mediaPlayerState
+        .map(viewModelScope) { state -> (state as? MediaPlayerState.Buffering)?.percent }
 
-    override val position = mediaPlayerState
+    override val position = this.mediaPlayerState
         .map { state ->
             when (state) {
-                is MediaPlayerHelper.State.Buffering -> state.position
-                is MediaPlayerHelper.State.Error -> null
-                is MediaPlayerHelper.State.Idle -> null
-                is MediaPlayerHelper.State.Paused -> state.position
-                is MediaPlayerHelper.State.Playing -> state.position
-                is MediaPlayerHelper.State.Finished -> null
+                is MediaPlayerState.Buffering -> state.position
+                is MediaPlayerState.Error -> null
+                is MediaPlayerState.Idle -> null
+                is MediaPlayerState.Paused -> state.position
+                is MediaPlayerState.Playing -> state.position
+                is MediaPlayerState.Finished -> null
             }
         }
         .filter { it == null || isValidPosition(it) }
@@ -137,15 +137,15 @@ class VideoPlayerViewModelImpl constructor(
     /**
      * Playing progress (as a real number from 0.0 to 1.0) or null if nothing is currently playing.
      */
-    val progress = mediaPlayerState
+    val progress = this.mediaPlayerState
         .map { state ->
             when (state) {
-                is MediaPlayerHelper.State.Buffering -> state.position
-                is MediaPlayerHelper.State.Error -> null
-                is MediaPlayerHelper.State.Idle -> null
-                is MediaPlayerHelper.State.Paused -> state.position
-                is MediaPlayerHelper.State.Playing -> state.position
-                is MediaPlayerHelper.State.Finished -> null
+                is MediaPlayerState.Buffering -> state.position
+                is MediaPlayerState.Error -> null
+                is MediaPlayerState.Idle -> null
+                is MediaPlayerState.Paused -> state.position
+                is MediaPlayerState.Playing -> state.position
+                is MediaPlayerState.Finished -> null
             }
         }
         .filter { it?.let { isValidPosition(it) } ?: true }
@@ -166,11 +166,11 @@ class VideoPlayerViewModelImpl constructor(
                 .map { position -> it to position?.progress }
         }
 
-    override val isDonePlaying = mediaPlayerState
-        .map(viewModelScope) { state -> state is MediaPlayerHelper.State.Finished }
+    override val isDonePlaying = this.mediaPlayerState
+        .map(viewModelScope) { state -> state is MediaPlayerState.Finished }
 
-    override val isError = mediaPlayerState
-        .map(viewModelScope) { state -> state is MediaPlayerHelper.State.Error }
+    override val isError = this.mediaPlayerState
+        .map(viewModelScope) { state -> state is MediaPlayerState.Error }
 
     /**
      * State of the interactive subtitle synchronization mechanism.
@@ -199,10 +199,11 @@ class VideoPlayerViewModelImpl constructor(
     @OptIn(FlowPreview::class)
     private fun persistPlayingPosition() {
         viewModelScope.launch {
-            progress.sample(PLAY_POSITION_SAMPLE_PERIOD_MS)
-                .filterNotNull()
-                .collect {
-                    playingHistoryRepository.setLastPlayedPosition(streamableKey.value, it)
+            combine(streamableKey, progress) { key, progress -> key to progress }
+                .sample(PLAY_POSITION_SAMPLE_PERIOD_MS)
+                .filter { (_, progress) -> progress != null }
+                .collect { (key, progress) ->
+                    playingHistoryRepository.setLastPlayedPosition(key, progress)
                 }
         }
     }
@@ -216,6 +217,10 @@ class VideoPlayerViewModelImpl constructor(
 
     override fun goToNextEpisode() {
         nextEpisode.value?.let { streamableKey.value = it }
+    }
+
+    override fun changeStreamable(key: StreamableKey) {
+        streamableKey.value = key
     }
 
     override fun onMediaAttached(media: MediaPlayerHelper) {

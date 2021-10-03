@@ -2,6 +2,7 @@
 ### Added
 - *Resume playing* feature for TV shows
 - *Next episode* button in video player for TV shows
+- Picture-in-picture mode support
 ### Changed
 - Increase thumb size on seekbar in video player
 - Search results now appear as they load instead of waiting for the last one before they are shown
