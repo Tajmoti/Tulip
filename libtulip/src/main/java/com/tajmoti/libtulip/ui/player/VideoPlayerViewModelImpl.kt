@@ -113,7 +113,7 @@ class VideoPlayerViewModelImpl constructor(
                 is MediaPlayerHelper.State.Idle -> VideoPlayerViewModel.PlayButtonState.HIDE
                 is MediaPlayerHelper.State.Paused -> VideoPlayerViewModel.PlayButtonState.SHOW_PLAY
                 is MediaPlayerHelper.State.Playing -> VideoPlayerViewModel.PlayButtonState.SHOW_PAUSE
-                is MediaPlayerHelper.State.Finished -> VideoPlayerViewModel.PlayButtonState.SHOW_PLAY
+                is MediaPlayerHelper.State.Finished -> VideoPlayerViewModel.PlayButtonState.HIDE
             }
         }
 
