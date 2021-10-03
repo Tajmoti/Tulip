@@ -1,5 +1,6 @@
 package com.tajmoti.libtulip.ui.streams
 
+import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.stream.StreamableInfoWithLangLinks
@@ -81,9 +82,14 @@ class StreamsViewModelImpl constructor(
         .map { (it as? State.Success)?.streams }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    override val linksAnyResult = MutableStateFlow(false)
+    private val streamLoadingFinalSuccessState = streamLoadingState
+        .map(viewModelScope) { (it as? State.Success)?.takeIf { success -> success.final } }
 
-    override val linksNoResult = MutableStateFlow(false)
+    override val linksAnyResult = streamLoadingFinalSuccessState
+        .map(viewModelScope) { it?.streams?.streams?.any() ?: false }
+
+    override val linksNoResult = streamLoadingFinalSuccessState
+        .map(viewModelScope) { it?.streams?.streams?.none() ?: false }
 
     override val linksLoading = streamLoadingState
         .combine(linksNoResult) { state, noResults ->
@@ -196,15 +202,11 @@ class StreamsViewModelImpl constructor(
 
     private fun fetchStreams(info: StreamableKey) = flow {
         val result = streamService.getStreamsWithLanguages(info)
-            .onCompletion { updateAnyErrorsValue() }
-            .map { result -> result.fold({ State.Error(it) }, { State.Success(it) }) }
+            .map { result -> result.fold({ State.Error(it) }, { State.Success(it, false) }) }
+            .shareIn(viewModelScope, SharingStarted.Eagerly, 1)
         emitAll(result)
-    }
-
-    private fun updateAnyErrorsValue() {
-        val successState = (streamLoadingState.value as? State.Success)
-        linksAnyResult.value = successState?.streams?.streams?.any() ?: false
-        linksNoResult.value = successState?.streams?.streams?.none() ?: false
+        (result.lastOrNull() as? State.Success)
+            ?.let { emit(State.Success(it.streams, true)) }
     }
 
     private fun stateToStreamableInfo(it: State): StreamableInfo? {
@@ -236,7 +238,13 @@ class StreamsViewModelImpl constructor(
         /**
          * Streamable item loaded successfully.
          */
-        data class Success(val streams: StreamableInfoWithLangLinks) : State
+        data class Success(
+            val streams: StreamableInfoWithLangLinks,
+            /**
+             * Whether this is the final value and no more will be loaded.
+             */
+            val final: Boolean
+        ) : State
 
         /**
          * Error during loading of the item.
