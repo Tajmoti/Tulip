@@ -85,8 +85,8 @@ class StreamsViewModelImpl constructor(
     private val streamLoadingFinalSuccessState = streamLoadingState
         .map(viewModelScope) { (it as? State.Success)?.takeIf { success -> success.final } }
 
-    override val linksAnyResult = streamLoadingFinalSuccessState
-        .map(viewModelScope) { it?.streams?.streams?.any() ?: false }
+    override val linksAnyResult = streamLoadingState
+        .map(viewModelScope) { (it as? State.Success)?.streams?.streams?.any() ?: false }
 
     override val linksNoResult = streamLoadingFinalSuccessState
         .map(viewModelScope) { it?.streams?.streams?.none() ?: false }
