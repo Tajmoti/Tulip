@@ -141,7 +141,10 @@ class StreamsViewModelImpl constructor(
     }
 
     override fun onStreamClicked(key: StreamableKey) {
-        viewModelScope.launch { streamableKey.emit(key) }
+        viewModelScope.launch {
+            manualStream.emit(null)
+            streamableKey.emit(key)
+        }
     }
 
     private fun fetchStreams(stream: UnloadedVideoStreamRef, download: Boolean) = flow {
