@@ -169,7 +169,6 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         consume(playerViewModel.isPlaying, this::onPlayingChanged)
         consume(playerViewModel.buffering, this::updateBuffering)
         consume(playerViewModel.position, this::updatePosition)
-        consume(playerViewModel.isDonePlaying, this::onDonePlayingChanged)
         consume(streamsViewModel.directLoadingUnsupported, this::onDirectLinkUnsupported)
         consume(streamsViewModel.videoLinkToPlay) { onVideoToPlayChanged(it) }
         consume(streamsViewModel.videoLinkToDownload) { onVideoToDownloadChanged(it) }
