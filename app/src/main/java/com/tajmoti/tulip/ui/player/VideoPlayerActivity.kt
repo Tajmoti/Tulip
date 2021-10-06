@@ -1,11 +1,9 @@
 package com.tajmoti.tulip.ui.player
 
-import android.app.Dialog
 import android.app.PictureInPictureParams
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -13,8 +11,6 @@ import android.os.Handler
 import android.os.Message
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.view.View
-import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.WindowCompat
@@ -22,18 +18,10 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.commit
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.tajmoti.libtulip.model.info.StreamableInfo
-import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
-import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
-import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
 import com.tajmoti.libtulip.ui.player.MediaPlayerState
-import com.tajmoti.libtulip.ui.player.Position
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.streams.FailedLink
 import com.tajmoti.libtulip.ui.streams.LoadedLink
@@ -43,18 +31,11 @@ import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ActivityVideoPlayerBinding
 import com.tajmoti.tulip.ui.*
 import com.tajmoti.tulip.ui.captcha.CaptchaSolverActivity
+import com.tajmoti.tulip.ui.player.controls.VideoControlsFragment
 import com.tajmoti.tulip.ui.player.streams.AndroidStreamsViewModel
-import com.tajmoti.tulip.ui.player.streams.StreamsFragment
-import com.tajmoti.tulip.ui.player.subtitles.SubtitleItem
-import com.tajmoti.tulip.ui.player.subtitles.SubtitleLanguageHeaderItem
-import com.xwray.groupie.ExpandableGroup
-import com.xwray.groupie.Group
-import com.xwray.groupie.GroupieAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import org.videolan.libvlc.LibVLC
 import java.io.File
-import java.util.*
-import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
@@ -87,7 +68,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     private val uiHider: () -> Unit = {
         setupFullscreenIfNotInPip()
         if (playerViewModel.isPlaying.value)
-            binding.groupVideoControls.isVisible = false
+            videoControlsVisibility = false
     }
 
     /**
@@ -98,7 +79,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     /**
      * Media currently being played
      */
-    private var vlc: VlcMediaHelper? = null
+    var vlc: VlcMediaHelper? = null
         set(value) {
             if (value != null) {
                 val mediaSession = MediaSessionCompat(this, "Tulip")
@@ -146,47 +127,10 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     private fun setupPlayerUi() {
-        binding.seekBarVideoProgress.max = UI_PROGRESS_STEPS
         binding.progressBarBuffering.max = UI_PROGRESS_STEPS
-        binding.seekBarVideoProgress.setOnSeekBarChangeListener(OnSeekBarChangeListener())
-        binding.buttonPlayResume.setOnClickListener {
-            onPlayPausePressed()
-        }
-        binding.buttonRewind.setOnClickListener {
-            vlc?.let { it.time = (it.time - REWIND_TIME_MS).coerceAtLeast(0) }
-        }
-        binding.buttonSeek.setOnClickListener {
-            vlc?.let { it.time = (it.time + REWIND_TIME_MS).coerceAtMost(it.length) }
-        }
-        binding.buttonSubtitles.setOnClickListener {
-            showSubtitleSelectionDialog()
-        }
-        binding.buttonSubtitleAdjustText.setOnClickListener {
-            vlc?.let { playerViewModel.onTextSeen(it.time) }
-        }
-        binding.buttonSubtitleAdjustVideo.setOnClickListener {
-            vlc?.let { playerViewModel.onWordHeard(it.time) }
-        }
-        binding.buttonRestartVideo.setOnClickListener {
-            onVideoToPlayChanged(streamsViewModel.videoLinkToPlay.value, forceReload = true)
-        }
-        binding.buttonChangeSource.setOnClickListener {
-            showStreamsSelection()
-        }
         binding.videoLayout.setOnClickListener {
             onVideoClicked()
         }
-        binding.buttonBack.setOnClickListener {
-            switchToPipModeIfAvailable(true)
-        }
-    }
-
-    override fun onPictureInPictureModeChanged(
-        isInPictureInPictureMode: Boolean,
-        newConfig: Configuration
-    ) {
-        binding.groupVideoControls.isVisible = !isInPictureInPictureMode
-        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
     }
 
     override fun onBackPressed() {
@@ -202,7 +146,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         switchToPipModeIfAvailable(false)
     }
 
-    private fun switchToPipModeIfAvailable(shouldOtherwiseFinish: Boolean) {
+    fun switchToPipModeIfAvailable(shouldOtherwiseFinish: Boolean) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
             packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
         ) {
@@ -216,31 +160,16 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         }
     }
 
-    private fun showStreamsSelection() {
-        supportFragmentManager.commit {
-            setCustomAnimations(
-                R.anim.slide_from_top_enter,
-                R.anim.slide_from_top_exit,
-                R.anim.slide_from_top_enter,
-                R.anim.slide_from_top_exit
-            )
-            replace(R.id.container_fragment_streams, StreamsFragment())
-        }
-    }
-
     private fun setupFlowCollectors() {
         consume(playerViewModel.subtitleFile) { onSubtitlesChanged(it) }
         consume(playerViewModel.downloadingError) { if (it) toast(R.string.subtitle_download_failure) }
         consume(playerViewModel.subtitleOffset, this::onSubtitlesDelayChanged)
-        consume(playerViewModel.showPlayButton, this::updatePlayPauseButton)
         consume(playerViewModel.isPlaying, this::onPlayingChanged)
         consume(playerViewModel.buffering, this::updateBuffering)
-        consume(playerViewModel.position, this::updatePosition)
         consume(streamsViewModel.directLoadingUnsupported, this::onDirectLinkUnsupported)
         consume(streamsViewModel.videoLinkToPlay) { onVideoToPlayChanged(it) }
         consume(streamsViewModel.videoLinkToDownload) { onVideoToDownloadChanged(it) }
         consume(streamsViewModel.linkLoadingError, this::onDirectLinkLoadingError)
-        consume(streamsViewModel.streamableInfo, this::onStreamableInfo)
         consume(playerViewModel.streamableKey) { streamsViewModel.onStreamClicked(it) } // TODO
         consume(playerViewModel.mediaPlayerState) { onMediaStateChanged(it) }
     }
@@ -297,22 +226,10 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     /**
-     * Info about the streamable is known, show its name in the UI.
-     */
-    private fun onStreamableInfo(info: StreamableInfo?) {
-        val name = when (info) {
-            is TulipCompleteEpisodeInfo -> showToDisplayName(info)
-            is TulipMovie -> info.name
-            null -> ""
-        }
-        binding.textItemName.text = name
-    }
-
-    /**
      * If not null, a link to a direct video stream was selected and loaded,
      * that means we can start playing.
      */
-    private fun onVideoToPlayChanged(it: LoadedLink?, forceReload: Boolean = false) {
+    fun onVideoToPlayChanged(it: LoadedLink?, forceReload: Boolean = false) {
         if (it?.directLink != null) {
             // Don't relaunch the video if it's already set TODO media should be in the ViewModel
             if (it.directLink == vlc?.videoUrl && !forceReload)
@@ -421,59 +338,14 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         }
     }
 
-    private fun updatePlayPauseButton(it: VideoPlayerViewModel.PlayButtonState) {
-        when (it) {
-            VideoPlayerViewModel.PlayButtonState.SHOW_PLAY ->
-                updatePlayPauseImage(false)
-            VideoPlayerViewModel.PlayButtonState.SHOW_PAUSE ->
-                updatePlayPauseImage(true)
-            else -> Unit
-        }
-    }
-
     private fun onPlayingChanged(playing: Boolean) {
         if (playing)
             rescheduleVideoControlAutoHide()
     }
 
-    private fun updatePlayPauseImage(showPause: Boolean) {
-        binding.buttonPlayResume.setImageResource(
-            if (showPause) {
-                R.drawable.ic_baseline_pause_24
-            } else {
-                R.drawable.ic_baseline_play_arrow_24
-            }
-        )
-    }
-
-    private fun updatePosition(position: Position?) {
-        val hasPosition = position != null
-        binding.seekBarVideoProgress.visibility = if (hasPosition) View.VISIBLE else View.INVISIBLE
-        position?.let { binding.seekBarVideoProgress.progress = convertToUiProgress(it.fraction) }
-        position?.let { binding.textVideoTime.text = formatTimeForDisplay(it.timeMs) }
-    }
-
     private fun onDonePlayingChanged(done: Boolean) {
         if (done)
             finish()
-    }
-
-    private fun formatTimeForDisplay(timeMs: Long): String {
-        var mutableTimeMs = timeMs
-        val hours = TimeUnit.MILLISECONDS.toHours(mutableTimeMs)
-        mutableTimeMs -= TimeUnit.HOURS.toMillis(hours)
-        val minutes = TimeUnit.MILLISECONDS.toMinutes(mutableTimeMs)
-        mutableTimeMs -= TimeUnit.MINUTES.toMillis(minutes)
-        val seconds = TimeUnit.MILLISECONDS.toSeconds(mutableTimeMs)
-        return when {
-            hours > 0 -> hours.toString() + ':' + timePad(minutes) + ':' + timePad(seconds)
-            minutes > 0 -> timePad(minutes) + ':' + timePad(seconds)
-            else -> "0:" + timePad(seconds)
-        }
-    }
-
-    private fun timePad(time: Long): String {
-        return time.toString().padStart(2, '0')
     }
 
     private fun updateBuffering(buffering: Float?) {
@@ -494,67 +366,6 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         }
     }
 
-    private fun onPlayPausePressed() {
-        vlc?.playOrPause()
-    }
-
-    private fun setMediaProgress(progress: Int) {
-        vlc?.progress = convertFromUiProgress(progress)
-    }
-
-    private fun showSubtitleSelectionDialog() {
-        var dialog: Dialog? = null
-        val callback: (SubtitleInfo?) -> Unit = {
-            dialog?.dismiss()
-            playerViewModel.onSubtitlesSelected(it)
-        }
-        val noSubItem = SubtitleItem(0, null, callback)
-        val groups = createSubtitleGroups(playerViewModel.subtitleList.value, callback)
-        val recycler = setupSubtitleRecycler(listOf(noSubItem) + groups)
-        dialog = MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.select_subtitles)
-            .setView(recycler)
-            .setNegativeButton(R.string.back, null)
-            .show()
-    }
-
-    private fun setupSubtitleRecycler(its: List<Group>): RecyclerView {
-        val recycler = RecyclerView(this)
-        val adapter = GroupieAdapter()
-        recycler.adapter = adapter
-        recycler.layoutManager = LinearLayoutManager(this)
-        recycler.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
-        adapter.addAll(its)
-        return recycler
-    }
-
-    private fun createSubtitleGroups(
-        state: List<SubtitleInfo>,
-        callback: (SubtitleInfo?) -> Unit
-    ): List<Group> {
-        val groupedByLanguage = state
-            .map { Locale.forLanguageTag(it.language) to it }
-            .sortedBy { it.first.displayLanguage }
-            .groupBy { it.first }
-        return groupedByLanguage
-            .map {
-                val subtitleInfo = it.value.map { pair -> pair.second }
-                createSubtitleGroup(it.key, subtitleInfo, callback)
-            }
-    }
-
-    private fun createSubtitleGroup(
-        locale: Locale,
-        season: List<SubtitleInfo>,
-        callback: (SubtitleInfo?) -> Unit
-    ): ExpandableGroup {
-        val header = SubtitleLanguageHeaderItem(locale)
-        val group = ExpandableGroup(header)
-        val mapped = season.mapIndexed { index, info -> SubtitleItem(index, info, callback) }
-        group.addAll(mapped)
-        return group
-    }
-
     private fun onSubtitlesChanged(file: File?) {
         if (file != null) {
             val uri = Uri.fromFile(file).toString()
@@ -571,24 +382,23 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
     private fun onVideoClicked() {
         if (!isInPipModeCompat)
-            binding.groupVideoControls.isVisible = !binding.groupVideoControls.isVisible
+            videoControlsVisibility = !videoControlsVisibility
     }
 
-    inner class OnSeekBarChangeListener : SeekBar.OnSeekBarChangeListener {
-        override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-            if (!fromUser)
-                return
-            setMediaProgress(progress)
+    private var videoControlsVisibility: Boolean
+        get() {
+            return supportFragmentManager.findFragmentById(R.id.container_fragment_controls) != null
         }
-
-        override fun onStartTrackingTouch(p0: SeekBar?) {
-
+        set(value) = run {
+            supportFragmentManager.commit {
+                if (value) {
+                    replace(R.id.container_fragment_controls, VideoControlsFragment())
+                } else {
+                    supportFragmentManager.findFragmentById(R.id.container_fragment_controls)
+                        ?.let { remove(it) }
+                }
+            }
         }
-
-        override fun onStopTrackingTouch(p0: SeekBar?) {
-
-        }
-    }
 
     companion object {
         private const val MESSAGE_HIDE_UI = 1
@@ -597,23 +407,5 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
          * After how many seconds the UI will be hidden
          */
         private const val UI_HIDE_DELAY_MS = 5000L
-
-        /**
-         * How much will be skipped when skipping backward or forward
-         */
-        private const val REWIND_TIME_MS = 10_000
-
-        /**
-         * The number of steps that the seek and progress bars have.
-         */
-        private const val UI_PROGRESS_STEPS = 1_000
-
-        fun convertToUiProgress(realProgress: Float): Int {
-            return (realProgress * UI_PROGRESS_STEPS).toInt()
-        }
-
-        fun convertFromUiProgress(uiProgress: Int): Float {
-            return (uiProgress.toFloat() / UI_PROGRESS_STEPS)
-        }
     }
 }

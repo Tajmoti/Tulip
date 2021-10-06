@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="com.tajmoti.libtulip.ui.player.VideoPlayerViewModel.PlayButtonState" />
+
+        <variable
+            name="viewModel"
+            type="com.tajmoti.libtulip.ui.player.VideoPlayerViewModel" />
+
+        <variable
+            name="streamsViewModel"
+            type="com.tajmoti.libtulip.ui.streams.StreamsViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/group_video_controls"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/scrim_player_controls"
+        android:keepScreenOn="true"
+        tools:context=".ui.player.VideoPlayerActivity">
+
+        <ImageButton
+            android:id="@+id/button_back"
+            style="@style/FullscreenImageButtonSmall"
+            android:layout_margin="@dimen/activity_vertical_margin"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_baseline_arrow_back_24" />
+
+        <TextView
+            android:id="@+id/text_item_name"
+            style="@style/FullscreenText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@+id/button_back"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/button_back" />
+
+        <Button
+            android:id="@+id/button_subtitle_adjust_video"
+            style="@style/FullscreenTextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/subtitle_adjust_word_heard"
+            android:visibility="@{viewModel.subtitleFile != null}"
+            app:icon="@drawable/ic_baseline_hearing_24"
+            app:layout_constraintBottom_toTopOf="@id/button_subtitle_adjust_text"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@id/guideline_subtitle_buttons" />
+
+        <Button
+            android:id="@+id/button_subtitle_adjust_text"
+            style="@style/FullscreenTextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/subtitle_adjust_word_seen"
+            android:visibility="@{viewModel.subtitleFile != null}"
+            app:icon="@drawable/ic_baseline_remove_red_eye_24"
+            app:layout_constraintBottom_toTopOf="@id/seek_bar_video_progress"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@id/guideline_subtitle_buttons" />
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/guideline_subtitle_buttons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="start"
+            app:constraint_referenced_ids="button_subtitle_adjust_text,button_subtitle_adjust_video"
+            tools:layout_editor_absoluteX="279dp" />
+
+        <ImageButton
+            android:id="@+id/button_rewind"
+            style="@style/FullscreenImageButtonLarge"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:visibility="@{viewModel.position != null}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/button_seek"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_baseline_undo_24" />
+
+        <ImageButton
+            android:id="@+id/button_play_resume"
+            style="@style/FullscreenImageButtonLarge"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:visibility="@{viewModel.showPlayButton != PlayButtonState.HIDE}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@drawable/ic_baseline_play_arrow_24" />
+
+        <ImageButton
+            android:id="@+id/button_seek"
+            style="@style/FullscreenImageButtonLarge"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:visibility="@{viewModel.position != null}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/button_rewind"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_baseline_redo_24" />
+
+        <ImageView
+            android:id="@+id/image_video_error"
+            style="@style/FullscreenIcon"
+            android:layout_width="@dimen/error_screen_image_size"
+            android:layout_height="@dimen/error_screen_image_size"
+            android:visibility="@{viewModel.isError()}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_sad_24" />
+
+        <SeekBar
+            android:id="@+id/seek_bar_video_progress"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:thumb="@drawable/seekbar_drawable_thumb_video_player"
+            android:visibility="@{!viewModel.isError()}"
+            app:layout_constraintBottom_toTopOf="@id/barrier_bottom_buttons"
+            app:layout_constraintEnd_toStartOf="@id/text_video_time"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/text_video_time"
+            style="@style/FullscreenText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minEms="3"
+            android:visibility="@{viewModel.position != null}"
+            app:layout_constraintBottom_toBottomOf="@id/seek_bar_video_progress"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/seek_bar_video_progress"
+            app:layout_constraintTop_toTopOf="@id/seek_bar_video_progress"
+            tools:text="4:44:44" />
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/barrier_bottom_buttons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="top"
+            app:constraint_referenced_ids="button_subtitles,button_restart_video"
+            tools:layout_editor_absoluteY="667dp" />
+
+        <Button
+            android:id="@+id/button_subtitles"
+            style="@style/FullscreenTextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="@{streamsViewModel.linksAnyResult &amp;&amp; viewModel.subtitlesReadyToSelect}"
+            android:text="@string/subtitles"
+            app:icon="@drawable/ic_baseline_subtitles_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/button_restart_video"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
+            android:id="@+id/button_restart_video"
+            style="@style/FullscreenTextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="@{streamsViewModel.videoLinkToPlay != null}"
+            android:text="@string/restart_video"
+            app:icon="@drawable/ic_baseline_refresh_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/button_change_source"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/button_subtitles" />
+
+        <Button
+            android:id="@+id/button_change_source"
+            style="@style/FullscreenTextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="@{streamsViewModel.linksAnyResult}"
+            android:text="@string/change_source"
+            app:icon="@drawable/ic_baseline_tap_and_play_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/button_episode_list"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@id/button_restart_video" />
+
+        <Button
+            android:id="@+id/button_episode_list"
+            style="@style/FullscreenTextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="@{viewModel.episodeList != null}"
+            android:text="@string/episodes"
+            android:visibility="@{viewModel.isTvShow()}"
+            app:icon="@drawable/ic_baseline_playlist_play_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/button_next_episode"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@id/button_change_source" />
+
+        <Button
+            android:id="@+id/button_next_episode"
+            style="@style/FullscreenTextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="@{viewModel.nextEpisode != null}"
+            android:onClick="@{(v) -> viewModel.goToNextEpisode()}"
+            android:text="@string/next_episode"
+            android:visibility="@{viewModel.isTvShow()}"
+            app:icon="@drawable/ic_baseline_skip_next_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@id/button_episode_list" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
