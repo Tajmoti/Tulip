@@ -64,9 +64,10 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     private val streamsViewModel by viewModelsDelegated<StreamsViewModel, AndroidStreamsViewModel>()
 
     /**
-     * Media session used to control the video from PIP mode
+     * Media session used to control the video from PIP mode.
+     * Non-null only if some media is actually playing.
      */
-    private lateinit var mediaSession: MediaSessionCompat
+    private var mediaSession: MediaSessionCompat? = null
 
     /**
      * Handler used for hiding UI after a timeout
@@ -99,7 +100,14 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
      */
     private var vlc: VlcMediaHelper? = null
         set(value) {
-            mediaSession.setCallback(value?.let { VlcMediaSessionCallback(it) })
+            if (value != null) {
+                val mediaSession = MediaSessionCompat(this, "Tulip")
+                mediaSession.setCallback(VlcMediaSessionCallback(value))
+                this.mediaSession = mediaSession
+            } else {
+                mediaSession?.release()
+                mediaSession = null
+            }
             field = value
         }
 
@@ -110,7 +118,6 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         binding.viewModel = playerViewModel
         binding.streamsViewModel = streamsViewModel
         libVLC = LibVLC(this)
-        mediaSession = MediaSessionCompat(this, "Tulip")
 
         setupPlayerUi()
         setupFlowCollectors()
@@ -243,7 +250,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         val capabilities = PlaybackStateCompat.ACTION_SEEK_TO or
                 PlaybackStateCompat.ACTION_PLAY or
                 PlaybackStateCompat.ACTION_PAUSE
-        mediaSession.setPlaybackState(
+        mediaSession?.setPlaybackState(
             PlaybackStateCompat.Builder()
                 .setActions(capabilities)
                 .setState(state, pos, 1.0f)
@@ -264,7 +271,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     override fun onStart() {
         super.onStart()
         vlc?.attach(binding.videoLayout)
-        mediaSession.isActive = true
+        mediaSession?.isActive = true
     }
 
     override fun onResume() {
@@ -275,7 +282,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     override fun onStop() {
         super.onStop()
         vlc?.detachAndPause()
-        mediaSession.isActive = false
+        mediaSession?.isActive = false
     }
 
     override fun onDestroy() {
