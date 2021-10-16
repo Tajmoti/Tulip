@@ -185,6 +185,17 @@ class VideoPlayerViewModelImpl constructor(
         .map(viewModelScope) { (it as? SubtitleSyncState.OffsetUsed)?.offsetMs ?: 0L }
 
     /**
+     * The current playing position while the media is actively playing,
+     * sampled each [PLAY_POSITION_SAMPLE_PERIOD_MS] milliseconds.
+     */
+    @OptIn(FlowPreview::class)
+    private val playingPositionToPersist = combine(streamableKey, progress, isPlaying)
+    { key, progress, playing -> Triple(key, progress, playing) }
+        .filter { (_, _, playing) -> playing }
+        .sample(PLAY_POSITION_SAMPLE_PERIOD_MS)
+        .filter { (_, progress) -> progress != null }
+
+    /**
      * Represents fetching of the selected subtitles.
      */
     private var subtitleDownloadJob: Job? = null
@@ -198,15 +209,11 @@ class VideoPlayerViewModelImpl constructor(
      * Persists each playing position update to the DB.
      * This allows us to resume playback later.
      */
-    @OptIn(FlowPreview::class)
     private fun persistPlayingPosition() {
         viewModelScope.launch {
-            combine(streamableKey, progress) { key, progress -> key to progress }
-                .sample(PLAY_POSITION_SAMPLE_PERIOD_MS)
-                .filter { (_, progress) -> progress != null }
-                .collect { (key, progress) ->
-                    playingHistoryRepository.setLastPlayedPosition(key, progress)
-                }
+            playingPositionToPersist.collect { (key, progress) ->
+                playingHistoryRepository.setLastPlayedPosition(key, progress)
+            }
         }
     }
 
