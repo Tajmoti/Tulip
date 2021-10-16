@@ -1,5 +1,6 @@
 package com.tajmoti.libtulip.ui.player
 
+import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.misc.NetworkResult
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
@@ -12,6 +13,7 @@ import com.tajmoti.libtulip.repository.SubtitleRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtulip.service.*
 import com.tajmoti.libtulip.ui.doCancelableJob
+import com.tajmoti.libtulip.ui.logAllFlowValues
 import com.tajmoti.libtvprovider.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -203,6 +205,18 @@ class VideoPlayerViewModelImpl constructor(
     init {
         persistPlayingPosition()
         viewModelScope.launch { restorePlayerProgress() }
+        logAllFlowValues(
+            this,
+            viewModelScope,
+            logger,
+            listOf(
+                this::position,
+                this::progress,
+                this::mediaPlayerState,
+                this::persistedPlayingProgress,
+                this::playingPositionToPersist
+            )
+        )
     }
 
     /**

@@ -9,6 +9,16 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.last
 
 /**
+ * Set to true to enable debugging of the network resource mechanism.
+ */
+private const val NETWORK_EXECUTION_DEBUG = false
+
+fun Any.networkBoundResourceDebug(message: String) {
+    if (NETWORK_EXECUTION_DEBUG)
+        logger.debug(message)
+}
+
+/**
  * Retrieves a resource, either from a local database or from the network.
  * First, a database item is used and when the network request finished,
  * the online value is used and inserted into the database.
@@ -51,7 +61,7 @@ inline fun <T> getNetworkBoundResource(
         val cached = cacheGetter()
         if (cached is Some) {
             // Cached value available, try to convert it
-            logger.debug("Emitting cached value #1")
+            networkBoundResourceDebug("Emitting cached value #1")
             emit(NetworkResult.Success<T>(cached.value))
             // If we are fine with cached-only, get out of here
             if (finishIfCached)
@@ -60,7 +70,7 @@ inline fun <T> getNetworkBoundResource(
         // Then try to emit an item from the DB
         val dbItem = dbProducer().onValue { dbResult ->
             // DB item available, use it
-            logger.debug("Emitting DB value #1")
+            networkBoundResourceDebug("Emitting DB value #1")
             emit(NetworkResult.Success<T>(dbResult))
         }
         // Then try to fetch it from network
@@ -69,25 +79,25 @@ inline fun <T> getNetworkBoundResource(
                 // Network succeeded, save it, cache it and try to convert it
                 dbInserter(netResult)
                 cachePutter(netResult)
-                logger.debug("Emitting network value #1")
+                networkBoundResourceDebug("Emitting network value #1")
                 emit(NetworkResult.Success(netResult))
             }
             .onFailure { netErr ->
                 val error = errorConverter(netErr)
                 // If we have a cached value, return it
                 if (cached is Some) {
-                    logger.debug("Emitting cached value #3")
+                    networkBoundResourceDebug("Emitting cached value #3")
                     emit(NetworkResult.Cached<T>(cached.value, error))
                     return@flow
                 }
                 // Cached value not available, try DB value
                 dbItem.onValue { dbItem ->
                     // DB item available, use it and get out of here
-                    logger.debug("Emitting DB value #3")
+                    networkBoundResourceDebug("Emitting DB value #3")
                     emit(NetworkResult.Cached<T>(dbItem, error))
                 }.onNull {
                     // DB item available, return conversion error
-                    logger.debug("Emitting error value #2")
+                    networkBoundResourceDebug("Emitting error value #2")
                     emit(NetworkResult.Error<T>(error))
                 }
             }

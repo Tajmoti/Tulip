@@ -1,5 +1,6 @@
 package com.tajmoti.libtulip.ui.streams
 
+import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.StreamableKey
@@ -7,6 +8,7 @@ import com.tajmoti.libtulip.model.stream.StreamableInfoWithLangLinks
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.repository.StreamsRepository
 import com.tajmoti.libtulip.service.*
+import com.tajmoti.libtulip.ui.logAllFlowValues
 import com.tajmoti.libtvprovider.*
 import com.tajmoti.libtvvideoextractor.CaptchaInfo
 import com.tajmoti.libtvvideoextractor.ExtractionError
@@ -135,6 +137,9 @@ class StreamsViewModelImpl constructor(
         }
         .shareIn(viewModelScope, SharingStarted.Eagerly)
 
+    init {
+        logAllFlowValues(this, viewModelScope, logger)
+    }
 
     override fun onStreamClicked(stream: UnloadedVideoStreamRef, download: Boolean) {
         viewModelScope.launch { manualStream.emit(stream to download) }
