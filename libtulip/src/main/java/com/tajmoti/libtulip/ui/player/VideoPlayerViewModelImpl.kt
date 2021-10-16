@@ -73,9 +73,11 @@ class VideoPlayerViewModelImpl constructor(
         SubtitleDownloadingState.Idle
     )
 
-    override val loadingSubtitles = MutableStateFlow(false)
+    override val loadingSubtitles = loadingSubtitlesState
+        .map(viewModelScope) { it is SubtitleListLoadingState.Loading }
 
-    override val downloadingSubtitleFile = MutableStateFlow(false)
+    override val downloadingSubtitleFile = subtitleDownloadState
+        .map(viewModelScope) { it is SubtitleDownloadingState.Loading }
 
     override val subtitleList = loadingSubtitlesState
         .map(viewModelScope) { (it as? SubtitleListLoadingState.Success)?.subtitles ?: emptyList() }
@@ -248,7 +250,7 @@ class VideoPlayerViewModelImpl constructor(
 
     override fun onSubtitlesSelected(subtitleInfo: SubtitleInfo?) {
         subSyncState.value = null
-        viewModelScope.doCancelableJob(this::subtitleDownloadJob, downloadingSubtitleFile) {
+        viewModelScope.doCancelableJob(this::subtitleDownloadJob) {
             if (subtitleInfo != null) {
                 subtitleDownloadState.emitAll(downloadSubtitles(subtitleInfo))
             } else {
