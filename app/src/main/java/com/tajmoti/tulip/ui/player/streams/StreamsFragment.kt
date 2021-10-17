@@ -22,7 +22,7 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding>(FragmentStreamsBind
         super.onViewCreated(view, savedInstanceState)
         val adapter = StreamsAdapter(this::onStreamClickedPlay, this::onStreamClickedDownload)
         binding.recyclerSearch.setupWithAdapterAndDivider(adapter)
-        binding.buttonBack.setOnClickListener { dismiss() }
+        binding.buttonBack.setOnClickListener { slideToBottomDismiss() }
         consume(streamsViewModel.linksResult) { it?.let { adapter.items = it.streams } }
         consume(streamsViewModel.streamableInfo, this::onStreamableInfo)
     }
@@ -44,7 +44,7 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding>(FragmentStreamsBind
      * A video link was clicked, load it and play it.
      */
     private fun onStreamClickedPlay(stream: UnloadedVideoWithLanguage) {
-        dismiss()
+        slideToBottomDismiss()
         streamsViewModel.onStreamClicked(stream.video, false)
     }
 
@@ -53,19 +53,5 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding>(FragmentStreamsBind
      */
     private fun onStreamClickedDownload(stream: UnloadedVideoWithLanguage) {
         streamsViewModel.onStreamClicked(stream.video, true)
-    }
-
-    private fun dismiss() {
-        requireActivity()
-            .supportFragmentManager
-            .commit {
-                setCustomAnimations(
-                    R.anim.slide_from_top_enter,
-                    R.anim.slide_from_top_exit,
-                    R.anim.slide_from_top_enter,
-                    R.anim.slide_from_top_exit
-                )
-                remove(this@StreamsFragment)
-            }
     }
 }

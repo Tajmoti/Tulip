@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fullscreen_menu_background"
+        android:orientation="vertical">
+
+        <View
+            android:id="@+id/top_bar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/fullscreen_menu_top_panel_height"
+            android:layout_gravity="top"
+            android:background="?colorPrimary"
+            android:orientation="horizontal" />
+
+        <Spinner
+            android:id="@+id/spinner_select_season"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:minHeight="?android:attr/actionBarSize"
+            android:padding="8dp" />
+
+        <ImageButton
+            android:id="@+id/button_back"
+            style="@style/FullscreenImageButtonSmall"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="@dimen/activity_vertical_margin"
+            app:srcCompat="@drawable/ic_baseline_close_24" />
+
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_episodes"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/fullscreen_menu_top_panel_height"
+            app:layoutManager="LinearLayoutManager" />
+
+    </FrameLayout>
+</layout>

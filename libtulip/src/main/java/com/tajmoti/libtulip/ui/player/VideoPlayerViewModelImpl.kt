@@ -170,6 +170,16 @@ class VideoPlayerViewModelImpl constructor(
                 .map { position -> it to position?.progress }
         }
 
+    /**
+     * Persisted playing progress that will be triggered once per each stream.
+     */
+    private val playerProgressToRestore =
+        combine(attachedMediaPlayer.filterNotNull(), streamableKey, persistedPlayingProgress)
+        { pl, k, pr -> Triple(pl, k, pr) }
+            .distinctUntilChanged { a, b -> a.first == b.first && a.second == b.second }
+            .filter { (_, key, keyToProgress) -> key == keyToProgress.first }
+            .mapNotNull { (player, _, keyPos) -> keyPos.second?.let { player to it } }
+
     override val isDonePlaying = this.mediaPlayerState
         .map(viewModelScope) { state -> state is MediaPlayerState.Finished }
 
@@ -203,8 +213,8 @@ class VideoPlayerViewModelImpl constructor(
     private var subtitleDownloadJob: Job? = null
 
     init {
-        persistPlayingPosition()
-        viewModelScope.launch { restorePlayerProgress() }
+        startPersistPlayingPosition()
+        startRestorePlayingPosition()
         logAllFlowValues(
             this,
             viewModelScope,
@@ -213,8 +223,7 @@ class VideoPlayerViewModelImpl constructor(
                 this::position,
                 this::progress,
                 this::mediaPlayerState,
-                this::persistedPlayingProgress,
-                this::playingPositionToPersist
+                this::persistedPlayingProgress
             )
         )
     }
@@ -223,11 +232,21 @@ class VideoPlayerViewModelImpl constructor(
      * Persists each playing position update to the DB.
      * This allows us to resume playback later.
      */
-    private fun persistPlayingPosition() {
+    private fun startPersistPlayingPosition() {
         viewModelScope.launch {
             playingPositionToPersist.collect { (key, progress) ->
                 playingHistoryRepository.setLastPlayedPosition(key, progress)
             }
+        }
+    }
+
+    /**
+     * Loads the time where the playback was last at
+     * and restores it to the media player if it is still attached.
+     */
+    private fun startRestorePlayingPosition() {
+        viewModelScope.launch {
+            playerProgressToRestore.collect { (player, pos) -> player.progress = pos }
         }
     }
 
@@ -248,21 +267,6 @@ class VideoPlayerViewModelImpl constructor(
 
     override fun onMediaAttached(media: MediaPlayerHelper) {
         attachedMediaPlayer.value = media
-    }
-
-    /**
-     * Loads the time where the playback was last at
-     * and restores it to the media player if it is still attached.
-     */
-    private suspend fun restorePlayerProgress() {
-        val player = attachedMediaPlayer.filterNotNull()
-        val key = streamableKey
-        val progress = persistedPlayingProgress
-        combine(player, key, progress) { a, b, c -> Triple(a, b, c) }
-            .distinctUntilChanged { a, b -> a.first == b.first && a.second == b.second }
-            .filter { (_, key, keyToProgress) -> key == keyToProgress.first }
-            .mapNotNull { (player, _, keyPos) -> keyPos.second?.let { player to it } }
-            .collect { (player, pos) -> player.progress = pos }
     }
 
     override fun onMediaDetached() {

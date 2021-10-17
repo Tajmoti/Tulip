@@ -14,4 +14,6 @@
 
     <color name="translucent_scrim_bottom">#D0121212</color>
     <color name="translucent_scrim_center">#A0121212</color>
+
+    <color name="fullscreen_menu_background">@color/black</color>
 </resources>

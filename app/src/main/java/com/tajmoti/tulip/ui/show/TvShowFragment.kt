@@ -10,13 +10,10 @@ import androidx.appcompat.widget.Toolbar
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.bumptech.glide.Glide
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
-import com.tajmoti.libtulip.model.info.seasonNumber
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
-import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ActivityTabbedTvShowBinding
 import com.tajmoti.tulip.ui.*
 import dagger.hilt.android.AndroidEntryPoint
@@ -80,7 +77,10 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
             context,
             android.R.layout.simple_spinner_dropdown_item
         )
-        episodesAdapter = EpisodesAdapter({ goToStreamsScreen(it.key) }, this::goToDetailsScreen)
+        episodesAdapter = EpisodesAdapter(
+            { goToStreamsScreen(it.key) },
+            { showEpisodeDetailsDialog(requireContext(), it) }
+        )
         binding.spinnerSelectSeason.adapter = seasonsAdapter
         binding.spinnerSelectSeason.onItemSelectedListener = SpinnerListener()
     }
@@ -118,7 +118,7 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
         val oldPos = selectedSeasonIndex ?: binding.header.spinnerSelectSeason.selectedItemPosition
         selectedSeasonIndex = null
         seasonsAdapter.clear()
-        seasonsAdapter.addAll(seasons.map { getSeasonTitle(it) })
+        seasonsAdapter.addAll(seasons.map { getSeasonTitle(requireContext(), it) })
         if (oldPos < seasons.size)
             binding.header.spinnerSelectSeason.setSelection(oldPos)
     }
@@ -132,27 +132,9 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
         episodesAdapter.items = episodes
     }
 
-    private fun getSeasonTitle(season: TulipSeasonInfo): String {
-        val seasonTitle = if (season.seasonNumber == 0) {
-            getString(R.string.season_specials)
-        } else {
-            getString(R.string.season_no, season.seasonNumber)
-        }
-        return seasonTitle
-    }
-
     private fun goToStreamsScreen(episodeKey: EpisodeKey) {
         TvShowFragmentDirections.actionNavigationTvShowToVideoPlayerActivity(episodeKey)
             .let { findNavController().navigate(it) }
-    }
-
-    private fun goToDetailsScreen(episodeInfo: TulipEpisodeInfo) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setIcon(R.drawable.ic_baseline_live_tv_24)
-            .setTitle(episodeToLabel(episodeInfo))
-            .setMessage(episodeInfo.overview ?: "")
-            .setPositiveButton(R.string.dismiss, null)
-            .show()
     }
 
     companion object {

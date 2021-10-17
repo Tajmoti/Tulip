@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.SeekBar
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -13,6 +14,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipMovie
+import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.ui.player.Position
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
@@ -23,6 +25,7 @@ import com.tajmoti.tulip.ui.BaseFragment
 import com.tajmoti.tulip.ui.activityViewModelsDelegated
 import com.tajmoti.tulip.ui.consume
 import com.tajmoti.tulip.ui.player.*
+import com.tajmoti.tulip.ui.player.episodes.EpisodesFragment
 import com.tajmoti.tulip.ui.player.streams.AndroidStreamsViewModel
 import com.tajmoti.tulip.ui.player.streams.StreamsFragment
 import com.tajmoti.tulip.ui.player.subtitles.SubtitleItem
@@ -80,6 +83,9 @@ class VideoControlsFragment :
         binding.buttonChangeSource.setOnClickListener {
             showStreamsSelection()
         }
+        binding.buttonEpisodeList.setOnClickListener {
+            showEpisodeSelection()
+        }
         binding.buttonBack.setOnClickListener {
             (requireActivity() as VideoPlayerActivity)
                 .switchToPipModeIfAvailable(true)
@@ -113,6 +119,21 @@ class VideoControlsFragment :
     }
 
     private fun showStreamsSelection() {
+        popInCustomFragment(StreamsFragment())
+    }
+
+    private fun showEpisodeSelection() {
+        val tvShowKey = (playerViewModel.streamableKey.value as EpisodeKey)
+            .seasonKey
+            .tvShowKey
+        val args = Bundle()
+            .apply { putSerializable(EpisodesFragment.ARG_TV_SHOW_KEY, tvShowKey) }
+        val frag = EpisodesFragment()
+            .apply { arguments = args }
+        popInCustomFragment(frag)
+    }
+
+    private fun popInCustomFragment(frag: Fragment) {
         parentFragmentManager.commit {
             setCustomAnimations(
                 R.anim.slide_from_top_enter,
@@ -120,7 +141,7 @@ class VideoControlsFragment :
                 R.anim.slide_from_top_enter,
                 R.anim.slide_from_top_exit
             )
-            replace(R.id.container_fragment_streams, StreamsFragment())
+            replace(R.id.container_fragment_streams, frag)
         }
     }
 

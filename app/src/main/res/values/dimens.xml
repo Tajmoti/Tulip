@@ -20,6 +20,7 @@
     <!-- Fullscreen buttons -->
     <dimen name="fullscreen_button_size">48dp</dimen>
     <dimen name="library_item_margin_half">3dp</dimen>
+    <dimen name="fullscreen_menu_top_panel_height">64dp</dimen>
 
     <integer name="library_columns">2</integer>
 </resources>
