@@ -4,6 +4,7 @@ import android.app.PictureInPictureParams
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -32,6 +33,10 @@ import com.tajmoti.tulip.databinding.ActivityVideoPlayerBinding
 import com.tajmoti.tulip.ui.*
 import com.tajmoti.tulip.ui.captcha.CaptchaSolverActivity
 import com.tajmoti.tulip.ui.player.controls.VideoControlsFragment
+import com.tajmoti.tulip.ui.player.helper.AudioFocusApi26
+import com.tajmoti.tulip.ui.player.helper.AudioFocusApiBelow26
+import com.tajmoti.tulip.ui.player.helper.AudioFocusAwareMediaPlayerHelper
+import com.tajmoti.tulip.ui.player.helper.VlcMediaHelper
 import com.tajmoti.tulip.ui.player.streams.AndroidStreamsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import org.videolan.libvlc.LibVLC
@@ -77,22 +82,31 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     private lateinit var libVLC: LibVLC
 
     /**
-     * Media currently being played
+     * Wrapper around a concrete media player implementation.
      */
-    var vlc: VlcMediaHelper? = null
+    var player: MediaPlayerHelper? = null
         set(value) {
             if (value != null) {
-                val mediaSession = MediaSessionCompat(this, "Tulip")
-                mediaSession.isActive = true
-                mediaSession.setCallback(VlcMediaSessionCallback(value))
-                this.mediaSession = mediaSession
+                val newValue = wrapInMediaFocusAware(value)
+                setupMediaSession(newValue)
+                field = newValue
             } else {
+                player?.release()
                 mediaSession?.release()
                 mediaSession = null
             }
-            field = value
         }
 
+    /**
+     * Wrapper around a VLC media player implementation.
+     * Use only for initialization and resource releasing specific to VLC!
+     * For everything else use [player], which respects audio focus.
+     */
+    private var vlc: VlcMediaHelper? = null
+        set(value) {
+            field = value
+            player = value
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -175,6 +189,22 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         consume(playerViewModel.mediaPlayerState) { onMediaStateChanged(it) }
     }
 
+    private fun setupMediaSession(value: MediaPlayerHelper) {
+        val mediaSession = MediaSessionCompat(this, "Tulip")
+        mediaSession.isActive = true
+        mediaSession.setCallback(TulipMediaSessionCallback(value))
+        this.mediaSession = mediaSession
+    }
+
+    private fun wrapInMediaFocusAware(player: MediaPlayerHelper): AudioFocusAwareMediaPlayerHelper {
+        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            AudioFocusApi26(this, audioManager, player)
+        } else {
+            AudioFocusApiBelow26(this, audioManager, player)
+        }
+    }
+
     private fun onMediaStateChanged(it: MediaPlayerState) {
         val (state, pos) = appStateToAndroidState(it)
         val capabilities = PlaybackStateCompat.ACTION_SEEK_TO or
@@ -200,6 +230,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
     override fun onStart() {
         super.onStart()
+        volumeControlStream = AudioManager.STREAM_MUSIC
         vlc?.attach(binding.videoLayout)
         mediaSession?.isActive = true
     }
@@ -234,13 +265,13 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     fun onVideoToPlayChanged(it: LoadedLink?, forceReload: Boolean = false) {
         if (it?.directLink != null) {
             // Don't relaunch the video if it's already set TODO media should be in the ViewModel
-            if (it.directLink == vlc?.videoUrl && !forceReload)
+            if (it.directLink == player?.videoUrl && !forceReload)
                 return
             releaseMedia()
             vlc = VlcMediaHelper(libVLC, it.directLink)
                 .apply { attach(binding.videoLayout) }
-                .apply { playOrPause() }
                 .also { playerViewModel.onMediaAttached(it) }
+            player?.play()
             onSubtitlesChanged(playerViewModel.subtitleFile.value)
         } else {
             releaseMedia()
@@ -249,7 +280,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
     private fun releaseMedia() {
         playerViewModel.onMediaDetached()
-        vlc?.release()
+        player?.release()
         vlc = null
     }
 
@@ -371,14 +402,14 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     private fun onSubtitlesChanged(file: File?) {
         if (file != null) {
             val uri = Uri.fromFile(file).toString()
-            vlc?.setSubtitles(MediaPlayerHelper.SubtitleInfo(uri))
+            player?.setSubtitles(MediaPlayerHelper.SubtitleInfo(uri))
         } else {
-            vlc?.setSubtitles(null)
+            player?.setSubtitles(null)
         }
     }
 
     private fun onSubtitlesDelayChanged(delay: Long) {
-        if (vlc?.setSubtitleDelay(delay) == false)
+        if (player?.setSubtitleDelay(delay) == false)
             toast(R.string.subtitle_delay_failed)
     }
 

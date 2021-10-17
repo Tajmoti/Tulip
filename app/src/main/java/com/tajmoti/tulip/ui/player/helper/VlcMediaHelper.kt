@@ -1,10 +1,12 @@
-package com.tajmoti.tulip.ui.player
+package com.tajmoti.tulip.ui.player.helper
 
 import android.net.Uri
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
 import com.tajmoti.libtulip.ui.player.MediaPlayerState
 import com.tajmoti.libtulip.ui.player.Position
+import com.tajmoti.tulip.ui.player.format
+import com.tajmoti.tulip.ui.player.isSpam
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.videolan.libvlc.Media
 import org.videolan.libvlc.MediaPlayer
@@ -14,7 +16,7 @@ import org.videolan.libvlc.util.VLCVideoLayout
 
 class VlcMediaHelper(
     lib: ILibVLC,
-    val videoUrl: String
+    override val videoUrl: String
 ) : MediaPlayer.EventListener, MediaPlayerHelper {
     /**
      * Current state of the player and the media being played
@@ -104,7 +106,7 @@ class VlcMediaHelper(
         return delay == 0L || (player.isPlaying && player.setSpuDelay(delay * 1000))
     }
 
-    fun release() {
+    override fun release() {
         player.detachViews()
         attached = false
         player.release()

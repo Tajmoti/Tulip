@@ -16,6 +16,7 @@ import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
+import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
 import com.tajmoti.libtulip.ui.player.Position
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.streams.StreamsViewModel
@@ -42,8 +43,8 @@ class VideoControlsFragment :
     private val playerViewModel by activityViewModelsDelegated<VideoPlayerViewModel, AndroidVideoPlayerViewModel>()
     private val streamsViewModel by activityViewModelsDelegated<StreamsViewModel, AndroidStreamsViewModel>()
 
-    private val vlc: VlcMediaHelper?
-        get() = (activity as? VideoPlayerActivity)?.vlc
+    private val player: MediaPlayerHelper?
+        get() = (activity as? VideoPlayerActivity)?.player
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -62,19 +63,19 @@ class VideoControlsFragment :
             onPlayPausePressed()
         }
         binding.buttonRewind.setOnClickListener {
-            vlc?.let { it.time = (it.time - REWIND_TIME_MS).coerceAtLeast(0) }
+            player?.let { it.time = (it.time - REWIND_TIME_MS).coerceAtLeast(0) }
         }
         binding.buttonSeek.setOnClickListener {
-            vlc?.let { it.time = (it.time + REWIND_TIME_MS).coerceAtMost(it.length) }
+            player?.let { it.time = (it.time + REWIND_TIME_MS).coerceAtMost(it.length) }
         }
         binding.buttonSubtitles.setOnClickListener {
             showSubtitleSelectionDialog()
         }
         binding.buttonSubtitleAdjustText.setOnClickListener {
-            vlc?.let { playerViewModel.onTextSeen(it.time) }
+            player?.let { playerViewModel.onTextSeen(it.time) }
         }
         binding.buttonSubtitleAdjustVideo.setOnClickListener {
-            vlc?.let { playerViewModel.onWordHeard(it.time) }
+            player?.let { playerViewModel.onWordHeard(it.time) }
         }
         binding.buttonRestartVideo.setOnClickListener {
             (requireActivity() as VideoPlayerActivity)
@@ -174,11 +175,11 @@ class VideoControlsFragment :
     }
 
     private fun onPlayPausePressed() {
-        vlc?.playOrPause()
+        player?.playOrPause()
     }
 
     private fun setMediaProgress(progress: Int) {
-        vlc?.progress = convertFromUiProgress(progress)
+        player?.progress = convertFromUiProgress(progress)
     }
 
     private fun showSubtitleSelectionDialog() {

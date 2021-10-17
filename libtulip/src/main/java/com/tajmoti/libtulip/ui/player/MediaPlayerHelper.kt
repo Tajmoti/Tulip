@@ -3,6 +3,7 @@ package com.tajmoti.libtulip.ui.player
 import kotlinx.coroutines.flow.MutableStateFlow
 
 interface MediaPlayerHelper {
+    val videoUrl: String
     /**
      * Current state of the player and the media being played
      */
@@ -16,6 +17,7 @@ interface MediaPlayerHelper {
     val length: Long
     fun setSubtitles(info: SubtitleInfo?)
     fun setSubtitleDelay(delay: Long): Boolean
+    fun release()
 
     data class SubtitleInfo(
         val uri: String,
