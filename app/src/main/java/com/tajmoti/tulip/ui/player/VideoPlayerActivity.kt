@@ -218,6 +218,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         super.onDestroy()
         releaseMedia()
         libVLC.release()
+        mainHandler.removeCallbacksAndMessages(null)
     }
 
     private fun rescheduleVideoControlAutoHide() {
