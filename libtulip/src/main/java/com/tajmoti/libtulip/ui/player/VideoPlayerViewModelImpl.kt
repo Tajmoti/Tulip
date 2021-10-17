@@ -141,7 +141,7 @@ class VideoPlayerViewModelImpl constructor(
     /**
      * Playing progress (as a real number from 0.0 to 1.0) or null if nothing is currently playing.
      */
-    val progress = this.mediaPlayerState
+    val progress = mediaPlayerState
         .map { state ->
             when (state) {
                 is MediaPlayerState.Buffering -> state.position
@@ -175,8 +175,8 @@ class VideoPlayerViewModelImpl constructor(
      */
     private val playerProgressToRestore =
         combine(attachedMediaPlayer.filterNotNull(), streamableKey, persistedPlayingProgress)
-        { pl, k, pr -> Triple(pl, k, pr) }
-            .distinctUntilChanged { a, b -> a.first == b.first && a.second == b.second }
+        { player, key, keyToProgress -> Triple(player, key, keyToProgress) }
+            .distinctUntilChanged { (p1, k1), (p2, k2) -> p1 == p2 && k1 == k2 }
             .filter { (_, key, keyToProgress) -> key == keyToProgress.first }
             .mapNotNull { (player, _, keyPos) -> keyPos.second?.let { player to it } }
 
@@ -203,6 +203,8 @@ class VideoPlayerViewModelImpl constructor(
     @OptIn(FlowPreview::class)
     private val playingPositionToPersist = combine(streamableKey, progress, isPlaying)
     { key, progress, playing -> Triple(key, progress, playing) }
+        // This prevents an existing position from being applied to a newly selected streamable
+        .distinctUntilChanged { (_, pos1), (_, pos2) -> pos1 == pos2 }
         .filter { (_, _, playing) -> playing }
         .sample(PLAY_POSITION_SAMPLE_PERIOD_MS)
         .filter { (_, progress) -> progress != null }
