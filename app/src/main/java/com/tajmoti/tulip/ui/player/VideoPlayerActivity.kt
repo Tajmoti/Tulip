@@ -83,6 +83,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         set(value) {
             if (value != null) {
                 val mediaSession = MediaSessionCompat(this, "Tulip")
+                mediaSession.isActive = true
                 mediaSession.setCallback(VlcMediaSessionCallback(value))
                 this.mediaSession = mediaSession
             } else {
