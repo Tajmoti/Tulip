@@ -1,5 +1,6 @@
 <resources>
     <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="fullscreen_toolbar_margin">8dp</dimen>
 
     <!-- List items -->
     <dimen name="list_item_padding">16dp</dimen>

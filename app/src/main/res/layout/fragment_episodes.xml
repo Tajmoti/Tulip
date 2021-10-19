@@ -28,8 +28,8 @@
             android:id="@+id/button_back"
             style="@style/FullscreenImageButtonSmall"
             android:layout_gravity="top|end"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="@dimen/activity_vertical_margin"
+            android:layout_marginTop="@dimen/fullscreen_toolbar_margin"
+            android:layout_marginEnd="@dimen/fullscreen_toolbar_margin"
             app:srcCompat="@drawable/ic_baseline_close_24" />
 
 
