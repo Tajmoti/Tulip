@@ -2,8 +2,7 @@ package com.tajmoti.libtulip.ui.player
 
 import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.map
-import com.tajmoti.libtulip.misc.NetworkResult
-import com.tajmoti.libtulip.model.info.TulipSeasonInfo
+import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
@@ -27,7 +26,7 @@ class VideoPlayerViewModelImpl constructor(
     private val hostedTvDataRepository: HostedTvDataRepository,
     private val subDirectory: File,
     private val viewModelScope: CoroutineScope,
-    streamableKeyInitial: StreamableKey
+    streamableKeyInitial: StreamableKey,
 ) : VideoPlayerViewModel {
     override val streamableKey = MutableStateFlow(streamableKeyInitial)
 
@@ -35,41 +34,31 @@ class VideoPlayerViewModelImpl constructor(
         .map(viewModelScope) { it is EpisodeKey }
 
     override val episodeList = streamableKey
-        .flatMapLatest { getSeasonFlow(it) }
+        .flatMapLatest { getSeasonByKeyAsFlow(it) }
         .map { it?.data?.episodes }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    private fun getSeasonFlow(
-        streamableKey: StreamableKey
-    ): Flow<NetworkResult<out TulipSeasonInfo>?> {
-        return when (streamableKey) {
-            is EpisodeKey.Tmdb -> tmdbTvDataRepository.getSeasonAsFlow(streamableKey.seasonKey)
-            is EpisodeKey.Hosted -> hostedTvDataRepository.getSeasonAsFlow(streamableKey.seasonKey)
-            else -> flowOf(null)
-        }
-    }
-
-    override val nextEpisode = combine(episodeList, streamableKey) { a, b -> a to b }
-        .map { (episodes, streamableKey) ->
-            val currentEpisodeIndex = episodes
-                ?.indexOfFirst { episode -> episode.key == streamableKey }
-                ?: return@map null
-            if (currentEpisodeIndex == episodes.size - 1)
-                return@map null
-            episodes[currentEpisodeIndex + 1].key
-        }
+    /**
+     * If a TV show episode is playing, this is the following episode in the same season.
+     * Null if the currently playing episode is the last one in the season or a movie is being played.
+     */
+    private val nextEpisode = combine(episodeList, streamableKey) { a, b -> a to b }
+        .map { (episodes, key) -> episodes?.let { selectNextEpisode(it, key) } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    override val hasNextEpisode = nextEpisode
+        .map(viewModelScope) { it != null }
+
     /**
-     * State of subtitle list loading
+     * State of subtitle list loading.
      */
     private val loadingSubtitlesState = streamableKey
-        .flatMapLatest { loadSubtitlesList(it) }
+        .flatMapLatest { loadSubtitleList(it) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, SubtitleListLoadingState.Loading)
 
 
     /**
-     * State of downloading of selected subtitles
+     * State of downloading of the selected subtitles.
      */
     private val subtitleDownloadState = MutableStateFlow<SubtitleDownloadingState>(
         SubtitleDownloadingState.Idle
@@ -105,63 +94,28 @@ class VideoPlayerViewModelImpl constructor(
         .flatMapLatest { it?.state ?: flowOf(MediaPlayerState.Idle) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, MediaPlayerState.Idle)
 
-    override val isPlaying = this.mediaPlayerState.map(viewModelScope) {
-        it is MediaPlayerState.Playing
-    }
+    override val isPlaying = mediaPlayerState
+        .map(viewModelScope) { it is MediaPlayerState.Playing }
 
-    override val showPlayButton = this.mediaPlayerState
-        .map(viewModelScope) {
-            when (it) {
-                is MediaPlayerState.Buffering -> VideoPlayerViewModel.PlayButtonState.HIDE
-                is MediaPlayerState.Error -> VideoPlayerViewModel.PlayButtonState.HIDE
-                is MediaPlayerState.Idle -> VideoPlayerViewModel.PlayButtonState.HIDE
-                is MediaPlayerState.Paused -> VideoPlayerViewModel.PlayButtonState.SHOW_PLAY
-                is MediaPlayerState.Playing -> VideoPlayerViewModel.PlayButtonState.SHOW_PAUSE
-                is MediaPlayerState.Finished -> VideoPlayerViewModel.PlayButtonState.HIDE
-            }
-        }
+    override val showPlayButton = mediaPlayerState
+        .map(viewModelScope, this::playerStateToPlayButtonState)
 
-    override val buffering = this.mediaPlayerState
+    override val buffering = mediaPlayerState
         .map(viewModelScope) { state -> (state as? MediaPlayerState.Buffering)?.percent }
 
-    override val position = this.mediaPlayerState
-        .map { state ->
-            when (state) {
-                is MediaPlayerState.Buffering -> state.position
-                is MediaPlayerState.Error -> null
-                is MediaPlayerState.Idle -> null
-                is MediaPlayerState.Paused -> state.position
-                is MediaPlayerState.Playing -> state.position
-                is MediaPlayerState.Finished -> null
-            }
-        }
-        .filter { it == null || isValidPosition(it) }
+    override val position = mediaPlayerState
+        .map { state -> state.validPositionOrNull }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /**
-     * Playing progress (as a real number from 0.0 to 1.0) or null if nothing is currently playing.
+     * Progress of the currently playing media or null if nothing is currently playing.
      */
-    val progress = mediaPlayerState
-        .map { state ->
-            when (state) {
-                is MediaPlayerState.Buffering -> state.position
-                is MediaPlayerState.Error -> null
-                is MediaPlayerState.Idle -> null
-                is MediaPlayerState.Paused -> state.position
-                is MediaPlayerState.Playing -> state.position
-                is MediaPlayerState.Finished -> null
-            }
-        }
-        .filter { it?.let { isValidPosition(it) } ?: true }
-        .map { it?.fraction }
-
-    private fun isValidPosition(it: Position): Boolean {
-        return (it.timeMs > 0 && it.fraction > 0.0f)
-    }
+    private val progress = position
+        .map { state -> state?.fraction }
 
     /**
-     * Persisted playing position, should be used only to resume playback state
-     * the first time the media is loaded.
+     * Persisted playing position, to be used only to resume playback
+     * state once the streamable is initially loaded.
      */
     private val persistedPlayingProgress = streamableKey
         .flatMapLatest {
@@ -171,7 +125,12 @@ class VideoPlayerViewModelImpl constructor(
         }
 
     /**
-     * Persisted playing progress that will be triggered once per each stream.
+     * Persisted playing progress. This flow will emit a value only once per streamable
+     * and a media player. In other words, both the streamable and the media player
+     * must change in order for this flow to emit a value.
+     *
+     * The emitted value is to be directly set to the media player to resume
+     * the playing position of a newly loaded streamable.
      */
     private val playerProgressToRestore =
         combine(attachedMediaPlayer.filterNotNull(), streamableKey, persistedPlayingProgress)
@@ -180,10 +139,10 @@ class VideoPlayerViewModelImpl constructor(
             .filter { (_, key, keyToProgress) -> key == keyToProgress.first }
             .mapNotNull { (player, _, keyPos) -> keyPos.second?.let { player to it } }
 
-    override val isDonePlaying = this.mediaPlayerState
+    override val isDonePlaying = mediaPlayerState
         .map(viewModelScope) { state -> state is MediaPlayerState.Finished }
 
-    override val isError = this.mediaPlayerState
+    override val isError = mediaPlayerState
         .map(viewModelScope) { state -> state is MediaPlayerState.Error }
 
     /**
@@ -228,35 +187,6 @@ class VideoPlayerViewModelImpl constructor(
                 this::persistedPlayingProgress
             )
         )
-    }
-
-    /**
-     * Persists each playing position update to the DB.
-     * This allows us to resume playback later.
-     */
-    private fun startPersistPlayingPosition() {
-        viewModelScope.launch {
-            playingPositionToPersist.collect { (key, progress) ->
-                playingHistoryRepository.setLastPlayedPosition(key, progress)
-            }
-        }
-    }
-
-    /**
-     * Loads the time where the playback was last at
-     * and restores it to the media player if it is still attached.
-     */
-    private fun startRestorePlayingPosition() {
-        viewModelScope.launch {
-            playerProgressToRestore.collect { (player, pos) -> player.progress = pos }
-        }
-    }
-
-    private fun loadSubtitlesList(id: StreamableKey) = flow {
-        emit(SubtitleListLoadingState.Loading)
-        val subtitles = subtitleRepository.fetchAvailableSubtitles(id)
-            .getOrElse { emit(SubtitleListLoadingState.Error); return@flow }
-        emit(SubtitleListLoadingState.Success(subtitles))
     }
 
     override fun goToNextEpisode() {
@@ -306,6 +236,35 @@ class VideoPlayerViewModelImpl constructor(
         }
     }
 
+    /**
+     * Persists each playing position update to the DB.
+     * This allows us to resume playback later.
+     */
+    private fun startPersistPlayingPosition() {
+        viewModelScope.launch {
+            playingPositionToPersist.collect { (key, progress) ->
+                playingHistoryRepository.setLastPlayedPosition(key, progress)
+            }
+        }
+    }
+
+    /**
+     * Loads the time where the playback was last at
+     * and restores it to the media player if it is still attached.
+     */
+    private fun startRestorePlayingPosition() {
+        viewModelScope.launch {
+            playerProgressToRestore.collect { (player, pos) -> player.progress = pos }
+        }
+    }
+
+    private fun loadSubtitleList(id: StreamableKey) = flow {
+        emit(SubtitleListLoadingState.Loading)
+        val subtitles = subtitleRepository.fetchAvailableSubtitles(id)
+            .getOrElse { emit(SubtitleListLoadingState.Error); return@flow }
+        emit(SubtitleListLoadingState.Success(subtitles))
+    }
+
     private fun calculateAndSetSubtitleDelay(heardTime: Long, seenTime: Long) {
         val existingOffset = subSyncState.value?.offsetMs ?: 0L
         val newOffset = heardTime - seenTime
@@ -318,6 +277,35 @@ class VideoPlayerViewModelImpl constructor(
         val subtitleStream = subtitleRepository.downloadSubtitleToFile(subtitleInfo, subDirectory)
             .getOrElse { emit(SubtitleDownloadingState.Error); return@flow }
         emit(SubtitleDownloadingState.Success(subtitleStream))
+    }
+
+
+    private fun getSeasonByKeyAsFlow(key: StreamableKey) = when (key) {
+        is EpisodeKey.Tmdb -> tmdbTvDataRepository.getSeasonAsFlow(key.seasonKey)
+        is EpisodeKey.Hosted -> hostedTvDataRepository.getSeasonAsFlow(key.seasonKey)
+        else -> flowOf(null)
+    }
+
+    private fun selectNextEpisode(
+        episodes: List<TulipEpisodeInfo>,
+        key: StreamableKey,
+    ): EpisodeKey? {
+        val currentEpisodeIndex = episodes
+            .indexOfFirst { episode -> episode.key == key }
+            .takeIf { it != -1 }
+            ?: return null
+        if (currentEpisodeIndex == episodes.size - 1)
+            return null
+        return episodes[currentEpisodeIndex + 1].key
+    }
+
+    private fun playerStateToPlayButtonState(state: MediaPlayerState) = when (state) {
+        is MediaPlayerState.Buffering -> VideoPlayerViewModel.PlayButtonState.HIDE
+        is MediaPlayerState.Error -> VideoPlayerViewModel.PlayButtonState.HIDE
+        is MediaPlayerState.Idle -> VideoPlayerViewModel.PlayButtonState.HIDE
+        is MediaPlayerState.Paused -> VideoPlayerViewModel.PlayButtonState.SHOW_PLAY
+        is MediaPlayerState.Playing -> VideoPlayerViewModel.PlayButtonState.SHOW_PAUSE
+        is MediaPlayerState.Finished -> VideoPlayerViewModel.PlayButtonState.HIDE
     }
 
     sealed interface SubtitleListLoadingState {

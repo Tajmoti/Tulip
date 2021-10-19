@@ -217,7 +217,7 @@
             style="@style/FullscreenTextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:enabled="@{viewModel.nextEpisode != null}"
+            android:enabled="@{viewModel.hasNextEpisode}"
             android:onClick="@{(v) -> viewModel.goToNextEpisode()}"
             android:text="@string/next_episode"
             android:visibility="@{viewModel.isTvShow()}"

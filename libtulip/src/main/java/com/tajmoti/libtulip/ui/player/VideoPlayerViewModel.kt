@@ -1,7 +1,6 @@
 package com.tajmoti.libtulip.ui.player
 
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
-import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import kotlinx.coroutines.flow.StateFlow
@@ -25,11 +24,9 @@ interface VideoPlayerViewModel {
     val episodeList: StateFlow<List<TulipEpisodeInfo>?>
 
     /**
-     * Next episode to play or null if this is the last one
-     * or a movie is being played.
+     * Whether a TV show episode is currently playing and it's not the last one in the season.
      */
-    val nextEpisode: StateFlow<EpisodeKey?>
-
+    val hasNextEpisode: StateFlow<Boolean>
 
     /**
      * Successful result of subtitle loading.
