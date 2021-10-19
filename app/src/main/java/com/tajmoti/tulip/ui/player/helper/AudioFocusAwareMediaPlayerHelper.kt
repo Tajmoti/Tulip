@@ -10,12 +10,24 @@ import com.tajmoti.libtulip.ui.player.MediaPlayerState
 
 abstract class AudioFocusAwareMediaPlayerHelper(
     private val context: Context,
-    private val delegate: MediaPlayerHelper
+    private val delegate: MediaPlayerHelper,
 ) : MediaPlayerHelper {
     override val videoUrl = delegate.videoUrl
     override val state = delegate.state
-    override var progress = delegate.progress
-    override var time = delegate.time
+    override var progress: Float
+        get() {
+            return delegate.progress
+        }
+        set(value) {
+            delegate.progress = value
+        }
+    override var time: Long
+        get() {
+            return delegate.time
+        }
+        set(value) {
+            delegate.time = value
+        }
     override val length = delegate.length
 
     private val receiver = BecomingNoisyReceiver()
