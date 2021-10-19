@@ -46,6 +46,7 @@
         <item name="android:layout_width">@dimen/fullscreen_button_size</item>
         <item name="android:layout_height">@dimen/fullscreen_button_size</item>
         <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+        <item name="tint">@color/white</item>
     </style>
 
     <style name="LibraryItemButton">

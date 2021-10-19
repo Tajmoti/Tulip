@@ -3,6 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.tajmoti.libtulip.ui.player.VideoPlayerViewModel" />
+    </data>
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/container_stream_selection"
         android:layout_width="match_parent"
@@ -33,15 +40,24 @@
             app:drawableStartCompat="@drawable/ic_baseline_playlist_play_24"
             app:drawableTint="?colorOnPrimary"
             app:layout_constraintBottom_toBottomOf="@id/top_bar"
-            app:layout_constraintEnd_toStartOf="@id/button_back"
+            app:layout_constraintEnd_toStartOf="@id/button_restart_video"
             app:layout_constraintStart_toStartOf="@id/top_bar"
             app:layout_constraintTop_toTopOf="@id/top_bar"
             tools:text="The Simpsons S1:E1 Example Name" />
 
         <ImageButton
+            android:id="@+id/button_restart_video"
+            style="@style/FullscreenImageButtonSmall"
+            android:enabled="@{viewModel.videoLinkToPlay != null}"
+            app:layout_constraintBottom_toBottomOf="@id/top_bar"
+            app:layout_constraintEnd_toStartOf="@id/button_back"
+            app:layout_constraintTop_toTopOf="@id/top_bar"
+            app:srcCompat="@drawable/ic_baseline_refresh_24" />
+
+        <ImageButton
             android:id="@+id/button_back"
             style="@style/FullscreenImageButtonSmall"
-            android:layout_margin="@dimen/fullscreen_toolbar_margin"
+            android:layout_marginEnd="@dimen/fullscreen_toolbar_margin"
             app:layout_constraintBottom_toBottomOf="@id/top_bar"
             app:layout_constraintEnd_toEndOf="@id/top_bar"
             app:layout_constraintTop_toTopOf="@id/top_bar"

@@ -10,6 +10,7 @@ import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.tulip.databinding.FragmentStreamsBinding
 import com.tajmoti.tulip.ui.*
 import com.tajmoti.tulip.ui.player.AndroidVideoPlayerViewModel
+import com.tajmoti.tulip.ui.player.VideoPlayerActivity
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -20,10 +21,18 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding>(FragmentStreamsBind
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val adapter = StreamsAdapter(this::onStreamClickedPlay, this::onStreamClickedDownload)
+        binding.viewModel = viewModel
         binding.recyclerSearch.setupWithAdapterAndDivider(adapter)
         binding.buttonBack.setOnClickListener { slideToBottomDismiss() }
+        binding.buttonRestartVideo.setOnClickListener { reloadCurrentStream() }
         consume(viewModel.linksResult) { it?.let { adapter.items = it.streams } }
         consume(viewModel.streamableInfo, this::onStreamableInfo)
+    }
+
+    private fun reloadCurrentStream() {
+        slideToBottomDismiss()
+        (requireActivity() as VideoPlayerActivity)
+            .onVideoToPlayChanged(viewModel.videoLinkToPlay.value, forceReload = true)
     }
 
     /**

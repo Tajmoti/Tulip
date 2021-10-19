@@ -73,10 +73,6 @@ class VideoControlsFragment :
         binding.buttonSubtitleAdjustVideo.setOnClickListener {
             player?.let { playerViewModel.onWordHeard(it.time) }
         }
-        binding.buttonRestartVideo.setOnClickListener {
-            (requireActivity() as VideoPlayerActivity)
-                .onVideoToPlayChanged(playerViewModel.videoLinkToPlay.value, forceReload = true)
-        }
         binding.buttonChangeSource.setOnClickListener {
             showStreamsSelection()
         }

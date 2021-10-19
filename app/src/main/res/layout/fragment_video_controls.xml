@@ -153,7 +153,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:barrierDirection="top"
-            app:constraint_referenced_ids="button_subtitles,button_restart_video"
+            app:constraint_referenced_ids="button_subtitles,button_change_source,button_episode_list,button_next_episode"
             tools:layout_editor_absoluteY="667dp" />
 
         <Button
@@ -165,22 +165,9 @@
             android:text="@string/subtitles"
             app:icon="@drawable/ic_baseline_subtitles_24"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/button_restart_video"
+            app:layout_constraintEnd_toStartOf="@+id/button_change_source"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent" />
-
-        <Button
-            android:id="@+id/button_restart_video"
-            style="@style/FullscreenTextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:enabled="@{viewModel.videoLinkToPlay != null}"
-            android:text="@string/restart_video"
-            app:icon="@drawable/ic_baseline_refresh_24"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/button_change_source"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/button_subtitles" />
 
         <Button
             android:id="@+id/button_change_source"
@@ -193,7 +180,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/button_episode_list"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@id/button_restart_video" />
+            app:layout_constraintStart_toEndOf="@id/button_subtitles" />
 
         <Button
             android:id="@+id/button_episode_list"
