@@ -145,15 +145,30 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     override fun onBackPressed() {
-        switchToPipModeIfAvailable(true)
+        if (!hideOverlayMenuIfVisible())
+            switchToPipModeIfAvailable(true)
+    }
+
+    private fun hideOverlayMenuIfVisible(): Boolean {
+        val fm = supportFragmentManager
+        val existingFragment = fm
+            .findFragmentById(R.id.container_fragment_overlay_menu)
+        return if (existingFragment != null) {
+            existingFragment.slideToBottomDismiss(fm)
+            true
+        } else {
+            false
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        switchToPipModeIfAvailable(true)
+        if (!hideOverlayMenuIfVisible())
+            switchToPipModeIfAvailable(true)
         return true
     }
 
     override fun onUserLeaveHint() {
+        hideOverlayMenuIfVisible()
         switchToPipModeIfAvailable(false)
     }
 

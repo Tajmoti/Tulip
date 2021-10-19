@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
 import androidx.lifecycle.*
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -82,10 +83,8 @@ inline fun <T> AppCompatActivity.consume(
     }
 }
 
-fun Fragment.slideToBottomDismiss() {
-    requireActivity()
-        .supportFragmentManager
-        .commit {
+fun Fragment.slideToBottomDismiss(fm: FragmentManager = requireActivity().supportFragmentManager) {
+    fm.commit {
             setCustomAnimations(
                 R.anim.slide_from_top_enter,
                 R.anim.slide_from_top_exit,

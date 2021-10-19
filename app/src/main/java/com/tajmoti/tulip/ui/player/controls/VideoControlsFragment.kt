@@ -138,7 +138,7 @@ class VideoControlsFragment :
                 R.anim.slide_from_top_enter,
                 R.anim.slide_from_top_exit
             )
-            replace(R.id.container_fragment_streams, frag)
+            replace(R.id.container_fragment_overlay_menu, frag)
         }
     }
 
