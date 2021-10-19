@@ -4,8 +4,10 @@ import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
+import com.tajmoti.libtulip.model.info.seasonNumber
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import com.tajmoti.tulip.databinding.FragmentEpisodesBinding
@@ -55,6 +57,17 @@ class EpisodesFragment : BaseFragment<FragmentEpisodesBinding>(FragmentEpisodesB
     private fun onSeasonsChanged(seasons: List<TulipSeasonInfo>) {
         seasonsAdapter.clear()
         seasonsAdapter.addAll(seasons.map { getSeasonTitle(requireContext(), it) })
+        preselectPlayingSeason(seasons)
+    }
+
+    private fun preselectPlayingSeason(seasons: List<TulipSeasonInfo>) {
+        val episodeInfo = playerViewModel.streamableInfo.value as? TulipCompleteEpisodeInfo
+            ?: return
+        val playingSeason = episodeInfo.seasonNumber
+        val currentSeasonIndex = seasons.indexOfFirst { it.seasonNumber == playingSeason }
+            .takeIf { it >= 0 }
+            ?: return
+        binding.spinnerSelectSeason.setSelection(currentSeasonIndex)
     }
 
     private fun onSeasonClicked(index: Int) {
