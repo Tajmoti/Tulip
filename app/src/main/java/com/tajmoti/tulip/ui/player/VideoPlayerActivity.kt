@@ -27,7 +27,6 @@ import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.streams.FailedLink
 import com.tajmoti.libtulip.ui.streams.LoadedLink
 import com.tajmoti.libtulip.ui.streams.SelectedLink
-import com.tajmoti.libtulip.ui.streams.StreamsViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ActivityVideoPlayerBinding
 import com.tajmoti.tulip.ui.*
@@ -37,7 +36,6 @@ import com.tajmoti.tulip.ui.player.helper.AudioFocusApi26
 import com.tajmoti.tulip.ui.player.helper.AudioFocusApiBelow26
 import com.tajmoti.tulip.ui.player.helper.AudioFocusAwareMediaPlayerHelper
 import com.tajmoti.tulip.ui.player.helper.VlcMediaHelper
-import com.tajmoti.tulip.ui.player.streams.AndroidStreamsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import org.videolan.libvlc.LibVLC
 import java.io.File
@@ -47,7 +45,6 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     R.layout.activity_video_player
 ) {
     private val playerViewModel by viewModelsDelegated<VideoPlayerViewModel, AndroidVideoPlayerViewModel>()
-    private val streamsViewModel by viewModelsDelegated<StreamsViewModel, AndroidStreamsViewModel>()
 
     /**
      * Media session used to control the video from PIP mode.
@@ -112,7 +109,6 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         super.onCreate(savedInstanceState)
         mainHandler = Handler(mainLooper, EasyHandler(messageHandlers))
         binding.viewModel = playerViewModel
-        binding.streamsViewModel = streamsViewModel
         libVLC = LibVLC(this)
 
         setupPlayerUi()
@@ -177,15 +173,14 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
 
     private fun setupFlowCollectors() {
         consume(playerViewModel.subtitleFile) { onSubtitlesChanged(it) }
-        consume(playerViewModel.downloadingError) { if (it) toast(R.string.subtitle_download_failure) }
+        consume(playerViewModel.subtitleDownloadError) { if (it) toast(R.string.subtitle_download_failure) }
         consume(playerViewModel.subtitleOffset, this::onSubtitlesDelayChanged)
         consume(playerViewModel.isPlaying, this::onPlayingChanged)
         consume(playerViewModel.buffering, this::updateBuffering)
-        consume(streamsViewModel.directLoadingUnsupported, this::onDirectLinkUnsupported)
-        consume(streamsViewModel.videoLinkToPlay) { onVideoToPlayChanged(it) }
-        consume(streamsViewModel.videoLinkToDownload) { onVideoToDownloadChanged(it) }
-        consume(streamsViewModel.linkLoadingError, this::onDirectLinkLoadingError)
-        consume(playerViewModel.streamableKey) { streamsViewModel.onStreamClicked(it) } // TODO
+        consume(playerViewModel.directLoadingUnsupported, this::onDirectLinkUnsupported)
+        consume(playerViewModel.videoLinkToPlay) { onVideoToPlayChanged(it) }
+        consume(playerViewModel.videoLinkToDownload) { onVideoToDownloadChanged(it) }
+        consume(playerViewModel.linkLoadingError, this::onDirectLinkLoadingError)
         consume(playerViewModel.mediaPlayerState) { onMediaStateChanged(it) }
     }
 
@@ -342,7 +337,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
                 toast(R.string.captcha_solved)
                 lastLink?.let { link ->
                     val ref = UnloadedVideoStreamRef(link.stream, true)
-                    streamsViewModel.onStreamClicked(ref, link.download)
+                    playerViewModel.onStreamClicked(ref, link.download)
                 }
             } else {
                 toast(R.string.captcha_not_solved)

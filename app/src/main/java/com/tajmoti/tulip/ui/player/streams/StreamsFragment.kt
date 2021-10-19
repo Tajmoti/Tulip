@@ -2,20 +2,19 @@ package com.tajmoti.tulip.ui.player.streams
 
 import android.os.Bundle
 import android.view.View
-import androidx.fragment.app.commit
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
-import com.tajmoti.libtulip.ui.streams.StreamsViewModel
-import com.tajmoti.tulip.R
+import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.tulip.databinding.FragmentStreamsBinding
 import com.tajmoti.tulip.ui.*
+import com.tajmoti.tulip.ui.player.AndroidVideoPlayerViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class StreamsFragment : BaseFragment<FragmentStreamsBinding>(FragmentStreamsBinding::inflate) {
-    private val streamsViewModel by activityViewModelsDelegated<StreamsViewModel, AndroidStreamsViewModel>()
+    private val viewModel by activityViewModelsDelegated<VideoPlayerViewModel, AndroidVideoPlayerViewModel>()
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -23,8 +22,8 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding>(FragmentStreamsBind
         val adapter = StreamsAdapter(this::onStreamClickedPlay, this::onStreamClickedDownload)
         binding.recyclerSearch.setupWithAdapterAndDivider(adapter)
         binding.buttonBack.setOnClickListener { slideToBottomDismiss() }
-        consume(streamsViewModel.linksResult) { it?.let { adapter.items = it.streams } }
-        consume(streamsViewModel.streamableInfo, this::onStreamableInfo)
+        consume(viewModel.linksResult) { it?.let { adapter.items = it.streams } }
+        consume(viewModel.streamableInfo, this::onStreamableInfo)
     }
 
     /**
@@ -45,13 +44,13 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding>(FragmentStreamsBind
      */
     private fun onStreamClickedPlay(stream: UnloadedVideoWithLanguage) {
         slideToBottomDismiss()
-        streamsViewModel.onStreamClicked(stream.video, false)
+        viewModel.onStreamClicked(stream.video, false)
     }
 
     /**
      * A video link was long-clicked which means download.
      */
     private fun onStreamClickedDownload(stream: UnloadedVideoWithLanguage) {
-        streamsViewModel.onStreamClicked(stream.video, true)
+        viewModel.onStreamClicked(stream.video, true)
     }
 }

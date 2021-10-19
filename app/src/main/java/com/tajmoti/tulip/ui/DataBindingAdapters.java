@@ -4,8 +4,7 @@ import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.ImageView;
 
-import androidx.annotation.ColorRes;
-import androidx.core.content.ContextCompat;
+import androidx.annotation.ColorInt;
 import androidx.core.view.ViewKt;
 import androidx.databinding.BindingAdapter;
 
@@ -25,8 +24,7 @@ public class DataBindingAdapters {
     }
 
     @BindingAdapter("indicatorColor")
-    public static void setIndicatorColor(CircularProgressIndicator indicator, @ColorRes int colorRes) {
-        int color = ContextCompat.getColor(indicator.getContext(), colorRes);
+    public static void setIndicatorColor(CircularProgressIndicator indicator, @ColorInt int color) {
         indicator.setIndicatorColor(color);
     }
 

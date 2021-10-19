@@ -4,15 +4,12 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <import type="com.tajmoti.libtulip.ui.player.VideoPlayerViewModel.PlayButtonState" />
 
         <variable
             name="viewModel"
             type="com.tajmoti.libtulip.ui.player.VideoPlayerViewModel" />
-
-        <variable
-            name="streamsViewModel"
-            type="com.tajmoti.libtulip.ui.streams.StreamsViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -164,7 +161,7 @@
             style="@style/FullscreenTextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:enabled="@{streamsViewModel.linksAnyResult &amp;&amp; viewModel.subtitlesReadyToSelect}"
+            android:enabled="@{viewModel.linksAnyResult &amp;&amp; viewModel.subtitlesReadyToSelect}"
             android:text="@string/subtitles"
             app:icon="@drawable/ic_baseline_subtitles_24"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -177,7 +174,7 @@
             style="@style/FullscreenTextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:enabled="@{streamsViewModel.videoLinkToPlay != null}"
+            android:enabled="@{viewModel.videoLinkToPlay != null}"
             android:text="@string/restart_video"
             app:icon="@drawable/ic_baseline_refresh_24"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -190,7 +187,7 @@
             style="@style/FullscreenTextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:enabled="@{streamsViewModel.linksAnyResult}"
+            android:enabled="@{viewModel.linksAnyResult}"
             android:text="@string/change_source"
             app:icon="@drawable/ic_baseline_tap_and_play_24"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -203,9 +200,8 @@
             style="@style/FullscreenTextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:enabled="@{viewModel.episodeList != null}"
             android:text="@string/episodes"
-            android:visibility="@{viewModel.isTvShow()}"
+            android:visibility="@{viewModel.isTvShow}"
             app:icon="@drawable/ic_baseline_playlist_play_24"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/button_next_episode"

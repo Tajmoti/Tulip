@@ -19,7 +19,6 @@ import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
 import com.tajmoti.libtulip.ui.player.Position
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
-import com.tajmoti.libtulip.ui.streams.StreamsViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentVideoControlsBinding
 import com.tajmoti.tulip.ui.BaseFragment
@@ -27,7 +26,6 @@ import com.tajmoti.tulip.ui.activityViewModelsDelegated
 import com.tajmoti.tulip.ui.consume
 import com.tajmoti.tulip.ui.player.*
 import com.tajmoti.tulip.ui.player.episodes.EpisodesFragment
-import com.tajmoti.tulip.ui.player.streams.AndroidStreamsViewModel
 import com.tajmoti.tulip.ui.player.streams.StreamsFragment
 import com.tajmoti.tulip.ui.player.subtitles.SubtitleItem
 import com.tajmoti.tulip.ui.player.subtitles.SubtitleLanguageHeaderItem
@@ -41,7 +39,6 @@ import java.util.concurrent.TimeUnit
 class VideoControlsFragment :
     BaseFragment<FragmentVideoControlsBinding>(FragmentVideoControlsBinding::inflate) {
     private val playerViewModel by activityViewModelsDelegated<VideoPlayerViewModel, AndroidVideoPlayerViewModel>()
-    private val streamsViewModel by activityViewModelsDelegated<StreamsViewModel, AndroidStreamsViewModel>()
 
     private val player: MediaPlayerHelper?
         get() = (activity as? VideoPlayerActivity)?.player
@@ -50,7 +47,6 @@ class VideoControlsFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.viewModel = playerViewModel
-        binding.streamsViewModel = streamsViewModel
 
         setupPlayerUi()
         setupFlowCollectors()
@@ -79,7 +75,7 @@ class VideoControlsFragment :
         }
         binding.buttonRestartVideo.setOnClickListener {
             (requireActivity() as VideoPlayerActivity)
-                .onVideoToPlayChanged(streamsViewModel.videoLinkToPlay.value, forceReload = true)
+                .onVideoToPlayChanged(playerViewModel.videoLinkToPlay.value, forceReload = true)
         }
         binding.buttonChangeSource.setOnClickListener {
             showStreamsSelection()
@@ -96,7 +92,7 @@ class VideoControlsFragment :
     private fun setupFlowCollectors() {
         consume(playerViewModel.showPlayButton, this::updatePlayPauseButton)
         consume(playerViewModel.position, this::updatePosition)
-        consume(streamsViewModel.streamableInfo, this::onStreamableInfo)
+        consume(playerViewModel.streamableInfo, this::onStreamableInfo)
     }
 
     private fun updatePlayPauseButton(it: VideoPlayerViewModel.PlayButtonState) {
@@ -216,7 +212,7 @@ class VideoControlsFragment :
 
     private fun createSubtitleGroups(
         state: List<SubtitleInfo>,
-        callback: (SubtitleInfo?) -> Unit
+        callback: (SubtitleInfo?) -> Unit,
     ): List<Group> {
         val groupedByLanguage = state
             .map { Locale.forLanguageTag(it.language) to it }
@@ -244,7 +240,7 @@ class VideoControlsFragment :
     private fun createSubtitleGroup(
         locale: Locale,
         season: List<SubtitleInfo>,
-        callback: (SubtitleInfo?) -> Unit
+        callback: (SubtitleInfo?) -> Unit,
     ): ExpandableGroup {
         val header = SubtitleLanguageHeaderItem(locale)
         val group = ExpandableGroup(header)

@@ -1,32 +1,104 @@
 package com.tajmoti.libtulip.ui.player
 
-import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
+import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.StreamableKey
+import com.tajmoti.libtulip.model.stream.StreamableInfoWithLangLinks
+import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
+import com.tajmoti.libtulip.ui.streams.FailedLink
+import com.tajmoti.libtulip.ui.streams.LoadedLink
+import com.tajmoti.libtulip.ui.streams.SelectedLink
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.io.File
 
 interface VideoPlayerViewModel {
     /**
-     * Key of the media to play.
+     * Key of the streamable that is currently being loaded or played.
      */
     val streamableKey: StateFlow<StreamableKey>
 
     /**
-     * True if the playing item is a TV show, false if it is a movie.
+     * Cancels playback of the previous streamable
+     * and starts playing the one by [key].
      */
-    val isTvShow: StateFlow<Boolean>
+    fun changeStreamable(key: StreamableKey)
 
 
     /**
-     * All episodes from the playing season or null if a movie is being played.
+     * True if the currently playing streamable is a TV show, false if it is a movie.
      */
-    val episodeList: StateFlow<List<TulipEpisodeInfo>?>
+    val isTvShow: StateFlow<Boolean>
 
     /**
      * Whether a TV show episode is currently playing and it's not the last one in the season.
      */
     val hasNextEpisode: StateFlow<Boolean>
+
+    /**
+     * Starts playback of the next episode or does nothing
+     * if there's none or this is a movie.
+     */
+    fun goToNextEpisode()
+
+
+    /**
+     * Whether stream links are being loaded right now and there are no loaded links yet.
+     */
+    val linksLoading: StateFlow<Boolean>
+
+    /**
+     * Streamable info of [streamableKey] or null if not yet available.
+     */
+    val streamableInfo: StateFlow<StreamableInfo?>
+
+    /**
+     * Loaded links of the currently selected [streamableKey] or null if not yet available.
+     * This value is updated in real time as more links are loaded in.
+     */
+    val linksResult: StateFlow<StreamableInfoWithLangLinks?>
+
+    /**
+     * Whether link list loading is finished and at least one stream was found.
+     */
+    val linksAnyResult: StateFlow<Boolean>
+
+    /**
+     * Whether link list loading is finished, but no streams were found.
+     */
+    val linksNoResult: StateFlow<Boolean>
+
+
+    /**
+     * The user has clicked a link, it needs to be resolved and played.
+     */
+    fun onStreamClicked(stream: UnloadedVideoStreamRef, download: Boolean)
+
+    /**
+     * Whether redirects are being resolved or a direct link is being loaded right now.
+     */
+    val loadingStreamOrDirectLink: StateFlow<Boolean>
+
+    /**
+     * Selected item which has redirects resolved, but doesn't support direct link loading.
+     */
+    val directLoadingUnsupported: SharedFlow<SelectedLink>
+
+    /**
+     * Selected item with direct link loaded.
+     */
+    val videoLinkToPlay: StateFlow<LoadedLink?>
+
+    /**
+     * Selected item for playing is loaded
+     */
+    val videoLinkToDownload: StateFlow<LoadedLink?>
+
+    /**
+     * Selected item failed to load redirects or failed to load direct link.
+     */
+    val linkLoadingError: SharedFlow<FailedLink>
+
 
     /**
      * Successful result of subtitle loading.
@@ -36,7 +108,7 @@ interface VideoPlayerViewModel {
     /**
      * Whether the list of available subtitles is being loaded right now.
      */
-    val loadingSubtitles: StateFlow<Boolean>
+    val loadingSubtitleList: StateFlow<Boolean>
 
     /**
      * Whether subtitles are loaded and can be selected.
@@ -46,12 +118,12 @@ interface VideoPlayerViewModel {
     /**
      * Whether some subtitle file is being downloaded right now.
      */
-    val downloadingSubtitleFile: StateFlow<Boolean>
+    val downloadingSubtitles: StateFlow<Boolean>
 
     /**
-     * Whether there was some error while downloading the subtitles.
+     * Whether there was some error while downloading the selected subtitle file.
      */
-    val downloadingError: StateFlow<Boolean>
+    val subtitleDownloadError: StateFlow<Boolean>
 
     /**
      * Subtitles to be applied to the currently playing video
@@ -99,18 +171,6 @@ interface VideoPlayerViewModel {
      * True if an error was encountered and the player was canceled
      */
     val isError: StateFlow<Boolean>
-
-    /**
-     * Starts playback of the next episode or does nothing
-     * if there's none or this is a movie.
-     */
-    fun goToNextEpisode()
-
-    /**
-     * Cancels playback of the previous streamable
-     * and starts playing the one by [key].
-     */
-    fun changeStreamable(key: StreamableKey)
 
     /**
      * A new media is attached and starting to be played.
