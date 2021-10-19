@@ -21,6 +21,8 @@ interface VideoPlayerViewModel {
     /**
      * Cancels playback of the previous streamable
      * and starts playing the one by [key].
+     *
+     * If the key is already being played, this method has no effect.
      */
     fun changeStreamable(key: StreamableKey)
 

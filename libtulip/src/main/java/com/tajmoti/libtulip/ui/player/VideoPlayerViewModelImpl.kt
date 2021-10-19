@@ -315,11 +315,17 @@ class VideoPlayerViewModelImpl constructor(
     }
 
     override fun goToNextEpisode() {
-        nextEpisode.value?.let { streamableKey.value = it }
+        nextEpisode.value?.let { changeStreamable(it) }
     }
 
     override fun changeStreamable(key: StreamableKey) {
-        streamableKey.value = key
+        // This prevents the video from stopping if the currently playing streamable is selected
+        if (streamableKey.value == key)
+            return
+        viewModelScope.launch {
+            manualStream.emit(null)
+            streamableKey.emit(key)
+        }
     }
 
     override fun onMediaAttached(media: MediaPlayerHelper) {
