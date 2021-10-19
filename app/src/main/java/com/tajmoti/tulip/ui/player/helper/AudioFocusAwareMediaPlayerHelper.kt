@@ -63,9 +63,9 @@ abstract class AudioFocusAwareMediaPlayerHelper(
 
     override fun playOrPause() {
         if (state.value is MediaPlayerState.Playing) {
-            play()
-        } else {
             pause()
+        } else {
+            play()
         }
     }
 
