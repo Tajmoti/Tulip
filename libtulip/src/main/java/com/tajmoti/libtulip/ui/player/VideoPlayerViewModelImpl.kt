@@ -102,19 +102,19 @@ class VideoPlayerViewModelImpl constructor(
         .shareIn(viewModelScope, SharingStarted.Lazily)
 
     override val streamableInfo = streamLoadingState
-        .map { stateToStreamableInfo(it) }
-        .stateIn(viewModelScope, SharingStarted.Lazily, null)
+        .map(viewModelScope) { stateToStreamableInfo(it) }
 
 
     override val linksResult = streamLoadingState
-        .map { (it as? LinkListLoadingState.Success)?.streams }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+        .map(viewModelScope) { (it as? LinkListLoadingState.Success)?.streams }
 
     private val streamLoadingFinalSuccessState = streamLoadingState
         .map(viewModelScope) { (it as? LinkListLoadingState.Success)?.takeIf { success -> success.final } }
 
     override val linksAnyResult = streamLoadingState
-        .map(viewModelScope) { (it as? LinkListLoadingState.Success)?.streams?.streams?.any() ?: false }
+        .map(viewModelScope) {
+            (it as? LinkListLoadingState.Success)?.streams?.streams?.any() ?: false
+        }
 
     override val linksNoResult = streamLoadingFinalSuccessState
         .map(viewModelScope) { it?.streams?.streams?.none() ?: false }
@@ -230,8 +230,7 @@ class VideoPlayerViewModelImpl constructor(
         .map(viewModelScope) { state -> (state as? MediaPlayerState.Buffering)?.percent }
 
     override val position = mediaPlayerState
-        .map { state -> state.validPositionOrNull }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+        .map(viewModelScope) { state -> state.validPositionOrNull }
 
     /**
      * Progress of the currently playing media or null if nothing is currently playing.
@@ -434,43 +433,6 @@ class VideoPlayerViewModelImpl constructor(
         is MediaPlayerState.Finished -> VideoPlayerViewModel.PlayButtonState.HIDE
     }
 
-    sealed interface SubtitleListLoadingState {
-        object Loading : SubtitleListLoadingState
-        data class Success(val subtitles: List<SubtitleInfo>) : SubtitleListLoadingState
-        object Error : SubtitleListLoadingState
-    }
-
-    sealed interface SubtitleDownloadingState {
-        object Idle : SubtitleDownloadingState
-        object Loading : SubtitleDownloadingState
-        data class Success(val subtitles: File) : SubtitleDownloadingState
-        object Error : SubtitleDownloadingState
-    }
-
-    sealed interface SubtitleSyncState {
-        /**
-         * Subtitle offset to use.
-         * Positive values mean that subtitles must be delayed,
-         * negative values mean they need to be shown earlier.
-         */
-        val offsetMs: Long
-
-        class Heard(val time: Long, override val offsetMs: Long) : SubtitleSyncState
-        class Seen(val time: Long, override val offsetMs: Long) : SubtitleSyncState
-        class OffsetUsed(override val offsetMs: Long) : SubtitleSyncState
-    }
-
-    companion object {
-        /**
-         * Playing position will be stored this often.
-         */
-        private const val PLAY_POSITION_SAMPLE_PERIOD_MS = 5000L
-    }
-
-    init {
-        logAllFlowValues(this, viewModelScope, logger)
-    }
-
     override fun onStreamClicked(stream: UnloadedVideoStreamRef, download: Boolean) {
         viewModelScope.launch { manualStream.emit(stream to download) }
     }
@@ -530,7 +492,10 @@ class VideoPlayerViewModelImpl constructor(
 
     private fun fetchStreams(info: StreamableKey) = flow {
         val result = streamService.getStreamsWithLanguages(info)
-            .map { result -> result.fold({ LinkListLoadingState.Error(it) }, { LinkListLoadingState.Success(it, false) }) }
+            .map { result ->
+                result.fold({ LinkListLoadingState.Error(it) },
+                    { LinkListLoadingState.Success(it, false) })
+            }
             .shareIn(viewModelScope, SharingStarted.Eagerly, 1)
         emitAll(result)
         (result.lastOrNull() as? LinkListLoadingState.Success)
@@ -546,6 +511,32 @@ class VideoPlayerViewModelImpl constructor(
         }
     }
 
+
+    sealed interface SubtitleListLoadingState {
+        object Loading : SubtitleListLoadingState
+        data class Success(val subtitles: List<SubtitleInfo>) : SubtitleListLoadingState
+        object Error : SubtitleListLoadingState
+    }
+
+    sealed interface SubtitleDownloadingState {
+        object Idle : SubtitleDownloadingState
+        object Loading : SubtitleDownloadingState
+        data class Success(val subtitles: File) : SubtitleDownloadingState
+        object Error : SubtitleDownloadingState
+    }
+
+    sealed interface SubtitleSyncState {
+        /**
+         * Subtitle offset to use.
+         * Positive values mean that subtitles must be delayed,
+         * negative values mean they need to be shown earlier.
+         */
+        val offsetMs: Long
+
+        class Heard(val time: Long, override val offsetMs: Long) : SubtitleSyncState
+        class Seen(val time: Long, override val offsetMs: Long) : SubtitleSyncState
+        class OffsetUsed(override val offsetMs: Long) : SubtitleSyncState
+    }
 
     sealed interface LinkListLoadingState {
         /**
@@ -625,5 +616,12 @@ class VideoPlayerViewModelImpl constructor(
             val download: Boolean,
             val captcha: CaptchaInfo?,
         ) : LinkLoadingState
+    }
+
+    companion object {
+        /**
+         * Playing position will be stored this often.
+         */
+        private const val PLAY_POSITION_SAMPLE_PERIOD_MS = 5000L
     }
 }
