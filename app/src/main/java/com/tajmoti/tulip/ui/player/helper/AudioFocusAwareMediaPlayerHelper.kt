@@ -28,7 +28,10 @@ abstract class AudioFocusAwareMediaPlayerHelper(
         set(value) {
             delegate.time = value
         }
-    override val length = delegate.length
+    override val length: Long
+        get() {
+            return delegate.length
+        }
 
     private val receiver = BecomingNoisyReceiver()
     private var registered = false

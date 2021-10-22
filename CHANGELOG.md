@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Changed
+- Fixed issue where skipping 10 seconds forward would restart the video playback
 
 ## [0.10.0] - 2021-10-20
 ### Added
