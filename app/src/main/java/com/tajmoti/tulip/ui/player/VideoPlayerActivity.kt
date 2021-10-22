@@ -138,7 +138,6 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     }
 
     private fun setupPlayerUi() {
-        binding.progressBarBuffering.max = UI_PROGRESS_STEPS
         binding.videoLayout.setOnClickListener {
             onVideoClicked()
         }
@@ -404,8 +403,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
             binding.progressBarBuffering.isIndeterminate = true
             binding.progressBarBuffering.isVisible = true
         } else if (!indeterminate) {
-            val progressSteps = convertToUiProgress(buffering!! / 100.0f)
-            binding.progressBarBuffering.setProgressCompat(progressSteps, true)
+            binding.progressBarBuffering.setProgressFractionCompat(buffering!!, true)
         }
     }
 

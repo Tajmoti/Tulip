@@ -3,8 +3,10 @@ package com.tajmoti.tulip.ui;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 
 import androidx.annotation.ColorInt;
+import androidx.annotation.Nullable;
 import androidx.core.view.ViewKt;
 import androidx.databinding.BindingAdapter;
 
@@ -31,5 +33,50 @@ public class DataBindingAdapters {
     @BindingAdapter("android:visibility")
     public static void setVisibility(View view, Boolean value) {
         ViewKt.setVisible(view, value);
+    }
+
+    @BindingAdapter("progressFraction")
+    public static void setProgressFraction(SeekBar view, @Nullable Float progress) {
+        if (progress == null)
+            return;
+        var oldProgress = (int) ((float) view.getProgress() / (float) view.getMax());
+        var newProgress = (int) (view.getMax() * progress);
+        if (oldProgress != newProgress) {
+            view.setProgress(newProgress);
+        }
+    }
+
+    @BindingAdapter("onProgressFractionChanged")
+    public static void setOnSeekBarChangeListener(
+            SeekBar view,
+            final OnProgressFractionalChanged progressFractionalChanged
+    ) {
+        if (progressFractionalChanged == null) {
+            view.setOnSeekBarChangeListener(null);
+            return;
+        }
+        view.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser)
+                    return;
+                var progressFractional = (float) progress / (float) seekBar.getMax();
+                progressFractionalChanged.onProgressFractionalChanged(progressFractional);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+    }
+
+    public interface OnProgressFractionalChanged {
+        void onProgressFractionalChanged(Float progress);
     }
 }

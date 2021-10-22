@@ -13,6 +13,12 @@ import com.bumptech.glide.request.target.CustomViewTarget
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
+import com.google.android.material.progressindicator.BaseProgressIndicator
+
+fun BaseProgressIndicator<*>.setProgressFractionCompat(value: Float, animated: Boolean) {
+    val step = (value * max).toInt()
+    setProgressCompat(step, animated)
+}
 
 fun ImageView.loadImage(
     url: String?,

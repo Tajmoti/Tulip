@@ -195,12 +195,32 @@ interface VideoPlayerViewModel {
     /**
      * The user heard a word that they want to match to some text.
      */
-    fun onWordHeard(time: Long)
+    fun onWordHeard()
 
     /**
      * The user saw text that they want to match to a heard word.
      */
-    fun onTextSeen(time: Long)
+    fun onTextSeen()
+
+    /**
+     * Video needs to be skipped a few seconds forwards.
+     */
+    fun skipForwards()
+
+    /**
+     * Video needs to be skipped a few seconds backwards.
+     */
+    fun skipBackwards()
+
+    /**
+     * Video needs to be pause or resumed.
+     */
+    fun playPause()
+
+    /**
+     * Video needs to be sought to the provided progress (fraction).
+     */
+    fun setPlaybackProgress(progress: Float)
 
     enum class PlayButtonState {
         SHOW_PLAY,

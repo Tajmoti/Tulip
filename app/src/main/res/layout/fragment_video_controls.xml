@@ -7,6 +7,8 @@
 
         <import type="com.tajmoti.libtulip.ui.player.VideoPlayerViewModel.PlayButtonState" />
 
+        <import type="com.tajmoti.tulip.ui.player.VideoPlayerUtils" />
+
         <variable
             name="viewModel"
             type="com.tajmoti.libtulip.ui.player.VideoPlayerViewModel" />
@@ -33,6 +35,7 @@
             style="@style/FullscreenText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="@{VideoPlayerUtils.INSTANCE.streamableToDisplayName(viewModel.streamableInfo)}"
             app:layout_constraintBottom_toBottomOf="@+id/button_back"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
@@ -44,6 +47,7 @@
             style="@style/FullscreenTextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:onClick="@{() -> viewModel.onWordHeard()}"
             android:text="@string/subtitle_adjust_word_heard"
             android:visibility="@{viewModel.subtitleFile != null}"
             app:icon="@drawable/ic_baseline_hearing_24"
@@ -57,6 +61,7 @@
             style="@style/FullscreenTextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:onClick="@{() -> viewModel.onTextSeen()}"
             android:text="@string/subtitle_adjust_word_seen"
             android:visibility="@{viewModel.subtitleFile != null}"
             app:icon="@drawable/ic_baseline_remove_red_eye_24"
@@ -78,6 +83,7 @@
             style="@style/FullscreenImageButtonLarge"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:onClick="@{() -> viewModel.skipBackwards()}"
             android:visibility="@{viewModel.position != null}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/button_seek"
@@ -91,18 +97,20 @@
             style="@style/FullscreenImageButtonLarge"
             android:layout_width="64dp"
             android:layout_height="64dp"
+            android:onClick="@{() -> viewModel.playPause()}"
+            android:src="@{viewModel.showPlayButton == PlayButtonState.SHOW_PLAY ? @drawable/ic_baseline_play_arrow_24 : @drawable/ic_baseline_pause_24}"
             android:visibility="@{viewModel.showPlayButton != PlayButtonState.HIDE}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:src="@drawable/ic_baseline_play_arrow_24" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
             android:id="@+id/button_seek"
             style="@style/FullscreenImageButtonLarge"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:onClick="@{() -> viewModel.skipForwards()}"
             android:visibility="@{viewModel.position != null}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -128,12 +136,15 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
+            android:max="@integer/player_seek_bar_steps"
             android:thumb="@drawable/seekbar_drawable_thumb_video_player"
             android:visibility="@{viewModel.position != null}"
             app:layout_constraintBottom_toTopOf="@id/barrier_bottom_buttons"
             app:layout_constraintEnd_toStartOf="@id/text_video_time"
             app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:onProgressFractionChanged="@{(fraction) -> viewModel.setPlaybackProgress(fraction)}"
+            app:progressFraction="@{viewModel.position.fraction}" />
 
         <TextView
             android:id="@+id/text_video_time"
@@ -141,6 +152,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:minEms="3"
+            android:text="@{VideoPlayerUtils.INSTANCE.formatTimeForDisplay(viewModel.position.timeMs)}"
             android:visibility="@{viewModel.position != null}"
             app:layout_constraintBottom_toBottomOf="@id/seek_bar_video_progress"
             app:layout_constraintEnd_toEndOf="parent"

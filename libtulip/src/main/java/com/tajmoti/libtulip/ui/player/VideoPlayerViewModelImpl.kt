@@ -347,7 +347,8 @@ class VideoPlayerViewModelImpl constructor(
         }
     }
 
-    override fun onWordHeard(time: Long) {
+    override fun onWordHeard() {
+        val time = position.value?.timeMs ?: return
         val seen = subSyncState.value as? SubtitleSyncState.Seen
         if (seen == null) {
             val existingOffset = subSyncState.value?.offsetMs ?: 0L
@@ -357,7 +358,8 @@ class VideoPlayerViewModelImpl constructor(
         }
     }
 
-    override fun onTextSeen(time: Long) {
+    override fun onTextSeen() {
+        val time = position.value?.timeMs ?: return
         val heard = subSyncState.value as? SubtitleSyncState.Heard
         if (heard == null) {
             val existingOffset = subSyncState.value?.offsetMs ?: 0L
@@ -365,6 +367,28 @@ class VideoPlayerViewModelImpl constructor(
         } else {
             calculateAndSetSubtitleDelay(heard.time, time)
         }
+    }
+
+    override fun skipForwards() {
+        // TODO Not the best solution, probably merge with playerProgressToRestore
+        attachedMediaPlayer.value?.let {
+            it.time = (it.time + REWIND_TIME_MS).coerceAtMost(it.length)
+        }
+    }
+
+    override fun skipBackwards() {
+        // TODO Not the best solution, probably merge with playerProgressToRestore
+        attachedMediaPlayer.value?.let { it.time = (it.time - REWIND_TIME_MS).coerceAtLeast(0) }
+    }
+
+    override fun playPause() {
+        // TODO Not the best solution
+        attachedMediaPlayer.value?.playOrPause()
+    }
+
+    override fun setPlaybackProgress(progress: Float) {
+        // TODO Not the best solution
+        attachedMediaPlayer.value?.progress = progress
     }
 
     /**
@@ -629,5 +653,10 @@ class VideoPlayerViewModelImpl constructor(
          * Playing position will be stored this often.
          */
         private const val PLAY_POSITION_SAMPLE_PERIOD_MS = 5000L
+
+        /**
+         * How much will be skipped when skipping backward or forward.
+         */
+        private const val REWIND_TIME_MS = 10_000
     }
 }
