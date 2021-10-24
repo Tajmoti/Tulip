@@ -1,0 +1,15 @@
+<configuration>
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%-5relative %p %logger{0}: %msg %ex{short}%n</pattern>
+    </encoder>
+  </appender>
+
+  <logger name="com.tajmoti.libtulip.repository.impl" level="INFO"/>
+  <logger name="com.tajmoti.libtulip.ui" level="OFF"/>
+  <logger name="com.tajmoti.tulip.driver" level="INFO"/>
+
+  <root level="DEBUG">
+    <appender-ref ref="STDOUT" />
+  </root>
+</configuration>
