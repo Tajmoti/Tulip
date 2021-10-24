@@ -1,7 +1,6 @@
 package com.tajmoti.libtulip.di
 
 import com.tajmoti.libprimewiretvprovider.PrimewireTvProvider
-import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.kinox.KinoxTvProvider
@@ -19,7 +18,6 @@ import javax.inject.Singleton
 
 @Module
 object Provider {
-
     @Provides
     @Singleton
     fun provideMultiTvProvider(
@@ -99,15 +97,5 @@ object Provider {
         val webViewGetter = makeWebViewGetter(webDriver)
         val http = makeHttpGetter(okHttpClient)
         return VideoLinkExtractor(http, webViewGetter)
-    }
-
-    @Provides
-    @Singleton
-    fun provideTulipConfiguration(): TulipConfiguration {
-        return TulipConfiguration(
-            tmdbCacheParams = TulipConfiguration.CacheParameters(60 * 60 * 1000L, 256),
-            hostedItemCacheParams = TulipConfiguration.CacheParameters(60 * 60 * 1000L, 256),
-            streamCacheParams = TulipConfiguration.CacheParameters(60 * 60 * 1000L, 256)
-        )
     }
 }
