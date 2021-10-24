@@ -1,8 +1,5 @@
-package com.tajmoti.tulip
+package com.tajmoti.libtulip.di
 
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkInfo
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libopensubtitles.OpenSubtitlesKeyInterceptor
 import com.tajmoti.libtmdb.TmdbKeyInterceptor
@@ -10,6 +7,7 @@ import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 private const val MAX_REQUESTS = 4
@@ -26,9 +24,13 @@ private val interceptorLogger = object : HttpLoggingInterceptor.Logger {
     }
 }
 
-fun createAppOkHttpClient(context: Context): OkHttpClient {
+fun createAppOkHttpClient(
+    cacheDir: File,
+    hasNetwork: () -> Boolean,
+    debug: Boolean = false,
+): OkHttpClient {
     val cacheSize = NETWORK_CACHE_SIZE_B
-    val cache = Cache(context.cacheDir, cacheSize)
+    val cache = Cache(cacheDir, cacheSize)
     val dispatcher = Dispatcher()
         .apply { maxRequestsPerHost = MAX_REQUESTS_PER_HOST }
         .apply { maxRequests = MAX_REQUESTS_PER_HOST }
@@ -38,9 +40,9 @@ fun createAppOkHttpClient(context: Context): OkHttpClient {
         .connectionPool(pool)
         .dispatcher(dispatcher)
         .cache(cache)
-        .addInterceptor { chain -> makeCacheInterceptor(chain, context) }
+        .addInterceptor { chain -> makeCacheInterceptor(chain, hasNetwork) }
         .addInterceptor(UserAgentInterceptor(USER_AGENT))
-    if (BuildConfig.HTTP_DEBUG) {
+    if (debug) {
         val logger = HttpLoggingInterceptor(interceptorLogger)
             .also { it.level = HttpLoggingInterceptor.Level.BASIC }
         builder.addInterceptor(logger)
@@ -48,10 +50,10 @@ fun createAppOkHttpClient(context: Context): OkHttpClient {
     return builder.build()
 }
 
-fun createTmdbRetrofit(): Retrofit {
+fun createTmdbRetrofit(tmdbApiKey: String, debug: Boolean = false): Retrofit {
     val builder = OkHttpClient.Builder()
-        .addInterceptor(TmdbKeyInterceptor(BuildConfig.tmdbApiKey))
-    if (BuildConfig.HTTP_DEBUG) {
+        .addInterceptor(TmdbKeyInterceptor(tmdbApiKey))
+    if (debug) {
         val logger = HttpLoggingInterceptor(interceptorLogger)
             .also { it.level = HttpLoggingInterceptor.Level.BODY }
         builder.addInterceptor(logger)
@@ -63,10 +65,10 @@ fun createTmdbRetrofit(): Retrofit {
         .build()
 }
 
-fun createOpenSubtitlesRetrofit(): Retrofit {
+fun createOpenSubtitlesRetrofit(openSubtitlesApiKey: String, debug: Boolean = false): Retrofit {
     val builder = OkHttpClient.Builder()
-        .addInterceptor(OpenSubtitlesKeyInterceptor(BuildConfig.openSubtitlesApiKey))
-    if (BuildConfig.HTTP_DEBUG) {
+        .addInterceptor(OpenSubtitlesKeyInterceptor(openSubtitlesApiKey))
+    if (debug) {
         val logger = HttpLoggingInterceptor(interceptorLogger)
             .also { it.level = HttpLoggingInterceptor.Level.BODY }
         builder.addInterceptor(logger)
@@ -78,10 +80,13 @@ fun createOpenSubtitlesRetrofit(): Retrofit {
         .build()
 }
 
-fun createOpenSubtitlesFallbackRetrofit(): Retrofit {
+fun createOpenSubtitlesFallbackRetrofit(
+    openSubtitlesApiKey: String,
+    debug: Boolean = false,
+): Retrofit {
     val builder = OkHttpClient.Builder()
-        .addInterceptor(OpenSubtitlesKeyInterceptor(BuildConfig.openSubtitlesApiKey))
-    if (BuildConfig.HTTP_DEBUG) {
+        .addInterceptor(OpenSubtitlesKeyInterceptor(openSubtitlesApiKey))
+    if (debug) {
         val logger = HttpLoggingInterceptor(interceptorLogger)
             .also { it.level = HttpLoggingInterceptor.Level.BODY }
         builder.addInterceptor(logger)
@@ -93,9 +98,9 @@ fun createOpenSubtitlesFallbackRetrofit(): Retrofit {
         .build()
 }
 
-private fun makeCacheInterceptor(chain: Interceptor.Chain, context: Context): Response {
+private fun makeCacheInterceptor(chain: Interceptor.Chain, hasNetwork: () -> Boolean): Response {
     var request = chain.request()
-    request = if (hasNetwork(context)) {
+    request = if (hasNetwork()) {
         request.newBuilder()
             .header("Cache-Control", "public, max-age=$MAX_CACHE_AGE")
             .build()
@@ -106,14 +111,4 @@ private fun makeCacheInterceptor(chain: Interceptor.Chain, context: Context): Re
             .build()
     }
     return chain.proceed(request)
-}
-
-private fun hasNetwork(context: Context): Boolean {
-    var isConnected = false //
-    val connectivityManager =
-        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    val activeNetwork: NetworkInfo? = connectivityManager.activeNetworkInfo
-    if (activeNetwork != null && activeNetwork.isConnected)
-        isConnected = true
-    return isConnected
 }
