@@ -2,13 +2,12 @@ package com.tajmoti.libtulip.repository
 
 import com.tajmoti.libtmdb.model.search.SearchMovieResponse
 import com.tajmoti.libtmdb.model.search.SearchTvResponse
-import com.tajmoti.libtulip.misc.NetworkResult
-import com.tajmoti.libtulip.misc.firstValueOrNull
+import com.tajmoti.libtulip.misc.job.NetworkResult
+import com.tajmoti.libtulip.misc.job.firstValueOrNull
 import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtvprovider.SearchResult
-import com.tajmoti.libtvprovider.TvItemInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.last
 

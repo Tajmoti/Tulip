@@ -1,8 +1,10 @@
-package com.tajmoti.libtulip.misc
+package com.tajmoti.libtulip.misc.job
 
 import arrow.core.Option
 import arrow.core.Some
 import com.tajmoti.commonutils.logger
+import com.tajmoti.libtulip.misc.onNull
+import com.tajmoti.libtulip.misc.onValue
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow

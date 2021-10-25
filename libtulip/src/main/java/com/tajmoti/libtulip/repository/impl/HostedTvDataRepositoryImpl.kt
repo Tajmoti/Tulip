@@ -3,7 +3,10 @@ package com.tajmoti.libtulip.repository.impl
 import com.tajmoti.commonutils.*
 import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.HostedInfoDataSource
-import com.tajmoti.libtulip.misc.*
+import com.tajmoti.libtulip.misc.cache.TimedCache
+import com.tajmoti.libtulip.misc.job.NetFlow
+import com.tajmoti.libtulip.misc.job.NetworkResult
+import com.tajmoti.libtulip.misc.job.getNetworkBoundResource
 import com.tajmoti.libtulip.model.MissingEntityException
 import com.tajmoti.libtulip.model.NoSuccessfulResultsException
 import com.tajmoti.libtulip.model.hosted.*
@@ -18,9 +21,8 @@ import com.tajmoti.libtvprovider.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import javax.inject.Inject
 
-class HostedTvDataRepositoryImpl @Inject constructor(
+class HostedTvDataRepositoryImpl(
     private val hostedTvDataRepo: HostedInfoDataSource,
     private val tvProvider: MultiTvProvider<StreamingService>,
     private val tmdbRepo: TmdbTvDataRepository,

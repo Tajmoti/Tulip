@@ -1,8 +1,9 @@
-package com.tajmoti.libtulip.di
+package com.tajmoti.libtulip
 
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libopensubtitles.OpenSubtitlesKeyInterceptor
 import com.tajmoti.libtmdb.TmdbKeyInterceptor
+import com.tajmoti.libtulip.misc.net.UserAgentInterceptor
 import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit

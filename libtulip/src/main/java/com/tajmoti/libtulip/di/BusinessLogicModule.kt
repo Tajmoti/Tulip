@@ -2,6 +2,11 @@ package com.tajmoti.libtulip.di
 
 import com.tajmoti.libprimewiretvprovider.PrimewireTvProvider
 import com.tajmoti.libtulip.model.hosted.StreamingService
+import com.tajmoti.libtulip.repository.HostedTvDataRepository
+import com.tajmoti.libtulip.repository.StreamsRepository
+import com.tajmoti.libtulip.repository.TmdbTvDataRepository
+import com.tajmoti.libtulip.service.LanguageMappingStreamService
+import com.tajmoti.libtulip.service.impl.LanguageMappingStreamServiceImpl
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.kinox.KinoxTvProvider
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
@@ -17,7 +22,17 @@ import okhttp3.OkHttpClient
 import javax.inject.Singleton
 
 @Module
-object Provider {
+object BusinessLogicModule {
+    @Provides
+    @Singleton
+    fun provideLanguageMappingService(
+        hostedTvDataRepository: HostedTvDataRepository,
+        streamsRepo: StreamsRepository,
+        tvDataRepo: TmdbTvDataRepository
+    ): LanguageMappingStreamService {
+        return LanguageMappingStreamServiceImpl(hostedTvDataRepository, streamsRepo, tvDataRepo)
+    }
+
     @Provides
     @Singleton
     fun provideMultiTvProvider(
@@ -37,16 +52,12 @@ object Provider {
         )
     }
 
-
-    /**
-     * Returns a function, which loads the provided URL into a WebView,
-     * runs all the JavaScript and returns the finished page HTML source.
-     */
-    private fun makeWebViewGetter(webDriver: WebDriver): WebDriverPageSourceLoader {
-        return { url, urlFilter ->
-            val params = WebDriver.Params(urlFilter = urlFilter)
-            webDriver.getPageHtml(url, params)
-        }
+    @Provides
+    @Singleton
+    fun provideLinkExtractor(okHttpClient: OkHttpClient, webDriver: WebDriver): VideoLinkExtractor {
+        val webViewGetter = makeWebViewGetter(webDriver)
+        val http = makeHttpGetter(okHttpClient)
+        return VideoLinkExtractor(http, webViewGetter)
     }
 
 
@@ -60,6 +71,17 @@ object Provider {
                 WebDriver.SubmitTrigger.CustomJs(interfaceName),
                 urlFilter = urlFilter
             )
+            webDriver.getPageHtml(url, params)
+        }
+    }
+
+    /**
+     * Returns a function, which loads the provided URL into a WebView,
+     * runs all the JavaScript and returns the finished page HTML source.
+     */
+    private fun makeWebViewGetter(webDriver: WebDriver): WebDriverPageSourceLoader {
+        return { url, urlFilter ->
+            val params = WebDriver.Params(urlFilter = urlFilter)
             webDriver.getPageHtml(url, params)
         }
     }
@@ -79,23 +101,5 @@ object Provider {
                 Result.failure(e)
             }
         }
-    }
-
-    @Provides
-    @Singleton
-    fun provideHttpClient(okHttpClient: OkHttpClient): HttpClient {
-        return HttpClient(OkHttp) {
-            engine { preconfigured = okHttpClient }
-            followRedirects = false
-            expectSuccess = false
-        }
-    }
-
-    @Provides
-    @Singleton
-    fun provideLinkExtractor(okHttpClient: OkHttpClient, webDriver: WebDriver): VideoLinkExtractor {
-        val webViewGetter = makeWebViewGetter(webDriver)
-        val http = makeHttpGetter(okHttpClient)
-        return VideoLinkExtractor(http, webViewGetter)
     }
 }

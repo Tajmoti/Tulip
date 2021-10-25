@@ -4,9 +4,8 @@ import com.tajmoti.libtulip.data.UserDataDataSource
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.repository.FavoritesRepository
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
 
-class FavoriteRepositoryImpl @Inject constructor(
+class FavoriteRepositoryImpl(
     private val repo: UserDataDataSource
 ) : FavoritesRepository {
 

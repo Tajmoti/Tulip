@@ -3,7 +3,7 @@ package com.tajmoti.libtulip.ui.library
 import com.tajmoti.commonutils.combine
 import com.tajmoti.commonutils.parallelMapBoth
 import com.tajmoti.libtulip.data.HostedInfoDataSource
-import com.tajmoti.libtulip.misc.NetworkResult
+import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.history.LastPlayedPosition
 import com.tajmoti.libtulip.model.info.TulipItem
 import com.tajmoti.libtulip.model.key.ItemKey

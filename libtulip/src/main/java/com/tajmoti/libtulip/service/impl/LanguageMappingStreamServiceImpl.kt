@@ -21,10 +21,9 @@ import com.tajmoti.libtulip.service.StreamsResult
 import com.tajmoti.libtvprovider.VideoStreamRef
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class LanguageMappingStreamServiceImpl @Inject constructor(
+class LanguageMappingStreamServiceImpl(
     private val hostedTvDataRepository: HostedTvDataRepository,
     private val streamsRepo: StreamsRepository,
     private val tvDataRepo: TmdbTvDataRepository

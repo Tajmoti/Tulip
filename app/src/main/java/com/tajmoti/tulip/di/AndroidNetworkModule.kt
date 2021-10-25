@@ -3,7 +3,7 @@ package com.tajmoti.tulip.di
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
-import com.tajmoti.libtulip.di.createAppOkHttpClient
+import com.tajmoti.libtulip.createAppOkHttpClient
 import com.tajmoti.libwebdriver.WebDriver
 import com.tajmoti.libwebdriver.WebViewWebDriver
 import com.tajmoti.tulip.BuildConfig

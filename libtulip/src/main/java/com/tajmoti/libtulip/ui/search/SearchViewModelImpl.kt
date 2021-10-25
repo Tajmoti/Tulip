@@ -13,9 +13,8 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-class SearchViewModelImpl @Inject constructor(
+class SearchViewModelImpl(
     private val repository: HostedTvDataRepository,
     private val viewModelScope: CoroutineScope
 ) : SearchViewModel {

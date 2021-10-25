@@ -14,6 +14,10 @@ import com.tajmoti.libtmdb.model.tv.Tv
 import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.LocalTvDataSource
 import com.tajmoti.libtulip.misc.*
+import com.tajmoti.libtulip.misc.cache.TimedCache
+import com.tajmoti.libtulip.misc.job.NetworkResult
+import com.tajmoti.libtulip.misc.job.firstValueOrNull
+import com.tajmoti.libtulip.misc.job.getNetworkBoundResource
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
@@ -24,9 +28,8 @@ import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtvprovider.SearchResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
-class TmdbTvDataRepositoryImpl @Inject constructor(
+class TmdbTvDataRepositoryImpl(
     private val service: TmdbService,
     private val db: LocalTvDataSource,
     config: TulipConfiguration

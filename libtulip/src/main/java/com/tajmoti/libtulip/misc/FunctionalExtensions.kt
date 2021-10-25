@@ -1,4 +1,5 @@
 @file:Suppress("UNUSED", "NOTHING_TO_INLINE")
+
 package com.tajmoti.libtulip.misc
 
 inline fun <T> T?.onValue(onValue: (T) -> Unit): T? {

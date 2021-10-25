@@ -1,6 +1,6 @@
 package com.tajmoti.libtulip.repository
 
-import com.tajmoti.libtulip.misc.NetworkResult
+import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.search.TulipSearchResult

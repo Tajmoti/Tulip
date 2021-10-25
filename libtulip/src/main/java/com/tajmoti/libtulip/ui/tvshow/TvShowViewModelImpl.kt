@@ -1,7 +1,7 @@
 package com.tajmoti.libtulip.ui.tvshow
 
 import com.tajmoti.commonutils.map
-import com.tajmoti.libtulip.misc.NetworkResult
+import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
 import com.tajmoti.libtulip.model.info.TulipTvShowInfo
 import com.tajmoti.libtulip.model.info.seasonNumber

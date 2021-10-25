@@ -1,4 +1,4 @@
-package com.tajmoti.libtulip.di
+package com.tajmoti.libtulip.misc.net
 
 import okhttp3.Interceptor
 import okhttp3.Request

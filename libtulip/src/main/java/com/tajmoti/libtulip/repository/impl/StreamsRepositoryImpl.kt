@@ -10,9 +10,8 @@ import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import java.net.URI
-import javax.inject.Inject
 
-class StreamsRepositoryImpl @Inject constructor(
+class StreamsRepositoryImpl(
     private val linkExtractor: VideoLinkExtractor,
     private val httpClient: HttpClient
 ) : StreamsRepository {

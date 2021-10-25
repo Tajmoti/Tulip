@@ -6,9 +6,8 @@ import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.repository.PlayingHistoryRepository
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
 
-class PlayingHistoryRepositoryImpl @Inject constructor(
+class PlayingHistoryRepositoryImpl(
     private val dataSource: UserDataDataSource
 ) : PlayingHistoryRepository {
 

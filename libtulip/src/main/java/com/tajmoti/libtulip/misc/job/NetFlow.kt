@@ -1,4 +1,4 @@
-package com.tajmoti.libtulip.misc
+package com.tajmoti.libtulip.misc.job
 
 import kotlinx.coroutines.flow.Flow
 

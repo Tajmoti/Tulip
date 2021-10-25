@@ -4,6 +4,9 @@ import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libopensubtitles.OpenSubtitlesService
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtulip.TulipConfiguration
+import com.tajmoti.libtulip.createOpenSubtitlesFallbackRetrofit
+import com.tajmoti.libtulip.createOpenSubtitlesRetrofit
+import com.tajmoti.libtulip.createTmdbRetrofit
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton

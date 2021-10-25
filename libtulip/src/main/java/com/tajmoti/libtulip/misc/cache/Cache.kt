@@ -1,4 +1,4 @@
-package com.tajmoti.libtulip.misc
+package com.tajmoti.libtulip.misc.cache
 
 import arrow.core.Option
 

@@ -10,9 +10,8 @@ import com.tajmoti.libtulip.repository.SubtitleRepository
 import java.io.InputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
-import javax.inject.Inject
 
-class SubtitleRepositoryImpl @Inject constructor(
+class SubtitleRepositoryImpl(
     private val openSubtitlesService: OpenSubtitlesService,
     private val openSubtitlesFallbackService: OpenSubtitlesFallbackService,
 ) : SubtitleRepository {
