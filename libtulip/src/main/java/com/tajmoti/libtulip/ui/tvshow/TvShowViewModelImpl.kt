@@ -20,55 +20,53 @@ class TvShowViewModelImpl constructor(
     private val tmdbRepo: TmdbTvDataRepository,
     private val favoritesRepository: FavoritesRepository,
     private val viewModelScope: CoroutineScope,
-    private val itemKey: TvShowKey
+    private val initialItemKey: TvShowKey,
 ) : TvShowViewModel {
-    private val state: MutableStateFlow<State> = MutableStateFlow(State.Loading)
+    private val itemKey = MutableSharedFlow<TvShowKey>()
+    private val state = itemKey
+        .flatMapConcat { fetchSeasonsToState(it) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, State.Loading)
     override val name = MutableStateFlow<String?>(null)
     override val backdropPath = state
         .map(viewModelScope) { (it as? State.Success)?.backdropPath }
     override val seasons = state
         .map(viewModelScope) { (it as? State.Success)?.seasons?.let { s -> sortSpecialsLast(s) } }
-    override val isFavorite = favoritesRepository.isFavorite(itemKey)
+    override val isFavorite = favoritesRepository.isFavorite(initialItemKey)
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
     override val error = state
         .map(viewModelScope) { it is State.Error }
 
-
     init {
-        fetchTvShowData()
+        retryFetchTvShowData()
     }
 
     /**
      * Retries the last fetching request
      */
     override fun retryFetchTvShowData() {
-        fetchTvShowData()
-    }
-
-    private fun fetchTvShowData() {
         viewModelScope.launch {
-            state.emitAll(fetchSeasonsToState(itemKey))
+            itemKey.emit(initialItemKey)
         }
     }
 
     override fun toggleFavorites() {
         viewModelScope.launch {
             if (isFavorite.value) {
-                favoritesRepository.deleteUserFavorite(itemKey)
+                favoritesRepository.deleteUserFavorite(initialItemKey)
             } else {
-                favoritesRepository.addUserFavorite(itemKey)
+                favoritesRepository.addUserFavorite(initialItemKey)
             }
         }
     }
 
-    private suspend inline fun fetchSeasonsToState(key: TvShowKey): Flow<State> {
+    private fun fetchSeasonsToState(key: TvShowKey): Flow<State> {
         return when (key) {
             is TvShowKey.Hosted -> getHostedTvShowAsState(key)
             is TvShowKey.Tmdb -> getTmdbTvShowAsState(key)
         }
     }
 
-    private suspend inline fun getHostedTvShowAsState(key: TvShowKey.Hosted) = flow {
+    private fun getHostedTvShowAsState(key: TvShowKey.Hosted) = flow {
         val show = hostedTvDataRepository.getTvShow(key)
             .getOrElse {
                 emit(State.Error)
@@ -80,7 +78,7 @@ class TvShowViewModelImpl constructor(
             .onFailure { emit(State.Error) }
     }
 
-    private suspend inline fun getTmdbTvShowAsState(key: TvShowKey.Tmdb): Flow<State> {
+    private fun getTmdbTvShowAsState(key: TvShowKey.Tmdb): Flow<State> {
         return tmdbRepo.getTvShowWithSeasonsAsFlow(key)
             .onEach { result ->
                 if (result !is NetworkResult.Success)
@@ -122,7 +120,7 @@ class TvShowViewModelImpl constructor(
 
         data class Success(
             val backdropPath: String?,
-            val seasons: List<TulipSeasonInfo>
+            val seasons: List<TulipSeasonInfo>,
         ) : State
 
         object Error : State
