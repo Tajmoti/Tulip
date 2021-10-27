@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Changed
+- Fixed infinite loading in case there are no streams available for the selected episode or movie
 
 ## [0.10.1] - 2021-10-22
 ### Changed

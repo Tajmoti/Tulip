@@ -2,6 +2,7 @@ package com.tajmoti.libtulip.ui.player
 
 import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.map
+import com.tajmoti.commonutils.onLast
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.key.EpisodeKey
@@ -526,10 +527,12 @@ class VideoPlayerViewModelImpl constructor(
                 result.fold({ LinkListLoadingState.Error(it) },
                     { LinkListLoadingState.Success(it, false) })
             }
-            .shareIn(viewModelScope, SharingStarted.Eagerly, 1)
+            .onLast {
+                if (it !is LinkListLoadingState.Success)
+                    return@onLast
+                emit(LinkListLoadingState.Success(it.streams, true))
+            }
         emitAll(result)
-        (result.lastOrNull() as? LinkListLoadingState.Success)
-            ?.let { emit(LinkListLoadingState.Success(it.streams, true)) }
     }
 
     private fun stateToStreamableInfo(it: LinkListLoadingState): StreamableInfo? {

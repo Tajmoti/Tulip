@@ -219,3 +219,11 @@ inline fun <T, R> Flow<T?>.mapFold(
         }
     }
 }
+
+/**
+ * Calls [action] with the last item that went through the flow.
+ */
+inline fun <T> Flow<T>.onLast(crossinline action: suspend FlowCollector<T>.(T?) -> Unit): Flow<T> {
+    var previous: T? = null
+    return onEach { previous = it }.onCompletion { action(previous) }
+}
