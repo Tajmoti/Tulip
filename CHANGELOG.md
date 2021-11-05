@@ -1,6 +1,7 @@
 ## [Unreleased]
 ### Changed
 - Fixed infinite loading in case there are no streams available for the selected episode or movie
+- Improve support for grabbing links from Kinox.to
 
 ## [0.10.1] - 2021-10-22
 ### Changed
