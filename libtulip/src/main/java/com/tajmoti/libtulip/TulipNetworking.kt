@@ -41,6 +41,7 @@ fun createAppOkHttpClient(
         .connectionPool(pool)
         .dispatcher(dispatcher)
         .cache(cache)
+        .followRedirects(false)
         .addInterceptor { chain -> makeCacheInterceptor(chain, hasNetwork) }
         .addInterceptor(UserAgentInterceptor(USER_AGENT))
     if (debug) {
