@@ -22,10 +22,11 @@ object VideoPlayerUtils {
         }
     }
 
-    fun streamableToDisplayName(info: StreamableInfo): String {
+    fun streamableToDisplayName(info: StreamableInfo?): String {
         return when (info) {
             is TulipCompleteEpisodeInfo -> showToDisplayName(info)
             is TulipMovie -> info.name
+            null -> ""
         }
     }
 
