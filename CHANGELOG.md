@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [0.12.0] - 2021-11-07
 ### Added
 - Support for Voe.SX streaming site
 - Support for TheVideo.me streaming site
