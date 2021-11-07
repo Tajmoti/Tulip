@@ -7,7 +7,7 @@ interface FavoritesRepository {
 
     fun isFavorite(item: ItemKey): Flow<Boolean>
 
-    fun getUserFavoritesAsFlow(): Flow<List<ItemKey>>
+    fun getUserFavorites(): Flow<List<ItemKey>>
 
     suspend fun deleteUserFavorite(item: ItemKey)
 

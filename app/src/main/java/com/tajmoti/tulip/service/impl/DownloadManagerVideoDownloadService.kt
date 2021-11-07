@@ -7,7 +7,6 @@ import android.os.Environment
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
-import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.tulip.R
@@ -33,7 +32,7 @@ class DownloadManagerVideoDownloadService @Inject constructor(
             .setTitle(displayName)
             .setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, savePath)
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .apply { allowScanningByMediaScanner() }
+            .apply { @Suppress("DEPRECATION") allowScanningByMediaScanner() }
         logger.debug("Downloading '{}' as {} to path '{}'", uri, info, savePath)
         return downloadManager.enqueue(request)
     }

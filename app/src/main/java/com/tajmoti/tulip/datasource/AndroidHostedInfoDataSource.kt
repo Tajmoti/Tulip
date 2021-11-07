@@ -9,6 +9,8 @@ import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.tulip.db.dao.hosted.*
 import com.tajmoti.tulip.db.entity.hosted.DbTmdbMapping
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class AndroidHostedInfoDataSource @Inject constructor(
@@ -106,13 +108,13 @@ class AndroidHostedInfoDataSource @Inject constructor(
         tmdbMappingDao.insert(DbTmdbMapping(hosted.streamingService, hosted.id, tmdb.id))
     }
 
-    override suspend fun getTmdbMappingForTvShow(tmdb: TmdbItemId.Tv): List<TvShowKey.Hosted> {
+    override fun getTmdbMappingForTvShow(tmdb: TmdbItemId.Tv): Flow<List<TvShowKey.Hosted>> {
         return tmdbMappingDao.getHostedKeysByTmdbId(tmdb.id)
-            .map { TvShowKey.Hosted(it.service, it.key) }
+            .map { it.map { TvShowKey.Hosted(it.service, it.key) } }
     }
 
-    override suspend fun getTmdbMappingForMovie(tmdb: TmdbItemId.Movie): List<MovieKey.Hosted> {
+    override fun getTmdbMappingForMovie(tmdb: TmdbItemId.Movie): Flow<List<MovieKey.Hosted>> {
         return tmdbMappingDao.getHostedKeysByTmdbId(tmdb.id)
-            .map { MovieKey.Hosted(it.service, it.key) }
+            .map { it.map { MovieKey.Hosted(it.service, it.key) } }
     }
 }

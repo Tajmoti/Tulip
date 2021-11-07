@@ -3,10 +3,10 @@ package com.tajmoti.libtulip.di
 import com.tajmoti.libprimewiretvprovider.PrimewireTvProvider
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
-import com.tajmoti.libtulip.repository.StreamsRepository
+import com.tajmoti.libtulip.repository.StreamRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
-import com.tajmoti.libtulip.service.LanguageMappingStreamService
-import com.tajmoti.libtulip.service.impl.LanguageMappingStreamServiceImpl
+import com.tajmoti.libtulip.repository.impl.StreamRepositoryImpl
+import com.tajmoti.libtulip.service.StreamExtractionService
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.kinox.KinoxTvProvider
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
@@ -27,10 +27,10 @@ object BusinessLogicModule {
     @Singleton
     fun provideLanguageMappingService(
         hostedTvDataRepository: HostedTvDataRepository,
-        streamsRepo: StreamsRepository,
+        extractionService: StreamExtractionService,
         tvDataRepo: TmdbTvDataRepository
-    ): LanguageMappingStreamService {
-        return LanguageMappingStreamServiceImpl(hostedTvDataRepository, streamsRepo, tvDataRepo)
+    ): StreamRepository {
+        return StreamRepositoryImpl(hostedTvDataRepository, extractionService, tvDataRepo)
     }
 
     @Provides

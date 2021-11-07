@@ -5,7 +5,7 @@ import com.tajmoti.libtulip.model.hosted.StreamingService
 inline val SeasonKey.Hosted.streamingService: StreamingService
     get() = tvShowKey.streamingService
 
-inline val EpisodeKey.Hosted.seasonNumber: Int
+inline val EpisodeKey.seasonNumber: Int
     get() = seasonKey.seasonNumber
 
 inline val EpisodeKey.Hosted.tvShowKey: TvShowKey.Hosted

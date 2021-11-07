@@ -1,5 +1,6 @@
 package com.tajmoti.libtulip.ui.streams
 
+import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtvprovider.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.CaptchaInfo
 
@@ -8,6 +9,7 @@ import com.tajmoti.libtvvideoextractor.CaptchaInfo
  */
 data class FailedLink(
     val stream: VideoStreamRef,
+    val languageCode: LanguageCode,
     val download: Boolean,
     /**
      * If not null, this failed because of a captcha.

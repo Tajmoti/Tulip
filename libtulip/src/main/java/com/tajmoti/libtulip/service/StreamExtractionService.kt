@@ -1,12 +1,12 @@
-package com.tajmoti.libtulip.repository
+package com.tajmoti.libtulip.service
 
 import arrow.core.Either
 import com.tajmoti.libtvprovider.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.ExtractionError
 
-interface StreamsRepository {
+interface StreamExtractionService {
 
-    fun canExtractFromService(ref: VideoStreamRef): Boolean
+    fun canExtractStream(ref: VideoStreamRef): Boolean
 
     suspend fun resolveStream(ref: VideoStreamRef.Unresolved): Result<VideoStreamRef.Resolved>
 

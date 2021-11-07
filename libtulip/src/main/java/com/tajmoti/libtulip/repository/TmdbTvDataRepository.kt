@@ -1,19 +1,20 @@
 package com.tajmoti.libtulip.repository
 
+import com.tajmoti.commonutils.flatMap
 import com.tajmoti.libtmdb.model.search.SearchMovieResponse
 import com.tajmoti.libtmdb.model.search.SearchTvResponse
 import com.tajmoti.libtulip.misc.job.NetworkResult
-import com.tajmoti.libtulip.misc.job.firstValueOrNull
+import com.tajmoti.libtulip.model.MissingEntityException
 import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtvprovider.SearchResult
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.map
 
 interface TmdbTvDataRepository {
 
-    suspend fun findTmdbIdAsFlow(searchResult: SearchResult): Flow<NetworkResult<TmdbItemId?>>
+    fun findTmdbIdAsFlow(searchResult: SearchResult): Flow<NetworkResult<TmdbItemId?>>
 
     suspend fun findTmdbId(searchResult: SearchResult): TmdbItemId?
 
@@ -23,33 +24,40 @@ interface TmdbTvDataRepository {
     suspend fun searchMovie(query: String, firstAirDateYear: Int?): Result<SearchMovieResponse>
 
 
-    fun getItemAsFlow(key: ItemKey.Tmdb): Flow<NetworkResult<out TulipItem.Tmdb>> {
+    fun getItem(key: ItemKey.Tmdb): Flow<NetworkResult<out TulipItem.Tmdb>> {
         return when (key) {
-            is TvShowKey.Tmdb -> getTvShowWithSeasonsAsFlow(key)
-            is MovieKey.Tmdb -> getMovieAsFlow(key)
+            is TvShowKey.Tmdb -> getTvShowWithSeasons(key)
+            is MovieKey.Tmdb -> getMovie(key)
         }
     }
 
-    fun getTvShowWithSeasonsAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<out TulipTvShowInfo.Tmdb>>
+    fun getTvShowWithSeasons(key: TvShowKey.Tmdb): Flow<NetworkResult<out TulipTvShowInfo.Tmdb>>
 
-    fun getSeasonAsFlow(key: SeasonKey.Tmdb): Flow<NetworkResult<out TulipSeasonInfo.Tmdb>>
+    fun getSeason(key: SeasonKey.Tmdb): Flow<NetworkResult<out TulipSeasonInfo.Tmdb>>
 
-    fun getEpisodeAsFlow(key: EpisodeKey.Tmdb): Flow<NetworkResult<out TulipEpisodeInfo.Tmdb>>
+    fun getEpisode(key: EpisodeKey.Tmdb): Flow<NetworkResult<out TulipEpisodeInfo.Tmdb>>
 
-    suspend fun getFullEpisodeData(key: EpisodeKey.Tmdb): Triple<TulipTvShowInfo.Tmdb, TulipSeasonInfo.Tmdb, TulipEpisodeInfo.Tmdb>? {
-        val tv = getTvShowWithSeasonsAsFlow(key.tvShowKey)
-            .last().data ?: return null
-        val seasons = tv.seasons
-            .firstOrNull { key.seasonNumber == it.seasonNumber } ?: return null
-        val episode = seasons.episodes
-            .firstOrNull { it.episodeNumber == key.episodeNumber } ?: return null
-        return Triple(tv, seasons, episode)
+    fun getFullEpisodeData(key: EpisodeKey.Tmdb): Flow<Result<TulipCompleteEpisodeInfo.Tmdb>> {
+        return getTvShowWithSeasons(key.tvShowKey)
+            .map {
+                it.toResult().flatMap { tvInfo ->
+                    val seasons = tvInfo.seasons
+                        .firstOrNull { season -> key.seasonNumber == season.seasonNumber }
+                        ?: return@map Result.failure(MissingEntityException)
+                    val episode = seasons.episodes
+                        .firstOrNull { episode -> episode.episodeNumber == key.episodeNumber }
+                        ?: return@map Result.failure(MissingEntityException)
+                    Result.success(TulipCompleteEpisodeInfo.Tmdb(key, tvInfo.name, episode))
+                }
+            }
     }
 
-
-    suspend fun getMovie(movieId: MovieKey.Tmdb): TulipMovie.Tmdb? {
-        return getMovieAsFlow(movieId).firstValueOrNull() // TODO
+    fun getStreamableInfo(key: StreamableKey.Tmdb): Flow<Result<StreamableInfo.Tmdb>> {
+        return when (key) {
+            is EpisodeKey.Tmdb -> getFullEpisodeData(key)
+            is MovieKey.Tmdb -> getMovie(key).map { it.toResult() }
+        }
     }
 
-    fun getMovieAsFlow(key: MovieKey.Tmdb): Flow<NetworkResult<out TulipMovie.Tmdb>>
+    fun getMovie(key: MovieKey.Tmdb): Flow<NetworkResult<out TulipMovie.Tmdb>>
 }

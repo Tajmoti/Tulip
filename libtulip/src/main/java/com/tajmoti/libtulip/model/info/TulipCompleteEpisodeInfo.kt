@@ -14,6 +14,7 @@ sealed interface TulipCompleteEpisodeInfo : StreamableInfo {
         override val key: EpisodeKey.Hosted,
         override val showName: String,
         val info: TulipEpisodeInfo.Hosted,
+        override val language: LanguageCode
     ) : TulipCompleteEpisodeInfo, StreamableInfo.Hosted {
         override val name = info.name
         override val seasonNumber = info.key.seasonNumber

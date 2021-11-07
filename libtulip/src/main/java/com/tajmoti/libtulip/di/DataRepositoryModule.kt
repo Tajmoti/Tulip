@@ -10,6 +10,8 @@ import com.tajmoti.libtulip.data.UserDataDataSource
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.repository.*
 import com.tajmoti.libtulip.repository.impl.*
+import com.tajmoti.libtulip.service.StreamExtractionService
+import com.tajmoti.libtulip.service.impl.StreamExtractionServiceImpl
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
 import dagger.Module
@@ -35,8 +37,8 @@ object DataRepositoryModule {
     fun provideStreamsRepository(
         linkExtractor: VideoLinkExtractor,
         httpClient: HttpClient
-    ): StreamsRepository {
-        return StreamsRepositoryImpl(linkExtractor, httpClient)
+    ): StreamExtractionService {
+        return StreamExtractionServiceImpl(linkExtractor, httpClient)
     }
 
     @Provides

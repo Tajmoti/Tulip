@@ -1,5 +1,6 @@
 package com.tajmoti.libtulip.ui.tvshow
 
+import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
@@ -9,12 +10,10 @@ import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.repository.FavoritesRepository
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
+@OptIn(FlowPreview::class)
 class TvShowViewModelImpl constructor(
     private val hostedTvDataRepository: HostedTvDataRepository,
     private val tmdbRepo: TmdbTvDataRepository,
@@ -22,11 +21,16 @@ class TvShowViewModelImpl constructor(
     private val viewModelScope: CoroutineScope,
     private val initialItemKey: TvShowKey,
 ) : TvShowViewModel {
-    private val itemKey = MutableSharedFlow<TvShowKey>()
-    private val state = itemKey
-        .flatMapConcat { fetchSeasonsToState(it) }
+    private val itemKey = MutableSharedFlow<TvShowKey>(1)
+    private val stateWithName = itemKey
+        .flatMapLatest { fetchSeasonsToState(it) }
+    val state = stateWithName
+        .onEach { logger.warn("State is $it") }
+        .map { it.state }
         .stateIn(viewModelScope, SharingStarted.Eagerly, State.Loading)
-    override val name = MutableStateFlow<String?>(null)
+    override val name = stateWithName
+        .map { it.name }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
     override val backdropPath = state
         .map(viewModelScope) { (it as? State.Success)?.backdropPath }
     override val seasons = state
@@ -59,36 +63,34 @@ class TvShowViewModelImpl constructor(
         }
     }
 
-    private fun fetchSeasonsToState(key: TvShowKey): Flow<State> {
+    private fun fetchSeasonsToState(key: TvShowKey): Flow<StateWithName> {
         return when (key) {
             is TvShowKey.Hosted -> getHostedTvShowAsState(key)
             is TvShowKey.Tmdb -> getTmdbTvShowAsState(key)
         }
     }
 
-    private fun getHostedTvShowAsState(key: TvShowKey.Hosted) = flow {
-        val show = hostedTvDataRepository.getTvShow(key)
-            .getOrElse {
-                emit(State.Error)
-                return@flow
+    private fun getHostedTvShowAsState(key: TvShowKey.Hosted): Flow<StateWithName> {
+        val nameFlow = hostedTvDataRepository.getTvShow(key)
+            .map { (it as? NetworkResult.Success)?.data?.name }
+        val stateFlow = hostedTvDataRepository.getSeasons(key)
+            .map {
+                when (it) {
+                    is NetworkResult.Success -> State.Success(null, it.data)
+                    else -> State.Error
+                }
             }
-        name.value = show.info.name
-        hostedTvDataRepository.getSeasons(key)
-            .onSuccess { emit(State.Success(null, it)) }
-            .onFailure { emit(State.Error) }
+        return combine(nameFlow, stateFlow) { name, state ->
+            StateWithName(state, name)
+        }
     }
 
-    private fun getTmdbTvShowAsState(key: TvShowKey.Tmdb): Flow<State> {
-        return tmdbRepo.getTvShowWithSeasonsAsFlow(key)
-            .onEach { result ->
-                if (result !is NetworkResult.Success)
-                    return@onEach
-                name.value = result.data.name
-            }
+    private fun getTmdbTvShowAsState(key: TvShowKey.Tmdb): Flow<StateWithName> {
+        return tmdbRepo.getTvShowWithSeasons(key)
             .map { result ->
-                withContext(Dispatchers.Default) {
-                    resultToState(result)
-                }
+                val state = withContext(Dispatchers.Default) { resultToState(result) }
+                val name = result.data?.name
+                StateWithName(state, name)
             }
     }
 
@@ -114,6 +116,8 @@ class TvShowViewModelImpl constructor(
             val bx = b.seasonNumber.takeUnless { it == 0 } ?: Int.MAX_VALUE
             ax.compareTo(bx)
         }
+
+    data class StateWithName(val state: State, val name: String?)
 
     sealed interface State {
         object Loading : State

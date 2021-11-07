@@ -40,7 +40,7 @@ suspend inline fun <R, S> List<R>.parallelMapToFlow(
     }
 }
 
-suspend inline fun <P, R, S> Map<P, R>.parallelMapToFlow(
+inline fun <P, R, S> Map<P, R>.parallelMapToFlow(
     crossinline block: suspend CoroutineScope.(P, R) -> S
 ): Flow<S> {
     return channelFlow {

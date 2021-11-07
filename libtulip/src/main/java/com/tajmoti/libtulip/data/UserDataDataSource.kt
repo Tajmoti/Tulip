@@ -9,9 +9,7 @@ import kotlinx.coroutines.flow.Flow
 interface UserDataDataSource {
     fun isFavorite(item: ItemKey): Flow<Boolean>
 
-    suspend fun getUserFavorites(): List<ItemKey>
-
-    fun getUserFavoritesAsFlow(): Flow<List<ItemKey>>
+    fun getUserFavorites(): Flow<List<ItemKey>>
 
     suspend fun deleteUserFavorite(item: ItemKey)
 

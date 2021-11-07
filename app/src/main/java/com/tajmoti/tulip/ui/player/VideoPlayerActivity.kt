@@ -178,6 +178,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 enterPictureInPictureMode(PictureInPictureParams.Builder().build())
             } else {
+                @Suppress("DEPRECATION")
                 enterPictureInPictureMode()
             }
         } else if (shouldOtherwiseFinish) {
@@ -350,7 +351,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
             if (result.resultCode == RESULT_OK) {
                 toast(R.string.captcha_solved)
                 lastLink?.let { link ->
-                    val ref = UnloadedVideoStreamRef(link.stream, true)
+                    val ref = UnloadedVideoStreamRef(link.stream, true, link.languageCode)
                     playerViewModel.onStreamClicked(ref, link.download)
                 }
             } else {
@@ -383,11 +384,6 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     private fun onPlayingChanged(playing: Boolean) {
         if (playing)
             rescheduleVideoControlAutoHide()
-    }
-
-    private fun onDonePlayingChanged(done: Boolean) {
-        if (done)
-            finish()
     }
 
     private fun updateBuffering(buffering: Float?) {

@@ -12,11 +12,7 @@ class InMemoryUserDataDataSource : UserDataDataSource {
         return flowOf(false)
     }
 
-    override suspend fun getUserFavorites(): List<ItemKey> {
-        return emptyList()
-    }
-
-    override fun getUserFavoritesAsFlow(): Flow<List<ItemKey>> {
+    override fun getUserFavorites(): Flow<List<ItemKey>> {
         return flowOf(emptyList())
     }
 

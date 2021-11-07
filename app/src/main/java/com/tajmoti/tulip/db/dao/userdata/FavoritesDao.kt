@@ -13,10 +13,7 @@ interface FavoritesDao {
     fun isTmdbFavorite(type: ItemType, tmdbItemId: Long): Flow<Boolean>
 
     @Query("SELECT * FROM DbFavoriteTmdbItem")
-    suspend fun getAllTmdbFavorites(): List<DbFavoriteTmdbItem>
-
-    @Query("SELECT * FROM DbFavoriteTmdbItem")
-    fun getAllTmdbFavoritesAsFlow(): Flow<List<DbFavoriteTmdbItem>>
+    fun getAllTmdbFavorites(): Flow<List<DbFavoriteTmdbItem>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTmdbFavorite(item: DbFavoriteTmdbItem)
@@ -29,10 +26,7 @@ interface FavoritesDao {
     fun isHostedFavorite(type: ItemType, streamingService: StreamingService, key: String): Flow<Boolean>
 
     @Query("SELECT * FROM DbFavoriteHostedItem")
-    suspend fun getAllHostedFavorites(): List<DbFavoriteHostedItem>
-
-    @Query("SELECT * FROM DbFavoriteHostedItem")
-    fun getAllHostedFavoritesAsFlow(): Flow<List<DbFavoriteHostedItem>>
+    fun getAllHostedFavorites(): Flow<List<DbFavoriteHostedItem>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHostedFavorite(item: DbFavoriteHostedItem)

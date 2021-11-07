@@ -1,10 +1,10 @@
 package com.tajmoti.libtulip.repository
 
+import com.tajmoti.libtulip.misc.job.NetFlow
 import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.search.TulipSearchResult
-import com.tajmoti.libtulip.model.stream.StreamableInfoWithLanguage
 import com.tajmoti.libtvprovider.VideoStreamRef
 import kotlinx.coroutines.flow.Flow
 
@@ -13,28 +13,30 @@ import kotlinx.coroutines.flow.Flow
  */
 interface HostedTvDataRepository {
 
-    suspend fun search(query: String): Flow<Result<List<TulipSearchResult>>>
+    fun search(query: String): Flow<Result<List<TulipSearchResult>>>
 
-    fun getTvShowAsFlow(key: TvShowKey.Hosted): Flow<NetworkResult<out TulipTvShowInfo.Hosted>>
+    fun getTvShow(key: TvShowKey.Hosted): Flow<NetworkResult<TulipTvShowInfo.Hosted>>
 
-    suspend fun getTvShow(key: TvShowKey.Hosted): Result<TulipTvShowInfo.Hosted>
+    fun getTvShowsByTmdbKey(key: TvShowKey.Tmdb): Flow<List<Result<TulipTvShowInfo.Hosted>>>
 
-    suspend fun getSeasonsAsFlow(key: TvShowKey.Hosted): Flow<NetworkResult<List<TulipSeasonInfo.Hosted>>>
+    fun getSeasons(key: TvShowKey.Hosted): Flow<NetworkResult<List<TulipSeasonInfo.Hosted>>>
 
-    suspend fun getSeasons(key: TvShowKey.Hosted): Result<List<TulipSeasonInfo.Hosted>>
+    fun getSeason(key: SeasonKey.Hosted): Flow<NetworkResult<TulipSeasonInfo.Hosted>>
 
-    fun getSeasonAsFlow(key: SeasonKey.Hosted): Flow<NetworkResult<out TulipSeasonInfo.Hosted>>
+    fun getStreamableInfo(key: StreamableKey.Hosted): Flow<Result<StreamableInfo.Hosted>>
 
-    suspend fun getSeason(key: SeasonKey.Hosted): Result<TulipSeasonInfo.Hosted>
+    fun getEpisodeByTmdbId(key: EpisodeKey.Tmdb): Flow<List<Result<TulipEpisodeInfo.Hosted>>>
 
-    suspend fun getStreamableInfo(key: StreamableKey.Hosted): Result<StreamableInfoWithLanguage>
+    fun getCompleteEpisodesByTmdbKey(key: EpisodeKey.Tmdb): Flow<List<Result<TulipCompleteEpisodeInfo.Hosted>>>
 
-    suspend fun getEpisodeByTmdbId(key: EpisodeKey.Tmdb): Result<List<TulipEpisodeInfo.Hosted>>
+    fun getMoviesByTmdbKey(key: MovieKey.Tmdb): Flow<List<Result<TulipMovie.Hosted>>>
 
-    suspend fun getCompleteEpisodesByTmdbId(key: EpisodeKey.Tmdb): Result<List<TulipCompleteEpisodeInfo.Hosted>>
+    fun getStreamableInfoByTmdbKey(key: StreamableKey.Tmdb): Flow<List<Result<StreamableInfo.Hosted>>> {
+        return when (key) {
+            is MovieKey.Tmdb -> getMoviesByTmdbKey(key)
+            is EpisodeKey.Tmdb -> getCompleteEpisodesByTmdbKey(key)
+        }
+    }
 
-    suspend fun getMovieByTmdbId(key: MovieKey.Tmdb): Result<List<TulipMovie.Hosted>>
-
-
-    suspend fun fetchStreams(key: StreamableKey.Hosted): Result<List<VideoStreamRef>>
+    fun fetchStreams(key: StreamableKey.Hosted): NetFlow<List<VideoStreamRef>>
 }

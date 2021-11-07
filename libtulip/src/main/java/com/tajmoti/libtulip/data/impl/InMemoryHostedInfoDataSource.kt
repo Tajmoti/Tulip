@@ -7,6 +7,8 @@ import com.tajmoti.libtulip.model.info.TulipSeasonInfo
 import com.tajmoti.libtulip.model.info.TulipTvShowInfo
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 class InMemoryHostedInfoDataSource : HostedInfoDataSource {
     private val tvShows = mutableSetOf<TulipTvShowInfo.Hosted>()
@@ -70,11 +72,11 @@ class InMemoryHostedInfoDataSource : HostedInfoDataSource {
         tmdbMappings[tmdb] = list
     }
 
-    override suspend fun getTmdbMappingForTvShow(tmdb: TmdbItemId.Tv): List<TvShowKey.Hosted> {
-        return tmdbMappings[tmdb]?.map { it as TvShowKey.Hosted } ?: emptyList()
+    override fun getTmdbMappingForTvShow(tmdb: TmdbItemId.Tv): Flow<List<TvShowKey.Hosted>> {
+        return flowOf(tmdbMappings[tmdb]?.map { it as TvShowKey.Hosted } ?: emptyList())
     }
 
-    override suspend fun getTmdbMappingForMovie(tmdb: TmdbItemId.Movie): List<MovieKey.Hosted> {
-        return tmdbMappings[tmdb]?.map { it as MovieKey.Hosted } ?: emptyList()
+    override fun getTmdbMappingForMovie(tmdb: TmdbItemId.Movie): Flow<List<MovieKey.Hosted>> {
+        return flowOf(tmdbMappings[tmdb]?.map { it as MovieKey.Hosted } ?: emptyList())
     }
 }

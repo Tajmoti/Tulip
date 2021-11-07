@@ -1,8 +1,8 @@
-package com.tajmoti.libtulip.repository.impl
+package com.tajmoti.libtulip.service.impl
 
 import arrow.core.Either
 import com.tajmoti.commonutils.logger
-import com.tajmoti.libtulip.repository.StreamsRepository
+import com.tajmoti.libtulip.service.StreamExtractionService
 import com.tajmoti.libtvprovider.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.ExtractionError
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
@@ -11,12 +11,12 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import java.net.URI
 
-class StreamsRepositoryImpl(
+class StreamExtractionServiceImpl(
     private val linkExtractor: VideoLinkExtractor,
     private val httpClient: HttpClient
-) : StreamsRepository {
+) : StreamExtractionService {
 
-    override fun canExtractFromService(ref: VideoStreamRef): Boolean {
+    override fun canExtractStream(ref: VideoStreamRef): Boolean {
         return linkExtractor.canExtractUrl(ref.url)
                 || linkExtractor.canExtractService(ref.serviceName)
     }

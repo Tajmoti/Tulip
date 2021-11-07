@@ -7,7 +7,7 @@ sealed class VideoStreamRef {
     abstract val serviceName: String
 
     /**
-     * URL to the streaming page (or a redirect in case this is [Unresolved].
+     * URL to the streaming page (or a redirect in case this is [Unresolved]).
      */
     abstract val url: String
 

@@ -13,8 +13,8 @@ class FavoriteRepositoryImpl(
         return repo.isFavorite(item)
     }
 
-    override fun getUserFavoritesAsFlow(): Flow<List<ItemKey>> {
-        return repo.getUserFavoritesAsFlow()
+    override fun getUserFavorites(): Flow<List<ItemKey>> {
+        return repo.getUserFavorites()
     }
 
     override suspend fun deleteUserFavorite(item: ItemKey) {

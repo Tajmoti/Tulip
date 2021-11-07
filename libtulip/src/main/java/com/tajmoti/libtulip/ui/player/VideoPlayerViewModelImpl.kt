@@ -3,21 +3,23 @@ package com.tajmoti.libtulip.ui.player
 import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.map
 import com.tajmoti.commonutils.onLast
+import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.StreamableKey
-import com.tajmoti.libtulip.model.stream.StreamableInfoWithLangLinks
+import com.tajmoti.libtulip.model.stream.StreamableInfoWithLinks
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.repository.*
-import com.tajmoti.libtulip.service.*
+import com.tajmoti.libtulip.service.StreamExtractionService
+import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.libtulip.ui.doCancelableJob
 import com.tajmoti.libtulip.ui.logAllFlowValues
 import com.tajmoti.libtulip.ui.streams.FailedLink
 import com.tajmoti.libtulip.ui.streams.LoadedLink
 import com.tajmoti.libtulip.ui.streams.SelectedLink
-import com.tajmoti.libtvprovider.*
+import com.tajmoti.libtvprovider.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.CaptchaInfo
 import com.tajmoti.libtvvideoextractor.ExtractionError
 import kotlinx.coroutines.*
@@ -31,8 +33,8 @@ class VideoPlayerViewModelImpl constructor(
     private val tmdbTvDataRepository: TmdbTvDataRepository,
     private val hostedTvDataRepository: HostedTvDataRepository,
     private val downloadService: VideoDownloadService,
-    private val streamsRepository: StreamsRepository,
-    private val streamService: LanguageMappingStreamService,
+    private val streamExtractionService: StreamExtractionService,
+    private val streamService: StreamRepository,
     private val subDirectory: File,
     private val viewModelScope: CoroutineScope,
     streamableKeyInitial: StreamableKey,
@@ -46,7 +48,7 @@ class VideoPlayerViewModelImpl constructor(
      * List of episodes of the currently playing TV show or null if a movie is being played.
      */
     private val episodeList = streamableKey
-        .flatMapLatest { getSeasonByKeyAsFlow(it) }
+        .flatMapLatest { getSeasonByKey(it) }
         .map { it?.data?.episodes }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
@@ -77,14 +79,14 @@ class VideoPlayerViewModelImpl constructor(
         .mapNotNull { (key, state) -> (state as? LinkListLoadingState.Success)?.let { key to state.streams } }
         .filter { (_, streams) -> anyGoodStreams(streams) }
         .distinctUntilChangedBy { (key, _) -> key }
-        .map { (_, streams) -> firstGoodStream(streams).let { video -> video.video to false } }
+        .map { (_, streams) -> firstGoodStream(streams) to false }
         .shareIn(viewModelScope, SharingStarted.Lazily)
 
-    private fun firstGoodStream(it: StreamableInfoWithLangLinks) =
-        it.streams.first { video -> video.video.linkExtractionSupported }
+    private fun firstGoodStream(it: StreamableInfoWithLinks) =
+        it.streams.first { video -> video.linkExtractionSupported }
 
-    private fun anyGoodStreams(it: StreamableInfoWithLangLinks) =
-        it.streams.any { s -> s.video.linkExtractionSupported }
+    private fun anyGoodStreams(it: StreamableInfoWithLinks) =
+        it.streams.any { s -> s.linkExtractionSupported }
 
     /**
      * The stream that should actually be played.
@@ -160,7 +162,7 @@ class VideoPlayerViewModelImpl constructor(
     override val linkLoadingError = linkLoadingState
         .mapNotNull { state ->
             (state as? LinkLoadingState.Error)
-                ?.let { FailedLink(it.stream, it.download, it.captcha) }
+                ?.let { FailedLink(it.stream, it.languageCode, it.download, it.captcha) }
         }
         .shareIn(viewModelScope, SharingStarted.Eagerly)
 
@@ -436,9 +438,9 @@ class VideoPlayerViewModelImpl constructor(
     }
 
 
-    private fun getSeasonByKeyAsFlow(key: StreamableKey) = when (key) {
-        is EpisodeKey.Tmdb -> tmdbTvDataRepository.getSeasonAsFlow(key.seasonKey)
-        is EpisodeKey.Hosted -> hostedTvDataRepository.getSeasonAsFlow(key.seasonKey)
+    private fun getSeasonByKey(key: StreamableKey) = when (key) {
+        is EpisodeKey.Tmdb -> tmdbTvDataRepository.getSeason(key.seasonKey)
+        is EpisodeKey.Hosted -> hostedTvDataRepository.getSeason(key.seasonKey)
         else -> flowOf(null)
     }
 
@@ -489,9 +491,9 @@ class VideoPlayerViewModelImpl constructor(
         download: Boolean,
     ) = flow {
         emit(LinkLoadingState.Loading(info, download))
-        streamsRepository.resolveStream(info)
+        streamExtractionService.resolveStream(info)
             .onSuccess { emitAll(processResolvedLink(ref, it, download)) }
-            .onFailure { emit(LinkLoadingState.Error(info, download, null)) }
+            .onFailure { emit(LinkLoadingState.Error(info, ref.language, download, null)) }
     }
 
     private suspend fun processResolvedLink(
@@ -504,10 +506,10 @@ class VideoPlayerViewModelImpl constructor(
             return@flow
         }
         emit(LinkLoadingState.LoadingDirect(info, download))
-        val result = streamsRepository.extractVideoLink(info)
+        val result = streamExtractionService.extractVideoLink(info)
             .map { result -> if (download) downloadVideo(result); result }
             .fold(
-                { LinkLoadingState.Error(info, download, captchaOrNull(it)) },
+                { LinkLoadingState.Error(info, ref.language, download, captchaOrNull(it)) },
                 { LinkLoadingState.LoadedDirect(info, download, it) },
             )
         emit(result)
@@ -521,8 +523,8 @@ class VideoPlayerViewModelImpl constructor(
         downloadService.downloadFileToFiles(link, state.streams.info)
     }
 
-    private fun fetchStreams(info: StreamableKey) = flow {
-        val result = streamService.getStreamsWithLanguages(info)
+    private fun fetchStreams(info: StreamableKey) =
+        streamService.getStreamsByKey(info)
             .map { result ->
                 result.fold({ LinkListLoadingState.Error(it) },
                     { LinkListLoadingState.Success(it, false) })
@@ -532,8 +534,6 @@ class VideoPlayerViewModelImpl constructor(
                     return@onLast
                 emit(LinkListLoadingState.Success(it.streams, true))
             }
-        emitAll(result)
-    }
 
     private fun stateToStreamableInfo(it: LinkListLoadingState): StreamableInfo? {
         return when (it) {
@@ -591,7 +591,7 @@ class VideoPlayerViewModelImpl constructor(
          * Streamable item loaded successfully.
          */
         data class Success(
-            val streams: StreamableInfoWithLangLinks,
+            val streams: StreamableInfoWithLinks,
             /**
              * Whether this is the final value and no more will be loaded.
              */
@@ -646,6 +646,7 @@ class VideoPlayerViewModelImpl constructor(
 
         data class Error(
             val stream: VideoStreamRef,
+            val languageCode: LanguageCode,
             val download: Boolean,
             val captcha: CaptchaInfo?,
         ) : LinkLoadingState

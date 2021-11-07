@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.tajmoti.libtulip.repository.*
-import com.tajmoti.libtulip.service.LanguageMappingStreamService
+import com.tajmoti.libtulip.service.StreamExtractionService
 import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModelImpl
@@ -21,8 +21,8 @@ class AndroidVideoPlayerViewModel @Inject constructor(
     tmdbTvDataRepository: TmdbTvDataRepository,
     hostedTvDataRepository: HostedTvDataRepository,
     downloadService: VideoDownloadService,
-    extractionService: StreamsRepository,
-    streamService: LanguageMappingStreamService,
+    extractionService: StreamExtractionService,
+    streamService: StreamRepository,
     @ApplicationContext
     context: Context
 ) : DelegatingViewModel<VideoPlayerViewModel>() {

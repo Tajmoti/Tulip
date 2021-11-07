@@ -12,5 +12,6 @@ sealed interface StreamableInfo {
 
     sealed interface Hosted : StreamableInfo {
         override val key: StreamableKey.Hosted
+        val language: LanguageCode
     }
 }

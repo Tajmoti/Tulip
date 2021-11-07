@@ -44,7 +44,7 @@ class TmdbTvDataRepositoryImpl(
         timeout = config.tmdbCacheParams.validityMs, size = config.tmdbCacheParams.size
     )
 
-    override suspend fun findTmdbIdAsFlow(searchResult: SearchResult): Flow<NetworkResult<TmdbItemId?>> {
+    override fun findTmdbIdAsFlow(searchResult: SearchResult): Flow<NetworkResult<TmdbItemId?>> {
         logger.debug("Retrieving $searchResult")
         return getNetworkBoundResource(
             { null },
@@ -123,7 +123,7 @@ class TmdbTvDataRepositoryImpl(
             voteAverage.takeUnless { it == 0.0f })
     }
 
-    override fun getTvShowWithSeasonsAsFlow(key: TvShowKey.Tmdb): Flow<NetworkResult<out TulipTvShowInfo.Tmdb>> {
+    override fun getTvShowWithSeasons(key: TvShowKey.Tmdb): Flow<NetworkResult<out TulipTvShowInfo.Tmdb>> {
         logger.debug("Retrieving $key")
         return getNetworkBoundResource(
             { db.getTvShow(key) },
@@ -134,9 +134,9 @@ class TmdbTvDataRepositoryImpl(
         )
     }
 
-    override fun getSeasonAsFlow(key: SeasonKey.Tmdb): Flow<NetworkResult<out TulipSeasonInfo.Tmdb>> {
+    override fun getSeason(key: SeasonKey.Tmdb): Flow<NetworkResult<out TulipSeasonInfo.Tmdb>> {
         logger.debug("Retrieving $key")
-        return getTvShowWithSeasonsAsFlow(key.tvShowKey)
+        return getTvShowWithSeasons(key.tvShowKey)
             .map {
                 it.convert { tvShow ->
                     getCorrectSeason(tvShow, key)
@@ -145,9 +145,9 @@ class TmdbTvDataRepositoryImpl(
             }
     }
 
-    override fun getEpisodeAsFlow(key: EpisodeKey.Tmdb): Flow<NetworkResult<out TulipEpisodeInfo.Tmdb>> {
+    override fun getEpisode(key: EpisodeKey.Tmdb): Flow<NetworkResult<out TulipEpisodeInfo.Tmdb>> {
         logger.debug("Retrieving $key")
-        return getTvShowWithSeasonsAsFlow(key.tvShowKey)
+        return getTvShowWithSeasons(key.tvShowKey)
             .map {
                 it.convert { tvShow ->
                     getCorrectEpisode(tvShow, key)
@@ -171,7 +171,7 @@ class TmdbTvDataRepositoryImpl(
             ?.firstOrNull { e -> e.key == key }
     }
 
-    override fun getMovieAsFlow(key: MovieKey.Tmdb): Flow<NetworkResult<out TulipMovie.Tmdb>> {
+    override fun getMovie(key: MovieKey.Tmdb): Flow<NetworkResult<out TulipMovie.Tmdb>> {
         logger.debug("Retrieving $key")
         return getNetworkBoundResource(
             { db.getMovie(key) },

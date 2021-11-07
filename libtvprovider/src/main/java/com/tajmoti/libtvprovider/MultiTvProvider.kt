@@ -17,7 +17,7 @@ class MultiTvProvider<ID>(
     /**
      * Searches [query] using all TV providers in parallel.
      */
-    suspend fun search(query: String): Flow<Pair<ID, Result<List<SearchResult>>>> {
+    fun search(query: String): Flow<Pair<ID, Result<List<SearchResult>>>> {
         val results = providers.parallelMapToFlow { key, value ->
             key to searchAsync(query, key, value)
         }

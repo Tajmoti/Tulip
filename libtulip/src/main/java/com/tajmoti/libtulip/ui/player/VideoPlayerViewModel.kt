@@ -2,7 +2,7 @@ package com.tajmoti.libtulip.ui.player
 
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.StreamableKey
-import com.tajmoti.libtulip.model.stream.StreamableInfoWithLangLinks
+import com.tajmoti.libtulip.model.stream.StreamableInfoWithLinks
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.ui.streams.FailedLink
@@ -58,7 +58,7 @@ interface VideoPlayerViewModel {
      * Loaded links of the currently selected [streamableKey] or null if not yet available.
      * This value is updated in real time as more links are loaded in.
      */
-    val linksResult: StateFlow<StreamableInfoWithLangLinks?>
+    val linksResult: StateFlow<StreamableInfoWithLinks?>
 
     /**
      * Whether link list loading is finished and at least one stream was found.

@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.AudioManager
 import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
 
+@Suppress("DEPRECATION")
 class AudioFocusApiBelow26(
     context: Context,
     private val audioManager: AudioManager,

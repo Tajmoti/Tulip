@@ -5,7 +5,7 @@ import android.view.View
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipMovie
-import com.tajmoti.libtulip.model.stream.UnloadedVideoWithLanguage
+import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.tulip.databinding.FragmentStreamsBinding
 import com.tajmoti.tulip.ui.*
@@ -51,15 +51,15 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding>(FragmentStreamsBind
     /**
      * A video link was clicked, load it and play it.
      */
-    private fun onStreamClickedPlay(stream: UnloadedVideoWithLanguage) {
+    private fun onStreamClickedPlay(stream: UnloadedVideoStreamRef) {
         slideToBottomDismiss()
-        viewModel.onStreamClicked(stream.video, false)
+        viewModel.onStreamClicked(stream, false)
     }
 
     /**
      * A video link was long-clicked which means download.
      */
-    private fun onStreamClickedDownload(stream: UnloadedVideoWithLanguage) {
-        viewModel.onStreamClicked(stream.video, true)
+    private fun onStreamClickedDownload(stream: UnloadedVideoStreamRef) {
+        viewModel.onStreamClicked(stream, true)
     }
 }

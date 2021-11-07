@@ -2,7 +2,7 @@ package com.tajmoti.libtulip.model.stream
 
 import com.tajmoti.libtulip.model.info.StreamableInfo
 
-data class StreamableInfoWithLangLinks(
+data class StreamableInfoWithLinks(
     val info: StreamableInfo,
-    val streams: List<UnloadedVideoWithLanguage>
+    val streams: List<UnloadedVideoStreamRef>
 )

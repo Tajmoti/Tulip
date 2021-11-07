@@ -24,7 +24,7 @@ class LibraryViewModelImpl constructor(
 ) : LibraryViewModel {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val favoriteItems = favoritesRepo.getUserFavoritesAsFlow()
+    override val favoriteItems = favoritesRepo.getUserFavorites()
         .flatMapLatest { mapFavorites(it) }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
@@ -50,7 +50,7 @@ class LibraryViewModelImpl constructor(
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     private fun getTmdbFavorites(keyFlow: List<ItemKey.Tmdb>): Flow<List<LibraryItem>> {
         return keyFlow
-            .map { tmdbRepo.getItemAsFlow(it).map { a -> it to a } }
+            .map { tmdbRepo.getItem(it).map { a -> it to a } }
             .combine()
             .flatMapLatest { keyToResultList ->
                 keyToResultList.map { (key, result) ->

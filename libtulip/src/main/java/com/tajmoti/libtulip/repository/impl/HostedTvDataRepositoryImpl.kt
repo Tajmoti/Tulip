@@ -9,18 +9,21 @@ import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.misc.job.getNetworkBoundResource
 import com.tajmoti.libtulip.model.MissingEntityException
 import com.tajmoti.libtulip.model.NoSuccessfulResultsException
-import com.tajmoti.libtulip.model.hosted.*
+import com.tajmoti.libtulip.model.hosted.MappedSearchResult
+import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.search.TulipSearchResult
-import com.tajmoti.libtulip.model.stream.StreamableInfoWithLanguage
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtvprovider.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 
 class HostedTvDataRepositoryImpl(
     private val hostedTvDataRepo: HostedInfoDataSource,
@@ -40,7 +43,7 @@ class HostedTvDataRepositoryImpl(
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override suspend fun search(query: String): Flow<Result<List<TulipSearchResult>>> {
+    override fun search(query: String): Flow<Result<List<TulipSearchResult>>> {
         logger.debug("Searching '{}'", query)
         return tvProvider.search(query)
             .onEach(this::logExceptions)
@@ -134,7 +137,7 @@ class HostedTvDataRepositoryImpl(
         }
     }
 
-    override fun getTvShowAsFlow(key: TvShowKey.Hosted): NetFlow<out TulipTvShowInfo.Hosted> {
+    override fun getTvShow(key: TvShowKey.Hosted): NetFlow<TulipTvShowInfo.Hosted> {
         logger.debug("Retrieving $key")
         return getNetworkBoundResource(
             { hostedTvDataRepo.getTvShowByKey(key) },
@@ -145,9 +148,15 @@ class HostedTvDataRepositoryImpl(
         )
     }
 
-    override suspend fun getTvShow(key: TvShowKey.Hosted): Result<TulipTvShowInfo.Hosted> {
-        return getTvShowAsFlow(key).firstOrNull()?.toResult()
-            ?: Result.failure(MissingEntityException)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getTvShowsByTmdbKey(key: TvShowKey.Tmdb): Flow<List<Result<TulipTvShowInfo.Hosted>>> {
+        logger.debug("Retrieving $key")
+        return hostedTvDataRepo.getTmdbMappingForTvShow(key.id)
+            .flatMapLatest { movieKeyList ->
+                movieKeyList.map { getTvShow(it) }
+                    .combine()
+                    .mapNetworkResultToResultInListFlow()
+            }
     }
 
     private suspend fun fetchTvShow(key: TvShowKey.Hosted): Result<TulipTvShowInfo.Hosted> {
@@ -160,64 +169,32 @@ class HostedTvDataRepositoryImpl(
         return tmdbRepo.findTmdbId(result) as? TmdbItemId.Tv
     }
 
-    override fun getSeasonAsFlow(key: SeasonKey.Hosted): Flow<NetworkResult<out TulipSeasonInfo.Hosted>> {
+    override fun getSeason(key: SeasonKey.Hosted): Flow<NetworkResult<TulipSeasonInfo.Hosted>> {
         logger.debug("Retrieving $key")
-        return getTvShowAsFlow(key.tvShowKey)
-            .map { it.convert { showInfo -> getCorrectSeasonOrNull(showInfo, key) } }
+        return getTvShow(key.tvShowKey)
+            .map { it.convert { showInfo -> showInfo.findSeasonOrNull(key) } }
     }
 
-    override suspend fun getSeason(key: SeasonKey.Hosted): Result<TulipSeasonInfo.Hosted> {
+    override fun getSeasons(key: TvShowKey.Hosted): NetFlow<List<TulipSeasonInfo.Hosted>> {
         logger.debug("Retrieving $key")
-        return getSeasonAsFlow(key).map { it.toResult() }.firstOrNull()
-            ?: Result.failure(MissingEntityException)
-    }
-
-    private fun getCorrectSeasonOrNull(
-        it: TulipTvShowInfo.Hosted,
-        key: SeasonKey.Hosted
-    ): TulipSeasonInfo.Hosted? {
-        return it.seasons.firstOrNull { season -> season.key == key }
-    }
-
-    override suspend fun getSeasonsAsFlow(key: TvShowKey.Hosted): NetFlow<List<TulipSeasonInfo.Hosted>> {
-        logger.debug("Retrieving $key")
-        return getTvShowAsFlow(key)
+        return getTvShow(key)
             .map { it.map { tvShow -> tvShow.seasons } }
     }
 
-    override suspend fun getSeasons(key: TvShowKey.Hosted): Result<List<TulipSeasonInfo.Hosted>> {
-        return getSeasonsAsFlow(key).firstOrNull()?.toResult()
-            ?: Result.failure(MissingEntityException)
-    }
-
-    override suspend fun getStreamableInfo(key: StreamableKey.Hosted): Result<StreamableInfoWithLanguage> {
+    override fun getStreamableInfo(key: StreamableKey.Hosted): Flow<Result<StreamableInfo.Hosted>> {
         logger.debug("Retrieving $key")
         return when (key) {
             is EpisodeKey.Hosted -> getEpisodeInfo(key)
-            is MovieKey.Hosted -> getMovieInfo(key)
+            is MovieKey.Hosted -> getMovieInfo(key).map { it.toResult() }
         }
     }
 
-    private suspend fun getEpisodeInfo(key: EpisodeKey.Hosted): Result<StreamableInfoWithLanguage> {
+    private fun getEpisodeInfo(key: EpisodeKey.Hosted): Flow<Result<StreamableInfo.Hosted>> {
         return getTvShow(key.tvShowKey)
-            .flatMap { tvShow ->
-                toCompleteEpisodeInfo(tvShow, key)
-                    ?.let { StreamableInfoWithLanguage(it, tvShow.language) }
-                    ?.let { Result.success(it) }
-                    ?: Result.failure(MissingEntityException)
-            }
+            .map { netResult -> netResult.toResult().flatMap { tvShow -> tvShow.findCompleteEpisodeInfoAsResult(key) } }
     }
 
-    private fun toCompleteEpisodeInfo(
-        tvShow: TulipTvShowInfo.Hosted,
-        key: EpisodeKey.Hosted
-    ): TulipCompleteEpisodeInfo.Hosted? {
-        return tvShow.seasons.firstOrNull { season -> season.seasonNumber == key.seasonNumber }
-            ?.episodes?.first { episode -> episode.key.id == key.id }
-            ?.let { TulipCompleteEpisodeInfo.Hosted(key, tvShow.name, it) }
-    }
-
-    private suspend fun getMovieInfoAsFlow(key: MovieKey.Hosted): NetFlow<out TulipMovie.Hosted> {
+    private fun getMovieInfo(key: MovieKey.Hosted): NetFlow<TulipMovie.Hosted> {
         logger.debug("Retrieving $key")
         return getNetworkBoundResource(
             { hostedTvDataRepo.getMovieByKey(key) },
@@ -238,75 +215,49 @@ class HostedTvDataRepositoryImpl(
         return tmdbRepo.findTmdbId(result) as? TmdbItemId.Movie
     }
 
-    private suspend fun getMovieInfo(key: MovieKey.Hosted): Result<StreamableInfoWithLanguage> {
-        return getMovie(key)
-            .map { StreamableInfoWithLanguage(it, it.language) }
-    }
-
-    private suspend fun getMovie(key: MovieKey.Hosted): Result<TulipMovie.Hosted> {
-        return getMovieInfoAsFlow(key)
-            .firstOrNull()?.toResult() ?: Result.failure(MissingEntityException)
-    }
-
     private fun logExceptions(searchResult: Pair<StreamingService, Result<List<SearchResult>>>) {
         val (service, result) = searchResult
         val exception = result.exceptionOrNull() ?: return
         logger.warn("{} failed with", service, exception)
     }
 
-    override suspend fun getEpisodeByTmdbId(key: EpisodeKey.Tmdb): Result<List<TulipEpisodeInfo.Hosted>> {
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getEpisodeByTmdbId(key: EpisodeKey.Tmdb): Flow<List<Result<TulipEpisodeInfo.Hosted>>> {
         logger.debug("Retrieving $key")
         return hostedTvDataRepo.getTmdbMappingForTvShow(key.tvShowKey.id)
-            .parallelMap { getHostedEpisodesByTmdbKey(it, key) }
-            .mapNotNull { it.getOrNull() }
-            .let { Result.success(it) }
+            .flatMapLatest { movieKeyList -> movieKeyList.map { getHostedEpisodesByTmdbKey(it, key) }.combine() }
     }
 
-    private suspend fun getHostedEpisodesByTmdbKey(
-        it: TvShowKey.Hosted,
-        key: EpisodeKey.Tmdb
-    ): Result<TulipEpisodeInfo.Hosted> {
-        return getTvShow(it).flatMap { tvShow ->
-            getEpisodeFromTv(tvShow, key)
-                ?.let { episode -> Result.success(episode) }
-                ?: Result.failure(MissingEntityException)
-        }
+    private fun getHostedEpisodesByTmdbKey(
+        tvShowKey: TvShowKey.Hosted,
+        episodeKey: EpisodeKey.Tmdb
+    ): Flow<Result<TulipEpisodeInfo.Hosted>> {
+        val tvShow = getTvShow(tvShowKey)
+        return tvShow.map { it.toResult().flatMap { tvShow -> tvShow.findEpisodeAsResult(episodeKey) } }
     }
 
-    private fun getEpisodeFromTv(
-        tvShow: TulipTvShowInfo.Hosted,
-        key: EpisodeKey.Tmdb
-    ): TulipEpisodeInfo.Hosted? {
-        return tvShow.seasons.firstOrNull { it.seasonNumber == key.seasonKey.seasonNumber }
-            ?.episodes?.firstOrNull { it.episodeNumber == key.episodeNumber }
-    }
 
-    override suspend fun getCompleteEpisodesByTmdbId(key: EpisodeKey.Tmdb): Result<List<TulipCompleteEpisodeInfo.Hosted>> {
-        return getEpisodeByTmdbId(key)
-            .map {
-                it.mapNotNull { episode ->
-                    getTvShow(episode.key.tvShowKey)
-                        .map { tv ->
-                            TulipCompleteEpisodeInfo.Hosted(episode.key, tv.name, episode)
-                        }
-                        .onFailure { logger.warn("Failed to fetch TV for $episode") }
-                        .getOrNull()
+    override fun getCompleteEpisodesByTmdbKey(key: EpisodeKey.Tmdb): Flow<List<Result<TulipCompleteEpisodeInfo.Hosted>>> {
+        return getTvShowsByTmdbKey(key.tvShowKey)
+            .map { tvListResult ->
+                tvListResult.map { tvList ->
+                    tvList.flatMap { tv -> tv.findCompleteEpisodeFromTvAsResult(key) }
                 }
             }
     }
 
-    override suspend fun getMovieByTmdbId(key: MovieKey.Tmdb): Result<List<TulipMovie.Hosted>> {
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getMoviesByTmdbKey(key: MovieKey.Tmdb): Flow<List<Result<TulipMovie.Hosted>>> {
         logger.debug("Retrieving $key")
         return hostedTvDataRepo.getTmdbMappingForMovie(key.id)
-            .parallelMapBoth { getMovie(it) }
-            .onEach { (key, it) ->
-                it.exceptionOrNull()?.let { logger.warn("Failed to fetch $key") }
+            .flatMapLatest { movieKeyList ->
+                movieKeyList.map { getMovieInfo(it) }
+                    .combine()
+                    .mapNetworkResultToResultInListFlow()
             }
-            .mapNotNull { it.second.getOrNull() }
-            .let { Result.success(it) }
     }
 
-    private suspend inline fun fetchStreamsAsFlow(key: StreamableKey.Hosted): NetFlow<List<VideoStreamRef>> {
+    override fun fetchStreams(key: StreamableKey.Hosted): NetFlow<List<VideoStreamRef>> {
         logger.debug("Retrieving $key")
         return getNetworkBoundResource(
             { null },
@@ -317,9 +268,24 @@ class HostedTvDataRepositoryImpl(
         )
     }
 
-    override suspend fun fetchStreams(key: StreamableKey.Hosted): Result<List<VideoStreamRef>> {
-        val result = fetchStreamsAsFlow(key).firstOrNull()?.toResult()
-            ?: Result.failure(MissingEntityException)
-        return result.onFailure { logger.warn("Failed to fetch streams for $key", it) }
+    private fun <T> T?.toResultIfMissing(): Result<T> {
+        return this?.let { notNull -> Result.success(notNull) } ?: Result.failure(MissingEntityException)
+    }
+
+    private fun TulipTvShowInfo.Hosted.findEpisodeAsResult(
+        key: EpisodeKey.Tmdb
+    ) = findEpisodeOrNull(key).toResultIfMissing()
+
+    private fun TulipTvShowInfo.Hosted.findCompleteEpisodeInfoAsResult(
+        key: EpisodeKey.Hosted
+    ) = findCompleteEpisodeInfo(key).toResultIfMissing()
+
+    private fun TulipTvShowInfo.Hosted.findCompleteEpisodeFromTvAsResult(
+        key: EpisodeKey.Tmdb
+    ) = findEpisodeAsResult(key)
+        .map { episode -> TulipCompleteEpisodeInfo.Hosted(episode.key, name, episode, language) }
+
+    private fun <T> Flow<List<NetworkResult<T>>>.mapNetworkResultToResultInListFlow(): Flow<List<Result<T>>> {
+        return map { it.map { networkResult -> networkResult.toResult() } }
     }
 }
