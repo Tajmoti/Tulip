@@ -34,7 +34,7 @@ class LibraryViewModelImpl constructor(
         val tmdbFavorites = favorites.filterIsInstance(ItemKey.Tmdb::class.java)
         val hostedFavorites = favorites.filterIsInstance(ItemKey.Hosted::class.java)
         val a = getTmdbFavorites(tmdbFavorites)
-        val b = flow<List<LibraryItem>> { getHostedFavorites(hostedFavorites) }
+        val b = flow { emit(getHostedFavorites(hostedFavorites)) }
         return merge(a, b).onEmpty { emit(emptyList()) }
     }
 
