@@ -48,7 +48,7 @@ object DataRepositoryModule {
         db: LocalTvDataSource,
         config: TulipConfiguration
     ): TmdbTvDataRepository {
-        return TmdbTvDataRepositoryImpl(service, db, config)
+        return TmdbTvDataRepositoryImpl(service, db, config.tmdbCacheParams)
     }
 
     @Provides

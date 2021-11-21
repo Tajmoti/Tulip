@@ -10,6 +10,7 @@ import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.repository.FavoritesRepository
 import com.tajmoti.libtulip.repository.PlayingHistoryRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
+import com.tajmoti.libtulip.repository.getItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview

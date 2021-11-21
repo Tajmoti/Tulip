@@ -2,9 +2,13 @@ package com.tajmoti.libtulip.repository.impl
 
 import arrow.core.left
 import arrow.core.right
+import com.tajmoti.commonutils.flatMap
+import com.tajmoti.libtulip.model.MissingEntityException
 import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtulip.model.info.StreamableInfo
-import com.tajmoti.libtulip.model.key.StreamableKey
+import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
+import com.tajmoti.libtulip.model.info.seasonNumber
+import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.stream.StreamableInfoWithLinks
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
@@ -47,7 +51,7 @@ class StreamRepositoryImpl(
     override fun getStreamsByKey(
         key: StreamableKey.Tmdb
     ): Flow<StreamsResult> {
-        val infoFlow = tvDataRepo.getStreamableInfo(key)
+        val infoFlow = getStreamableInfo(key)
         val streamableFlow = hostedTvDataRepository.getStreamableInfoByTmdbKey(key)
             // Makes sure that a value from [getStreamableInfo] can be consumed immediately
             // if it is produced earlier than the first value of [getStreamablesWithLanguages]
@@ -89,4 +93,26 @@ class StreamRepositoryImpl(
 
     private fun sortByExtractionSupport(videosWithLanguages: List<UnloadedVideoStreamRef>) =
         videosWithLanguages.sortedBy { vidWithLang -> !vidWithLang.linkExtractionSupported }
+
+    private fun getFullEpisodeData(key: EpisodeKey.Tmdb): Flow<Result<TulipCompleteEpisodeInfo.Tmdb>> {
+        return tvDataRepo.getTvShow(key.tvShowKey)
+            .map {
+                it.toResult().flatMap { tvInfo ->
+                    val seasons = tvInfo.seasons
+                        .firstOrNull { season -> key.seasonNumber == season.seasonNumber }
+                        ?: return@map Result.failure(MissingEntityException)
+                    val episode = seasons.episodes
+                        .firstOrNull { episode -> episode.episodeNumber == key.episodeNumber }
+                        ?: return@map Result.failure(MissingEntityException)
+                    Result.success(TulipCompleteEpisodeInfo.Tmdb(key, tvInfo.name, episode))
+                }
+            }
+    }
+
+    private fun getStreamableInfo(key: StreamableKey.Tmdb): Flow<Result<StreamableInfo.Tmdb>> {
+        return when (key) {
+            is EpisodeKey.Tmdb -> getFullEpisodeData(key)
+            is MovieKey.Tmdb -> tvDataRepo.getMovie(key).map { it.toResult() }
+        }
+    }
 }

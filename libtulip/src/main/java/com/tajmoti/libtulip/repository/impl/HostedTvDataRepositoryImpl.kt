@@ -6,6 +6,7 @@ import com.tajmoti.libtulip.data.HostedInfoDataSource
 import com.tajmoti.libtulip.misc.cache.TimedCache
 import com.tajmoti.libtulip.misc.job.NetFlow
 import com.tajmoti.libtulip.misc.job.NetworkResult
+import com.tajmoti.libtulip.misc.job.firstValueOrNull
 import com.tajmoti.libtulip.misc.job.getNetworkBoundResource
 import com.tajmoti.libtulip.model.MissingEntityException
 import com.tajmoti.libtulip.model.NoSuccessfulResultsException
@@ -17,7 +18,9 @@ import com.tajmoti.libtulip.model.search.TulipSearchResult
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
-import com.tajmoti.libtvprovider.*
+import com.tajmoti.libtvprovider.MultiTvProvider
+import com.tajmoti.libtvprovider.SearchResult
+import com.tajmoti.libtvprovider.VideoStreamRef
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -89,7 +92,7 @@ class HostedTvDataRepositoryImpl(
         service: StreamingService,
         items: List<SearchResult>
     ): List<MappedSearchResult> {
-        return items.parallelMapBoth { tmdbRepo.findTmdbId(it) }
+        return items.parallelMapBoth { findTmdbIdOrNull(it) }
             .map { (item, tmdbId) -> pairInfoWithTmdbId(item, service, tmdbId) }
     }
 
@@ -161,12 +164,11 @@ class HostedTvDataRepositoryImpl(
 
     private suspend fun fetchTvShow(key: TvShowKey.Hosted): Result<TulipTvShowInfo.Hosted> {
         return tvProvider.getShow(key.streamingService, key.id)
-            .map { it.fromNetwork(key, getTmdbIdForItem(it)) }
-    }
-
-    private suspend fun getTmdbIdForItem(it: TvShowInfo): TmdbItemId.Tv? {
-        val result = SearchResult(it.info.id, SearchResult.Type.TV_SHOW, it.info)
-        return tmdbRepo.findTmdbId(result) as? TmdbItemId.Tv
+            .map {
+                // TODO Use flows properly
+                val tmdbId = tmdbRepo.findTmdbIdTv(it.info.name, it.info.firstAirDateYear).firstValueOrNull()
+                it.fromNetwork(key, tmdbId)
+            }
     }
 
     override fun getSeason(key: SeasonKey.Hosted): Flow<NetworkResult<TulipSeasonInfo.Hosted>> {
@@ -207,12 +209,11 @@ class HostedTvDataRepositoryImpl(
 
     private suspend fun fetchMovie(key: MovieKey.Hosted): Result<TulipMovie.Hosted> {
         return tvProvider.getMovie(key.streamingService, key.id)
-            .map { it.fromNetwork(key, getTmdbIdForItem(it)) }
-    }
-
-    private suspend fun getTmdbIdForItem(it: MovieInfo): TmdbItemId.Movie? {
-        val result = SearchResult(it.info.id, SearchResult.Type.TV_SHOW, it.info)
-        return tmdbRepo.findTmdbId(result) as? TmdbItemId.Movie
+            .map {
+                // TODO Use flows properly
+                val tmdbId = tmdbRepo.findTmdbIdMovie(it.info.name, it.info.firstAirDateYear).firstValueOrNull()
+                it.fromNetwork(key, tmdbId)
+            }
     }
 
     private fun logExceptions(searchResult: Pair<StreamingService, Result<List<SearchResult>>>) {
@@ -266,6 +267,15 @@ class HostedTvDataRepositoryImpl(
             { streamCache[key] },
             { streamCache[key] = it }
         )
+    }
+
+    private suspend fun findTmdbIdOrNull(searchResult: SearchResult): TmdbItemId? {
+        return when (searchResult.type) {
+            SearchResult.Type.TV_SHOW ->
+                tmdbRepo.findTmdbIdTv(searchResult.info.name, searchResult.info.firstAirDateYear).firstValueOrNull()
+            SearchResult.Type.MOVIE ->
+                tmdbRepo.findTmdbIdTv(searchResult.info.name, searchResult.info.firstAirDateYear).firstValueOrNull()
+        }
     }
 
     private fun <T> T?.toResultIfMissing(): Result<T> {

@@ -86,7 +86,7 @@ class TvShowViewModelImpl constructor(
     }
 
     private fun getTmdbTvShowAsState(key: TvShowKey.Tmdb): Flow<StateWithName> {
-        return tmdbRepo.getTvShowWithSeasons(key)
+        return tmdbRepo.getTvShow(key)
             .map { result ->
                 val state = withContext(Dispatchers.Default) { resultToState(result) }
                 val name = result.data?.name

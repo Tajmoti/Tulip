@@ -13,62 +13,79 @@ import com.tajmoti.libtmdb.model.tv.Season
 import com.tajmoti.libtmdb.model.tv.Tv
 import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.LocalTvDataSource
-import com.tajmoti.libtulip.misc.*
 import com.tajmoti.libtulip.misc.cache.TimedCache
 import com.tajmoti.libtulip.misc.job.NetworkResult
-import com.tajmoti.libtulip.misc.job.firstValueOrNull
 import com.tajmoti.libtulip.misc.job.getNetworkBoundResource
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
 import com.tajmoti.libtulip.model.info.TulipTvShowInfo
-import com.tajmoti.libtulip.model.key.*
+import com.tajmoti.libtulip.model.key.EpisodeKey
+import com.tajmoti.libtulip.model.key.MovieKey
+import com.tajmoti.libtulip.model.key.SeasonKey
+import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
-import com.tajmoti.libtvprovider.SearchResult
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 
 class TmdbTvDataRepositoryImpl(
     private val service: TmdbService,
     private val db: LocalTvDataSource,
-    config: TulipConfiguration
+    config: TulipConfiguration.CacheParameters
 ) : TmdbTvDataRepository {
     private val tvCache = TimedCache<TvShowKey.Tmdb, TulipTvShowInfo.Tmdb>(
-        timeout = config.tmdbCacheParams.validityMs, size = config.tmdbCacheParams.size
+        timeout = config.validityMs, size = config.size
     )
     private val movieCache = TimedCache<MovieKey.Tmdb, TulipMovie.Tmdb>(
-        timeout = config.tmdbCacheParams.validityMs, size = config.tmdbCacheParams.size
+        timeout = config.validityMs, size = config.size
     )
-    private val tmdbTvIdCache = TimedCache<SearchResult, TmdbItemId?>(
-        timeout = config.tmdbCacheParams.validityMs, size = config.tmdbCacheParams.size
+    private val tmdbTvIdCache = TimedCache<Pair<String, Int?>, TmdbItemId.Tv?>(
+        timeout = config.validityMs, size = config.size
+    )
+    private val tmdbMovieIdCache = TimedCache<Pair<String, Int?>, TmdbItemId.Movie?>(
+        timeout = config.validityMs, size = config.size
     )
 
-    override fun findTmdbIdAsFlow(searchResult: SearchResult): Flow<NetworkResult<TmdbItemId?>> {
-        logger.debug("Retrieving $searchResult")
+    override fun findTmdbIdTv(name: String, firstAirYear: Int?): Flow<NetworkResult<TmdbItemId.Tv?>> {
+        logger.debug("Looking up TMDB ID for TV show $name ($firstAirYear)")
+        val key = Pair(name, firstAirYear)
         return getNetworkBoundResource(
             { null },
-            { fetchSearchResult(searchResult) },
+            { fetchSearchResultTv(name, firstAirYear) },
             { },
-            { tmdbTvIdCache[searchResult] },
-            { tmdbTvIdCache[searchResult] = it }
+            { tmdbTvIdCache[key] },
+            { tmdbTvIdCache[key] = it }
         )
     }
 
-    override suspend fun findTmdbId(searchResult: SearchResult): TmdbItemId? {
-        return findTmdbIdAsFlow(searchResult).firstValueOrNull()
+    override fun findTmdbIdMovie(name: String, firstAirYear: Int?): Flow<NetworkResult<TmdbItemId.Movie?>> {
+        logger.debug("Looking up TMDB ID for movie $name ($firstAirYear)")
+        val key = Pair(name, firstAirYear)
+        return getNetworkBoundResource(
+            { null },
+            { fetchSearchResultMovie(name, firstAirYear) },
+            { },
+            { tmdbMovieIdCache[key] },
+            { tmdbMovieIdCache[key] = it }
+        )
     }
 
-    private suspend fun fetchSearchResult(searchResult: SearchResult): Result<TmdbItemId?> {
+    private suspend fun fetchSearchResultTv(name: String, firstAirDateYear: Int?): Result<TmdbItemId.Tv?> {
         return runCatching {
-            val info = searchResult.info
-            when (searchResult.type) {
-                SearchResult.Type.TV_SHOW -> searchTv(info.name, info.firstAirDateYear)
-                    .map { firstResultIdOrNull(it) }.getOrNull()?.let { TmdbItemId.Tv(it) }
-                SearchResult.Type.MOVIE -> searchMovie(info.name, info.firstAirDateYear)
-                    .map { firstResultIdOrNull(it) }.getOrNull()?.let { TmdbItemId.Movie(it) }
-            }
-        }.onFailure { logger.warn("Exception searching $searchResult") }
+            searchTv(name, firstAirDateYear)
+                .map { firstResultIdOrNull(it) }
+                .getOrNull()
+                ?.let { TmdbItemId.Tv(it) }
+        }.onFailure { logger.warn("Exception searching $name ($firstAirDateYear)") }
+    }
+
+    private suspend fun fetchSearchResultMovie(name: String, firstAirDateYear: Int?): Result<TmdbItemId.Movie?> {
+        return runCatching {
+            searchMovie(name, firstAirDateYear)
+                .map { firstResultIdOrNull(it) }
+                .getOrNull()
+                ?.let { TmdbItemId.Movie(it) }
+        }.onFailure { logger.warn("Exception searching $name ($firstAirDateYear)") }
     }
 
 
@@ -77,14 +94,11 @@ class TmdbTvDataRepositoryImpl(
     }
 
 
-    override suspend fun searchTv(query: String, firstAirDateYear: Int?): Result<SearchTvResponse> {
+    private suspend fun searchTv(query: String, firstAirDateYear: Int?): Result<SearchTvResponse> {
         return runCatching { service.searchTv(query, firstAirDateYear) }
     }
 
-    override suspend fun searchMovie(
-        query: String,
-        firstAirDateYear: Int?
-    ): Result<SearchMovieResponse> {
+    private suspend fun searchMovie(query: String, firstAirDateYear: Int?): Result<SearchMovieResponse> {
         return runCatching { service.searchMovie(query, firstAirDateYear) }
     }
 
@@ -123,7 +137,7 @@ class TmdbTvDataRepositoryImpl(
             voteAverage.takeUnless { it == 0.0f })
     }
 
-    override fun getTvShowWithSeasons(key: TvShowKey.Tmdb): Flow<NetworkResult<out TulipTvShowInfo.Tmdb>> {
+    override fun getTvShow(key: TvShowKey.Tmdb): Flow<NetworkResult<TulipTvShowInfo.Tmdb>> {
         logger.debug("Retrieving $key")
         return getNetworkBoundResource(
             { db.getTvShow(key) },
@@ -134,44 +148,7 @@ class TmdbTvDataRepositoryImpl(
         )
     }
 
-    override fun getSeason(key: SeasonKey.Tmdb): Flow<NetworkResult<out TulipSeasonInfo.Tmdb>> {
-        logger.debug("Retrieving $key")
-        return getTvShowWithSeasons(key.tvShowKey)
-            .map {
-                it.convert { tvShow ->
-                    getCorrectSeason(tvShow, key)
-                        .onNull { logger.warn("Season $key not found in $tvShow") }
-                }
-            }
-    }
-
-    override fun getEpisode(key: EpisodeKey.Tmdb): Flow<NetworkResult<out TulipEpisodeInfo.Tmdb>> {
-        logger.debug("Retrieving $key")
-        return getTvShowWithSeasons(key.tvShowKey)
-            .map {
-                it.convert { tvShow ->
-                    getCorrectEpisode(tvShow, key)
-                        .onNull { logger.warn("Episode $key not found in $tvShow") }
-                }
-            }
-    }
-
-    private fun getCorrectSeason(
-        all: TulipTvShowInfo.Tmdb,
-        key: SeasonKey.Tmdb
-    ): TulipSeasonInfo.Tmdb? {
-        return all.seasons.firstOrNull { s -> s.key.seasonNumber == key.seasonNumber }
-    }
-
-    private fun getCorrectEpisode(
-        all: TulipTvShowInfo.Tmdb,
-        key: EpisodeKey.Tmdb
-    ): TulipEpisodeInfo.Tmdb? {
-        return getCorrectSeason(all, key.seasonKey)?.episodes
-            ?.firstOrNull { e -> e.key == key }
-    }
-
-    override fun getMovie(key: MovieKey.Tmdb): Flow<NetworkResult<out TulipMovie.Tmdb>> {
+    override fun getMovie(key: MovieKey.Tmdb): Flow<NetworkResult<TulipMovie.Tmdb>> {
         logger.debug("Retrieving $key")
         return getNetworkBoundResource(
             { db.getMovie(key) },
