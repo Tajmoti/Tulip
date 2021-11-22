@@ -1,7 +1,6 @@
 package com.tajmoti.libtulip.model.key
 
 import com.tajmoti.libtulip.model.hosted.StreamingService
-import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import java.io.Serializable
 
 sealed interface ItemKey : Serializable {
@@ -11,6 +10,6 @@ sealed interface ItemKey : Serializable {
     }
 
     sealed interface Tmdb : ItemKey {
-        val id: TmdbItemId
+        val id: Long
     }
 }

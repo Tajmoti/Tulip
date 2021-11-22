@@ -1,10 +1,8 @@
 package com.tajmoti.libtulip.ui.search
 
 import com.tajmoti.commonutils.map
-import com.tajmoti.libtulip.model.hosted.toItemKey
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.search.TulipSearchResult
-import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.ui.doCancelableJob
 import com.tajmoti.libtulip.ui.search.SearchViewModel.Companion.DEBOUNCE_INTERVAL_MS
@@ -73,9 +71,9 @@ class SearchViewModelImpl(
     /**
      * The user has clicked an identified item
      */
-    override fun onItemClicked(id: TmdbItemId) {
+    override fun onItemClicked(id: ItemKey.Tmdb) {
         viewModelScope.launch {
-            itemToOpen.emit(id.toItemKey())
+            itemToOpen.emit(id)
         }
     }
 

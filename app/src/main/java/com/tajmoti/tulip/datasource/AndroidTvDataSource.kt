@@ -15,7 +15,7 @@ class AndroidTvDataSource @Inject constructor(
 ) : LocalTvDataSource {
 
     override suspend fun getTvShow(key: TvShowKey.Tmdb): TulipTvShowInfo.Tmdb? {
-        return dao.getTv(key.id.id)?.let { tv ->
+        return dao.getTv(key.id)?.let { tv ->
             val seasons = getSeasons(key).map { season -> season }
             tv.fromDb(key, seasons)
         }
@@ -31,7 +31,7 @@ class AndroidTvDataSource @Inject constructor(
     }
 
     override suspend fun getSeason(key: SeasonKey.Tmdb): TulipSeasonInfo.Tmdb? {
-        return dao.getSeason(key.tvShowKey.id.id, key.seasonNumber)
+        return dao.getSeason(key.tvShowKey.id, key.seasonNumber)
             ?.let { getSeasonWithEpisodes(key, it) }
     }
 
@@ -44,7 +44,7 @@ class AndroidTvDataSource @Inject constructor(
     }
 
     override suspend fun getSeasons(key: TvShowKey.Tmdb): List<TulipSeasonInfo.Tmdb> {
-        return dao.getSeasons(key.id.id)
+        return dao.getSeasons(key.id)
             .map {
                 val seasonKey = SeasonKey.Tmdb(key, it.seasonNumber)
                 getSeasonWithEpisodes(seasonKey, it)
@@ -55,18 +55,18 @@ class AndroidTvDataSource @Inject constructor(
         tvId: TvShowKey.Tmdb,
         seasons: List<TulipSeasonInfo.Tmdb>
     ) {
-        val dbSeasons = seasons.map { season -> season.toDb(tvId.id.id) }
+        val dbSeasons = seasons.map { season -> season.toDb(tvId.id) }
         dao.insertSeasons(dbSeasons)
         val episodes = seasons.flatMap { it.episodes }
-        insertEpisodes(tvId.id.id, episodes)
+        insertEpisodes(tvId.id, episodes)
     }
 
     override suspend fun getEpisode(key: EpisodeKey.Tmdb): TulipEpisodeInfo.Tmdb? {
-        return dao.getEpisode(key.tvShowKey.id.id, key.seasonNumber, key.episodeNumber)?.fromDb(key)
+        return dao.getEpisode(key.tvShowKey.id, key.seasonNumber, key.episodeNumber)?.fromDb(key)
     }
 
     override suspend fun getEpisodes(key: SeasonKey.Tmdb): List<TulipEpisodeInfo.Tmdb> {
-        return dao.getEpisodes(key.tvShowKey.id.id, key.seasonNumber).map { it.fromDb(key) }
+        return dao.getEpisodes(key.tvShowKey.id, key.seasonNumber).map { it.fromDb(key) }
     }
 
     private suspend inline fun insertEpisodes(tvId: Long, episodes: List<TulipEpisodeInfo.Tmdb>) {
@@ -75,7 +75,7 @@ class AndroidTvDataSource @Inject constructor(
     }
 
     override suspend fun getMovie(key: MovieKey.Tmdb): TulipMovie.Tmdb? {
-        return dao.getMovie(key.id.id)?.fromDb()
+        return dao.getMovie(key.id)?.fromDb()
     }
 
     override suspend fun insertMovie(movie: TulipMovie.Tmdb) {

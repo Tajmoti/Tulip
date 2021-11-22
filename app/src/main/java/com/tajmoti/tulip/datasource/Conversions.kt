@@ -5,7 +5,6 @@ package com.tajmoti.tulip.datasource
 import com.tajmoti.libtulip.model.history.LastPlayedPosition
 import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.libtulip.model.key.*
-import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtvprovider.TvItemInfo
 import com.tajmoti.tulip.db.entity.hosted.DbEpisode
 import com.tajmoti.tulip.db.entity.hosted.DbMovie
@@ -45,7 +44,7 @@ internal inline fun DbTmdbEpisode.fromDb(key: EpisodeKey.Tmdb): TulipEpisodeInfo
 
 internal inline fun DbTmdbMovie.fromDb(): TulipMovie.Tmdb {
     return TulipMovie.Tmdb(
-        MovieKey.Tmdb(TmdbItemId.Movie(id)),
+        MovieKey.Tmdb(id),
         name,
         overview,
         posterPath,
@@ -54,7 +53,7 @@ internal inline fun DbTmdbMovie.fromDb(): TulipMovie.Tmdb {
 }
 
 internal inline fun TulipTvShowInfo.Tmdb.toDb(): DbTmdbTv {
-    return DbTmdbTv(key.id.id, name, posterPath, backdropPath)
+    return DbTmdbTv(key.id, name, posterPath, backdropPath)
 }
 
 internal inline fun TulipSeasonInfo.Tmdb.toDb(tvId: Long): DbTmdbSeason {
@@ -66,15 +65,15 @@ internal inline fun TulipEpisodeInfo.Tmdb.toDb(tvId: Long): DbTmdbEpisode {
 }
 
 internal inline fun TulipMovie.Tmdb.toDb(): DbTmdbMovie {
-    return DbTmdbMovie(key.id.id, name, overview, posterPath, backdropPath)
+    return DbTmdbMovie(key.id, name, overview, posterPath, backdropPath)
 }
 
 
 internal inline fun DbFavoriteTmdbItem.fromDb(): ItemKey {
     val id = if (type == ItemType.TV_SHOW) {
-        TvShowKey.Tmdb(TmdbItemId.Tv(tmdbItemId))
+        TvShowKey.Tmdb(tmdbItemId)
     } else {
-        MovieKey.Tmdb(TmdbItemId.Movie(tmdbItemId))
+        MovieKey.Tmdb(tmdbItemId)
     }
     return id
 }
@@ -88,12 +87,11 @@ internal inline fun DbFavoriteHostedItem.fromDb(): ItemKey {
 }
 
 internal inline fun ItemKey.Tmdb.toDb(): DbFavoriteTmdbItem {
-    val type = if (id is TmdbItemId.Tv) {
-        ItemType.TV_SHOW
-    } else {
-        ItemType.MOVIE
+    val type = when (this) {
+        is TvShowKey.Tmdb -> ItemType.TV_SHOW
+        is MovieKey.Tmdb -> ItemType.MOVIE
     }
-    return DbFavoriteTmdbItem(type, id.id)
+    return DbFavoriteTmdbItem(type, id)
 }
 
 internal inline fun ItemKey.Hosted.toDb(): DbFavoriteHostedItem {
@@ -110,7 +108,7 @@ internal inline fun DbTvShow.fromDb(
     seasons: List<TulipSeasonInfo.Hosted>
 ): TulipTvShowInfo.Hosted {
     val info = TvItemInfo(key, name, language, firstAirDateYear)
-    return TulipTvShowInfo.Hosted(tvShowKey, info, tmdbId?.let { TmdbItemId.Tv(it) }, seasons)
+    return TulipTvShowInfo.Hosted(tvShowKey, info, tmdbId?.let { TvShowKey.Tmdb(it) }, seasons)
 }
 
 internal inline fun DbSeason.fromDb(
@@ -139,7 +137,7 @@ internal inline fun DbMovie.fromDb(tmdbId: Long?): TulipMovie.Hosted {
 
 internal inline fun DbMovie.fromDb(movieKey: MovieKey.Hosted, tmdbId: Long?): TulipMovie.Hosted {
     val info = TvItemInfo(key, name, language, firstAirDateYear)
-    return TulipMovie.Hosted(movieKey, info, tmdbId?.let { TmdbItemId.Movie(it) })
+    return TulipMovie.Hosted(movieKey, info, tmdbId?.let { MovieKey.Tmdb(it) })
 }
 
 internal inline fun TulipTvShowInfo.Hosted.toDb(info: TvItemInfo): DbTvShow {
@@ -179,7 +177,7 @@ internal inline fun TulipMovie.Hosted.toDb(info: TvItemInfo): DbMovie {
 }
 
 internal inline fun DbLastPlayedPositionTmdb.fromDb(): LastPlayedPosition.Tmdb {
-    val tvShowKey = TvShowKey.Tmdb(TmdbItemId.Tv(tvShowId))
+    val tvShowKey = TvShowKey.Tmdb(tvShowId)
     val seasonKey = SeasonKey.Tmdb(tvShowKey, seasonNumber)
     val key = EpisodeKey.Tmdb(seasonKey, episodeNumber)
     return LastPlayedPosition.Tmdb(key, progress)
@@ -194,7 +192,7 @@ internal inline fun DbLastPlayedPositionHosted.fromDb(): LastPlayedPosition.Host
 
 internal inline fun EpisodeKey.Tmdb.toLastPositionDb(progress: Float?): DbLastPlayedPositionTmdb {
     return DbLastPlayedPositionTmdb(
-        tvShowKey.id.id,
+        tvShowKey.id,
         seasonNumber,
         episodeNumber,
         progress

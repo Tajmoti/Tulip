@@ -24,7 +24,6 @@ import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import kotlinx.coroutines.flow.Flow
 
@@ -39,14 +38,14 @@ class TmdbTvDataRepositoryImpl(
     private val movieCache = TimedCache<MovieKey.Tmdb, TulipMovie.Tmdb>(
         timeout = config.validityMs, size = config.size
     )
-    private val tmdbTvIdCache = TimedCache<Pair<String, Int?>, TmdbItemId.Tv?>(
+    private val tmdbTvIdCache = TimedCache<Pair<String, Int?>, TvShowKey.Tmdb?>(
         timeout = config.validityMs, size = config.size
     )
-    private val tmdbMovieIdCache = TimedCache<Pair<String, Int?>, TmdbItemId.Movie?>(
+    private val tmdbMovieIdCache = TimedCache<Pair<String, Int?>, MovieKey.Tmdb?>(
         timeout = config.validityMs, size = config.size
     )
 
-    override fun findTmdbIdTv(name: String, firstAirYear: Int?): Flow<NetworkResult<TmdbItemId.Tv?>> {
+    override fun findTmdbIdTv(name: String, firstAirYear: Int?): Flow<NetworkResult<TvShowKey.Tmdb?>> {
         logger.debug("Looking up TMDB ID for TV show $name ($firstAirYear)")
         val key = Pair(name, firstAirYear)
         return getNetworkBoundResource(
@@ -58,7 +57,7 @@ class TmdbTvDataRepositoryImpl(
         )
     }
 
-    override fun findTmdbIdMovie(name: String, firstAirYear: Int?): Flow<NetworkResult<TmdbItemId.Movie?>> {
+    override fun findTmdbIdMovie(name: String, firstAirYear: Int?): Flow<NetworkResult<MovieKey.Tmdb?>> {
         logger.debug("Looking up TMDB ID for movie $name ($firstAirYear)")
         val key = Pair(name, firstAirYear)
         return getNetworkBoundResource(
@@ -70,21 +69,21 @@ class TmdbTvDataRepositoryImpl(
         )
     }
 
-    private suspend fun fetchSearchResultTv(name: String, firstAirDateYear: Int?): Result<TmdbItemId.Tv?> {
+    private suspend fun fetchSearchResultTv(name: String, firstAirDateYear: Int?): Result<TvShowKey.Tmdb?> {
         return runCatching {
             searchTv(name, firstAirDateYear)
                 .map { firstResultIdOrNull(it) }
                 .getOrNull()
-                ?.let { TmdbItemId.Tv(it) }
+                ?.let { TvShowKey.Tmdb(it) }
         }.onFailure { logger.warn("Exception searching $name ($firstAirDateYear)") }
     }
 
-    private suspend fun fetchSearchResultMovie(name: String, firstAirDateYear: Int?): Result<TmdbItemId.Movie?> {
+    private suspend fun fetchSearchResultMovie(name: String, firstAirDateYear: Int?): Result<MovieKey.Tmdb?> {
         return runCatching {
             searchMovie(name, firstAirDateYear)
                 .map { firstResultIdOrNull(it) }
                 .getOrNull()
-                ?.let { TmdbItemId.Movie(it) }
+                ?.let { MovieKey.Tmdb(it) }
         }.onFailure { logger.warn("Exception searching $name ($firstAirDateYear)") }
     }
 
@@ -104,7 +103,7 @@ class TmdbTvDataRepositoryImpl(
 
     private suspend inline fun fetchFullTvInfo(key: TvShowKey.Tmdb): Result<TulipTvShowInfo.Tmdb> {
         logger.debug("Downloading full TV info of $key")
-        val tv = runCatching { service.getTv(key.id.id) }
+        val tv = runCatching { service.getTv(key.id) }
             .getOrElse { return Result.failure(it) }
         return tv.seasons
             .parallelMap { slim ->
@@ -117,7 +116,7 @@ class TmdbTvDataRepositoryImpl(
     }
 
     private fun Tv.fromNetwork(seasons: List<TulipSeasonInfo.Tmdb>): TulipTvShowInfo.Tmdb {
-        val key = TvShowKey.Tmdb(TmdbItemId.Tv(id))
+        val key = TvShowKey.Tmdb(id)
         return TulipTvShowInfo.Tmdb(key, name, null, posterPath, backdropPath, seasons)
     }
 
@@ -152,7 +151,7 @@ class TmdbTvDataRepositoryImpl(
         logger.debug("Retrieving $key")
         return getNetworkBoundResource(
             { db.getMovie(key) },
-            { runCatching { service.getMovie(key.id.id).fromNetwork() } },
+            { runCatching { service.getMovie(key.id).fromNetwork() } },
             { db.insertMovie(it) },
             { movieCache[key] },
             { movieCache[key] = it }
@@ -160,7 +159,7 @@ class TmdbTvDataRepositoryImpl(
     }
 
     private fun Movie.fromNetwork(): TulipMovie.Tmdb {
-        val key = MovieKey.Tmdb(TmdbItemId.Movie(id))
+        val key = MovieKey.Tmdb(id)
         return TulipMovie.Tmdb(key, name, overview, posterPath, backdropPath)
     }
 }

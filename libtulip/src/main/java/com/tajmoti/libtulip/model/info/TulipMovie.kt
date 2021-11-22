@@ -1,7 +1,6 @@
 package com.tajmoti.libtulip.model.info
 
 import com.tajmoti.libtulip.model.key.MovieKey
-import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtvprovider.TvItemInfo
 
 sealed interface TulipMovie : StreamableInfo {
@@ -18,7 +17,7 @@ sealed interface TulipMovie : StreamableInfo {
     class Hosted(
         override val key: MovieKey.Hosted,
         val info: TvItemInfo,
-        override val tmdbId: TmdbItemId.Movie?
+        override val tmdbId: MovieKey.Tmdb?
     ) : TulipMovie, TulipItem.Hosted, StreamableInfo.Hosted {
         override val name = info.name
         override val language = LanguageCode(info.language)

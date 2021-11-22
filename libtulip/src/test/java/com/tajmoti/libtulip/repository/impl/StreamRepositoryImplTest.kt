@@ -7,7 +7,8 @@ import com.tajmoti.libtmdb.model.search.SearchTvResponse
 import com.tajmoti.libtmdb.model.tv.Tv
 import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.LocalTvDataSource
-import com.tajmoti.libtulip.model.tmdb.TmdbItemId
+import com.tajmoti.libtulip.model.key.MovieKey
+import com.tajmoti.libtulip.model.key.TvShowKey
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.runBlocking
@@ -44,7 +45,7 @@ class StreamRepositoryImplTest {
     fun `findTmdbIdTv finds correct ID`() = runBlocking {
         val repo = createRepo(tmdbService = createTmdbServiceForTv())
         for ((year, tv) in tvInputs) {
-            assertEquals(TmdbItemId.Tv(tv.id), repo.findTmdbIdTv(tv.name, year).single().data)
+            assertEquals(TvShowKey.Tmdb(tv.id), repo.findTmdbIdTv(tv.name, year).single().data)
         }
     }
 
@@ -53,7 +54,7 @@ class StreamRepositoryImplTest {
         val repo = createRepo(tmdbService = createTmdbServiceForMovie())
         for ((year, movie) in movieInputs) {
             val actual = repo.findTmdbIdMovie(movie.title, year).single().data
-            assertEquals(TmdbItemId.Movie(movie.id), actual)
+            assertEquals(MovieKey.Tmdb(movie.id), actual)
         }
     }
 

@@ -1,7 +1,7 @@
 package com.tajmoti.libtulip.model.info
 
 import com.tajmoti.libtulip.model.key.ItemKey
-import com.tajmoti.libtulip.model.tmdb.TmdbItemId
+import com.tajmoti.libtulip.model.key.TvShowKey
 
 sealed interface TulipItem {
     val key: ItemKey
@@ -18,6 +18,6 @@ sealed interface TulipItem {
     sealed interface Hosted : TulipItem {
         override val key: ItemKey.Hosted
         val language: LanguageCode
-        val tmdbId: TmdbItemId?
+        val tmdbId: ItemKey.Tmdb?
     }
 }

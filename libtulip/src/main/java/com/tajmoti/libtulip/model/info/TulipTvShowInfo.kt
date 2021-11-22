@@ -1,7 +1,6 @@
 package com.tajmoti.libtulip.model.info
 
 import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtvprovider.TvItemInfo
 
 interface TulipTvShowInfo {
@@ -19,7 +18,7 @@ interface TulipTvShowInfo {
     class Hosted(
         override val key: TvShowKey.Hosted,
         val info: TvItemInfo,
-        override val tmdbId: TmdbItemId.Tv?,
+        override val tmdbId: TvShowKey.Tmdb?,
         override val seasons: List<TulipSeasonInfo.Hosted>
     ) : TulipTvShowInfo, TulipItem.Hosted {
         override val name = info.name

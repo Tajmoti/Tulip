@@ -1,8 +1,7 @@
 package com.tajmoti.libtulip.ui.search
 
-import com.tajmoti.libtulip.model.search.TulipSearchResult
 import com.tajmoti.libtulip.model.key.ItemKey
-import com.tajmoti.libtulip.model.tmdb.TmdbItemId
+import com.tajmoti.libtulip.model.search.TulipSearchResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -52,7 +51,7 @@ interface SearchViewModel {
     /**
      * The user has clicked an identified item
      */
-    fun onItemClicked(id: TmdbItemId)
+    fun onItemClicked(id: ItemKey.Tmdb)
 
     enum class Icon {
         READY,

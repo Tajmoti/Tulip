@@ -29,13 +29,13 @@ class SubtitleRepositoryImpl(
     ): Result<SubtitlesResponse> {
         return when (itemId) {
             is EpisodeKey.Tmdb -> runCatching {
-                val tvId = itemId.tvShowKey.id.id
+                val tvId = itemId.tvShowKey.id
                 val season = itemId.seasonNumber
                 val episode = itemId.episodeNumber
                 openSubtitlesService.searchEpisode(tvId, season, episode)
             }
             is MovieKey.Tmdb -> runCatching {
-                openSubtitlesService.searchMovie(itemId.id.id)
+                openSubtitlesService.searchMovie(itemId.id)
             }
             is EpisodeKey.Hosted -> {
                 Result.failure(NotImplementedError()) // TODO

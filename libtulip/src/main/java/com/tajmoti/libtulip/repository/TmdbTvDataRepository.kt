@@ -5,12 +5,11 @@ import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.TulipTvShowInfo
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 
 interface TmdbTvDataRepository {
-    fun findTmdbIdTv(name: String, firstAirYear: Int?): NetFlow<TmdbItemId.Tv?>
+    fun findTmdbIdTv(name: String, firstAirYear: Int?): NetFlow<TvShowKey.Tmdb?>
 
-    fun findTmdbIdMovie(name: String, firstAirYear: Int?): NetFlow<TmdbItemId.Movie?>
+    fun findTmdbIdMovie(name: String, firstAirYear: Int?): NetFlow<MovieKey.Tmdb?>
 
     fun getTvShow(key: TvShowKey.Tmdb): NetFlow<TulipTvShowInfo.Tmdb>
 

@@ -6,21 +6,20 @@ import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
 import com.tajmoti.libtulip.model.info.TulipTvShowInfo
 import com.tajmoti.libtulip.model.key.*
-import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
 class InMemoryHostedInfoDataSource : HostedInfoDataSource {
     private val tvShows = mutableSetOf<TulipTvShowInfo.Hosted>()
     private val movies = mutableSetOf<TulipMovie.Hosted>()
-    private val tmdbMappings = mutableMapOf<TmdbItemId, MutableSet<ItemKey.Hosted>>()
+    private val tmdbMappings = mutableMapOf<ItemKey.Tmdb, MutableSet<ItemKey.Hosted>>()
 
     override suspend fun getTvShowByKey(key: TvShowKey.Hosted): TulipTvShowInfo.Hosted? {
         return tvShows.firstOrNull { it.key == key }
     }
 
     override suspend fun getTvShowsByTmdbId(key: TvShowKey.Tmdb): List<TulipTvShowInfo.Hosted> {
-        val showKeys = tmdbMappings[key.id] ?: return emptyList()
+        val showKeys = tmdbMappings[key] ?: return emptyList()
         return tvShows.filter { showKeys.contains(it.key) }
     }
 
@@ -58,7 +57,7 @@ class InMemoryHostedInfoDataSource : HostedInfoDataSource {
     }
 
     override suspend fun getMovieByTmdbKey(key: MovieKey.Tmdb): List<TulipMovie.Hosted> {
-        val showKeys = tmdbMappings[key.id] ?: return emptyList()
+        val showKeys = tmdbMappings[key] ?: return emptyList()
         return movies.filter { showKeys.contains(it.key) }
     }
 
@@ -66,17 +65,17 @@ class InMemoryHostedInfoDataSource : HostedInfoDataSource {
         movies.add(movie)
     }
 
-    override suspend fun createTmdbMapping(hosted: ItemKey.Hosted, tmdb: TmdbItemId) {
+    override suspend fun createTmdbMapping(hosted: ItemKey.Hosted, tmdb: ItemKey.Tmdb) {
         val list = tmdbMappings[tmdb] ?: mutableSetOf()
         list.add(hosted)
         tmdbMappings[tmdb] = list
     }
 
-    override fun getTmdbMappingForTvShow(tmdb: TmdbItemId.Tv): Flow<List<TvShowKey.Hosted>> {
+    override fun getTmdbMappingForTvShow(tmdb: TvShowKey.Tmdb): Flow<List<TvShowKey.Hosted>> {
         return flowOf(tmdbMappings[tmdb]?.map { it as TvShowKey.Hosted } ?: emptyList())
     }
 
-    override fun getTmdbMappingForMovie(tmdb: TmdbItemId.Movie): Flow<List<MovieKey.Hosted>> {
+    override fun getTmdbMappingForMovie(tmdb: MovieKey.Tmdb): Flow<List<MovieKey.Hosted>> {
         return flowOf(tmdbMappings[tmdb]?.map { it as MovieKey.Hosted } ?: emptyList())
     }
 }

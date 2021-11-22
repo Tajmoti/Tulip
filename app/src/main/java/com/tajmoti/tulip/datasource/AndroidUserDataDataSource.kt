@@ -55,7 +55,7 @@ class AndroidUserDataDataSource @Inject constructor(
     override fun getLastPlayedPositionTmdb(key: ItemKey.Tmdb): Flow<LastPlayedPosition.Tmdb?> {
         return when (key) {
             is TvShowKey.Tmdb -> playingHistoryDao.getLastPlayingPositionTmdb(
-                key.id.id
+                key.id
             ).map { it?.fromDb() }
             is MovieKey.Tmdb -> flowOf(null) // TODO
         }
@@ -83,7 +83,7 @@ class AndroidUserDataDataSource @Inject constructor(
     override fun getLastPlayedPositionTmdb(key: StreamableKey.Tmdb): Flow<LastPlayedPosition.Tmdb?> {
         return when (key) {
             is EpisodeKey.Tmdb -> playingHistoryDao.getLastPlayingPositionEpisodeTmdb(
-                key.seasonKey.tvShowKey.id.id,
+                key.seasonKey.tvShowKey.id,
                 key.seasonNumber,
                 key.episodeNumber
             ).map { it?.fromDb() }

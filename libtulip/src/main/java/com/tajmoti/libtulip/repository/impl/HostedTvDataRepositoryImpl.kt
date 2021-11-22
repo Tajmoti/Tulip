@@ -15,7 +15,6 @@ import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.search.TulipSearchResult
-import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtvprovider.MultiTvProvider
@@ -99,16 +98,16 @@ class HostedTvDataRepositoryImpl(
     private fun pairInfoWithTmdbId(
         item: SearchResult,
         service: StreamingService,
-        tmdbId: TmdbItemId?
+        tmdbId: TvShowKey.Tmdb?
     ): MappedSearchResult {
         return when (item.type) {
             SearchResult.Type.TV_SHOW -> {
                 val key = TvShowKey.Hosted(service, item.key)
-                MappedSearchResult.TvShow(key, item.info, tmdbId as? TmdbItemId.Tv?)
+                MappedSearchResult.TvShow(key, item.info, tmdbId as? TvShowKey.Tmdb?)
             }
             SearchResult.Type.MOVIE -> {
                 val key = MovieKey.Hosted(service, item.key)
-                MappedSearchResult.Movie(key, item.info, tmdbId as? TmdbItemId.Movie?)
+                MappedSearchResult.Movie(key, item.info, tmdbId as? MovieKey.Tmdb?)
             }
         }
     }
@@ -125,15 +124,15 @@ class HostedTvDataRepositoryImpl(
     }
 
     private fun groupedItemToResult(
-        id: TmdbItemId,
+        id: ItemKey.Tmdb,
         items: List<MappedSearchResult>
     ): TulipSearchResult {
         return when (id) {
-            is TmdbItemId.Tv -> {
+            is TvShowKey.Tmdb -> {
                 val mapped = items.map { it as MappedSearchResult.TvShow }
                 TulipSearchResult.TvShow(id, mapped)
             }
-            is TmdbItemId.Movie -> {
+            is MovieKey.Tmdb -> {
                 val mapped = items.map { it as MappedSearchResult.Movie }
                 TulipSearchResult.Movie(id, mapped)
             }
@@ -154,7 +153,7 @@ class HostedTvDataRepositoryImpl(
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getTvShowsByTmdbKey(key: TvShowKey.Tmdb): Flow<List<Result<TulipTvShowInfo.Hosted>>> {
         logger.debug("Retrieving $key")
-        return hostedTvDataRepo.getTmdbMappingForTvShow(key.id)
+        return hostedTvDataRepo.getTmdbMappingForTvShow(key)
             .flatMapLatest { movieKeyList ->
                 movieKeyList.map { getTvShow(it) }
                     .combine()
@@ -225,7 +224,7 @@ class HostedTvDataRepositoryImpl(
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getEpisodeByTmdbId(key: EpisodeKey.Tmdb): Flow<List<Result<TulipEpisodeInfo.Hosted>>> {
         logger.debug("Retrieving $key")
-        return hostedTvDataRepo.getTmdbMappingForTvShow(key.tvShowKey.id)
+        return hostedTvDataRepo.getTmdbMappingForTvShow(key.tvShowKey)
             .flatMapLatest { movieKeyList -> movieKeyList.map { getHostedEpisodesByTmdbKey(it, key) }.combine() }
     }
 
@@ -250,7 +249,7 @@ class HostedTvDataRepositoryImpl(
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getMoviesByTmdbKey(key: MovieKey.Tmdb): Flow<List<Result<TulipMovie.Hosted>>> {
         logger.debug("Retrieving $key")
-        return hostedTvDataRepo.getTmdbMappingForMovie(key.id)
+        return hostedTvDataRepo.getTmdbMappingForMovie(key)
             .flatMapLatest { movieKeyList ->
                 movieKeyList.map { getMovieInfo(it) }
                     .combine()
@@ -269,7 +268,7 @@ class HostedTvDataRepositoryImpl(
         )
     }
 
-    private suspend fun findTmdbIdOrNull(searchResult: SearchResult): TmdbItemId? {
+    private suspend fun findTmdbIdOrNull(searchResult: SearchResult): TvShowKey.Tmdb? {
         return when (searchResult.type) {
             SearchResult.Type.TV_SHOW ->
                 tmdbRepo.findTmdbIdTv(searchResult.info.name, searchResult.info.firstAirDateYear).firstValueOrNull()

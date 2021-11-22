@@ -6,7 +6,6 @@ import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
 import com.tajmoti.libtulip.model.info.TulipTvShowInfo
 import com.tajmoti.libtulip.model.key.*
-import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 import com.tajmoti.tulip.db.dao.hosted.*
 import com.tajmoti.tulip.db.entity.hosted.DbTmdbMapping
 import kotlinx.coroutines.flow.Flow
@@ -28,10 +27,10 @@ class AndroidHostedInfoDataSource @Inject constructor(
     }
 
     override suspend fun getTvShowsByTmdbId(key: TvShowKey.Tmdb): List<TulipTvShowInfo.Hosted> {
-        return tvShowDao.getByTmdbId(key.id.id)
+        return tvShowDao.getByTmdbId(key.id)
             .map {
                 val tvShowKey = TvShowKey.Hosted(it.service, it.key)
-                it.fromDb(tvShowKey, key.id.id, getSeasonsByTvShow(tvShowKey))
+                it.fromDb(tvShowKey, key.id, getSeasonsByTvShow(tvShowKey))
             }
     }
 
@@ -95,8 +94,8 @@ class AndroidHostedInfoDataSource @Inject constructor(
     }
 
     override suspend fun getMovieByTmdbKey(key: MovieKey.Tmdb): List<TulipMovie.Hosted> {
-        return movieDao.getByTmdbId(key.id.id)
-            .map { it.fromDb(key.id.id) }
+        return movieDao.getByTmdbId(key.id)
+            .map { it.fromDb(key.id) }
     }
 
     override suspend fun insertMovie(movie: TulipMovie.Hosted) {
@@ -104,16 +103,16 @@ class AndroidHostedInfoDataSource @Inject constructor(
     }
 
 
-    override suspend fun createTmdbMapping(hosted: ItemKey.Hosted, tmdb: TmdbItemId) {
+    override suspend fun createTmdbMapping(hosted: ItemKey.Hosted, tmdb: ItemKey.Tmdb) {
         tmdbMappingDao.insert(DbTmdbMapping(hosted.streamingService, hosted.id, tmdb.id))
     }
 
-    override fun getTmdbMappingForTvShow(tmdb: TmdbItemId.Tv): Flow<List<TvShowKey.Hosted>> {
+    override fun getTmdbMappingForTvShow(tmdb: TvShowKey.Tmdb): Flow<List<TvShowKey.Hosted>> {
         return tmdbMappingDao.getHostedKeysByTmdbId(tmdb.id)
             .map { it.map { TvShowKey.Hosted(it.service, it.key) } }
     }
 
-    override fun getTmdbMappingForMovie(tmdb: TmdbItemId.Movie): Flow<List<MovieKey.Hosted>> {
+    override fun getTmdbMappingForMovie(tmdb: MovieKey.Tmdb): Flow<List<MovieKey.Hosted>> {
         return tmdbMappingDao.getHostedKeysByTmdbId(tmdb.id)
             .map { it.map { MovieKey.Hosted(it.service, it.key) } }
     }

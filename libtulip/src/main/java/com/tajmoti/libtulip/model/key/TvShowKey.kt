@@ -1,7 +1,6 @@
 package com.tajmoti.libtulip.model.key
 
 import com.tajmoti.libtulip.model.hosted.StreamingService
-import com.tajmoti.libtulip.model.tmdb.TmdbItemId
 
 sealed interface TvShowKey : ItemKey {
     data class Hosted(
@@ -10,6 +9,6 @@ sealed interface TvShowKey : ItemKey {
     ) : TvShowKey, ItemKey.Hosted
 
     data class Tmdb(
-        override val id: TmdbItemId.Tv
+        override val id: Long
     ) : TvShowKey, ItemKey.Tmdb
 }
