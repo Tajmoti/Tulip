@@ -12,6 +12,12 @@ import kotlinx.coroutines.flow.Flow
  * Handles data coming from specific streaming sites.
  */
 interface HostedTvDataRepository {
+    suspend fun getItemByKey(key: ItemKey.Hosted): Flow<NetworkResult<out TulipItem.Hosted>> {
+        return when (key) {
+            is TvShowKey.Hosted -> getTvShow(key)
+            is MovieKey.Hosted -> getMovie(key)
+        }
+    }
 
     fun search(query: String): Flow<Result<List<TulipSearchResult>>>
 
@@ -30,6 +36,8 @@ interface HostedTvDataRepository {
     fun getCompleteEpisodesByTmdbKey(key: EpisodeKey.Tmdb): Flow<List<Result<TulipCompleteEpisodeInfo.Hosted>>>
 
     fun getMoviesByTmdbKey(key: MovieKey.Tmdb): Flow<List<Result<TulipMovie.Hosted>>>
+
+    fun getMovie(key: MovieKey.Hosted): Flow<NetworkResult<TulipMovie.Hosted>>
 
     fun getStreamableInfoByTmdbKey(key: StreamableKey.Tmdb): Flow<List<Result<StreamableInfo.Hosted>>> {
         return when (key) {

@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import com.tajmoti.libtulip.createAppOkHttpClient
-import com.tajmoti.libwebdriver.WebDriver
+import com.tajmoti.libwebdriver.TulipWebDriver
 import com.tajmoti.libwebdriver.WebViewWebDriver
 import com.tajmoti.tulip.BuildConfig
 import dagger.Module
@@ -19,7 +19,7 @@ import javax.inject.Singleton
 object AndroidNetworkModule {
     @Provides
     @Singleton
-    fun provideWebDriver(@ApplicationContext app: Context): WebDriver {
+    fun provideWebDriver(@ApplicationContext app: Context): TulipWebDriver {
         return WebViewWebDriver(app)
     }
 

@@ -1,8 +1,8 @@
 package com.tajmoti.tulip.ui.library
 
 import androidx.lifecycle.viewModelScope
-import com.tajmoti.libtulip.data.HostedInfoDataSource
 import com.tajmoti.libtulip.repository.FavoritesRepository
+import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.repository.PlayingHistoryRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtulip.ui.library.LibraryViewModel
@@ -15,8 +15,8 @@ import javax.inject.Inject
 class AndroidLibraryViewModel @Inject constructor(
     favoritesRepo: FavoritesRepository,
     historyRepository: PlayingHistoryRepository,
-    hostedRepo: HostedInfoDataSource,
-    tmdbRepo: TmdbTvDataRepository
+    hostedRepo: HostedTvDataRepository,
+    tmdbRepo: TmdbTvDataRepository,
 ) : DelegatingViewModel<LibraryViewModel>() {
     override val impl = LibraryViewModelImpl(
         favoritesRepo,

@@ -11,6 +11,7 @@ import androidx.fragment.app.commit
 import androidx.lifecycle.*
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tajmoti.libtulip.model.info.*
+import com.tajmoti.libtulip.ui.player.VideoPlayerUtils.episodeToLabel
 import com.tajmoti.tulip.R
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -43,17 +44,6 @@ fun showEpisodeDetailsDialog(ctx: Context, episodeInfo: TulipEpisodeInfo) {
         .setMessage(episodeInfo.overview ?: "")
         .setPositiveButton(R.string.dismiss, null)
         .show()
-}
-
-fun episodeToLabel(episodeInfo: TulipEpisodeInfo): String {
-    val name = episodeInfo.name ?: ""
-    return "${episodeInfo.episodeNumber}. $name"
-}
-
-fun showToDisplayName(item: TulipCompleteEpisodeInfo): String {
-    val showSeasonEpNum = "${item.showName} S${item.seasonNumber}:E${item.episodeNumber}"
-    val episodeName = item.name?.let { " '$it'" } ?: ""
-    return showSeasonEpNum + episodeName
 }
 
 inline val AppCompatActivity.isInPipModeCompat: Boolean

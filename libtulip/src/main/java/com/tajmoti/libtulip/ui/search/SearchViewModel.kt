@@ -34,11 +34,6 @@ interface SearchViewModel {
     val canTryAgain: StateFlow<Boolean>
 
     /**
-     * Contains the item that should be opened
-     */
-    val itemToOpen: Flow<ItemKey>
-
-    /**
      * Submit a new query to be searched
      */
     fun submitNewText(query: String)
@@ -47,11 +42,6 @@ interface SearchViewModel {
      * Submits an already submitted text again
      */
     fun resubmitText()
-
-    /**
-     * The user has clicked an identified item
-     */
-    fun onItemClicked(id: ItemKey.Tmdb)
 
     enum class Icon {
         READY,

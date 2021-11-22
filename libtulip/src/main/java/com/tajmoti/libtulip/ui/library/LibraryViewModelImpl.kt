@@ -2,12 +2,12 @@ package com.tajmoti.libtulip.ui.library
 
 import com.tajmoti.commonutils.combine
 import com.tajmoti.commonutils.parallelMapBoth
-import com.tajmoti.libtulip.data.HostedInfoDataSource
 import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.history.LastPlayedPosition
 import com.tajmoti.libtulip.model.info.TulipItem
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.repository.FavoritesRepository
+import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.repository.PlayingHistoryRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtulip.repository.getItem
@@ -19,9 +19,9 @@ import kotlinx.coroutines.flow.*
 class LibraryViewModelImpl constructor(
     favoritesRepo: FavoritesRepository,
     private val historyRepository: PlayingHistoryRepository,
-    private val hostedRepo: HostedInfoDataSource,
+    private val hostedTvDataRepository: HostedTvDataRepository,
     private val tmdbRepo: TmdbTvDataRepository,
-    viewModelScope: CoroutineScope
+    viewModelScope: CoroutineScope,
 ) : LibraryViewModel {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -41,7 +41,7 @@ class LibraryViewModelImpl constructor(
 
     private suspend inline fun getHostedFavorites(items: List<ItemKey.Hosted>): List<LibraryItem> {
         return items
-            .parallelMapBoth { hostedRepo.getItemByKey(it) }
+            .parallelMapBoth { hostedTvDataRepository.getItemByKey(it).firstOrNull()?.toResult()?.getOrNull() }
             .mapNotNull { (key, item) ->
                 val lastPlayedPosition = historyRepository.getLastPlayedPosition(key).firstOrNull()
                 item?.let { LibraryItem(key, item.name ?: "", null, lastPlayedPosition) }
@@ -64,7 +64,7 @@ class LibraryViewModelImpl constructor(
     private fun netResultToLibraryItem(
         key: ItemKey.Tmdb,
         result: NetworkResult<out TulipItem.Tmdb>,
-        position: LastPlayedPosition?
+        position: LastPlayedPosition?,
     ): LibraryItem? {
         return result.data?.let {
             val posterPath = "https://image.tmdb.org/t/p/original" + it.posterPath

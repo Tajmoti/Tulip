@@ -1,7 +1,6 @@
 package com.tajmoti.libtulip.ui.search
 
 import com.tajmoti.commonutils.map
-import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.search.TulipSearchResult
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.ui.doCancelableJob
@@ -14,10 +13,9 @@ import kotlinx.coroutines.launch
 
 class SearchViewModelImpl(
     private val repository: HostedTvDataRepository,
-    private val viewModelScope: CoroutineScope
+    private val viewModelScope: CoroutineScope,
 ) : SearchViewModel {
     private val state = MutableStateFlow<State>(State.Idle)
-    override val itemToOpen = MutableSharedFlow<ItemKey>()
     override val loading = state.map(viewModelScope) { it is State.Searching }
     override val results = state.map(viewModelScope) {
         (it as? State.Success)?.results ?: emptyList()
@@ -66,15 +64,6 @@ class SearchViewModelImpl(
      */
     override fun resubmitText() {
         onNewSearchQuery(searchFlow.value ?: "")
-    }
-
-    /**
-     * The user has clicked an identified item
-     */
-    override fun onItemClicked(id: ItemKey.Tmdb) {
-        viewModelScope.launch {
-            itemToOpen.emit(id)
-        }
     }
 
     private fun onNewSearchQuery(it: String?) {

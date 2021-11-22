@@ -21,20 +21,20 @@ class WebViewWebDriver(
      * Whether to disable all WebView logging messages (suppress log spam)
      */
     private val suppressConsole: Boolean = true
-) : WebDriver {
+) : TulipWebDriver {
     private val chromeClient: ChromeClient by lazy(LazyThreadSafetyMode.NONE) {
         ChromeClient(suppressConsole)
     }
     private val mainHandler = Handler(context.mainLooper)
 
 
-    override suspend fun getPageHtml(url: String, params: WebDriver.Params): Result<String> {
+    override suspend fun getPageHtml(url: String, params: TulipWebDriver.Params): Result<String> {
         return withContext(Dispatchers.Main) { loadPageWithContinuation(url, params) }
     }
 
     private suspend fun loadPageWithContinuation(
         url: String,
-        p: WebDriver.Params
+        p: TulipWebDriver.Params
     ): Result<String> = suspendCoroutine { cont ->
         var finished = false
         fun submitOnce(wv: WebView, result: Result<String>) {
@@ -61,7 +61,7 @@ class WebViewWebDriver(
     }
 
     private fun createWebView(
-        p: WebDriver.Params,
+        p: TulipWebDriver.Params,
         onSuccess: (WebView, String) -> Unit,
         onError: (WebView, Any) -> Unit
     ): WebView {
@@ -80,7 +80,7 @@ class WebViewWebDriver(
     }
 
     private class HtmlRetrievingClient(
-        private val p: WebDriver.Params,
+        private val p: TulipWebDriver.Params,
         private val onError: (WebView, Any) -> Unit
     ) : WebViewClient() {
 

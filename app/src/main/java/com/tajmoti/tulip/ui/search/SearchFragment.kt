@@ -40,9 +40,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
             .setToRecyclerWithDividers(binding.recyclerSearch)
         binding.recyclerSearch.itemAnimator = null
         consume(viewModel.results) { adapter.items = it }
-        consume(viewModel.itemToOpen, this::goToItemByKey)
         consume(viewModel.status, this::setStatusView)
-
     }
 
     private fun fixLayoutCentering() {
@@ -70,7 +68,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
         val id = result.tmdbId
         val results = result.results
         if (id != null) {
-            viewModel.onItemClicked(id)
+            goToItemByKey(id)
         } else {
             onUnidentifiedResultClicked(results)
         }

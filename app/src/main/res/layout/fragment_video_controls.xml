@@ -7,7 +7,7 @@
 
         <import type="com.tajmoti.libtulip.ui.player.VideoPlayerViewModel.PlayButtonState" />
 
-        <import type="com.tajmoti.tulip.ui.player.VideoPlayerUtils" />
+        <import type="com.tajmoti.libtulip.ui.player.VideoPlayerUtils" />
 
         <variable
             name="viewModel"
@@ -35,7 +35,7 @@
             style="@style/FullscreenText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@{VideoPlayerUtils.INSTANCE.streamableToDisplayName(viewModel.streamableInfo)}"
+            android:text="@{VideoPlayerUtils.streamableToDisplayName(viewModel.streamableInfo)}"
             app:layout_constraintBottom_toBottomOf="@+id/button_back"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
@@ -124,7 +124,7 @@
             style="@style/FullscreenIcon"
             android:layout_width="@dimen/error_screen_image_size"
             android:layout_height="@dimen/error_screen_image_size"
-            android:visibility="@{viewModel.isError()}"
+            android:visibility="@{viewModel.isError}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -152,7 +152,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:minEms="3"
-            android:text="@{VideoPlayerUtils.INSTANCE.formatTimeForDisplay(viewModel.position.timeMs)}"
+            android:text="@{VideoPlayerUtils.formatTimeForDisplay(viewModel.position.timeMs)}"
             android:visibility="@{viewModel.position != null}"
             app:layout_constraintBottom_toBottomOf="@id/seek_bar_video_progress"
             app:layout_constraintEnd_toEndOf="parent"
@@ -215,7 +215,7 @@
             android:enabled="@{viewModel.hasNextEpisode}"
             android:onClick="@{(v) -> viewModel.goToNextEpisode()}"
             android:text="@string/next_episode"
-            android:visibility="@{viewModel.isTvShow()}"
+            android:visibility="@{viewModel.isTvShow}"
             app:icon="@drawable/ic_baseline_skip_next_24"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

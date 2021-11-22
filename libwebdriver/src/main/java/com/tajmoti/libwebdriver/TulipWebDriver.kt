@@ -1,6 +1,6 @@
 package com.tajmoti.libwebdriver
 
-interface WebDriver {
+interface TulipWebDriver {
 
     /**
      * Loads the [url] into a real web browser; once the page load

@@ -103,7 +103,7 @@ class HostedTvDataRepositoryImpl(
         return when (item.type) {
             SearchResult.Type.TV_SHOW -> {
                 val key = TvShowKey.Hosted(service, item.key)
-                MappedSearchResult.TvShow(key, item.info, tmdbId as? TvShowKey.Tmdb?)
+                MappedSearchResult.TvShow(key, item.info, tmdbId)
             }
             SearchResult.Type.MOVIE -> {
                 val key = MovieKey.Hosted(service, item.key)
@@ -186,7 +186,7 @@ class HostedTvDataRepositoryImpl(
         logger.debug("Retrieving $key")
         return when (key) {
             is EpisodeKey.Hosted -> getEpisodeInfo(key)
-            is MovieKey.Hosted -> getMovieInfo(key).map { it.toResult() }
+            is MovieKey.Hosted -> getMovie(key).map { it.toResult() }
         }
     }
 
@@ -195,7 +195,7 @@ class HostedTvDataRepositoryImpl(
             .map { netResult -> netResult.toResult().flatMap { tvShow -> tvShow.findCompleteEpisodeInfoAsResult(key) } }
     }
 
-    private fun getMovieInfo(key: MovieKey.Hosted): NetFlow<TulipMovie.Hosted> {
+    override fun getMovie(key: MovieKey.Hosted): Flow<NetworkResult<TulipMovie.Hosted>> {
         logger.debug("Retrieving $key")
         return getNetworkBoundResource(
             { hostedTvDataRepo.getMovieByKey(key) },
@@ -251,7 +251,7 @@ class HostedTvDataRepositoryImpl(
         logger.debug("Retrieving $key")
         return hostedTvDataRepo.getTmdbMappingForMovie(key)
             .flatMapLatest { movieKeyList ->
-                movieKeyList.map { getMovieInfo(it) }
+                movieKeyList.map { getMovie(it) }
                     .combine()
                     .mapNetworkResultToResultInListFlow()
             }

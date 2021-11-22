@@ -5,15 +5,6 @@ import com.tajmoti.libtulip.model.key.*
 import kotlinx.coroutines.flow.Flow
 
 interface HostedInfoDataSource {
-
-    suspend fun getItemByKey(key: ItemKey.Hosted): TulipItem.Hosted? {
-        return when (key) {
-            is TvShowKey.Hosted -> getTvShowByKey(key)
-            is MovieKey.Hosted -> getMovieByKey(key)
-        }
-    }
-
-
     suspend fun getTvShowByKey(key: TvShowKey.Hosted): TulipTvShowInfo.Hosted?
 
     suspend fun getTvShowsByTmdbId(key: TvShowKey.Tmdb): List<TulipTvShowInfo.Hosted>

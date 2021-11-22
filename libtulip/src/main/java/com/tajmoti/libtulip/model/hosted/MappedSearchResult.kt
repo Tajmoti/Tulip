@@ -17,7 +17,7 @@ sealed interface MappedSearchResult {
     ) : MappedSearchResult
 
     data class Movie(
-        override val key: ItemKey.Hosted,
+        override val key: MovieKey.Hosted,
         override val info: TvItemInfo,
         override val tmdbId: MovieKey.Tmdb?
     ) : MappedSearchResult

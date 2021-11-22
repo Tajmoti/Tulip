@@ -11,17 +11,17 @@ sealed class TulipSearchResult {
 
 
     class TvShow(
-        override val tmdbId: TvShowKey.Tmdb?,
+        override val tmdbId: TvShowKey.Tmdb,
         override val results: List<MappedSearchResult.TvShow>
     ) : TulipSearchResult()
 
     class Movie(
-        override val tmdbId: MovieKey.Tmdb?,
+        override val tmdbId: MovieKey.Tmdb,
         override val results: List<MappedSearchResult.Movie>
     ) : TulipSearchResult()
 
     class Unrecognized(
-        override val results: List<MappedSearchResult>
+        override val results: List<MappedSearchResult>,
     ) : TulipSearchResult() {
         override val tmdbId: TvShowKey.Tmdb? = null
     }

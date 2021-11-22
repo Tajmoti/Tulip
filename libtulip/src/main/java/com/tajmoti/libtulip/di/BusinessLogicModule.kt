@@ -12,7 +12,7 @@ import com.tajmoti.libtvprovider.kinox.KinoxTvProvider
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
 import com.tajmoti.libtvvideoextractor.WebDriverPageSourceLoader
 import com.tajmoti.libtvvideoextractor.WebDriverPageSourceLoaderWithCustomJs
-import com.tajmoti.libwebdriver.WebDriver
+import com.tajmoti.libwebdriver.TulipWebDriver
 import dagger.Module
 import dagger.Provides
 import io.ktor.client.*
@@ -36,7 +36,7 @@ object BusinessLogicModule {
     @Provides
     @Singleton
     fun provideMultiTvProvider(
-        webDriver: WebDriver,
+        webDriver: TulipWebDriver,
         okHttpClient: OkHttpClient,
     ): MultiTvProvider<StreamingService> {
         val webViewGetter = makeWebViewGetterWithCustomJs(webDriver)
@@ -54,7 +54,7 @@ object BusinessLogicModule {
 
     @Provides
     @Singleton
-    fun provideLinkExtractor(okHttpClient: OkHttpClient, webDriver: WebDriver): VideoLinkExtractor {
+    fun provideLinkExtractor(okHttpClient: OkHttpClient, webDriver: TulipWebDriver): VideoLinkExtractor {
         val webViewGetter = makeWebViewGetter(webDriver)
         val http = makeHttpGetter(okHttpClient)
         return VideoLinkExtractor(http, webViewGetter)
@@ -65,10 +65,10 @@ object BusinessLogicModule {
      * Returns a function, which loads the provided URL into a WebView,
      * runs all the JavaScript and returns the finished page HTML source.
      */
-    private fun makeWebViewGetterWithCustomJs(webDriver: WebDriver): WebDriverPageSourceLoaderWithCustomJs {
+    private fun makeWebViewGetterWithCustomJs(webDriver: TulipWebDriver): WebDriverPageSourceLoaderWithCustomJs {
         return { url, urlFilter, interfaceName ->
-            val params = WebDriver.Params(
-                WebDriver.SubmitTrigger.CustomJs(interfaceName),
+            val params = TulipWebDriver.Params(
+                TulipWebDriver.SubmitTrigger.CustomJs(interfaceName),
                 urlFilter = urlFilter
             )
             webDriver.getPageHtml(url, params)
@@ -79,9 +79,9 @@ object BusinessLogicModule {
      * Returns a function, which loads the provided URL into a WebView,
      * runs all the JavaScript and returns the finished page HTML source.
      */
-    private fun makeWebViewGetter(webDriver: WebDriver): WebDriverPageSourceLoader {
+    private fun makeWebViewGetter(webDriver: TulipWebDriver): WebDriverPageSourceLoader {
         return { url, urlFilter ->
-            val params = WebDriver.Params(urlFilter = urlFilter)
+            val params = TulipWebDriver.Params(urlFilter = urlFilter)
             webDriver.getPageHtml(url, params)
         }
     }

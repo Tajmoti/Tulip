@@ -1,10 +1,10 @@
 package com.tajmoti.tulip.ui.show
 
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
+import com.tajmoti.libtulip.ui.player.VideoPlayerUtils.episodeToLabel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ItemEpisodeBinding
 import com.tajmoti.tulip.ui.BaseAdapter
-import com.tajmoti.tulip.ui.episodeToLabel
 import com.tajmoti.tulip.ui.loadImageAsBackground
 
 class EpisodesAdapter(
