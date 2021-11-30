@@ -10,7 +10,8 @@ import com.tajmoti.libtulip.data.LocalTvDataSource
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.single
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -45,7 +46,7 @@ class StreamRepositoryImplTest {
     fun `findTmdbIdTv finds correct ID`() = runBlocking {
         val repo = createRepo(tmdbService = createTmdbServiceForTv())
         for ((year, tv) in tvInputs) {
-            assertEquals(TvShowKey.Tmdb(tv.id), repo.findTmdbIdTv(tv.name, year).single().data)
+            assertEquals(TvShowKey.Tmdb(tv.id), repo.findTmdbIdTv(tv.name, year).first().data)
         }
     }
 
@@ -53,7 +54,7 @@ class StreamRepositoryImplTest {
     fun `findTmdbIdMovie finds correct ID`() = runBlocking {
         val repo = createRepo(tmdbService = createTmdbServiceForMovie())
         for ((year, movie) in movieInputs) {
-            val actual = repo.findTmdbIdMovie(movie.title, year).single().data
+            val actual = repo.findTmdbIdMovie(movie.title, year).first().data
             assertEquals(MovieKey.Tmdb(movie.id), actual)
         }
     }
@@ -64,7 +65,7 @@ class StreamRepositoryImplTest {
         val repo = createRepo(cache = activeCacheParams, tmdbService = tmdbApiMock)
         for (i in 0 until 64) {
             for ((year, tv) in tvInputs) {
-                repo.findTmdbIdTv(tv.name, year).collect { }
+                repo.findTmdbIdTv(tv.name, year).take(1).collect { }
             }
         }
         for ((year, tv) in tvInputs) {
@@ -78,7 +79,7 @@ class StreamRepositoryImplTest {
         val repo = createRepo(cache = activeCacheParams, tmdbService = tmdbApiMock)
         for (i in 0 until 64) {
             for ((year, movie) in movieInputs) {
-                repo.findTmdbIdMovie(movie.name, year).collect { }
+                repo.findTmdbIdMovie(movie.name, year).take(1).collect { }
             }
         }
         for ((year, movie) in movieInputs) {

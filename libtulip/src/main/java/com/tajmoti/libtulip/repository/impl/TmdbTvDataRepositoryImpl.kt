@@ -1,5 +1,12 @@
 package com.tajmoti.libtulip.repository.impl
 
+import arrow.core.None
+import arrow.core.Option
+import arrow.core.Some
+import com.dropbox.android.external.store4.Fetcher
+import com.dropbox.android.external.store4.SourceOfTruth
+import com.dropbox.android.external.store4.StoreBuilder
+import com.dropbox.android.external.store4.StoreRequest
 import com.tajmoti.commonutils.allOrNone
 import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.parallelMap
@@ -13,9 +20,10 @@ import com.tajmoti.libtmdb.model.tv.Season
 import com.tajmoti.libtmdb.model.tv.Tv
 import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.LocalTvDataSource
-import com.tajmoti.libtulip.misc.cache.TimedCache
 import com.tajmoti.libtulip.misc.job.NetworkResult
-import com.tajmoti.libtulip.misc.job.getNetworkBoundResource
+import com.tajmoti.libtulip.misc.job.createCache
+import com.tajmoti.libtulip.misc.job.toFetcherResult
+import com.tajmoti.libtulip.misc.job.toNetFlow
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
@@ -26,47 +34,69 @@ import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 class TmdbTvDataRepositoryImpl(
     private val service: TmdbService,
     private val db: LocalTvDataSource,
     config: TulipConfiguration.CacheParameters
 ) : TmdbTvDataRepository {
-    private val tvCache = TimedCache<TvShowKey.Tmdb, TulipTvShowInfo.Tmdb>(
-        timeout = config.validityMs, size = config.size
-    )
-    private val movieCache = TimedCache<MovieKey.Tmdb, TulipMovie.Tmdb>(
-        timeout = config.validityMs, size = config.size
-    )
-    private val tmdbTvIdCache = TimedCache<Pair<String, Int?>, TvShowKey.Tmdb?>(
-        timeout = config.validityMs, size = config.size
-    )
-    private val tmdbMovieIdCache = TimedCache<Pair<String, Int?>, MovieKey.Tmdb?>(
-        timeout = config.validityMs, size = config.size
-    )
+    private val tvStore = StoreBuilder
+        .from<TvShowKey.Tmdb, TulipTvShowInfo.Tmdb, TulipTvShowInfo.Tmdb>(
+            fetcher = Fetcher.ofResult { fetchFullTvInfo(it).toFetcherResult() },
+            sourceOfTruth = SourceOfTruth.of(
+                reader = { flow { emit(db.getTvShow(it)) } },
+                writer = { _, it -> db.insertTvShow(it) },
+            )
+        )
+        .cachePolicy(createCache(config))
+        .build()
+    private val movieStore = StoreBuilder
+        .from<MovieKey.Tmdb, TulipMovie.Tmdb, TulipMovie.Tmdb>(
+            fetcher = Fetcher.ofResult { runCatching { service.getMovie(it.id).fromNetwork() }.toFetcherResult() },
+            sourceOfTruth = SourceOfTruth.of(
+                reader = { flow { emit(db.getMovie(it)) } },
+                writer = { _, it -> db.insertMovie(it) },
+            )
+        )
+        .cachePolicy(createCache(config))
+        .build()
+    private val tmdbTvIdStore = StoreBuilder
+        .from<Pair<String, Int?>, Option<TvShowKey.Tmdb>>(
+            fetcher = Fetcher.ofResult { (name, firstAirDate) ->
+                fetchSearchResultTv(name, firstAirDate)
+                    .map { it?.let { Some(it) } ?: None }
+                    .toFetcherResult()
+            }
+        )
+        .cachePolicy(createCache(config))
+        .build()
+    private val tmdbMovieIdStore = StoreBuilder
+        .from<Pair<String, Int?>, Option<MovieKey.Tmdb>>(
+            fetcher = Fetcher.ofResult { (name, firstAirDate) ->
+                fetchSearchResultMovie(name, firstAirDate)
+                    .map { it?.let { Some(it) } ?: None }
+                    .toFetcherResult()
+            }
+        )
+        .cachePolicy(createCache(config))
+        .build()
 
     override fun findTmdbIdTv(name: String, firstAirYear: Int?): Flow<NetworkResult<TvShowKey.Tmdb?>> {
         logger.debug("Looking up TMDB ID for TV show $name ($firstAirYear)")
-        val key = Pair(name, firstAirYear)
-        return getNetworkBoundResource(
-            { null },
-            { fetchSearchResultTv(name, firstAirYear) },
-            { },
-            { tmdbTvIdCache[key] },
-            { tmdbTvIdCache[key] = it }
-        )
+        return tmdbTvIdStore.stream(StoreRequest.cached(name to firstAirYear, true))
+            .toNetFlow()
+            .map { it.convert { opt -> opt.orNull() } }
     }
 
     override fun findTmdbIdMovie(name: String, firstAirYear: Int?): Flow<NetworkResult<MovieKey.Tmdb?>> {
         logger.debug("Looking up TMDB ID for movie $name ($firstAirYear)")
-        val key = Pair(name, firstAirYear)
-        return getNetworkBoundResource(
-            { null },
-            { fetchSearchResultMovie(name, firstAirYear) },
-            { },
-            { tmdbMovieIdCache[key] },
-            { tmdbMovieIdCache[key] = it }
-        )
+        return tmdbMovieIdStore.stream(StoreRequest.cached(name to firstAirYear, true))
+            .toNetFlow()
+            .map { it.convert { opt -> opt.orNull() } }
     }
 
     private suspend fun fetchSearchResultTv(name: String, firstAirDateYear: Int?): Result<TvShowKey.Tmdb?> {
@@ -138,24 +168,12 @@ class TmdbTvDataRepositoryImpl(
 
     override fun getTvShow(key: TvShowKey.Tmdb): Flow<NetworkResult<TulipTvShowInfo.Tmdb>> {
         logger.debug("Retrieving $key")
-        return getNetworkBoundResource(
-            { db.getTvShow(key) },
-            { fetchFullTvInfo(key) },
-            { db.insertTvShow(it) },
-            { tvCache[key] },
-            { tvCache[key] = it }
-        )
+        return tvStore.stream(StoreRequest.cached(key, false)).toNetFlow()
     }
 
     override fun getMovie(key: MovieKey.Tmdb): Flow<NetworkResult<TulipMovie.Tmdb>> {
         logger.debug("Retrieving $key")
-        return getNetworkBoundResource(
-            { db.getMovie(key) },
-            { runCatching { service.getMovie(key.id).fromNetwork() } },
-            { db.insertMovie(it) },
-            { movieCache[key] },
-            { movieCache[key] = it }
-        )
+        return movieStore.stream(StoreRequest.cached(key, false)).toNetFlow()
     }
 
     private fun Movie.fromNetwork(): TulipMovie.Tmdb {

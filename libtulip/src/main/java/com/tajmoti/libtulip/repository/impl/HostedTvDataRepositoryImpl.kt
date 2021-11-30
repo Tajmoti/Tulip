@@ -1,13 +1,10 @@
 package com.tajmoti.libtulip.repository.impl
 
+import com.dropbox.android.external.store4.*
 import com.tajmoti.commonutils.*
 import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.HostedInfoDataSource
-import com.tajmoti.libtulip.misc.cache.TimedCache
-import com.tajmoti.libtulip.misc.job.NetFlow
-import com.tajmoti.libtulip.misc.job.NetworkResult
-import com.tajmoti.libtulip.misc.job.firstValueOrNull
-import com.tajmoti.libtulip.misc.job.getNetworkBoundResource
+import com.tajmoti.libtulip.misc.job.*
 import com.tajmoti.libtulip.model.MissingEntityException
 import com.tajmoti.libtulip.model.NoSuccessfulResultsException
 import com.tajmoti.libtulip.model.hosted.MappedSearchResult
@@ -22,26 +19,42 @@ import com.tajmoti.libtvprovider.SearchResult
 import com.tajmoti.libtvprovider.VideoStreamRef
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 class HostedTvDataRepositoryImpl(
     private val hostedTvDataRepo: HostedInfoDataSource,
     private val tvProvider: MultiTvProvider<StreamingService>,
     private val tmdbRepo: TmdbTvDataRepository,
     config: TulipConfiguration
 ) : HostedTvDataRepository {
-    private val tvCache = TimedCache<TvShowKey.Hosted, TulipTvShowInfo.Hosted>(
-        timeout = config.hostedItemCacheParams.validityMs, size = config.hostedItemCacheParams.size
-    )
-    private val movieCache = TimedCache<MovieKey.Hosted, TulipMovie.Hosted>(
-        timeout = config.hostedItemCacheParams.validityMs, size = config.hostedItemCacheParams.size
-    )
-    private val streamCache = TimedCache<StreamableKey.Hosted, List<VideoStreamRef>>(
-        timeout = config.streamCacheParams.validityMs, size = config.streamCacheParams.size
-    )
+    private val tvShowStore = StoreBuilder
+        .from<TvShowKey.Hosted, TulipTvShowInfo.Hosted, TulipTvShowInfo.Hosted>(
+            fetcher = Fetcher.ofResult { fetchTvShow(it).toFetcherResult() },
+            sourceOfTruth = SourceOfTruth.of(
+                reader = { flow { emit(hostedTvDataRepo.getTvShowByKey(it)) } },
+                writer = { _, it -> hostedTvDataRepo.insertTvShow(it) },
+            )
+        )
+        .cachePolicy(createCache(config.hostedItemCacheParams))
+        .build()
+    private val movieStore = StoreBuilder
+        .from<MovieKey.Hosted, TulipMovie.Hosted, TulipMovie.Hosted>(
+            fetcher = Fetcher.ofResult { fetchMovie(it).toFetcherResult() },
+            sourceOfTruth = SourceOfTruth.of(
+                reader = { flow { emit(hostedTvDataRepo.getMovieByKey(it)) } },
+                writer = { _, it -> hostedTvDataRepo.insertMovie(it) },
+            )
+        )
+        .cachePolicy(createCache(config.hostedItemCacheParams))
+        .build()
+    private val streamsStore = StoreBuilder
+        .from<StreamableKey.Hosted, List<VideoStreamRef>>(
+            fetcher = Fetcher.ofResult { tvProvider.getStreamableLinks(it.streamingService, it.id).toFetcherResult() },
+        )
+        .cachePolicy(createCache(config.streamCacheParams))
+        .build()
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -141,13 +154,7 @@ class HostedTvDataRepositoryImpl(
 
     override fun getTvShow(key: TvShowKey.Hosted): NetFlow<TulipTvShowInfo.Hosted> {
         logger.debug("Retrieving $key")
-        return getNetworkBoundResource(
-            { hostedTvDataRepo.getTvShowByKey(key) },
-            { fetchTvShow(key) },
-            { hostedTvDataRepo.insertTvShow(it) },
-            { tvCache[key] },
-            { tvCache[key] = it }
-        )
+        return tvShowStore.stream(StoreRequest.cached(key, false)).toNetFlow()
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -197,13 +204,7 @@ class HostedTvDataRepositoryImpl(
 
     override fun getMovie(key: MovieKey.Hosted): Flow<NetworkResult<TulipMovie.Hosted>> {
         logger.debug("Retrieving $key")
-        return getNetworkBoundResource(
-            { hostedTvDataRepo.getMovieByKey(key) },
-            { fetchMovie(key) },
-            { hostedTvDataRepo.insertMovie(it) },
-            { movieCache[key] },
-            { movieCache[key] = it }
-        )
+        return movieStore.stream(StoreRequest.cached(key, false)).toNetFlow()
     }
 
     private suspend fun fetchMovie(key: MovieKey.Hosted): Result<TulipMovie.Hosted> {
@@ -239,6 +240,8 @@ class HostedTvDataRepositoryImpl(
 
     override fun getCompleteEpisodesByTmdbKey(key: EpisodeKey.Tmdb): Flow<List<Result<TulipCompleteEpisodeInfo.Hosted>>> {
         return getTvShowsByTmdbKey(key.tvShowKey)
+            .onStart { logger.debug("Sth is START") }
+            .onEach { logger.debug("Sth is flowwww $it") }
             .map { tvListResult ->
                 tvListResult.map { tvList ->
                     tvList.flatMap { tv -> tv.findCompleteEpisodeFromTvAsResult(key) }
@@ -259,13 +262,7 @@ class HostedTvDataRepositoryImpl(
 
     override fun fetchStreams(key: StreamableKey.Hosted): NetFlow<List<VideoStreamRef>> {
         logger.debug("Retrieving $key")
-        return getNetworkBoundResource(
-            { null },
-            { tvProvider.getStreamableLinks(key.streamingService, key.id) },
-            { },
-            { streamCache[key] },
-            { streamCache[key] = it }
-        )
+        return streamsStore.stream(StoreRequest.cached(key, false)).toNetFlow()
     }
 
     private suspend fun findTmdbIdOrNull(searchResult: SearchResult): TvShowKey.Tmdb? {

@@ -1,5 +1,9 @@
 package com.tajmoti.libtulip.misc.job
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
+
 sealed class NetworkResult<T> {
     /**
      * This is either a cached value before the online value is finished loading,
@@ -70,4 +74,18 @@ sealed class NetworkResult<T> {
             }
         }
     }
+}
+
+/**
+ * Returns the final value of the resource or null if it's not available.
+ */
+suspend inline fun <T> Flow<NetworkResult<out T>>.firstValueOrNull(): T? {
+    return first().data
+}
+
+/**
+ * Returns the final value of the resource or null if it's not available.
+ */
+suspend inline fun <T> Flow<NetworkResult<out T>>.finalValueOrNull(): T? {
+    return last().data
 }
