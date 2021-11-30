@@ -19,7 +19,7 @@ object AndroidConfigurationModule {
             streamCacheParams = TulipConfiguration.CacheParameters(60 * 60 * 1000L, 256),
             tmdbApiKey = BuildConfig.tmdbApiKey,
             openSubtitlesApiKey = BuildConfig.openSubtitlesApiKey,
-            debug = BuildConfig.DEBUG
+            httpDebug = BuildConfig.HTTP_DEBUG
         )
     }
 }

@@ -26,7 +26,7 @@ object AndroidNetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
-        return createAppOkHttpClient(context.cacheDir, { hasNetwork(context) }, BuildConfig.DEBUG)
+        return createAppOkHttpClient(context.cacheDir, { hasNetwork(context) }, BuildConfig.HTTP_DEBUG)
     }
 
     private fun hasNetwork(context: Context): Boolean {

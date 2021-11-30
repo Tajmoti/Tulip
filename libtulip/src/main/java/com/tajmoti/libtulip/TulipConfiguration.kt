@@ -6,7 +6,7 @@ data class TulipConfiguration(
     val streamCacheParams: CacheParameters,
     val tmdbApiKey: String,
     val openSubtitlesApiKey: String,
-    val debug: Boolean
+    val httpDebug: Boolean
 ) {
     data class CacheParameters(
         val validityMs: Long,
