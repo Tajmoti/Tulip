@@ -7,7 +7,7 @@ import com.tajmoti.libtulip.model.key.StreamableKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
-class InMemoryUserDataDataSource : UserDataDataSource {
+class StubUserDataDataSource : UserDataDataSource {
     override fun isFavorite(item: ItemKey): Flow<Boolean> {
         return flowOf(false)
     }
@@ -22,14 +22,6 @@ class InMemoryUserDataDataSource : UserDataDataSource {
 
     override suspend fun addUserFavorite(item: ItemKey) {
 
-    }
-
-    override fun getLastPlayedPosition(key: ItemKey): Flow<LastPlayedPosition?> {
-        return flowOf(null)
-    }
-
-    override fun getLastPlayedPosition(key: StreamableKey): Flow<LastPlayedPosition?> {
-        return flowOf(null)
     }
 
     override fun getLastPlayedPositionTmdb(key: ItemKey.Tmdb): Flow<LastPlayedPosition.Tmdb?> {

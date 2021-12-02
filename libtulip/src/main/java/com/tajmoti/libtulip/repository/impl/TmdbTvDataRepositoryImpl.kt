@@ -85,14 +85,14 @@ class TmdbTvDataRepositoryImpl(
         .cachePolicy(createCache(config))
         .build()
 
-    override fun findTmdbIdTv(name: String, firstAirYear: Int?): Flow<NetworkResult<TvShowKey.Tmdb?>> {
+    override fun findTvShowKey(name: String, firstAirYear: Int?): Flow<NetworkResult<TvShowKey.Tmdb?>> {
         logger.debug("Looking up TMDB ID for TV show $name ($firstAirYear)")
         return tmdbTvIdStore.stream(StoreRequest.cached(name to firstAirYear, true))
             .toNetFlow()
             .map { it.convert { opt -> opt.orNull() } }
     }
 
-    override fun findTmdbIdMovie(name: String, firstAirYear: Int?): Flow<NetworkResult<MovieKey.Tmdb?>> {
+    override fun findMovieKey(name: String, firstAirYear: Int?): Flow<NetworkResult<MovieKey.Tmdb?>> {
         logger.debug("Looking up TMDB ID for movie $name ($firstAirYear)")
         return tmdbMovieIdStore.stream(StoreRequest.cached(name to firstAirYear, true))
             .toNetFlow()
@@ -147,7 +147,8 @@ class TmdbTvDataRepositoryImpl(
 
     private fun Tv.fromNetwork(seasons: List<TulipSeasonInfo.Tmdb>): TulipTvShowInfo.Tmdb {
         val key = TvShowKey.Tmdb(id)
-        return TulipTvShowInfo.Tmdb(key, name, null, posterPath, backdropPath, seasons)
+        val baseImageUrl = "https://image.tmdb.org/t/p/original"
+        return TulipTvShowInfo.Tmdb(key, name, null, baseImageUrl +  posterPath, baseImageUrl + backdropPath, seasons)
     }
 
     private fun Season.fromNetwork(tvShowKey: TvShowKey.Tmdb): TulipSeasonInfo.Tmdb {

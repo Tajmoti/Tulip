@@ -26,7 +26,7 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding>(FragmentStreamsBind
         binding.recyclerSearch.setupWithAdapterAndDivider(adapter)
         binding.buttonBack.setOnClickListener { slideToBottomDismiss() }
         binding.buttonRestartVideo.setOnClickListener { reloadCurrentStream() }
-        consume(viewModel.linksResult) { it?.let { adapter.items = it.streams } }
+        consume(viewModel.linksResult) { it?.let { adapter.items = it } }
         consume(viewModel.streamableInfo, this::onStreamableInfo)
     }
 

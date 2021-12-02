@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 interface TmdbMappingDao {
 
     @Query("SELECT * FROM DbTmdbMapping WHERE service == :service AND `key` == :key LIMIT 1")
-    suspend fun getTmdbIdByHostedKey(service: StreamingService, key: String): DbTmdbMapping?
+    fun getTmdbIdByHostedKey(service: StreamingService, key: String): Flow<DbTmdbMapping?>
 
     @Query("SELECT * FROM DbTmdbMapping WHERE tmdbId == :tmdbId")
     fun getHostedKeysByTmdbId(tmdbId: Long): Flow<List<DbTmdbMapping>>

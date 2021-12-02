@@ -1,9 +1,6 @@
 package com.tajmoti.libtulip.ui.player
 
-import com.tajmoti.libtulip.model.info.StreamableInfo
-import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
-import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
-import com.tajmoti.libtulip.model.info.TulipMovie
+import com.tajmoti.libtulip.model.info.*
 import java.util.concurrent.TimeUnit
 
 object VideoPlayerUtils {
@@ -12,7 +9,7 @@ object VideoPlayerUtils {
         return when (info) {
             is TulipCompleteEpisodeInfo -> showToDisplayName(info)
             is TulipMovie -> info.name
-            null -> ""
+            else -> ""
         }
     }
 
@@ -24,7 +21,7 @@ object VideoPlayerUtils {
 
     @JvmStatic
     fun showToDisplayName(item: TulipCompleteEpisodeInfo): String {
-        val showSeasonEpNum = "${item.showName} S${item.seasonNumber}:E${item.episodeNumber}"
+        val showSeasonEpNum = "${item.name} S${item.seasonNumber}:E${item.episodeNumber}"
         val episodeName = item.name?.let { " '$it'" } ?: ""
         return showSeasonEpNum + episodeName
     }

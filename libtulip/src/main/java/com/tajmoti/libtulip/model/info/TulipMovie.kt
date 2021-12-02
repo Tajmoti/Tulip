@@ -10,8 +10,8 @@ sealed interface TulipMovie : StreamableInfo {
         override val key: MovieKey.Tmdb,
         override val name: String,
         override val overview: String?,
-        override val posterPath: String?,
-        override val backdropPath: String?,
+        override val posterUrl: String?,
+        override val backdropUrl: String?,
     ) : TulipMovie, TulipItem.Tmdb, StreamableInfo.Tmdb
 
     class Hosted(

@@ -1,7 +1,7 @@
 package com.tajmoti.tulip.ui.search
 
 import androidx.lifecycle.viewModelScope
-import com.tajmoti.libtulip.repository.HostedTvDataRepository
+import com.tajmoti.libtulip.service.MappingSearchService
 import com.tajmoti.libtulip.ui.search.SearchViewModel
 import com.tajmoti.libtulip.ui.search.SearchViewModelImpl
 import com.tajmoti.tulip.ui.DelegatingViewModel
@@ -10,7 +10,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AndroidSearchViewModel @Inject constructor(
-    repository: HostedTvDataRepository
+    mappingSearchService: MappingSearchService
 ) : DelegatingViewModel<SearchViewModel>() {
-    override val impl = SearchViewModelImpl(repository, viewModelScope)
+    override val impl = SearchViewModelImpl(mappingSearchService, viewModelScope)
 }

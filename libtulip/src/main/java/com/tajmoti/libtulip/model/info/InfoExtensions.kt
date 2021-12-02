@@ -3,6 +3,7 @@ package com.tajmoti.libtulip.model.info
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.SeasonKey
+import com.tajmoti.libtulip.model.key.seasonNumber
 
 val TulipSeasonInfo.seasonNumber: Int
     get() = key.seasonNumber
@@ -35,5 +36,14 @@ fun TulipSeasonInfo.Hosted.findEpisodeOrNull(key: EpisodeKey.Hosted): TulipEpiso
 }
 
 fun TulipTvShowInfo.Hosted.findCompleteEpisodeInfo(key: EpisodeKey.Hosted): TulipCompleteEpisodeInfo.Hosted? {
-    return findEpisodeOrNull(key)?.let { TulipCompleteEpisodeInfo.Hosted(key, name, it, language) }
+    return findEpisodeOrNull(key)?.let { episode -> TulipCompleteEpisodeInfo.Hosted(this, episode) }
 }
+
+val TulipCompleteEpisodeInfo.showName: String
+    get() = tvShow.name
+
+val TulipCompleteEpisodeInfo.seasonNumber: Int
+    get() = episodeInfo.key.seasonNumber
+
+val TulipCompleteEpisodeInfo.episodeNumber: Int
+    get() = episodeInfo.episodeNumber

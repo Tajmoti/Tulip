@@ -10,6 +10,7 @@ import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.repository.FavoritesRepository
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
+import com.tajmoti.libtulip.repository.getSeasons
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -106,8 +107,7 @@ class TvShowViewModelImpl constructor(
     }
 
     private fun tvToStateFlow(show: TulipTvShowInfo.Tmdb): State {
-        val backdropUrl = "https://image.tmdb.org/t/p/original" + show.backdropPath
-        return State.Success(backdropUrl, show.seasons)
+        return State.Success(show.backdropUrl, show.seasons)
     }
 
     private fun sortSpecialsLast(seasons: List<TulipSeasonInfo>) =

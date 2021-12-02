@@ -1,12 +1,18 @@
 package com.tajmoti.libtulip.di
 
+import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libprimewiretvprovider.PrimewireTvProvider
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
-import com.tajmoti.libtulip.repository.StreamRepository
+import com.tajmoti.libtulip.repository.ItemMappingRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
-import com.tajmoti.libtulip.repository.impl.StreamRepositoryImpl
+import com.tajmoti.libtulip.service.MappingSearchService
 import com.tajmoti.libtulip.service.StreamExtractionService
+import com.tajmoti.libtulip.service.StreamService
+import com.tajmoti.libtulip.service.SubtitleService
+import com.tajmoti.libtulip.service.impl.MappingSearchServiceImpl
+import com.tajmoti.libtulip.service.impl.StreamServiceImpl
+import com.tajmoti.libtulip.service.impl.SubtitleServiceImpl
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.kinox.KinoxTvProvider
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
@@ -25,12 +31,38 @@ import javax.inject.Singleton
 object BusinessLogicModule {
     @Provides
     @Singleton
-    fun provideLanguageMappingService(
+    fun provideStreamService(
         hostedTvDataRepository: HostedTvDataRepository,
         extractionService: StreamExtractionService,
-        tvDataRepo: TmdbTvDataRepository
-    ): StreamRepository {
-        return StreamRepositoryImpl(hostedTvDataRepository, extractionService, tvDataRepo)
+        hostedToTmdbMappingRepository: ItemMappingRepository
+    ): StreamService {
+        return StreamServiceImpl(
+            hostedTvDataRepository,
+            extractionService,
+            hostedToTmdbMappingRepository
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideSubtitleService(
+        openSubtitlesFallbackService: OpenSubtitlesFallbackService
+    ): SubtitleService {
+        return SubtitleServiceImpl(openSubtitlesFallbackService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMappingSearchService(
+        hostedRepository: HostedTvDataRepository,
+        tmdbRepository: TmdbTvDataRepository,
+        hostedToTmdbMappingRepository: ItemMappingRepository,
+    ): MappingSearchService {
+        return MappingSearchServiceImpl(
+            hostedRepository,
+            tmdbRepository,
+            hostedToTmdbMappingRepository,
+        )
     }
 
     @Provides

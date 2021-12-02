@@ -7,75 +7,55 @@ import com.tajmoti.libtulip.model.info.TulipSeasonInfo
 import com.tajmoti.libtulip.model.info.TulipTvShowInfo
 import com.tajmoti.libtulip.model.key.*
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 
 class InMemoryHostedInfoDataSource : HostedInfoDataSource {
-    private val tvShows = mutableSetOf<TulipTvShowInfo.Hosted>()
-    private val movies = mutableSetOf<TulipMovie.Hosted>()
-    private val tmdbMappings = mutableMapOf<ItemKey.Tmdb, MutableSet<ItemKey.Hosted>>()
+    private val tvShows = MutableStateFlow(setOf<TulipTvShowInfo.Hosted>())
+    private val movies = MutableStateFlow(setOf<TulipMovie.Hosted>())
+    private val tmdbTvShowMappings = MutableStateFlow(mapOf<TvShowKey.Tmdb, Set<TvShowKey.Hosted>>())
+    private val tmdbMovieMappings = MutableStateFlow(mapOf<MovieKey.Tmdb, Set<MovieKey.Hosted>>())
 
-    override suspend fun getTvShowByKey(key: TvShowKey.Hosted): TulipTvShowInfo.Hosted? {
-        return tvShows.firstOrNull { it.key == key }
-    }
-
-    override suspend fun getTvShowsByTmdbId(key: TvShowKey.Tmdb): List<TulipTvShowInfo.Hosted> {
-        val showKeys = tmdbMappings[key] ?: return emptyList()
-        return tvShows.filter { showKeys.contains(it.key) }
+    override fun getTvShowByKey(key: TvShowKey.Hosted): Flow<TulipTvShowInfo.Hosted?> {
+        return tvShows.map { tvShows -> tvShows.firstOrNull { tvShow -> tvShow.key == key } }
     }
 
     override suspend fun insertTvShow(show: TulipTvShowInfo.Hosted) {
-        tvShows.add(show)
+        tvShows.value = tvShows.value.plus(show)
     }
 
-    override suspend fun getSeasonsByTvShow(key: TvShowKey.Hosted): List<TulipSeasonInfo.Hosted> {
-        return tvShows.firstOrNull { it.key == key }?.seasons ?: emptyList()
-    }
-
-    override suspend fun getSeasonByKey(key: SeasonKey.Hosted): TulipSeasonInfo.Hosted? {
-        return getSeasonsByTvShow(key.tvShowKey).firstOrNull { it.key == key }
-    }
-
-    override suspend fun getEpisodesBySeason(key: SeasonKey.Hosted): List<TulipEpisodeInfo.Hosted> {
-        return getSeasonByKey(key)?.episodes ?: emptyList()
-    }
-
-    override suspend fun getEpisodeByKey(key: EpisodeKey.Hosted): TulipEpisodeInfo.Hosted? {
-        return getSeasonByKey(key.seasonKey)?.episodes?.firstOrNull { it.key == key }
-    }
-
-    override suspend fun getEpisodeByTmdbId(key: EpisodeKey.Tmdb): List<TulipEpisodeInfo.Hosted> {
-        val seasons = getTvShowsByTmdbId(key.tvShowKey).mapNotNull { tvShow ->
-            tvShow.seasons.firstOrNull { season -> season.key.seasonNumber == key.seasonNumber }
-        }
-        return seasons.mapNotNull { season ->
-            season.episodes.firstOrNull { episode -> episode.episodeNumber == key.episodeNumber }
-        }
-    }
-
-    override suspend fun getMovieByKey(key: MovieKey.Hosted): TulipMovie.Hosted? {
-        return movies.firstOrNull { it.key == key }
-    }
-
-    override suspend fun getMovieByTmdbKey(key: MovieKey.Tmdb): List<TulipMovie.Hosted> {
-        val showKeys = tmdbMappings[key] ?: return emptyList()
-        return movies.filter { showKeys.contains(it.key) }
+    override fun getMovieByKey(key: MovieKey.Hosted): Flow<TulipMovie.Hosted?> {
+        return movies.map { movies -> movies.firstOrNull { movie -> movie.key == key } }
     }
 
     override suspend fun insertMovie(movie: TulipMovie.Hosted) {
-        movies.add(movie)
+        movies.value = movies.value.plus(movie)
     }
 
-    override suspend fun createTmdbMapping(hosted: ItemKey.Hosted, tmdb: ItemKey.Tmdb) {
-        val list = tmdbMappings[tmdb] ?: mutableSetOf()
-        list.add(hosted)
-        tmdbMappings[tmdb] = list
+    override suspend fun createTmdbMapping(hosted: TvShowKey.Hosted, tmdb: TvShowKey.Tmdb) {
+        val oldValue = tmdbTvShowMappings.value
+        val oldSet = oldValue[tmdb] ?: mutableSetOf()
+        val newSet = oldSet.plus(hosted)
+        tmdbTvShowMappings.value = oldValue.plus(tmdb to newSet)
+    }
+
+    override suspend fun createTmdbMapping(hosted: MovieKey.Hosted, tmdb: MovieKey.Tmdb) {
+        val oldValue = tmdbMovieMappings.value
+        val oldSet = oldValue[tmdb] ?: mutableSetOf()
+        val newSet = oldSet.plus(hosted)
+        tmdbMovieMappings.value = oldValue.plus(tmdb to newSet)
     }
 
     override fun getTmdbMappingForTvShow(tmdb: TvShowKey.Tmdb): Flow<List<TvShowKey.Hosted>> {
-        return flowOf(tmdbMappings[tmdb]?.map { it as TvShowKey.Hosted } ?: emptyList())
+        return tmdbTvShowMappings.map { keyMap ->
+            keyMap.filterKeys { tmdbKey -> tmdbKey == tmdb }.flatMap { (_, hostedKeys) -> hostedKeys }
+        }
     }
 
     override fun getTmdbMappingForMovie(tmdb: MovieKey.Tmdb): Flow<List<MovieKey.Hosted>> {
-        return flowOf(tmdbMappings[tmdb]?.map { it as MovieKey.Hosted } ?: emptyList())
+        return tmdbMovieMappings.map { keyMap ->
+            keyMap.filterKeys { tmdbKey -> tmdbKey == tmdb }.flatMap { (_, hostedKeys) -> hostedKeys }
+        }
     }
 }

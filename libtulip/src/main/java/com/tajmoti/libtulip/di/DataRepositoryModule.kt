@@ -34,6 +34,14 @@ object DataRepositoryModule {
 
     @Provides
     @Singleton
+    fun provideItemMappingRepository(
+        hostedTvDataRepo: HostedInfoDataSource
+    ): ItemMappingRepository {
+        return ItemMappingRepositoryImpl(hostedTvDataRepo)
+    }
+
+    @Provides
+    @Singleton
     fun provideStreamsRepository(
         linkExtractor: VideoLinkExtractor,
         httpClient: HttpClient

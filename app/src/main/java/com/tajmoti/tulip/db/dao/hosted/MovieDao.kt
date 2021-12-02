@@ -6,14 +6,15 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.tulip.db.entity.hosted.DbMovie
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MovieDao {
     @Query("SELECT * FROM DbMovie WHERE service == :service AND `key` == :key LIMIT 1")
-    suspend fun getByKey(service: StreamingService, key: String): DbMovie?
+    fun getByKey(service: StreamingService, key: String): Flow<DbMovie?>
 
     @Query("SELECT * FROM DbMovie INNER JOIN DbTmdbMapping mapping ON mapping.`key` == DbMovie.`key` WHERE tmdbId == :tmdbId")
-    suspend fun getByTmdbId(tmdbId: Long): List<DbMovie>
+    fun getByTmdbId(tmdbId: Long): Flow<List<DbMovie>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(episode: DbMovie)

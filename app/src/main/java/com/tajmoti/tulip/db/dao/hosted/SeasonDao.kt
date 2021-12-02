@@ -6,21 +6,22 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.tulip.db.entity.hosted.DbSeason
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SeasonDao {
     @Query("SELECT * FROM DbSeason WHERE service == :service AND tvShowKey == :tvShowKey")
-    suspend fun getForShow(
+    fun getForShow(
         service: StreamingService,
         tvShowKey: String
-    ): List<DbSeason>
+    ): Flow<List<DbSeason>>
 
     @Query("SELECT * FROM DbSeason WHERE service == :service AND tvShowKey == :tvShowKey AND number == :seasonNumber LIMIT 1")
-    suspend fun getBySeasonNumber(
+    fun getBySeasonNumber(
         service: StreamingService,
         tvShowKey: String,
         seasonNumber: Int
-    ): DbSeason?
+    ): Flow<DbSeason?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(seasons: List<DbSeason>)

@@ -4,6 +4,9 @@ import arrow.core.Either
 import com.tajmoti.libtvprovider.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.ExtractionError
 
+/**
+ * Extracts direct video links from streaming site links.
+ */
 interface StreamExtractionService {
 
     fun canExtractStream(ref: VideoStreamRef): Boolean

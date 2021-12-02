@@ -1,33 +1,23 @@
 package com.tajmoti.libtulip.model.info
 
-import com.tajmoti.libtulip.model.key.EpisodeKey
-import com.tajmoti.libtulip.model.key.seasonNumber
-
 sealed interface TulipCompleteEpisodeInfo : StreamableInfo {
-    override val key: EpisodeKey
-    val showName: String
-    val seasonNumber: Int
-    val episodeNumber: Int
-
+    val tvShow: TulipTvShowInfo
+    val episodeInfo: TulipEpisodeInfo
 
     data class Hosted(
-        override val key: EpisodeKey.Hosted,
-        override val showName: String,
-        val info: TulipEpisodeInfo.Hosted,
-        override val language: LanguageCode
+        override val tvShow: TulipTvShowInfo.Hosted,
+        override val episodeInfo: TulipEpisodeInfo.Hosted
     ) : TulipCompleteEpisodeInfo, StreamableInfo.Hosted {
-        override val name = info.name
-        override val seasonNumber = info.key.seasonNumber
-        override val episodeNumber = info.episodeNumber
+        override val key = episodeInfo.key
+        override val name = tvShow.name
+        override val language = tvShow.language
     }
 
     data class Tmdb(
-        override val key: EpisodeKey.Tmdb,
-        override val showName: String,
-        val info: TulipEpisodeInfo.Tmdb
+        override val tvShow: TulipTvShowInfo.Tmdb,
+        override val episodeInfo: TulipEpisodeInfo.Tmdb
     ) : TulipCompleteEpisodeInfo, StreamableInfo.Tmdb {
-        override val episodeNumber = key.episodeNumber
-        override val name = info.name
-        override val seasonNumber = info.key.seasonNumber
+        override val key = episodeInfo.key
+        override val name = tvShow.name
     }
 }

@@ -2,49 +2,43 @@ package com.tajmoti.libtulip.repository
 
 import com.tajmoti.libtulip.misc.job.NetFlow
 import com.tajmoti.libtulip.misc.job.NetworkResult
-import com.tajmoti.libtulip.model.info.*
+import com.tajmoti.libtulip.model.hosted.StreamingService
+import com.tajmoti.libtulip.model.info.TulipMovie
+import com.tajmoti.libtulip.model.info.TulipTvShowInfo
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.search.TulipSearchResult
+import com.tajmoti.libtvprovider.SearchResult
 import com.tajmoti.libtvprovider.VideoStreamRef
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Handles data coming from specific streaming sites.
+ * Repository of TV show and movie information from specific streaming sites.
+ * This includes the ability to search TV shows and movies and retrieving of video links for episodes and movies.
  */
 interface HostedTvDataRepository {
-    suspend fun getItemByKey(key: ItemKey.Hosted): Flow<NetworkResult<out TulipItem.Hosted>> {
-        return when (key) {
-            is TvShowKey.Hosted -> getTvShow(key)
-            is MovieKey.Hosted -> getMovie(key)
-        }
-    }
+    /**
+     * Searches [query] on all supported streaming services and returns a flow that emits the search results.
+     * The flow will emit multiple values as more search results are loaded in.
+     */
+    fun search(query: String): Flow<Map<StreamingService, Result<List<SearchResult>>>>
 
-    fun search(query: String): Flow<Result<List<TulipSearchResult>>>
 
+    /**
+     * Retrieves information about a TV show on a specific streaming site by its [key].
+     * The returned flow may never complete, and it may emit an updated value at any time!
+     */
     fun getTvShow(key: TvShowKey.Hosted): Flow<NetworkResult<TulipTvShowInfo.Hosted>>
 
-    fun getTvShowsByTmdbKey(key: TvShowKey.Tmdb): Flow<List<Result<TulipTvShowInfo.Hosted>>>
-
-    fun getSeasons(key: TvShowKey.Hosted): Flow<NetworkResult<List<TulipSeasonInfo.Hosted>>>
-
-    fun getSeason(key: SeasonKey.Hosted): Flow<NetworkResult<TulipSeasonInfo.Hosted>>
-
-    fun getStreamableInfo(key: StreamableKey.Hosted): Flow<Result<StreamableInfo.Hosted>>
-
-    fun getEpisodeByTmdbId(key: EpisodeKey.Tmdb): Flow<List<Result<TulipEpisodeInfo.Hosted>>>
-
-    fun getCompleteEpisodesByTmdbKey(key: EpisodeKey.Tmdb): Flow<List<Result<TulipCompleteEpisodeInfo.Hosted>>>
-
-    fun getMoviesByTmdbKey(key: MovieKey.Tmdb): Flow<List<Result<TulipMovie.Hosted>>>
-
+    /**
+     * Retrieves information about a movie on a specific streaming site by its [key].
+     * The returned flow may never complete, and it may emit an updated value at any time!
+     */
     fun getMovie(key: MovieKey.Hosted): Flow<NetworkResult<TulipMovie.Hosted>>
 
-    fun getStreamableInfoByTmdbKey(key: StreamableKey.Tmdb): Flow<List<Result<StreamableInfo.Hosted>>> {
-        return when (key) {
-            is MovieKey.Tmdb -> getMoviesByTmdbKey(key)
-            is EpisodeKey.Tmdb -> getCompleteEpisodesByTmdbKey(key)
-        }
-    }
 
+    /**
+     * Retrieves a list of video streams for the provided [key] (either [EpisodeKey.Hosted] or [MovieKey.Hosted]).
+     * The flow will emit multiple values as more streams results are loaded in.
+     */
     fun fetchStreams(key: StreamableKey.Hosted): NetFlow<List<VideoStreamRef>>
 }

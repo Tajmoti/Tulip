@@ -2,7 +2,7 @@ package com.tajmoti.libtulip.ui.search
 
 import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.model.search.TulipSearchResult
-import com.tajmoti.libtulip.repository.HostedTvDataRepository
+import com.tajmoti.libtulip.service.MappingSearchService
 import com.tajmoti.libtulip.ui.doCancelableJob
 import com.tajmoti.libtulip.ui.search.SearchViewModel.Companion.DEBOUNCE_INTERVAL_MS
 import kotlinx.coroutines.CoroutineScope
@@ -11,8 +11,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+@OptIn(FlowPreview::class)
 class SearchViewModelImpl(
-    private val repository: HostedTvDataRepository,
+    private val mappingSearchService: MappingSearchService,
     private val viewModelScope: CoroutineScope,
 ) : SearchViewModel {
     private val state = MutableStateFlow<State>(State.Idle)
@@ -44,7 +45,6 @@ class SearchViewModelImpl(
     private var searchJob: Job? = null
 
     init {
-        @OptIn(FlowPreview::class)
         searchFlow
             .debounce { if (it.isNullOrBlank()) 0L else DEBOUNCE_INTERVAL_MS }
             .onEach { onNewSearchQuery(it) }
@@ -79,7 +79,7 @@ class SearchViewModelImpl(
 
     private suspend fun startSearchAsync(query: String) = flow {
         emit(State.Searching)
-        val flowOfStates = repository.search(query)
+        val flowOfStates = mappingSearchService.searchAndCreateMappings(query)
             .map { result -> result.fold({ State.Success(it) }, { State.Error }) }
         emitAll(flowOfStates)
     }

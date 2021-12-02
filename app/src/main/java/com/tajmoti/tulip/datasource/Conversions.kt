@@ -53,7 +53,7 @@ internal inline fun DbTmdbMovie.fromDb(): TulipMovie.Tmdb {
 }
 
 internal inline fun TulipTvShowInfo.Tmdb.toDb(): DbTmdbTv {
-    return DbTmdbTv(key.id, name, posterPath, backdropPath)
+    return DbTmdbTv(key.id, name, posterUrl, backdropUrl)
 }
 
 internal inline fun TulipSeasonInfo.Tmdb.toDb(tvId: Long): DbTmdbSeason {
@@ -65,7 +65,7 @@ internal inline fun TulipEpisodeInfo.Tmdb.toDb(tvId: Long): DbTmdbEpisode {
 }
 
 internal inline fun TulipMovie.Tmdb.toDb(): DbTmdbMovie {
-    return DbTmdbMovie(key.id, name, overview, posterPath, backdropPath)
+    return DbTmdbMovie(key.id, name, overview, posterUrl, backdropUrl)
 }
 
 

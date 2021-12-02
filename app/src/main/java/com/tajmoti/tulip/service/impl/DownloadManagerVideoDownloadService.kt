@@ -5,9 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import com.tajmoti.commonutils.logger
-import com.tajmoti.libtulip.model.info.StreamableInfo
-import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
-import com.tajmoti.libtulip.model.info.TulipMovie
+import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.tulip.R
 import dagger.hilt.android.qualifiers.ApplicationContext
