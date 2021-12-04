@@ -1,82 +1,75 @@
-package com.tajmoti.tulip.ui;
+package com.tajmoti.tulip.ui
 
-import android.graphics.drawable.Drawable;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.SeekBar;
+import android.graphics.drawable.Drawable
+import android.view.View
+import android.widget.ImageView
+import android.widget.SeekBar
+import android.widget.SeekBar.OnSeekBarChangeListener
+import androidx.annotation.ColorInt
+import androidx.core.view.isVisible
+import androidx.databinding.BindingAdapter
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.progressindicator.CircularProgressIndicator
 
-import androidx.annotation.ColorInt;
-import androidx.annotation.Nullable;
-import androidx.core.view.ViewKt;
-import androidx.databinding.BindingAdapter;
-
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.progressindicator.CircularProgressIndicator;
-
-public class DataBindingAdapters {
-
+object DataBindingAdapters {
+    @JvmStatic
     @BindingAdapter("srcCompat")
-    public static void setFabDrawableCompat(FloatingActionButton view, Drawable drawable) {
-        view.setImageDrawable(drawable);
+    fun setFabDrawableCompat(view: FloatingActionButton, drawable: Drawable?) {
+        view.setImageDrawable(drawable)
     }
 
+    @JvmStatic
     @BindingAdapter("android:src")
-    public static void setImageResource(ImageView imageView, int resource) {
-        imageView.setImageResource(resource);
+    fun setImageResource(imageView: ImageView, resource: Int) {
+        imageView.setImageResource(resource)
     }
 
+    @JvmStatic
     @BindingAdapter("indicatorColor")
-    public static void setIndicatorColor(CircularProgressIndicator indicator, @ColorInt int color) {
-        indicator.setIndicatorColor(color);
+    fun setIndicatorColor(indicator: CircularProgressIndicator, @ColorInt color: Int) {
+        indicator.setIndicatorColor(color)
     }
 
+    @JvmStatic
     @BindingAdapter("android:visibility")
-    public static void setVisibility(View view, Boolean value) {
-        ViewKt.setVisible(view, value);
+    fun setVisibility(view: View, value: Boolean?) {
+        view.isVisible = value!!
     }
 
+    @JvmStatic
     @BindingAdapter("progressFraction")
-    public static void setProgressFraction(SeekBar view, @Nullable Float progress) {
-        if (progress == null)
-            return;
-        var oldProgress = (int) ((float) view.getProgress() / (float) view.getMax());
-        var newProgress = (int) (view.getMax() * progress);
+    fun setProgressFraction(view: SeekBar, progress: Float?) {
+        if (progress == null) return
+        val oldProgress = (view.progress.toFloat() / view.max.toFloat()).toInt()
+        val newProgress = (view.max * progress).toInt()
         if (oldProgress != newProgress) {
-            view.setProgress(newProgress);
+            view.progress = newProgress
         }
     }
 
+    @JvmStatic
     @BindingAdapter("onProgressFractionChanged")
-    public static void setOnSeekBarChangeListener(
-            SeekBar view,
-            final OnProgressFractionalChanged progressFractionalChanged
+    fun setOnSeekBarChangeListener(
+        view: SeekBar,
+        progressFractionalChanged: OnProgressFractionalChanged?
     ) {
         if (progressFractionalChanged == null) {
-            view.setOnSeekBarChangeListener(null);
-            return;
+            view.setOnSeekBarChangeListener(null)
+            return
         }
-        view.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (!fromUser)
-                    return;
-                var progressFractional = (float) progress / (float) seekBar.getMax();
-                progressFractionalChanged.onProgressFractionalChanged(progressFractional);
+        view.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                if (!fromUser) return
+                val progressFractional = progress.toFloat() / seekBar.max.toFloat()
+                progressFractionalChanged.onProgressFractionalChanged(progressFractional)
             }
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
+            override fun onStartTrackingTouch(seekBar: SeekBar) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar) {}
+        })
     }
 
-    public interface OnProgressFractionalChanged {
-        void onProgressFractionalChanged(Float progress);
+    interface OnProgressFractionalChanged {
+        fun onProgressFractionalChanged(progress: Float?)
     }
 }
