@@ -306,17 +306,19 @@ class VideoPlayerViewModelImpl constructor(
     init {
         startPersistPlayingPosition()
         startRestorePlayingPosition()
-        logAllFlowValues(
-            this,
-            viewModelScope,
-            logger,
-            listOf(
-                this::position,
-                this::progress,
-                this::mediaPlayerState,
-                this::persistedPlayingProgress
+        if (logger.isDebugEnabled) {
+            logAllFlowValues(
+                this,
+                viewModelScope,
+                logger,
+                listOf(
+                    this::position,
+                    this::progress,
+                    this::mediaPlayerState,
+                    this::persistedPlayingProgress
+                )
             )
-        )
+        }
     }
 
     override fun goToNextEpisode() {
