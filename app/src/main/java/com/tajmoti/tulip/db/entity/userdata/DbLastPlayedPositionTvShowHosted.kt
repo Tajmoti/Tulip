@@ -4,10 +4,10 @@ import androidx.room.Entity
 import com.tajmoti.libtulip.model.hosted.StreamingService
 
 @Entity(primaryKeys = ["streamingService", "tvShowId"])
-data class DbLastPlayedPositionHosted(
+data class DbLastPlayedPositionTvShowHosted(
     val streamingService: StreamingService,
     val tvShowId: String,
     val seasonNumber: Int,
     val episodeId: String,
-    val progress: Float?
+    val progress: Float
 )

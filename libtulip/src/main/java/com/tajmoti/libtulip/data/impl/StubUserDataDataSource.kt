@@ -40,7 +40,11 @@ class StubUserDataDataSource : UserDataDataSource {
         return flowOf(null)
     }
 
-    override suspend fun setLastPlayedPosition(key: StreamableKey, progress: Float?) {
+    override suspend fun setLastPlayedPosition(key: StreamableKey, progress: Float) {
+
+    }
+
+    override suspend fun removeLastPlayedPosition(item: StreamableKey) {
 
     }
 }

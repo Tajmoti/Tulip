@@ -6,7 +6,6 @@ import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.StreamableKey
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 
 interface UserDataDataSource {
     /**
@@ -54,7 +53,6 @@ interface UserDataDataSource {
     fun getLastPlayedPositionHosted(key: ItemKey.Hosted): Flow<LastPlayedPosition.Hosted?>
 
 
-
     /**
      * Retrieves the last played position of the TV show episode or movie specified by [key].
      * The returned flow may never complete, and it may emit an updated value at any time!
@@ -62,8 +60,8 @@ interface UserDataDataSource {
     fun getLastPlayedPosition(key: StreamableKey) = when (key) {
         is EpisodeKey.Tmdb -> getLastPlayedPositionTmdb(key)
         is EpisodeKey.Hosted -> getLastPlayedPositionHosted(key)
-        is MovieKey.Tmdb -> flowOf(null) // TODO
-        is MovieKey.Hosted -> flowOf(null) // TODO
+        is MovieKey.Tmdb -> getLastPlayedPositionTmdb(key as StreamableKey.Tmdb)
+        is MovieKey.Hosted -> getLastPlayedPositionHosted(key as StreamableKey.Hosted)
     }
 
     /**
@@ -83,5 +81,10 @@ interface UserDataDataSource {
      * Sets the playing [progress] of the TV show episode or movie specified by [key].
      * The [progress] is a real number in the range 0.0 to 1.0.
      */
-    suspend fun setLastPlayedPosition(key: StreamableKey, progress: Float?)
+    suspend fun setLastPlayedPosition(key: StreamableKey, progress: Float)
+
+    /**
+     * Removes the last playing progress for [item].
+     */
+    suspend fun removeLastPlayedPosition(item: StreamableKey)
 }

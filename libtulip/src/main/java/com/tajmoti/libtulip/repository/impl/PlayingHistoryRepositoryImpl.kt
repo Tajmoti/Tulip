@@ -19,7 +19,11 @@ class PlayingHistoryRepositoryImpl(
         return dataSource.getLastPlayedPosition(item)
     }
 
-    override suspend fun setLastPlayedPosition(item: StreamableKey, progress: Float?) {
+    override suspend fun setLastPlayedPosition(item: StreamableKey, progress: Float) {
         dataSource.setLastPlayedPosition(item, progress)
+    }
+
+    override suspend fun removeLastPlayedPosition(item: StreamableKey) {
+        dataSource.removeLastPlayedPosition(item)
     }
 }

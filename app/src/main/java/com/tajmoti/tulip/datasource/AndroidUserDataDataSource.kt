@@ -47,20 +47,19 @@ class AndroidUserDataDataSource @Inject constructor(
 
     override fun getLastPlayedPositionTmdb(key: ItemKey.Tmdb): Flow<LastPlayedPosition.Tmdb?> {
         return when (key) {
-            is TvShowKey.Tmdb -> playingHistoryDao.getLastPlayingPositionTmdb(
-                key.id
-            ).map { it?.fromDb() }
-            is MovieKey.Tmdb -> flowOf(null) // TODO
+            is TvShowKey.Tmdb -> playingHistoryDao.getLastPlayingPositionTvShowTmdb(key.id)
+                .map { it?.fromDb() }
+            is MovieKey.Tmdb -> playingHistoryDao.getLastPlayingPositionMovieTmdb(key.id)
+                .map { it?.fromDb() }
         }
     }
 
     override fun getLastPlayedPositionHosted(key: ItemKey.Hosted): Flow<LastPlayedPosition.Hosted?> {
         return when (key) {
-            is TvShowKey.Hosted -> playingHistoryDao.getLastPlayingPositionHosted(
-                key.streamingService,
-                key.id
-            ).map { it?.fromDb() }
-            is MovieKey.Hosted -> flowOf(null) // TODO
+            is TvShowKey.Hosted -> playingHistoryDao.getLastPlayingPositionHosted(key.streamingService, key.id)
+                .map { it?.fromDb() }
+            is MovieKey.Hosted -> playingHistoryDao.getLastPlayingPositionMovieHosted(key.streamingService, key.id)
+                .map { it?.fromDb() }
         }
     }
 
@@ -71,7 +70,8 @@ class AndroidUserDataDataSource @Inject constructor(
                 key.seasonNumber,
                 key.episodeNumber
             ).map { it?.fromDb() }
-            is MovieKey.Tmdb -> flowOf(null) // TODO
+            is MovieKey.Tmdb -> playingHistoryDao.getLastPlayingPositionMovieTmdb(key.id)
+                .map { it?.fromDb() }
         }
     }
 
@@ -83,20 +83,34 @@ class AndroidUserDataDataSource @Inject constructor(
                 key.seasonNumber,
                 key.id
             ).map { it?.fromDb() }
-            is MovieKey.Hosted -> flowOf(null) // TODO
+            is MovieKey.Hosted -> playingHistoryDao.getLastPlayingPositionMovieHosted(key.streamingService, key.id)
+                .map { it?.fromDb() }
         }
     }
 
-    override suspend fun setLastPlayedPosition(key: StreamableKey, progress: Float?) {
+    override suspend fun setLastPlayedPosition(key: StreamableKey, progress: Float) {
         return when (key) {
             is EpisodeKey.Tmdb ->
                 playingHistoryDao.insertLastPlayingPositionTmdb(key.toLastPositionDb(progress))
             is EpisodeKey.Hosted ->
                 playingHistoryDao.insertLastPlayingPositionHosted(key.toLastPositionDb(progress))
             is MovieKey.Hosted ->
-                Unit // TODO
+                playingHistoryDao.insertLastPlayingPositionMovieHosted(key.toLastPositionDb(progress))
             is MovieKey.Tmdb ->
-                Unit // TODO
+                playingHistoryDao.insertLastPlayingPositionMovieTmdb(key.toLastPositionDb(progress))
+        }
+    }
+
+    override suspend fun removeLastPlayedPosition(key: StreamableKey) {
+        when (key) {
+            is EpisodeKey.Tmdb ->
+                playingHistoryDao.deleteLastPlayingPositionEpisodeTmdb(key.tvShowKey.id, key.seasonNumber, key.episodeNumber)
+            is EpisodeKey.Hosted ->
+                playingHistoryDao.deleteLastPlayingPositionEpisodeHosted(key.streamingService, key.tvShowKey.id, key.seasonNumber, key.id)
+            is MovieKey.Hosted ->
+                playingHistoryDao.deleteLastPlayingPositionMovieHosted(key.streamingService, key.id)
+            is MovieKey.Tmdb ->
+                playingHistoryDao.deleteLastPlayingPositionMovieTmdb(key.id)
         }
     }
 }

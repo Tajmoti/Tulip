@@ -11,5 +11,7 @@ interface PlayingHistoryRepository {
 
     fun getLastPlayedPosition(item: ItemKey): Flow<LastPlayedPosition?>
 
-    suspend fun setLastPlayedPosition(item: StreamableKey, progress: Float?)
+    suspend fun setLastPlayedPosition(item: StreamableKey, progress: Float)
+
+    suspend fun removeLastPlayedPosition(item: StreamableKey)
 }

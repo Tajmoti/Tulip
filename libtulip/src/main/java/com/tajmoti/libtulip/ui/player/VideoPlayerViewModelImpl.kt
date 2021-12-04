@@ -296,7 +296,7 @@ class VideoPlayerViewModelImpl constructor(
         .distinctUntilChanged { (_, pos1), (_, pos2) -> pos1 == pos2 }
         .filter { (_, _, playing) -> playing }
         .sample(PLAY_POSITION_SAMPLE_PERIOD_MS)
-        .filter { (_, progress) -> progress != null }
+        .mapNotNull { (key, progress) -> progress?.let { key to progress } }
 
     /**
      * Represents fetching of the selected subtitles.

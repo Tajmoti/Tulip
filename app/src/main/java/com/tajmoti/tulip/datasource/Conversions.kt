@@ -14,10 +14,7 @@ import com.tajmoti.tulip.db.entity.tmdb.DbTmdbEpisode
 import com.tajmoti.tulip.db.entity.tmdb.DbTmdbMovie
 import com.tajmoti.tulip.db.entity.tmdb.DbTmdbSeason
 import com.tajmoti.tulip.db.entity.tmdb.DbTmdbTv
-import com.tajmoti.tulip.db.entity.userdata.DbFavoriteHostedItem
-import com.tajmoti.tulip.db.entity.userdata.DbFavoriteTmdbItem
-import com.tajmoti.tulip.db.entity.userdata.DbLastPlayedPositionHosted
-import com.tajmoti.tulip.db.entity.userdata.DbLastPlayedPositionTmdb
+import com.tajmoti.tulip.db.entity.userdata.*
 
 internal inline fun DbTmdbTv.fromDb(
     key: TvShowKey.Tmdb,
@@ -176,22 +173,32 @@ internal inline fun TulipMovie.Hosted.toDb(info: TvItemInfo): DbMovie {
     )
 }
 
-internal inline fun DbLastPlayedPositionTmdb.fromDb(): LastPlayedPosition.Tmdb {
+internal inline fun DbLastPlayedPositionTvShowTmdb.fromDb(): LastPlayedPosition.Tmdb {
     val tvShowKey = TvShowKey.Tmdb(tvShowId)
     val seasonKey = SeasonKey.Tmdb(tvShowKey, seasonNumber)
     val key = EpisodeKey.Tmdb(seasonKey, episodeNumber)
     return LastPlayedPosition.Tmdb(key, progress)
 }
 
-internal inline fun DbLastPlayedPositionHosted.fromDb(): LastPlayedPosition.Hosted {
+internal inline fun DbLastPlayedPositionTvShowHosted.fromDb(): LastPlayedPosition.Hosted {
     val tvShowKey = TvShowKey.Hosted(streamingService, tvShowId)
     val seasonKey = SeasonKey.Hosted(tvShowKey, seasonNumber)
     val key = EpisodeKey.Hosted(seasonKey, episodeId)
     return LastPlayedPosition.Hosted(key, progress)
 }
 
-internal inline fun EpisodeKey.Tmdb.toLastPositionDb(progress: Float?): DbLastPlayedPositionTmdb {
-    return DbLastPlayedPositionTmdb(
+internal inline fun DbLastPlayedPositionMovieTmdb.fromDb(): LastPlayedPosition.Tmdb {
+    val key = MovieKey.Tmdb(movieId)
+    return LastPlayedPosition.Tmdb(key, progress)
+}
+
+internal inline fun DbLastPlayedPositionMovieHosted.fromDb(): LastPlayedPosition.Hosted {
+    val key = MovieKey.Hosted(streamingService, movieId)
+    return LastPlayedPosition.Hosted(key, progress)
+}
+
+internal inline fun EpisodeKey.Tmdb.toLastPositionDb(progress: Float): DbLastPlayedPositionTvShowTmdb {
+    return DbLastPlayedPositionTvShowTmdb(
         tvShowKey.id,
         seasonNumber,
         episodeNumber,
@@ -199,11 +206,26 @@ internal inline fun EpisodeKey.Tmdb.toLastPositionDb(progress: Float?): DbLastPl
     )
 }
 
-internal inline fun EpisodeKey.Hosted.toLastPositionDb(progress: Float?): DbLastPlayedPositionHosted {
-    return DbLastPlayedPositionHosted(
+internal inline fun EpisodeKey.Hosted.toLastPositionDb(progress: Float): DbLastPlayedPositionTvShowHosted {
+    return DbLastPlayedPositionTvShowHosted(
         tvShowKey.streamingService,
         tvShowKey.id,
         seasonNumber,
+        id,
+        progress
+    )
+}
+
+internal inline fun MovieKey.Tmdb.toLastPositionDb(progress: Float): DbLastPlayedPositionMovieTmdb {
+    return DbLastPlayedPositionMovieTmdb(
+        id,
+        progress
+    )
+}
+
+internal inline fun MovieKey.Hosted.toLastPositionDb(progress: Float): DbLastPlayedPositionMovieHosted {
+    return DbLastPlayedPositionMovieHosted(
+        streamingService,
         id,
         progress
     )
