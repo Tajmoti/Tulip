@@ -24,15 +24,9 @@ class MultiTvProvider<ID>(
         return results
     }
 
-    private suspend inline fun searchAsync(
-        query: String,
-        id: ID,
-        provider: TvProvider
-    ): Result<List<SearchResult>> {
+    private suspend inline fun searchAsync(query: String, id: ID, provider: TvProvider): Result<List<SearchResult>> {
         logger.debug("Searching '$query' using $id")
-        val result = searchWithTimeout(provider, query)
-        logger.debug("Search for '$query' using $id ended with $result")
-        return result
+        return searchWithTimeout(provider, query)
     }
 
     private suspend fun searchWithTimeout(
