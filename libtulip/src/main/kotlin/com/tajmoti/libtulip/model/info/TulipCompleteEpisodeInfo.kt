@@ -18,6 +18,6 @@ sealed interface TulipCompleteEpisodeInfo : StreamableInfo {
         override val episodeInfo: TulipEpisodeInfo.Tmdb
     ) : TulipCompleteEpisodeInfo, StreamableInfo.Tmdb {
         override val key = episodeInfo.key
-        override val name = tvShow.name
+        override val name = episodeInfo.name
     }
 }
