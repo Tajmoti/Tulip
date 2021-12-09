@@ -5,34 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager.*
-import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
+import com.tajmoti.libtulip.ui.player.VideoPlayer
 import com.tajmoti.libtulip.ui.player.MediaPlayerState
 
-abstract class AudioFocusAwareMediaPlayerHelper(
+abstract class AudioFocusAwareVideoPlayer(
     private val context: Context,
-    private val delegate: MediaPlayerHelper,
-) : MediaPlayerHelper {
-    override val videoUrl = delegate.videoUrl
-    override val state = delegate.state
-    override var progress: Float
-        get() {
-            return delegate.progress
-        }
-        set(value) {
-            delegate.progress = value
-        }
-    override var time: Long
-        get() {
-            return delegate.time
-        }
-        set(value) {
-            delegate.time = value
-        }
-    override val length: Long
-        get() {
-            return delegate.length
-        }
-
+    private val delegate: VideoPlayer,
+) : VideoPlayer by delegate {
     private val receiver = BecomingNoisyReceiver()
     private var registered = false
 
@@ -82,14 +61,6 @@ abstract class AudioFocusAwareMediaPlayerHelper(
         } else {
             play()
         }
-    }
-
-    override fun setSubtitles(info: MediaPlayerHelper.SubtitleInfo?) {
-        delegate.setSubtitles(info)
-    }
-
-    override fun setSubtitleDelay(delay: Long): Boolean {
-        return delegate.setSubtitleDelay(delay)
     }
 
     private fun onAudioFocusChanged(focus: Int) {

@@ -2,7 +2,7 @@ package com.tajmoti.tulip.ui.player.helper
 
 import android.net.Uri
 import com.tajmoti.commonutils.logger
-import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
+import com.tajmoti.libtulip.ui.player.VideoPlayer
 import com.tajmoti.libtulip.ui.player.MediaPlayerState
 import com.tajmoti.libtulip.ui.player.Position
 import com.tajmoti.tulip.ui.player.format
@@ -14,10 +14,10 @@ import org.videolan.libvlc.interfaces.ILibVLC
 import org.videolan.libvlc.interfaces.IMedia
 import org.videolan.libvlc.util.VLCVideoLayout
 
-class VlcMediaHelper(
+class AndroidVlcVideoPlayer(
     lib: ILibVLC,
     override val videoUrl: String
-) : MediaPlayer.EventListener, MediaPlayerHelper {
+) : MediaPlayer.EventListener, VideoPlayer {
     /**
      * Current state of the player and the media being played
      */
@@ -69,7 +69,7 @@ class VlcMediaHelper(
         }
     }
 
-    override var progress: Float
+    override var position: Float
         get() = player.time.toFloat() / player.length.toFloat()
         set(value) {
             if (player.isPlaying) {
@@ -92,7 +92,7 @@ class VlcMediaHelper(
     override val length: Long
         get() = player.length
 
-    override fun setSubtitles(info: MediaPlayerHelper.SubtitleInfo?) {
+    override fun setSubtitles(info: VideoPlayer.SubtitleInfo?) {
         if (info != null) {
             val (uri, encoding) = info
             encoding?.let { player.media?.addOption(":subsdec-encoding=$encoding") }

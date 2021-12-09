@@ -1,10 +1,10 @@
 package com.tajmoti.tulip.ui.player
 
 import android.support.v4.media.session.MediaSessionCompat
-import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
+import com.tajmoti.libtulip.ui.player.VideoPlayer
 
 class TulipMediaSessionCallback(
-    private val vlc: MediaPlayerHelper
+    private val vlc: VideoPlayer
 ) : MediaSessionCompat.Callback() {
 
     override fun onPlay() {

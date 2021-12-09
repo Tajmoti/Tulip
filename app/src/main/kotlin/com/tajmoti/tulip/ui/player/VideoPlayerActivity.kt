@@ -21,7 +21,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.commit
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
-import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
+import com.tajmoti.libtulip.ui.player.VideoPlayer
 import com.tajmoti.libtulip.ui.player.MediaPlayerState
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.streams.FailedLink
@@ -34,8 +34,8 @@ import com.tajmoti.tulip.ui.captcha.CaptchaSolverActivity
 import com.tajmoti.tulip.ui.player.controls.VideoControlsFragment
 import com.tajmoti.tulip.ui.player.helper.AudioFocusApi26
 import com.tajmoti.tulip.ui.player.helper.AudioFocusApiBelow26
-import com.tajmoti.tulip.ui.player.helper.AudioFocusAwareMediaPlayerHelper
-import com.tajmoti.tulip.ui.player.helper.VlcMediaHelper
+import com.tajmoti.tulip.ui.player.helper.AudioFocusAwareVideoPlayer
+import com.tajmoti.tulip.ui.player.helper.AndroidVlcVideoPlayer
 import dagger.hilt.android.AndroidEntryPoint
 import org.videolan.libvlc.LibVLC
 import java.io.File
@@ -81,7 +81,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     /**
      * Wrapper around a concrete media player implementation.
      */
-    var player: MediaPlayerHelper? = null
+    var player: VideoPlayer? = null
         set(value) {
             if (value != null) {
                 val newValue = wrapInMediaFocusAware(value)
@@ -99,7 +99,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
      * Use only for initialization and resource releasing specific to VLC!
      * For everything else use [player], which respects audio focus.
      */
-    private var vlc: VlcMediaHelper? = null
+    private var vlc: AndroidVlcVideoPlayer? = null
         set(value) {
             field = value
             player = value
@@ -199,14 +199,14 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         consume(playerViewModel.mediaPlayerState) { onMediaStateChanged(it) }
     }
 
-    private fun setupMediaSession(value: MediaPlayerHelper) {
+    private fun setupMediaSession(value: VideoPlayer) {
         val mediaSession = MediaSessionCompat(this, "Tulip")
         mediaSession.isActive = true
         mediaSession.setCallback(TulipMediaSessionCallback(value))
         this.mediaSession = mediaSession
     }
 
-    private fun wrapInMediaFocusAware(player: MediaPlayerHelper): AudioFocusAwareMediaPlayerHelper {
+    private fun wrapInMediaFocusAware(player: VideoPlayer): AudioFocusAwareVideoPlayer {
         val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             AudioFocusApi26(this, audioManager, player)
@@ -278,7 +278,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
             if (it.directLink == player?.videoUrl && !forceReload)
                 return
             releaseMedia()
-            vlc = VlcMediaHelper(libVLC, it.directLink)
+            vlc = AndroidVlcVideoPlayer(libVLC, it.directLink)
                 .apply { attach(binding.videoLayout) }
                 .also { playerViewModel.onMediaAttached(it) }
             player?.play()
@@ -406,7 +406,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
     private fun onSubtitlesChanged(file: File?) {
         if (file != null) {
             val uri = Uri.fromFile(file).toString()
-            player?.setSubtitles(MediaPlayerHelper.SubtitleInfo(uri))
+            player?.setSubtitles(VideoPlayer.SubtitleInfo(uri))
         } else {
             player?.setSubtitles(null)
         }

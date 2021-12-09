@@ -21,7 +21,7 @@ object VideoPlayerUtils {
 
     @JvmStatic
     fun showToDisplayName(item: TulipCompleteEpisodeInfo): String {
-        val showSeasonEpNum = "${item.name} S${item.seasonNumber}:E${item.episodeNumber}"
+        val showSeasonEpNum = "${item.tvShow.name} S${item.seasonNumber}:E${item.episodeNumber}"
         val episodeName = item.name?.let { " '$it'" } ?: ""
         return showSeasonEpNum + episodeName
     }

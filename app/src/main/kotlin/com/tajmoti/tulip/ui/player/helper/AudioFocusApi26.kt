@@ -6,14 +6,14 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
+import com.tajmoti.libtulip.ui.player.VideoPlayer
 
 @RequiresApi(Build.VERSION_CODES.O)
 class AudioFocusApi26(
     context: Context,
     private val audioManager: AudioManager,
-    delegate: MediaPlayerHelper
-) : AudioFocusAwareMediaPlayerHelper(context, delegate) {
+    delegate: VideoPlayer
+) : AudioFocusAwareVideoPlayer(context, delegate) {
     private val attributes = AudioAttributes.Builder()
         .setUsage(AudioAttributes.USAGE_MEDIA)
         .setContentType(AudioAttributes.CONTENT_TYPE_MOVIE)

@@ -2,14 +2,14 @@ package com.tajmoti.tulip.ui.player.helper
 
 import android.content.Context
 import android.media.AudioManager
-import com.tajmoti.libtulip.ui.player.MediaPlayerHelper
+import com.tajmoti.libtulip.ui.player.VideoPlayer
 
 @Suppress("DEPRECATION")
 class AudioFocusApiBelow26(
     context: Context,
     private val audioManager: AudioManager,
-    delegate: MediaPlayerHelper
-) : AudioFocusAwareMediaPlayerHelper(context, delegate) {
+    delegate: VideoPlayer
+) : AudioFocusAwareVideoPlayer(context, delegate) {
     override fun requestAudioFocus(): Int {
         return audioManager.requestAudioFocus(
             callback,

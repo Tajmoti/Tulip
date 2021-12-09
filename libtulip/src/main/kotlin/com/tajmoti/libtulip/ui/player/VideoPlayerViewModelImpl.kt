@@ -217,7 +217,7 @@ class VideoPlayerViewModelImpl constructor(
     /**
      * Currently attached media player.
      */
-    private val attachedMediaPlayer = MutableStateFlow<MediaPlayerHelper?>(null)
+    private val attachedMediaPlayer = MutableStateFlow<VideoPlayer?>(null)
 
     /**
      * State of the currently attached media player.
@@ -335,7 +335,7 @@ class VideoPlayerViewModelImpl constructor(
         }
     }
 
-    override fun onMediaAttached(media: MediaPlayerHelper) {
+    override fun onMediaAttached(media: VideoPlayer) {
         attachedMediaPlayer.value = media
     }
 
@@ -395,7 +395,7 @@ class VideoPlayerViewModelImpl constructor(
 
     override fun setPlaybackProgress(progress: Float) {
         // TODO Not the best solution
-        attachedMediaPlayer.value?.progress = progress
+        attachedMediaPlayer.value?.position = progress
     }
 
     /**
@@ -416,7 +416,7 @@ class VideoPlayerViewModelImpl constructor(
      */
     private fun startRestorePlayingPosition() {
         viewModelScope.launch {
-            playerProgressToRestore.collect { (player, pos) -> player.progress = pos }
+            playerProgressToRestore.collect { (player, pos) -> player.position = pos }
         }
     }
 

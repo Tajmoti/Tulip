@@ -178,7 +178,7 @@ interface VideoPlayerViewModel {
      * If some media was already played, the position of the new
      * one will be set to the last valid position of the last media.
      */
-    fun onMediaAttached(media: MediaPlayerHelper)
+    fun onMediaAttached(media: VideoPlayer)
 
     /**
      * The existing media is detached.
