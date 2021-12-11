@@ -33,8 +33,8 @@ private fun elemToSearchResult(element: Element): SearchResult {
     val yearInt = year.toIntOrNull()
     val info = TvItemInfo(itemUrl, name, "en", yearInt)
     return if (isShow) {
-        SearchResult(itemUrl, SearchResult.Type.TV_SHOW, info)
+        SearchResult.TvShow(itemUrl, info)
     } else {
-        SearchResult(itemUrl, SearchResult.Type.MOVIE, info)
+        SearchResult.Movie(itemUrl, info)
     }
 }

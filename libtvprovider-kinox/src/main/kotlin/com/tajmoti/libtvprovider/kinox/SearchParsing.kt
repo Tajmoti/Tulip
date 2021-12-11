@@ -42,8 +42,8 @@ private fun elemToSearchResult(element: Element, throwAwayItemsWithNoYear: Boole
         return null
     val info = TvItemInfo(link, title, language, firstAirYear)
     return when (type) {
-        "series" -> SearchResult(link, SearchResult.Type.TV_SHOW, info)
-        "movie" -> SearchResult(link, SearchResult.Type.MOVIE, info)
+        "series" -> SearchResult.TvShow(link, info)
+        "movie" -> SearchResult.Movie(link, info)
         else -> null
     }
 }

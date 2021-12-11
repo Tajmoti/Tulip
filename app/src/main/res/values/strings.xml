@@ -44,4 +44,6 @@
     <string name="no_rating">No rating</string>
     <string name="rating_format">Rating: %.1f/10</string>
     <string name="dismiss">Dismiss</string>
+    <string name="other_movies">Other movies</string>
+    <string name="other_tv_shows">Other TV shows</string>
 </resources>

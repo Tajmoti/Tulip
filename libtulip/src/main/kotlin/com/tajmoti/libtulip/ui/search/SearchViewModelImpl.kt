@@ -1,7 +1,8 @@
 package com.tajmoti.libtulip.ui.search
 
 import com.tajmoti.commonutils.map
-import com.tajmoti.libtulip.model.search.TulipSearchResult
+import com.tajmoti.libtulip.model.hosted.MappedSearchResult
+import com.tajmoti.libtulip.model.search.GroupedSearchResult
 import com.tajmoti.libtulip.service.MappingSearchService
 import com.tajmoti.libtulip.ui.doCancelableJob
 import com.tajmoti.libtulip.ui.search.SearchViewModel.Companion.DEBOUNCE_INTERVAL_MS
@@ -80,17 +81,47 @@ class SearchViewModelImpl(
     private suspend fun startSearchAsync(query: String) = flow {
         emit(State.Searching)
         val flowOfStates = mappingSearchService.searchAndCreateMappings(query)
-            .map { result -> result.fold({ State.Success(it) }, { State.Error }) }
+            .map { result -> result.fold({ State.Success(groupAndSortMappedResults(it)) }, { State.Error }) }
         emitAll(flowOfStates)
+    }
+
+    private fun groupAndSortMappedResults(it: List<MappedSearchResult>): List<GroupedSearchResult> {
+        return groupSearchResults(it).sortedWith(groupComparator)
+    }
+
+    private fun groupSearchResults(it: List<MappedSearchResult>): List<GroupedSearchResult> {
+        val tvShows = it.mapNotNull { it as? MappedSearchResult.TvShow }
+        val movies = it.mapNotNull { it as? MappedSearchResult.Movie }
+        return groupItemsByTmdbIds(tvShows) + groupItemsByTmdbIdsMovie(movies)
+    }
+
+    private val groupComparator = Comparator<GroupedSearchResult> { a, b ->
+        val typeA = getItemType(a)
+        val typeB = getItemType(b)
+        typeA.compareTo(typeB)
+    }
+
+    private fun getItemType(a: GroupedSearchResult?) = when (a) {
+        is GroupedSearchResult.TvShow, is GroupedSearchResult.Movie -> 0
+        else -> 1
+    }
+
+    private fun groupItemsByTmdbIds(items: List<MappedSearchResult.TvShow>): List<GroupedSearchResult> {
+        return items
+            .groupBy { it.tmdbId }
+            .mapNotNull { (key, value) -> key?.let { GroupedSearchResult.TvShow(key, value) } ?: GroupedSearchResult.UnrecognizedTvShow(value) }
+    }
+
+    private fun groupItemsByTmdbIdsMovie(items: List<MappedSearchResult.Movie>): List<GroupedSearchResult> {
+        return items
+            .groupBy { it.tmdbId }
+            .mapNotNull { (key, value) -> key?.let { GroupedSearchResult.Movie(key, value) } ?: GroupedSearchResult.UnrecognizedMovie(value) }
     }
 
     sealed interface State {
         object Idle : State
         object Searching : State
-        data class Success(val results: List<TulipSearchResult>) : State
+        data class Success(val results: List<GroupedSearchResult>) : State
         object Error : State
-
-        val success: Boolean
-            get() = this is Success
     }
 }

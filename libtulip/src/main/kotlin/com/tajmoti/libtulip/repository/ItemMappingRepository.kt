@@ -13,7 +13,13 @@ interface ItemMappingRepository {
      * Creates a mapping between the [hostedKey] and the [tmdbKey].
      * This is a one to many relationship - one [tmdbKey] can have multiple [hostedKey]s.
      */
-    suspend fun createTmdbMapping(tmdbKey: ItemKey.Tmdb, hostedKey: ItemKey.Hosted)
+    suspend fun createTmdbMapping(tmdbKey: TvShowKey.Tmdb, hostedKey: TvShowKey.Hosted)
+
+    /**
+     * Creates a mapping between the [hostedKey] and the [tmdbKey].
+     * This is a one to many relationship - one [tmdbKey] can have multiple [hostedKey]s.
+     */
+    suspend fun createTmdbMapping(tmdbKey: MovieKey.Tmdb, hostedKey: MovieKey.Hosted)
 
     /**
      * Retrieves all [TvShowKey.Hosted] keys that were paired with [key].

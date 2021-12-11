@@ -1,19 +1,20 @@
 package com.tajmoti.libtvprovider
 
-data class SearchResult(
-    val key: String,
-    /**
-     * Whether this is a TV show or a movie
-     */
-    val type: Type,
+sealed interface SearchResult {
+    val key: String
+
     /**
      * Information about this search result
      */
     val info: TvItemInfo
-) {
 
-    enum class Type {
-        TV_SHOW,
-        MOVIE
-    }
+    data class TvShow(
+        override val key: String,
+        override val info: TvItemInfo
+    ) : SearchResult
+
+    data class Movie(
+        override val key: String,
+        override val info: TvItemInfo
+    ) : SearchResult
 }

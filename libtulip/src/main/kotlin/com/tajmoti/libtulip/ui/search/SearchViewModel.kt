@@ -1,8 +1,6 @@
 package com.tajmoti.libtulip.ui.search
 
-import com.tajmoti.libtulip.model.key.ItemKey
-import com.tajmoti.libtulip.model.search.TulipSearchResult
-import kotlinx.coroutines.flow.Flow
+import com.tajmoti.libtulip.model.search.GroupedSearchResult
 import kotlinx.coroutines.flow.StateFlow
 
 interface SearchViewModel {
@@ -19,9 +17,10 @@ interface SearchViewModel {
     val loading: StateFlow<Boolean>
 
     /**
-     * All search results for the entered query
+     * All search results for the entered query.
+     * Unrecognized results are moved to the end of the list.
      */
-    val results: StateFlow<List<TulipSearchResult>>
+    val results: StateFlow<List<GroupedSearchResult>>
 
     /**
      * Special UI state or null if search successful

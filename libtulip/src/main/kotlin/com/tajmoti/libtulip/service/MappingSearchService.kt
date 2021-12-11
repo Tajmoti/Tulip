@@ -1,7 +1,7 @@
 package com.tajmoti.libtulip.service
 
+import com.tajmoti.libtulip.model.hosted.MappedSearchResult
 import com.tajmoti.libtulip.model.key.ItemKey
-import com.tajmoti.libtulip.model.search.TulipSearchResult
 import com.tajmoti.libtulip.repository.ItemMappingRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import kotlinx.coroutines.flow.Flow
@@ -19,5 +19,5 @@ interface MappingSearchService {
      *
      * The flow will emit multiple values as more search results are loaded in.
      */
-    fun searchAndCreateMappings(query: String): Flow<Result<List<TulipSearchResult>>>
+    fun searchAndCreateMappings(query: String): Flow<Result<List<MappedSearchResult>>>
 }

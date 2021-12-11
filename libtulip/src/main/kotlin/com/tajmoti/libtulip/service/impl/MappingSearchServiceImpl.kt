@@ -5,12 +5,10 @@ import com.tajmoti.libtulip.misc.job.firstValueOrNull
 import com.tajmoti.libtulip.model.NoSuccessfulResultsException
 import com.tajmoti.libtulip.model.hosted.MappedSearchResult
 import com.tajmoti.libtulip.model.hosted.StreamingService
-import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtulip.model.search.TulipSearchResult
-import com.tajmoti.libtulip.repository.ItemMappingRepository
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
+import com.tajmoti.libtulip.repository.ItemMappingRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtulip.service.MappingSearchService
 import com.tajmoti.libtvprovider.SearchResult
@@ -21,114 +19,59 @@ import kotlinx.coroutines.flow.map
 class MappingSearchServiceImpl(
     private val hostedRepository: HostedTvDataRepository,
     private val tmdbRepository: TmdbTvDataRepository,
-    private val hostedToTmdbMappingRepository: ItemMappingRepository,
+    private val mappingRepository: ItemMappingRepository,
 ) : MappingSearchService {
 
-    override fun searchAndCreateMappings(query: String): Flow<Result<List<TulipSearchResult>>> {
+    override fun searchAndCreateMappings(query: String): Flow<Result<List<MappedSearchResult>>> {
         return hostedRepository.search(query)
             .map { resMap -> resMap.takeUnless { it.all { (_, v) -> v.isFailure } } }
-            .mapNotNullsWithContext(Dispatchers.Default, this::handleSearchResult)
-            .onEachNotNull(this::createTmdbMappings)
+            .mapNotNullsWithContext(Dispatchers.Default, this::mapWithTmdbIds)
+            .onEachNotNull(this::persistTmdbMappings)
             .onEachNull { logger.warn("No successful results!") }
             .mapFold({ Result.success(it) }, { Result.failure(NoSuccessfulResultsException) })
     }
 
 
-    private suspend fun createTmdbMappings(mapped: List<TulipSearchResult>) {
-        mapped.parallelMap { searchResult -> createTmdbMapping(searchResult) }
+    private suspend inline fun mapWithTmdbIds(resultMap: Map<StreamingService, Result<List<SearchResult>>>): List<MappedSearchResult> {
+        val serviceToResults = resultMap
+            .mapNotNull { (service, result) -> result.map { service to it }.getOrNull() }
+        val successfulItemsTv = serviceToResults
+            .flatMap { (service, results) -> findTmdbIdForResults(service, results.mapNotNull { it as? SearchResult.TvShow }) }
+        val successfulItemsMovie = serviceToResults
+            .flatMap { (service, results) -> findTmdbIdForResultsMovie(service, results.mapNotNull { it as? SearchResult.Movie }) }
+        return successfulItemsTv + successfulItemsMovie
     }
 
-    private suspend fun createTmdbMapping(searchResult: TulipSearchResult) {
-        val tmdbId = searchResult.tmdbId ?: return
-        searchResult.results.parallelMap { mappedResult ->
-            hostedToTmdbMappingRepository.createTmdbMapping(tmdbId, mappedResult.key)
+    private suspend fun findTmdbIdForResults(service: StreamingService, results: List<SearchResult.TvShow>): List<MappedSearchResult.TvShow> {
+        return results.parallelMap { item -> findTvShowTmdbKey(item, service) }
+    }
+
+    private suspend fun findTmdbIdForResultsMovie(service: StreamingService, results: List<SearchResult.Movie>): List<MappedSearchResult.Movie> {
+        return results.parallelMap { item -> findMovieTmdbKey(item, service) }
+    }
+
+    private suspend fun persistTmdbMappings(mapped: List<MappedSearchResult>) {
+        mapped.parallelMap { searchResult -> persistTmdbMapping(searchResult) }
+    }
+
+    private suspend fun persistTmdbMapping(mapped: MappedSearchResult) {
+        when (mapped) {
+            is MappedSearchResult.Movie -> mapped.tmdbId
+                ?.let { mappingRepository.createTmdbMapping(it, mapped.key) }
+            is MappedSearchResult.TvShow -> mapped.tmdbId
+                ?.let { mappingRepository.createTmdbMapping(mapped.tmdbId, mapped.key) }
         }
     }
 
-
-    private suspend inline fun itemsToHostedItems(
-        service: StreamingService,
-        items: List<SearchResult>
-    ): List<MappedSearchResult> {
-        return items.parallelMapBoth { findTmdbIdOrNull(it) }
-            .map { (item, tmdbId) -> pairInfoWithTmdbId(item, service, tmdbId) }
+    private suspend fun findTvShowTmdbKey(item: SearchResult.TvShow, service: StreamingService): MappedSearchResult.TvShow {
+        val tmdbId = tmdbRepository.findTvShowKey(item.info.name, item.info.firstAirDateYear).firstValueOrNull()
+        val key = TvShowKey.Hosted(service, item.key)
+        return MappedSearchResult.TvShow(key, item.info, tmdbId)
     }
 
-    private fun pairInfoWithTmdbId(
-        item: SearchResult,
-        service: StreamingService,
-        tmdbId: ItemKey.Tmdb?
-    ): MappedSearchResult {
-        return when (item.type) {
-            SearchResult.Type.TV_SHOW -> {
-                val key = TvShowKey.Hosted(service, item.key)
-                MappedSearchResult.TvShow(key, item.info, tmdbId as? TvShowKey.Tmdb)
-            }
-            SearchResult.Type.MOVIE -> {
-                val key = MovieKey.Hosted(service, item.key)
-                MappedSearchResult.Movie(key, item.info, tmdbId as? MovieKey.Tmdb?)
-            }
-        }
-    }
-
-    private fun hostedItemsToSearchResults(items: List<MappedSearchResult>): List<TulipSearchResult> {
-        val idToItems = items.groupBy { it.tmdbId }
-        val recognized = idToItems
-            .filterKeys { it != null }
-            .map { entry -> groupedItemToResult(entry.key!!, entry.value) }
-        val unrecognized = idToItems[null]
-            ?.let { listOf(TulipSearchResult.Unrecognized(it)) }
-            ?: emptyList()
-        return recognized + unrecognized
-    }
-
-    private fun groupedItemToResult(
-        id: ItemKey.Tmdb,
-        items: List<MappedSearchResult>
-    ): TulipSearchResult {
-        return when (id) {
-            is TvShowKey.Tmdb -> {
-                val mapped = items.map { it as MappedSearchResult.TvShow }
-                TulipSearchResult.TvShow(id, mapped)
-            }
-            is MovieKey.Tmdb -> {
-                val mapped = items.map { it as MappedSearchResult.Movie }
-                TulipSearchResult.Movie(id, mapped)
-            }
-        }
-    }
-
-
-    private suspend inline fun handleSearchResult(
-        searchResults: Map<StreamingService, Result<List<SearchResult>>>
-    ): List<TulipSearchResult> {
-        val successfulItems = successfulResultsToHostedItems(searchResults)
-        return hostedItemsToSearchResults(successfulItems)
-    }
-
-    private suspend inline fun successfulResultsToHostedItems(
-        results: Map<StreamingService, Result<List<SearchResult>>>
-    ): List<MappedSearchResult> {
-        return results
-            .mapNotNull { (service, itemListResult) ->
-                val itemList = itemListResult
-                    .getOrElse { return@mapNotNull null }
-                service to itemList
-            }
-            .flatMap { (service, itemListResult) ->
-                itemsToHostedItems(service, itemListResult)
-            }
-    }
-
-
-    private suspend fun findTmdbIdOrNull(searchResult: SearchResult): ItemKey.Tmdb? {
-        return when (searchResult.type) {
-            SearchResult.Type.TV_SHOW ->
-                tmdbRepository.findTvShowKey(searchResult.info.name, searchResult.info.firstAirDateYear)
-                    .firstValueOrNull()
-            SearchResult.Type.MOVIE ->
-                tmdbRepository.findMovieKey(searchResult.info.name, searchResult.info.firstAirDateYear)
-                    .firstValueOrNull()
-        }
+    private suspend fun findMovieTmdbKey(item: SearchResult, service: StreamingService): MappedSearchResult.Movie {
+        val tmdbId = tmdbRepository.findMovieKey(item.info.name, item.info.firstAirDateYear).firstValueOrNull()
+        val key = MovieKey.Hosted(service, item.key)
+        return MappedSearchResult.Movie(key, item.info, tmdbId)
     }
 }

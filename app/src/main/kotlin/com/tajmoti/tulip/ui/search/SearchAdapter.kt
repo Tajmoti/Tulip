@@ -2,9 +2,8 @@ package com.tajmoti.tulip.ui.search
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.tajmoti.libtulip.model.hosted.MappedSearchResult
 import com.tajmoti.libtulip.model.info.LanguageCode
-import com.tajmoti.libtulip.model.search.TulipSearchResult
+import com.tajmoti.libtulip.model.search.GroupedSearchResult
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.IconSearchResultLanguageBinding
 import com.tajmoti.tulip.databinding.ItemSearchBinding
@@ -12,40 +11,43 @@ import com.tajmoti.tulip.ui.BaseAdapter
 import com.tajmoti.tulip.ui.languageToIcon
 
 class SearchAdapter(
-    onSearchResultClickListener: (TulipSearchResult) -> Unit
-) : BaseAdapter<TulipSearchResult, ItemSearchBinding>(
+    onSearchResultClickListener: (GroupedSearchResult) -> Unit
+) : BaseAdapter<GroupedSearchResult, ItemSearchBinding>(
     ItemSearchBinding::inflate,
     onSearchResultClickListener
 ) {
 
-    override fun onBindViewHolder(
-        vh: Holder<ItemSearchBinding>,
-        item: TulipSearchResult
-    ) {
-        val fstResult = item.results.first()
-        val name = if (item.tmdbId != null) {
-            fstResult.info.name
-        } else {
-            vh.itemView.context.getString(
-                R.string.other_results
-            )
-        }
+    override fun onBindViewHolder(vh: Holder<ItemSearchBinding>, item: GroupedSearchResult) {
+        val name = getNameForItem(item)
+        val icon = getDrawableForItem(item)
+        val languages = getLanguagesForItem(item)
         vh.binding.searchResultName.text = name
-        val icon = getDrawableByType(fstResult.takeIf { item.tmdbId != null })
         vh.binding.searchResultName.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, 0, 0, 0)
+        inflateViewsForLanguages(languages, vh.binding.root)
+    }
 
-        val languages = item.results
+    private fun getNameForItem(item: GroupedSearchResult): String {
+        val firstResult = item.results.first()
+        return when (item) {
+            is GroupedSearchResult.Movie -> firstResult.info.name
+            is GroupedSearchResult.TvShow -> firstResult.info.name
+            is GroupedSearchResult.UnrecognizedTvShow -> context.getString(R.string.other_tv_shows)
+            is GroupedSearchResult.UnrecognizedMovie -> context.getString(R.string.other_movies)
+        }
+    }
+
+    private fun getLanguagesForItem(item: GroupedSearchResult): List<LanguageCode> {
+        return item.results
             .map { it.info.language }
             .distinct()
             .sorted()
             .map { LanguageCode(it) }
-        inflateViewsForLanguages(languages, vh.binding.root)
     }
 
-    private fun getDrawableByType(item: MappedSearchResult?): Int {
+    private fun getDrawableForItem(item: GroupedSearchResult): Int {
         return when (item) {
-            is MappedSearchResult.TvShow -> R.drawable.ic_baseline_live_tv_24
-            is MappedSearchResult.Movie -> R.drawable.ic_baseline_local_movies_24
+            is GroupedSearchResult.TvShow -> R.drawable.ic_baseline_live_tv_24
+            is GroupedSearchResult.Movie -> R.drawable.ic_baseline_local_movies_24
             else -> R.drawable.ic_baseline_more_horiz_24
         }
     }

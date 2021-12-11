@@ -13,7 +13,7 @@ import com.tajmoti.libtulip.model.hosted.MappedSearchResult
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtulip.model.search.TulipSearchResult
+import com.tajmoti.libtulip.model.search.GroupedSearchResult
 import com.tajmoti.libtulip.ui.search.SearchViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentSearchBinding
@@ -64,7 +64,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
         (requireActivity() as MainActivity).swapActionBar(null)
     }
 
-    private fun onSearchResultClicked(result: TulipSearchResult) {
+    private fun onSearchResultClicked(result: GroupedSearchResult) {
         val id = result.tmdbId
         val results = result.results
         if (id != null) {

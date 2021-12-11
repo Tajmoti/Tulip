@@ -44,4 +44,6 @@
     <string name="no_rating">Žiadne hodnotenie</string>
     <string name="rating_format">Hodnotenie: %.1f/10</string>
     <string name="dismiss">Zavrieť</string>
+    <string name="other_movies">Ostatné filmy</string>
+    <string name="other_tv_shows">Ostatné seriály</string>
 </resources>
