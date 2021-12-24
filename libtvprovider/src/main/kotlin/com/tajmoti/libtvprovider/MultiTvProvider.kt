@@ -2,6 +2,7 @@ package com.tajmoti.libtvprovider
 
 import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.parallelMapToFlow
+import com.tajmoti.commonutils.runningFoldConcatDropInitial
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withTimeout
@@ -17,11 +18,11 @@ class MultiTvProvider<ID>(
     /**
      * Searches [query] using all TV providers in parallel.
      */
-    fun search(query: String): Flow<Pair<ID, Result<List<SearchResult>>>> {
+    fun search(query: String): Flow<Map<ID, Result<List<SearchResult>>>> {
         val results = providers.parallelMapToFlow { key, value ->
             key to searchAsync(query, key, value)
         }
-        return results
+        return results.runningFoldConcatDropInitial()
     }
 
     private suspend inline fun searchAsync(query: String, id: ID, provider: TvProvider): Result<List<SearchResult>> {

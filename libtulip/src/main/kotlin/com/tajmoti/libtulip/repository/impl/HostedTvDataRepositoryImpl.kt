@@ -6,7 +6,6 @@ import com.dropbox.android.external.store4.StoreBuilder
 import com.dropbox.android.external.store4.StoreRequest
 import com.tajmoti.commonutils.flatMap
 import com.tajmoti.commonutils.logger
-import com.tajmoti.commonutils.runningFoldConcatDropInitial
 import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.HostedInfoDataSource
 import com.tajmoti.libtulip.misc.job.*
@@ -61,8 +60,7 @@ class HostedTvDataRepositoryImpl(
     override fun search(query: String): Flow<Map<StreamingService, Result<List<SearchResult>>>> {
         logger.debug("Searching '{}'", query)
         return tvProvider.search(query)
-            .onEach(this::logExceptions)
-            .runningFoldConcatDropInitial()
+            .onEach { it.onEach { (service, listResult) -> logExceptions(service, listResult) } }
     }
 
     override fun getTvShow(key: TvShowKey.Hosted): NetFlow<TulipTvShowInfo.Hosted> {
@@ -101,8 +99,7 @@ class HostedTvDataRepositoryImpl(
         tmdbRepo.findMovieKey(tvShowInfo.info.name, tvShowInfo.info.firstAirDateYear)
             .map { it.toResult().flatMap { tmdbKey -> Result.success(tvShowInfo.fromNetwork(key, tmdbKey)) } }
 
-    private fun logExceptions(searchResult: Pair<StreamingService, Result<List<SearchResult>>>) {
-        val (service, result) = searchResult
+    private fun logExceptions(service: StreamingService, result: Result<List<SearchResult>>) {
         val exception = result.exceptionOrNull() ?: return
         logger.warn("{} failed with", service, exception)
     }
