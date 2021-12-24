@@ -1,32 +1,35 @@
 package com.tajmoti.tulip.ui.player.streams
 
+import android.content.Context
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ItemStreamBinding
-import com.tajmoti.tulip.ui.BaseAdapter
+import com.tajmoti.tulip.ui.BaseIdentityAdapter
 import com.tajmoti.tulip.ui.languageToIcon
 
 class StreamsAdapter(
     onPlayClickedListener: (UnloadedVideoStreamRef) -> Unit,
     val onDownloadClickListener: (UnloadedVideoStreamRef) -> Unit
-) : BaseAdapter<UnloadedVideoStreamRef, ItemStreamBinding>(
+) : BaseIdentityAdapter<UnloadedVideoStreamRef, ItemStreamBinding>(
     ItemStreamBinding::inflate,
     onPlayClickedListener
 ) {
 
     override fun onBindViewHolder(
-        vh: Holder<ItemStreamBinding>,
+        context: Context,
+        index: Int,
+        binding: ItemStreamBinding,
         item: UnloadedVideoStreamRef
     ) {
-        val string = "#${vh.adapterPosition + 1}: ${item.info.serviceName}"
-        vh.binding.root.text = string
-        vh.binding.root.setCompoundDrawablesRelativeWithIntrinsicBounds(
+        val string = "#${index + 1}: ${item.info.serviceName}"
+        binding.root.text = string
+        binding.root.setCompoundDrawablesRelativeWithIntrinsicBounds(
             getDrawable(item),
             0,
             languageToIcon(item.language) ?: 0,
             0
         )
-        vh.binding.root.setOnLongClickListener { onDownloadClickListener(item); true }
+        binding.root.setOnLongClickListener { onDownloadClickListener(item); true }
     }
 
     private fun getDrawable(ref: UnloadedVideoStreamRef): Int {

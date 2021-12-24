@@ -1,5 +1,6 @@
 package com.tajmoti.tulip.ui.search
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.tajmoti.libtulip.model.info.LanguageCode
@@ -7,26 +8,26 @@ import com.tajmoti.libtulip.model.search.GroupedSearchResult
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.IconSearchResultLanguageBinding
 import com.tajmoti.tulip.databinding.ItemSearchBinding
-import com.tajmoti.tulip.ui.BaseAdapter
+import com.tajmoti.tulip.ui.BaseIdentityAdapter
 import com.tajmoti.tulip.ui.languageToIcon
 
 class SearchAdapter(
     onSearchResultClickListener: (GroupedSearchResult) -> Unit
-) : BaseAdapter<GroupedSearchResult, ItemSearchBinding>(
+) : BaseIdentityAdapter<GroupedSearchResult, ItemSearchBinding>(
     ItemSearchBinding::inflate,
     onSearchResultClickListener
 ) {
 
-    override fun onBindViewHolder(vh: Holder<ItemSearchBinding>, item: GroupedSearchResult) {
-        val name = getNameForItem(item)
+    override fun onBindViewHolder(context: Context, index: Int, binding: ItemSearchBinding, item: GroupedSearchResult) {
+        val name = getNameForItem(context, item)
         val icon = getDrawableForItem(item)
         val languages = getLanguagesForItem(item)
-        vh.binding.searchResultName.text = name
-        vh.binding.searchResultName.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, 0, 0, 0)
-        inflateViewsForLanguages(languages, vh.binding.root)
+        binding.searchResultName.text = name
+        binding.searchResultName.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, 0, 0, 0)
+        inflateViewsForLanguages(languages, binding.root)
     }
 
-    private fun getNameForItem(item: GroupedSearchResult): String {
+    private fun getNameForItem(context: Context, item: GroupedSearchResult): String {
         val firstResult = item.results.first()
         return when (item) {
             is GroupedSearchResult.Movie -> firstResult.info.name

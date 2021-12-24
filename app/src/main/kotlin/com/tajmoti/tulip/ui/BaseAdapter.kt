@@ -28,7 +28,26 @@ abstract class BaseAdapter<T, B : ViewBinding>(
     /**
      * Context of the recycler.
      */
-    protected lateinit var context: Context
+    private lateinit var context: Context
+
+    /**
+     * Binds the ViewHolder - [Context], [B] and [T] are provided.
+     */
+    protected abstract fun onBindViewHolder(context: Context, index: Int, binding: B, item: T)
+
+    /**
+     * Compares items for equality in regard to their identity.
+     */
+    protected open fun areItemsTheSame(oldItem: T, newItem: T): Boolean {
+        return oldItem == newItem
+    }
+
+    /**
+     * Compares items for equality in regard to their identity & contents.
+     */
+    protected open fun areContentsTheSame(oldItem: T, newItem: T): Boolean {
+        return oldItem == newItem
+    }
 
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
@@ -45,25 +64,16 @@ abstract class BaseAdapter<T, B : ViewBinding>(
     override fun onBindViewHolder(holder: Holder<B>, position: Int) {
         val item = items[position]
         callback?.let { cb -> holder.itemView.setOnClickListener { cb(item) } }
-        onBindViewHolder(holder, item)
-        onBindViewHolder(holder.binding, item)
+        onBindViewHolder(context, holder.adapterPosition, holder.binding, item)
     }
 
     override fun getItemCount(): Int {
         return items.size
     }
 
-    open fun onBindViewHolder(vh: Holder<B>, item: T) {
-
-    }
-
-    open fun onBindViewHolder(binding: B, item: T) {
-
-    }
-
     class Holder<B : ViewBinding>(val binding: B) : RecyclerView.ViewHolder(binding.root)
 
-    class EqualityDiffCallback<T>(
+    private inner class EqualityDiffCallback(
         private var newVideos: List<T>,
         private var oldVideos: List<T>
     ) : DiffUtil.Callback() {
@@ -73,11 +83,11 @@ abstract class BaseAdapter<T, B : ViewBinding>(
         override fun getNewListSize() = newVideos.size
 
         override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return oldVideos[oldItemPosition] == newVideos[newItemPosition]
+            return this@BaseAdapter.areItemsTheSame(oldVideos[oldItemPosition], newVideos[newItemPosition])
         }
 
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return oldVideos[oldItemPosition] == newVideos[newItemPosition]
+            return this@BaseAdapter.areContentsTheSame(oldVideos[oldItemPosition], newVideos[newItemPosition])
         }
     }
 }

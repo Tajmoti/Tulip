@@ -1,5 +1,6 @@
 package com.tajmoti.tulip.ui.library
 
+import android.content.Context
 import android.util.TypedValue
 import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -8,18 +9,18 @@ import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.ui.library.LibraryItem
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ItemLibraryBinding
-import com.tajmoti.tulip.ui.BaseAdapter
+import com.tajmoti.tulip.ui.BaseIdentityAdapter
 import com.tajmoti.tulip.ui.loadImage
 
 class LibraryAdapter(
     onImageClickListener: (LibraryItem) -> Unit,
     private val onDetailsClickListener: (ItemKey) -> Unit
-) : BaseAdapter<LibraryItem, ItemLibraryBinding>(
+) : BaseIdentityAdapter<LibraryItem, ItemLibraryBinding>(
     ItemLibraryBinding::inflate,
     onImageClickListener
 ) {
 
-    override fun onBindViewHolder(binding: ItemLibraryBinding, item: LibraryItem) {
+    override fun onBindViewHolder(context: Context, index: Int, binding: ItemLibraryBinding, item: LibraryItem) {
         // Item name if not image is available
         binding.imageLibraryPoster.scaleType = ImageView.ScaleType.CENTER
         binding.textLibraryName.isVisible = true
@@ -31,7 +32,7 @@ class LibraryAdapter(
             binding.textLibraryName.isVisible = false
         }
         // Label
-        val label = getEpisodeNumberLabelOrNull(item)
+        val label = getEpisodeNumberLabelOrNull(context, item)
         binding.textEpisodeNumber.isVisible = label != null
         if (label != null) {
             val (large, text) = label
@@ -52,7 +53,7 @@ class LibraryAdapter(
         }
     }
 
-    private fun getEpisodeNumberLabelOrNull(item: LibraryItem): Pair<Boolean, String>? {
+    private fun getEpisodeNumberLabelOrNull(context: Context, item: LibraryItem): Pair<Boolean, String>? {
         val text = when (val key = item.lastPlayedPosition?.key) {
             is EpisodeKey.Hosted -> null
             is EpisodeKey.Tmdb -> true to "S${key.seasonNumber}:E${key.episodeNumber}"

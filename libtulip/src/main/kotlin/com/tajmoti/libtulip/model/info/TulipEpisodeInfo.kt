@@ -1,9 +1,10 @@
 package com.tajmoti.libtulip.model.info
 
+import com.tajmoti.libtulip.model.IdentityItem
 import com.tajmoti.libtulip.model.key.EpisodeKey
 
-sealed interface TulipEpisodeInfo {
-    val key: EpisodeKey
+sealed interface TulipEpisodeInfo : IdentityItem<EpisodeKey> {
+    override val key: EpisodeKey
     val episodeNumber: Int
     val name: String?
     val overview: String?
