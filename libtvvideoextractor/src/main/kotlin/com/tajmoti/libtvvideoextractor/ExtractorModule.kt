@@ -3,7 +3,6 @@ package com.tajmoti.libtvvideoextractor
 import arrow.core.Either
 import com.tajmoti.libtvvideoextractor.module.StreamzzTo
 import com.tajmoti.libtvvideoextractor.module.TheVideoMe
-import com.tajmoti.libtvvideoextractor.module.VoeSx
 
 /**
  * A module able to extract direct video links from one
@@ -14,7 +13,7 @@ interface ExtractorModule {
         /**
          * All by-default included and supported link extractor modules.
          */
-        val DEFAULT_MODULES = listOf(StreamzzTo(), TheVideoMe(), VoeSx())
+        val DEFAULT_MODULES = listOf(StreamzzTo(), TheVideoMe())
     }
 
     /**
