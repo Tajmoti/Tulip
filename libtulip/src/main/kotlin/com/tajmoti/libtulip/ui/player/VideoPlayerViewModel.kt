@@ -21,7 +21,7 @@ interface VideoPlayerViewModel {
      * Cancels playback of the previous streamable
      * and starts playing the one by [key].
      *
-     * If the key is already being played, this method has no effect.
+     * If the [key] is already being loaded played, this method has no effect.
      */
     fun changeStreamable(key: StreamableKey)
 
@@ -32,7 +32,7 @@ interface VideoPlayerViewModel {
     val isTvShow: StateFlow<Boolean>
 
     /**
-     * Whether a TV show episode is currently playing and it's not the last one in the season.
+     * Whether a TV show episode is currently playing, and it's not the last one in the season.
      */
     val hasNextEpisode: StateFlow<Boolean>
 
@@ -76,7 +76,7 @@ interface VideoPlayerViewModel {
     fun onStreamClicked(stream: UnloadedVideoStreamRef, download: Boolean)
 
     /**
-     * Whether redirects are being resolved or a direct link is being loaded right now.
+     * Whether a direct link is being loaded right now.
      */
     val loadingStreamOrDirectLink: StateFlow<Boolean>
 
@@ -117,7 +117,7 @@ interface VideoPlayerViewModel {
     val subtitlesReadyToSelect: StateFlow<Boolean>
 
     /**
-     * Whether some subtitle file is being downloaded right now.
+     * Whether some subtitles file is being downloaded right now.
      */
     val downloadingSubtitles: StateFlow<Boolean>
 
@@ -212,7 +212,7 @@ interface VideoPlayerViewModel {
     fun skipBackwards()
 
     /**
-     * Video needs to be pause or resumed.
+     * Video needs to be paused or resumed.
      */
     fun playPause()
 

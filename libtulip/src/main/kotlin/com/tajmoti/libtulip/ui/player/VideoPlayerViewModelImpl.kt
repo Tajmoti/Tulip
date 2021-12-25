@@ -59,14 +59,14 @@ class VideoPlayerViewModelImpl constructor(
     /**
      * Streamable key to loading state of the list of available streams.
      */
-    private val streamLoadingStateWithKey = streamableKey
+    private val keyWithLinkListLoadingState = streamableKey
         .flatMapLatest { key -> fetchStreams(key).map { key to it } }
         .shareIn(viewModelScope, SharingStarted.Eagerly)
 
     /**
-     * Loading state of the list of available streams
+     * Loading state of the list of available streams.
      */
-    private val streamLoadingState = streamLoadingStateWithKey
+    private val linkListLoadingState = keyWithLinkListLoadingState
         .map { (_, state) -> state }
         .stateIn(viewModelScope, SharingStarted.Eagerly, LinkListLoadingState.Loading)
 
@@ -78,7 +78,7 @@ class VideoPlayerViewModelImpl constructor(
     /**
      * Auto-selected stream to play.
      */
-    private val autoStream = streamLoadingStateWithKey
+    private val autoStream = keyWithLinkListLoadingState
         .mapNotNull { (key, state) -> (state as? LinkListLoadingState.Success)?.let { key to state.streams } }
         .filter { (_, streams) -> anyGoodStreams(streams) }
         .distinctUntilChangedBy { (key, _) -> key }
@@ -113,13 +113,13 @@ class VideoPlayerViewModelImpl constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
 
-    override val linksResult = streamLoadingState
+    override val linksResult = linkListLoadingState
         .map(viewModelScope) { (it as? LinkListLoadingState.Success)?.streams }
 
-    private val streamLoadingFinalSuccessState = streamLoadingState
+    private val streamLoadingFinalSuccessState = linkListLoadingState
         .map(viewModelScope) { (it as? LinkListLoadingState.Success)?.takeIf { success -> success.final } }
 
-    override val linksAnyResult = streamLoadingState
+    override val linksAnyResult = linkListLoadingState
         .map(viewModelScope) {
             (it as? LinkListLoadingState.Success)?.streams?.any() ?: false
         }
@@ -127,7 +127,7 @@ class VideoPlayerViewModelImpl constructor(
     override val linksNoResult = streamLoadingFinalSuccessState
         .map(viewModelScope) { it?.streams?.none() ?: false }
 
-    override val linksLoading = streamLoadingState
+    override val linksLoading = linkListLoadingState
         .combine(linksNoResult) { state, noResults ->
             state is LinkListLoadingState.Loading
                     || (state is LinkListLoadingState.Success && state.streams.isEmpty() && !noResults)
