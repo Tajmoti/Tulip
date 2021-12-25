@@ -52,7 +52,11 @@ class StreamServiceImpl(
 
     private fun infosToFlowOfStreams(infos: List<StreamableInfo.Hosted>): Flow<List<UnloadedVideoStreamRef>> {
         return infos
-            .map { getStreamsByKey(it.key).mapNotNull { result -> result.getOrNull() } }
+            .map {
+                getStreamsByKey(it.key)
+                    .onStart { emit(Result.success(emptyList())) }
+                    .mapNotNull { result -> result.getOrNull() }
+            }
             .combine()
             .map { sortByExtractionSupport(it.flatten()) }
     }
