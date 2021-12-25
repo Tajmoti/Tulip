@@ -1,8 +1,10 @@
 package com.tajmoti.libtulip.service.impl
 
 import com.tajmoti.commonutils.combine
+import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.StreamableKey
+import com.tajmoti.libtulip.model.stream.StreamsResult
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.repository.ItemMappingRepository
@@ -22,17 +24,19 @@ class StreamServiceImpl(
     private val hostedToTmdbMappingRepository: ItemMappingRepository
 ) : StreamService {
 
-    override fun getStreamsByKey(key: StreamableKey.Hosted): Flow<Result<List<UnloadedVideoStreamRef>>> {
+    override fun getStreamsByKey(key: StreamableKey.Hosted): Flow<StreamsResult> {
+        logger.debug("Retrieving $key")
         return hostedTvDataRepository.getStreamableInfo(key)
-            .flatMapLatest { result -> result.fold(this::fetchStreamsForInfo) { flowOf(Result.failure(it)) } }
+            .flatMapLatest { result -> result.fold(this::fetchStreamsForInfo) { flowOf(StreamsResult.Error) } }
     }
 
-    private fun fetchStreamsForInfo(result: StreamableInfo.Hosted): Flow<Result<List<UnloadedVideoStreamRef>>> {
+    private fun fetchStreamsForInfo(result: StreamableInfo.Hosted): Flow<StreamsResult> {
         return hostedTvDataRepository.fetchStreams(result.key)
             .map {
                 it.toResult()
                     .map { streams -> streams.map { stream -> addMiscInfo(stream, result) } }
                     .map { streams -> sortByExtractionSupport(streams) }
+                    .fold({ streams -> StreamsResult.Success(streams, true) }, { StreamsResult.Error })
             }
     }
 
@@ -40,25 +44,32 @@ class StreamServiceImpl(
         return UnloadedVideoStreamRef(stream, streamsRepo.canExtractStream(stream), info.language)
     }
 
-    override fun getStreamsByKey(key: StreamableKey.Tmdb): Flow<Result<List<UnloadedVideoStreamRef>>> {
+    override fun getStreamsByKey(key: StreamableKey.Tmdb): Flow<StreamsResult> {
+        logger.debug("Retrieving $key")
         return hostedTvDataRepository
             .getStreamableInfoByTmdbKey(hostedToTmdbMappingRepository, key)
-            .flatMapLatest {
-                it.mapNotNull { res -> res.getOrNull() }
-                    .run { infosToFlowOfStreams(this) }
-                    .map { streams -> Result.success(streams) }
-            }
+            .flatMapLatest(::fetchStreamsForInfoResults)
     }
 
-    private fun infosToFlowOfStreams(infos: List<StreamableInfo.Hosted>): Flow<List<UnloadedVideoStreamRef>> {
+    private fun fetchStreamsForInfoResults(infos: List<Result<StreamableInfo.Hosted>>): Flow<StreamsResult> {
         return infos
-            .map {
-                getStreamsByKey(it.key)
-                    .onStart { emit(Result.success(emptyList())) }
-                    .mapNotNull { result -> result.getOrNull() }
+            .map { result ->
+                result.fold({ info -> getStreamsByKey(info.key) }, { flowOf(StreamsResult.Error) })
+                    .onStart { emit(StreamsResult.Success(emptyList(), false)) }
+                    .withIndex()
             }
             .combine()
-            .map { sortByExtractionSupport(it.flatten()) }
+            .filterNot { it.all { (index) -> index == 0 } } // Skips first useless emission caused by onStart
+            .map { indexedResults ->
+                val streams = indexedResults
+                    .mapNotNull { (_, value) -> (value as? StreamsResult.Success)?.streams }
+                    .flatten()
+                    .let(::sortByExtractionSupport)
+                // Skips the artificially emitted value in onStart, which is there to let us get here
+                // before all flows from getStreamsByKey actually emit an initial value
+                val allEmittedAtLeastOnce = indexedResults.all { (index) -> index > 0 }
+                StreamsResult.Success(streams, allEmittedAtLeastOnce)
+            }
     }
 
     private fun sortByExtractionSupport(videosWithLanguages: List<UnloadedVideoStreamRef>) =

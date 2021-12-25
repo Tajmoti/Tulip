@@ -2,13 +2,13 @@ package com.tajmoti.libtulip.ui.player
 
 import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.map
-import com.tajmoti.commonutils.onLast
 import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.StreamableKey
+import com.tajmoti.libtulip.model.stream.StreamsResult
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.repository.*
@@ -60,7 +60,11 @@ class VideoPlayerViewModelImpl constructor(
      * Streamable key to loading state of the list of available streams.
      */
     private val keyWithLinkListLoadingState = streamableKey
-        .flatMapLatest { key -> fetchStreams(key).map { key to it } }
+        .flatMapLatest { key ->
+            streamService.getStreamsByKey(key)
+                .map(::mapStreamsResult)
+                .map { key to it }
+        }
         .shareIn(viewModelScope, SharingStarted.Eagerly)
 
     /**
@@ -526,19 +530,12 @@ class VideoPlayerViewModelImpl constructor(
         downloadService.downloadFileToFiles(link, streamableInfo.value!!)
     }
 
-    private fun fetchStreams(info: StreamableKey) =
-        streamService.getStreamsByKey(info)
-            .map { result ->
-                result.fold(
-                    { LinkListLoadingState.Success(it, false) },
-                    { LinkListLoadingState.Error(it) }
-                )
-            }
-            .onLast {
-                if (it !is LinkListLoadingState.Success)
-                    return@onLast
-                emit(LinkListLoadingState.Success(it.streams, true))
-            }
+    private fun mapStreamsResult(result: StreamsResult): LinkListLoadingState {
+        return when (result) {
+            is StreamsResult.Success -> LinkListLoadingState.Success(result.streams, result.possiblyFinished)
+            is StreamsResult.Error -> LinkListLoadingState.Error
+        }
+    }
 
     private fun getStreamableInfo(key: StreamableKey): Flow<Result<StreamableInfo>> {
         return when (key) {
@@ -595,9 +592,7 @@ class VideoPlayerViewModelImpl constructor(
         /**
          * Error during loading of the item.
          */
-        data class Error(
-            val reason: Throwable
-        ) : LinkListLoadingState
+        object Error : LinkListLoadingState
     }
 
     sealed interface LinkLoadingState {
