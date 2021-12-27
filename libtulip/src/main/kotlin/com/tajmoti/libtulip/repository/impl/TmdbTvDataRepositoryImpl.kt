@@ -34,7 +34,6 @@ import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlin.time.ExperimentalTime
 
@@ -48,7 +47,7 @@ class TmdbTvDataRepositoryImpl(
         .from<TvShowKey.Tmdb, TulipTvShowInfo.Tmdb, TulipTvShowInfo.Tmdb>(
             fetcher = Fetcher.ofResult { fetchFullTvInfo(it).toFetcherResult() },
             sourceOfTruth = SourceOfTruth.of(
-                reader = { flow { emit(db.getTvShow(it)) } },
+                reader = { db.getTvShow(it) },
                 writer = { _, it -> db.insertTvShow(it) },
             )
         )
@@ -58,7 +57,7 @@ class TmdbTvDataRepositoryImpl(
         .from<MovieKey.Tmdb, TulipMovie.Tmdb, TulipMovie.Tmdb>(
             fetcher = Fetcher.ofResult { runCatching { service.getMovie(it.id).fromNetwork() }.toFetcherResult() },
             sourceOfTruth = SourceOfTruth.of(
-                reader = { flow { emit(db.getMovie(it)) } },
+                reader = { db.getMovie(it) },
                 writer = { _, it -> db.insertMovie(it) },
             )
         )
@@ -148,7 +147,7 @@ class TmdbTvDataRepositoryImpl(
     private fun Tv.fromNetwork(seasons: List<TulipSeasonInfo.Tmdb>): TulipTvShowInfo.Tmdb {
         val key = TvShowKey.Tmdb(id)
         val baseImageUrl = "https://image.tmdb.org/t/p/original"
-        return TulipTvShowInfo.Tmdb(key, name, null, baseImageUrl +  posterPath, baseImageUrl + backdropPath, seasons)
+        return TulipTvShowInfo.Tmdb(key, name, null, baseImageUrl + posterPath, baseImageUrl + backdropPath, seasons)
     }
 
     private fun Season.fromNetwork(tvShowKey: TvShowKey.Tmdb): TulipSeasonInfo.Tmdb {

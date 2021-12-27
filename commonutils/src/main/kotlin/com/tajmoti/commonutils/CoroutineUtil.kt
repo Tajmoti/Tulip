@@ -135,6 +135,15 @@ inline fun <reified T> List<Flow<T>>.combine(): Flow<List<T>> {
 }
 
 /**
+ * Combines a list of flows into a flow that contains the joined lists.
+ * If the source list is empty, returns a flow of an empty list!
+ */
+inline fun <reified T> List<Flow<T>>.combineNonEmpty(): Flow<List<T>> {
+    if (isEmpty()) return flowOf(emptyList())
+    return combine()
+}
+
+/**
  * Performs a running fold on the pairs, which get accumulated into a map.
  * The initial empty map is not emitted.
  */

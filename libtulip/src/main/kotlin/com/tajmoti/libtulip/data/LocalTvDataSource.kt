@@ -5,19 +5,20 @@ import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
+import kotlinx.coroutines.flow.Flow
 
 interface LocalTvDataSource {
-    suspend fun getTvShow(key: TvShowKey.Tmdb): TulipTvShowInfo.Tmdb?
+    fun getTvShow(key: TvShowKey.Tmdb): Flow<TulipTvShowInfo.Tmdb?>
 
-    suspend fun getSeason(key: SeasonKey.Tmdb): TulipSeasonInfo.Tmdb?
+    fun getSeason(key: SeasonKey.Tmdb): Flow<TulipSeasonInfo.Tmdb?>
 
-    suspend fun getSeasons(key: TvShowKey.Tmdb): List<TulipSeasonInfo.Tmdb>
+    fun getSeasons(key: TvShowKey.Tmdb): Flow<List<TulipSeasonInfo.Tmdb>>
 
-    suspend fun getEpisode(key: EpisodeKey.Tmdb): TulipEpisodeInfo.Tmdb?
+    fun getEpisode(key: EpisodeKey.Tmdb): Flow<TulipEpisodeInfo.Tmdb?>
 
-    suspend fun getEpisodes(key: SeasonKey.Tmdb): List<TulipEpisodeInfo.Tmdb>
+    fun getEpisodes(key: SeasonKey.Tmdb): Flow<List<TulipEpisodeInfo.Tmdb>>
 
-    suspend fun getMovie(key: MovieKey.Tmdb): TulipMovie.Tmdb?
+    fun getMovie(key: MovieKey.Tmdb): Flow<TulipMovie.Tmdb?>
 
     suspend fun insertTvShow(tv: TulipTvShowInfo.Tmdb)
 
