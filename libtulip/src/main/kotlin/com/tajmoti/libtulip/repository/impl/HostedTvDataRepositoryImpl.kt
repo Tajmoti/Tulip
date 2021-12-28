@@ -18,6 +18,9 @@ import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtvprovider.*
+import com.tajmoti.libtvprovider.model.SearchResult
+import com.tajmoti.libtvprovider.model.TvItem
+import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlin.time.ExperimentalTime
@@ -72,12 +75,11 @@ class HostedTvDataRepositoryImpl(
         val netFlow = flow { emit(tvProvider.getShow(key.streamingService, key.id)) }
         return netFlow
             .flatMapLatest { tvShowInfoResult ->
-                val tvShowInfo = tvShowInfoResult.getOrElse { return@flatMapLatest flowOf(Result.failure(it)) }
-                getHostedShowTvInfo(tvShowInfo, key)
+                tvShowInfoResult.fold({ getHostedShowTvInfo(it, key) }, { flowOf(Result.failure(it)) })
             }
     }
 
-    private fun getHostedShowTvInfo(tvShowInfo: TvShowInfo, key: TvShowKey.Hosted) =
+    private fun getHostedShowTvInfo(tvShowInfo: TvItem.TvShow, key: TvShowKey.Hosted) =
         tmdbRepo.findTvShowKey(tvShowInfo.info.name, tvShowInfo.info.firstAirDateYear)
             .map { it.toResult().flatMap { tmdbKey -> Result.success(tvShowInfo.fromNetwork(key, tmdbKey)) } }
 
@@ -90,12 +92,11 @@ class HostedTvDataRepositoryImpl(
         val netFlow = flow { emit(tvProvider.getMovie(key.streamingService, key.id)) }
         return netFlow
             .flatMapLatest { tvShowInfoResult ->
-                val tvShowInfo = tvShowInfoResult.getOrElse { return@flatMapLatest flowOf(Result.failure(it)) }
-                getHostedMovieInfo(tvShowInfo, key)
+                tvShowInfoResult.fold({ getHostedMovieInfo(it, key) }, { flowOf(Result.failure(it)) })
             }
     }
 
-    private fun getHostedMovieInfo(tvShowInfo: MovieInfo, key: MovieKey.Hosted) =
+    private fun getHostedMovieInfo(tvShowInfo: TvItem.Movie, key: MovieKey.Hosted) =
         tmdbRepo.findMovieKey(tvShowInfo.info.name, tvShowInfo.info.firstAirDateYear)
             .map { it.toResult().flatMap { tmdbKey -> Result.success(tvShowInfo.fromNetwork(key, tmdbKey)) } }
 

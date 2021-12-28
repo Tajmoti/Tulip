@@ -3,7 +3,7 @@ package com.tajmoti.libtulip.service.impl
 import arrow.core.Either
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.service.StreamExtractionService
-import com.tajmoti.libtvprovider.VideoStreamRef
+import com.tajmoti.libtvprovider.model.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.ExtractionError
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
 import io.ktor.client.*
@@ -28,6 +28,10 @@ class StreamExtractionServiceImpl(
         return resolveRedirects(ref.url)
             .onFailure { logger.warn("Failed to resolve redirects of $ref", it) }
             .map { ref.asResolved(it ?: ref.url) }
+    }
+
+    private fun VideoStreamRef.Unresolved.asResolved(resolvedUrl: String): VideoStreamRef.Resolved {
+        return VideoStreamRef.Resolved(serviceName, resolvedUrl)
     }
 
     /**

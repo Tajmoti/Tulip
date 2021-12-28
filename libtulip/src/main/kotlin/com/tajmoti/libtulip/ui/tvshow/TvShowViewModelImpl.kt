@@ -1,6 +1,5 @@
 package com.tajmoti.libtulip.ui.tvshow
 
-import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
@@ -26,7 +25,6 @@ class TvShowViewModelImpl constructor(
     private val stateWithName = itemKey
         .flatMapLatest { fetchSeasonsToState(it) }
     val state = stateWithName
-        .onEach { logger.warn("State is $it") }
         .map { it.state }
         .stateIn(viewModelScope, SharingStarted.Eagerly, State.Loading)
     override val name = stateWithName

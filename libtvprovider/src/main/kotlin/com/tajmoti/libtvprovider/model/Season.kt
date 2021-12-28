@@ -1,7 +1,6 @@
-package com.tajmoti.libtvprovider
+package com.tajmoti.libtvprovider.model
 
 data class Season(
-    val tvShowKey: String,
     /**
      * One-based season number
      */

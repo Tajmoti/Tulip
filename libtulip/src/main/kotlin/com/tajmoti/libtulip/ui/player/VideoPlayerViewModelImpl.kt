@@ -16,12 +16,11 @@ import com.tajmoti.libtulip.service.StreamExtractionService
 import com.tajmoti.libtulip.service.StreamService
 import com.tajmoti.libtulip.service.SubtitleService
 import com.tajmoti.libtulip.service.VideoDownloadService
-import com.tajmoti.libtulip.ui.doCancelableJob
 import com.tajmoti.libtulip.ui.logAllFlowValues
 import com.tajmoti.libtulip.ui.streams.FailedLink
 import com.tajmoti.libtulip.ui.streams.LoadedLink
 import com.tajmoti.libtulip.ui.streams.SelectedLink
-import com.tajmoti.libtvprovider.VideoStreamRef
+import com.tajmoti.libtvprovider.model.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.CaptchaInfo
 import com.tajmoti.libtvvideoextractor.ExtractionError
 import kotlinx.coroutines.*
@@ -192,13 +191,17 @@ class VideoPlayerViewModelImpl constructor(
         .flatMapLatest { loadSubtitleList(it) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, SubtitleListLoadingState.Loading)
 
+    /**
+     * Subtitles that should be downloaded and applied.
+     */
+    private val subtitlesToDownload = MutableStateFlow<SubtitleInfo?>(null)
 
     /**
      * State of downloading of the selected subtitles.
      */
-    private val subtitleDownloadState = MutableStateFlow<SubtitleDownloadingState>(
-        SubtitleDownloadingState.Idle
-    )
+    private val subtitleDownloadState = subtitlesToDownload
+        .flatMapLatest { if (it != null) downloadSubtitles(it) else flowOf(SubtitleDownloadingState.Idle) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, SubtitleDownloadingState.Idle)
 
     override val loadingSubtitleList = loadingSubtitlesState
         .map(viewModelScope) { it is SubtitleListLoadingState.Loading }
@@ -302,11 +305,6 @@ class VideoPlayerViewModelImpl constructor(
         .sample(PLAY_POSITION_SAMPLE_PERIOD_MS)
         .mapNotNull { (key, progress) -> progress?.let { key to progress } }
 
-    /**
-     * Represents fetching of the selected subtitles.
-     */
-    private var subtitleDownloadJob: Job? = null
-
     init {
         startPersistPlayingPosition()
         startRestorePlayingPosition()
@@ -349,13 +347,7 @@ class VideoPlayerViewModelImpl constructor(
 
     override fun onSubtitlesSelected(subtitleInfo: SubtitleInfo?) {
         subSyncState.value = null
-        viewModelScope.doCancelableJob(this::subtitleDownloadJob) {
-            if (subtitleInfo != null) {
-                subtitleDownloadState.emitAll(downloadSubtitles(subtitleInfo))
-            } else {
-                subtitleDownloadState.emit(SubtitleDownloadingState.Idle)
-            }
-        }
+        subtitlesToDownload.value = subtitleInfo
     }
 
     override fun onWordHeard() {
@@ -415,8 +407,7 @@ class VideoPlayerViewModelImpl constructor(
     }
 
     /**
-     * Loads the time where the playback was last at
-     * and restores it to the media player if it is still attached.
+     * Applies [playerProgressToRestore] to the media player to restore playback progress.
      */
     private fun startRestorePlayingPosition() {
         viewModelScope.launch {
@@ -426,9 +417,9 @@ class VideoPlayerViewModelImpl constructor(
 
     private fun loadSubtitleList(id: StreamableKey) = flow {
         emit(SubtitleListLoadingState.Loading)
-        val subtitles = subtitleRepository.getAvailableSubtitles(id)
-            .getOrElse { emit(SubtitleListLoadingState.Error); return@flow }
-        emit(SubtitleListLoadingState.Success(subtitles))
+        val result = subtitleRepository.getAvailableSubtitles(id)
+            .fold({ SubtitleListLoadingState.Success(it) }, { SubtitleListLoadingState.Error })
+        emit(result)
     }
 
     private fun calculateAndSetSubtitleDelay(heardTime: Long, seenTime: Long) {
@@ -440,9 +431,9 @@ class VideoPlayerViewModelImpl constructor(
 
     private fun downloadSubtitles(subtitleInfo: SubtitleInfo) = flow {
         emit(SubtitleDownloadingState.Loading)
-        val subtitleStream = subtitleService.downloadSubtitleToFile(subtitleInfo, subDirectory)
-            .getOrElse { emit(SubtitleDownloadingState.Error); return@flow }
-        emit(SubtitleDownloadingState.Success(subtitleStream))
+        val subtitleResult = subtitleService.downloadSubtitleToFile(subtitleInfo, subDirectory)
+            .fold({ SubtitleDownloadingState.Success(it) }, { SubtitleDownloadingState.Error })
+        emit(subtitleResult)
     }
 
 

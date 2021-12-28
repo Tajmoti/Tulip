@@ -1,7 +1,7 @@
 package com.tajmoti.libtulip.ui.streams
 
 import com.tajmoti.libtulip.model.info.LanguageCode
-import com.tajmoti.libtvprovider.VideoStreamRef
+import com.tajmoti.libtvprovider.model.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.CaptchaInfo
 
 /**

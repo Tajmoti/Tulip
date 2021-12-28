@@ -39,19 +39,20 @@ class EpisodesFragment : BaseFragment<FragmentEpisodesBinding>(FragmentEpisodesB
             requireContext(),
             android.R.layout.simple_spinner_dropdown_item
         )
-        episodesAdapter = EpisodesAdapter(
-            { onStreamClicked(it) },
-            { showEpisodeDetailsDialog(requireContext(), it) }
-        )
+        episodesAdapter = EpisodesAdapter(::onStreamClicked, ::onEpisodeDetailsClicked)
         binding.recyclerEpisodes.adapter = episodesAdapter
         consume(viewModel.seasons) { it?.let { onSeasonsChanged(it) } }
         binding.spinnerSelectSeason.adapter = seasonsAdapter
         binding.spinnerSelectSeason.onItemSelectedListener = SpinnerListener()
     }
 
-    private fun onStreamClicked(it: TulipEpisodeInfo) {
+    private fun onStreamClicked(episode: TulipEpisodeInfo) {
         slideToBottomDismiss()
-        playerViewModel.changeStreamable(it.key)
+        playerViewModel.changeStreamable(episode.key)
+    }
+
+    private fun onEpisodeDetailsClicked(episode: TulipEpisodeInfo) {
+        showEpisodeDetailsDialog(requireContext(), episode)
     }
 
     private fun onSeasonsChanged(seasons: List<TulipSeasonInfo>) {

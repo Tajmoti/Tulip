@@ -1,6 +1,6 @@
 package com.tajmoti.libprimewiretvprovider
 
-import com.tajmoti.libtvprovider.TvItemInfo
+import com.tajmoti.libtvprovider.model.TvItemInfo
 import org.jsoup.nodes.Document
 
 
@@ -12,5 +12,5 @@ fun parseTvItemInfo(key: String, page: Document): TvItemInfo {
     val yearEnd = title.indexOfLast { it == ')' }
     val yearStr = title.subSequence(yearStart + 1, yearEnd)
     val name = title.substring(0, yearStart - 1)
-    return TvItemInfo(key, name, "en", yearStr.toString().toInt())
+    return TvItemInfo(name, "en", yearStr.toString().toInt())
 }

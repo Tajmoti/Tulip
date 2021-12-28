@@ -1,7 +1,7 @@
 package com.tajmoti.libtulip.model.info
 
 import com.tajmoti.libtulip.model.key.MovieKey
-import com.tajmoti.libtvprovider.TvItemInfo
+import com.tajmoti.libtvprovider.model.TvItemInfo
 
 sealed interface TulipMovie : StreamableInfo {
     override val name: String

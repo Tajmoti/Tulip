@@ -21,28 +21,12 @@ class InMemoryLocalTvDataSource : LocalTvDataSource {
         return tvShows.map { it.firstOrNull { tvShow -> tvShow.key == key } }
     }
 
-    override fun getSeason(key: SeasonKey.Tmdb): Flow<TulipSeasonInfo.Tmdb?> {
-        return getSeasons(key.tvShowKey).map { it.firstOrNull { season -> season.key == key } }
-    }
-
-    override fun getSeasons(key: TvShowKey.Tmdb): Flow<List<TulipSeasonInfo.Tmdb>> {
-        return getTvShow(key).map { it?.seasons ?: emptyList() }
-    }
-
-    override fun getEpisode(key: EpisodeKey.Tmdb): Flow<TulipEpisodeInfo.Tmdb?> {
-        return getEpisodes(key.seasonKey).map { it.firstOrNull { episode -> episode.key == key } }
-    }
-
-    override fun getEpisodes(key: SeasonKey.Tmdb): Flow<List<TulipEpisodeInfo.Tmdb>> {
-        return getSeason(key).map { season -> season?.episodes ?: emptyList() }
+    override suspend fun insertTvShow(tv: TulipTvShowInfo.Tmdb) {
+        tvShows.value = tvShows.value.plus(tv)
     }
 
     override fun getMovie(key: MovieKey.Tmdb): Flow<TulipMovie.Tmdb?> {
         return movies.map { movies -> movies.firstOrNull { movie -> movie.key == key } }
-    }
-
-    override suspend fun insertTvShow(tv: TulipTvShowInfo.Tmdb) {
-        tvShows.value = tvShows.value.plus(tv)
     }
 
     override suspend fun insertMovie(movie: TulipMovie.Tmdb) {

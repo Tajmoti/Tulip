@@ -3,6 +3,9 @@ package com.tajmoti.libprimewiretvprovider
 import com.tajmoti.commonutils.flatMapWithContext
 import com.tajmoti.commonutils.mapWithContext
 import com.tajmoti.libtvprovider.*
+import com.tajmoti.libtvprovider.model.SearchResult
+import com.tajmoti.libtvprovider.model.TvItem
+import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.coroutines.Dispatchers
 import org.jsoup.Jsoup
 import java.net.URLEncoder
@@ -34,24 +37,24 @@ class PrimewireTvProvider(
         return "$baseUrl?s=$encoded&t=y&m=m&w=q"
     }
 
-    override suspend fun getTvShow(id: String): Result<TvShowInfo> {
+    override suspend fun getTvShow(id: String): Result<TvItem.TvShow> {
         return httpLoader(baseUrl + id)
             .flatMapWithContext(Dispatchers.Default) { source ->
                 val document = Jsoup.parse(source)
-                parseSearchResultPageBlockingSeason(id, document)
+                parseSearchResultPageBlockingSeason(document)
                     .map { seasons -> document to seasons }
             }
             .mapWithContext(Dispatchers.Default) { (document, seasons) ->
                 val tvItemInfo = parseTvItemInfo(id, document)
-                TvShowInfo(tvItemInfo, seasons)
+                TvItem.TvShow(tvItemInfo, seasons)
             }
     }
 
-    override suspend fun getMovie(id: String): Result<MovieInfo> {
+    override suspend fun getMovie(id: String): Result<TvItem.Movie> {
         return httpLoader(baseUrl + id)
             .mapWithContext(Dispatchers.Default) { source ->
                 val tvItemInfo = parseTvItemInfo(id, Jsoup.parse(source))
-                MovieInfo(id, tvItemInfo)
+                TvItem.Movie(tvItemInfo)
             }
     }
 

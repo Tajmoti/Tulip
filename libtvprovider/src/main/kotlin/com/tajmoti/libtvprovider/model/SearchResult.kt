@@ -1,6 +1,10 @@
-package com.tajmoti.libtvprovider
+package com.tajmoti.libtvprovider.model
 
 sealed interface SearchResult {
+    /**
+     * Key of this TV item. Only valid
+     * on the streaming site where it came from.
+     */
     val key: String
 
     /**

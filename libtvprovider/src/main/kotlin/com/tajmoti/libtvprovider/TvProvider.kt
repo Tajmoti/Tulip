@@ -1,7 +1,10 @@
 package com.tajmoti.libtvprovider
 
-interface TvProvider {
+import com.tajmoti.libtvprovider.model.SearchResult
+import com.tajmoti.libtvprovider.model.TvItem
+import com.tajmoti.libtvprovider.model.VideoStreamRef
 
+interface TvProvider {
     /**
      * Searches for shows or movies by their name.
      */
@@ -10,15 +13,15 @@ interface TvProvider {
     /**
      * Retrieves TV show info by its [id].
      */
-    suspend fun getTvShow(id: String): Result<TvShowInfo>
+    suspend fun getTvShow(id: String): Result<TvItem.TvShow>
 
     /**
      * Retrieves a movie by its information.
      */
-    suspend fun getMovie(id: String): Result<MovieInfo>
+    suspend fun getMovie(id: String): Result<TvItem.Movie>
 
     /**
-     * Returns a list of links for the provided [MovieInfo] or [EpisodeInfo].
+     * Returns a list of links for the provided [TvItem.Movie] or [EpisodeInfo].
      */
     suspend fun getStreamableLinks(episodeOrMovieId: String): Result<List<VideoStreamRef>>
 }

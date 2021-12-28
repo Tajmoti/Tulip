@@ -15,10 +15,9 @@ import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
-import com.tajmoti.libtvprovider.EpisodeInfo
-import com.tajmoti.libtvprovider.MovieInfo
-import com.tajmoti.libtvprovider.Season
-import com.tajmoti.libtvprovider.TvShowInfo
+import com.tajmoti.libtvprovider.model.EpisodeInfo
+import com.tajmoti.libtvprovider.model.Season
+import com.tajmoti.libtvprovider.model.TvItem
 
 inline fun SubtitlesResponseData.fromApi(): SubtitleInfo? {
     return attributes.fromApi()
@@ -29,7 +28,7 @@ inline fun SubtitleAttributes.fromApi(): SubtitleInfo? {
     return SubtitleInfo(release, language, subtitleId, legacySubtitleId, file)
 }
 
-inline fun TvShowInfo.fromNetwork(
+inline fun TvItem.TvShow.fromNetwork(
     key: TvShowKey.Hosted,
     tmdbId: TvShowKey.Tmdb?
 ): TulipTvShowInfo.Hosted {
@@ -37,7 +36,7 @@ inline fun TvShowInfo.fromNetwork(
     return TulipTvShowInfo.Hosted(key, info, tmdbId, seasons)
 }
 
-inline fun MovieInfo.fromNetwork(
+inline fun TvItem.Movie.fromNetwork(
     key: MovieKey.Hosted,
     tmdbId: MovieKey.Tmdb?
 ): TulipMovie.Hosted {

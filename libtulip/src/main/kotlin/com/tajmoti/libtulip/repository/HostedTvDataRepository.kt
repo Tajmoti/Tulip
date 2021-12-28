@@ -6,8 +6,8 @@ import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.TulipTvShowInfo
 import com.tajmoti.libtulip.model.key.*
-import com.tajmoti.libtvprovider.SearchResult
-import com.tajmoti.libtvprovider.VideoStreamRef
+import com.tajmoti.libtvprovider.model.SearchResult
+import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.coroutines.flow.Flow
 
 /**

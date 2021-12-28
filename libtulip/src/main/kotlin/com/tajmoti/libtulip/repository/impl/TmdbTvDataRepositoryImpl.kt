@@ -8,15 +8,14 @@ import com.dropbox.android.external.store4.SourceOfTruth
 import com.dropbox.android.external.store4.StoreBuilder
 import com.dropbox.android.external.store4.StoreRequest
 import com.tajmoti.commonutils.allOrNone
+import com.tajmoti.commonutils.combineNonEmpty
 import com.tajmoti.commonutils.logger
-import com.tajmoti.commonutils.parallelMap
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtmdb.model.movie.Movie
 import com.tajmoti.libtmdb.model.search.SearchMovieResponse
 import com.tajmoti.libtmdb.model.search.SearchResponse
 import com.tajmoti.libtmdb.model.search.SearchTvResponse
-import com.tajmoti.libtmdb.model.tv.Episode
-import com.tajmoti.libtmdb.model.tv.Season
+import com.tajmoti.libtmdb.model.tv.SlimSeason
 import com.tajmoti.libtmdb.model.tv.Tv
 import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.LocalTvDataSource
@@ -24,20 +23,17 @@ import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.misc.job.createCache
 import com.tajmoti.libtulip.misc.job.toFetcherResult
 import com.tajmoti.libtulip.misc.job.toNetFlow
-import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
 import com.tajmoti.libtulip.model.info.TulipTvShowInfo
-import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.MovieKey
-import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import kotlin.time.ExperimentalTime
 
-@OptIn(ExperimentalTime::class)
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalTime::class)
 class TmdbTvDataRepositoryImpl(
     private val service: TmdbService,
     private val db: LocalTvDataSource,
@@ -45,7 +41,7 @@ class TmdbTvDataRepositoryImpl(
 ) : TmdbTvDataRepository {
     private val tvStore = StoreBuilder
         .from<TvShowKey.Tmdb, TulipTvShowInfo.Tmdb, TulipTvShowInfo.Tmdb>(
-            fetcher = Fetcher.ofResult { fetchFullTvInfo(it).toFetcherResult() },
+            fetcher = Fetcher.ofResultFlow { fetchFullTvInfo(it).map { result -> result.toFetcherResult() } },
             sourceOfTruth = SourceOfTruth.of(
                 reader = { db.getTvShow(it) },
                 writer = { _, it -> db.insertTvShow(it) },
@@ -130,18 +126,25 @@ class TmdbTvDataRepositoryImpl(
         return runCatching { service.searchMovie(query, firstAirDateYear) }
     }
 
-    private suspend inline fun fetchFullTvInfo(key: TvShowKey.Tmdb): Result<TulipTvShowInfo.Tmdb> {
+    private fun fetchFullTvInfo(key: TvShowKey.Tmdb): Flow<Result<TulipTvShowInfo.Tmdb>> {
         logger.debug("Downloading full TV info of $key")
-        val tv = runCatching { service.getTv(key.id) }
-            .getOrElse { return Result.failure(it) }
+        return getTvAsFlow(key)
+            .flatMapLatest { it.fold({ tv -> pairTvWithSeasons(tv, key) }, { th -> flowOf(Result.failure(th)) }) }
+    }
+
+    private fun getTvAsFlow(key: TvShowKey.Tmdb): Flow<Result<Tv>> {
+        return flow { emit(runCatching { service.getTv(key.id) }) }
+    }
+
+    private fun pairTvWithSeasons(tv: Tv, key: TvShowKey.Tmdb): Flow<Result<TulipTvShowInfo.Tmdb>> {
         return tv.seasons
-            .parallelMap { slim ->
-                runCatching {
-                    service.getSeason(tv.id, slim.seasonNumber).fromNetwork(key)
-                }
-            }
-            .allOrNone()
-            .map { tv.fromNetwork(it) }
+            .map { season -> getSeasonAsFlow(tv, season, key) }
+            .combineNonEmpty()
+            .map { it.allOrNone().map(tv::fromNetwork) }
+    }
+
+    private fun getSeasonAsFlow(tv: Tv, slim: SlimSeason, key: TvShowKey.Tmdb): Flow<Result<TulipSeasonInfo.Tmdb>> {
+        return flow { emit(runCatching { service.getSeason(tv.id, slim.seasonNumber).fromNetwork(key) }) }
     }
 
     override fun getTvShow(key: TvShowKey.Tmdb): Flow<NetworkResult<TulipTvShowInfo.Tmdb>> {

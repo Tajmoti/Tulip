@@ -2,7 +2,7 @@
 
 package com.tajmoti.libtulip.repository
 
-import com.tajmoti.commonutils.combine
+import com.tajmoti.commonutils.combineNonEmpty
 import com.tajmoti.commonutils.flatMap
 import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.MissingEntityException
@@ -75,7 +75,7 @@ fun HostedTvDataRepository.getTvShowsByTmdbKey(mappingRepository: ItemMappingRep
     mappingRepository.getHostedTvShowKeysByTmdbKey(key)
         .flatMapLatest { tvShowKeys ->
             tvShowKeys.map { getTvShow(it) }
-                .combine()
+                .combineNonEmpty()
                 .mapNetworkResultToResultInListFlow()
         }
 
@@ -103,7 +103,7 @@ fun HostedTvDataRepository.getMoviesByTmdbKey(mappingRepository: ItemMappingRepo
     mappingRepository.getHostedMovieKeysByTmdbKey(key)
         .flatMapLatest { movieKeyList ->
             movieKeyList.map { getMovie(it) }
-                .combine()
+                .combineNonEmpty()
                 .mapNetworkResultToResultInListFlow()
         }
 

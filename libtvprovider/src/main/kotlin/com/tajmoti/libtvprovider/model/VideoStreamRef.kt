@@ -1,29 +1,24 @@
-package com.tajmoti.libtvprovider
+package com.tajmoti.libtvprovider.model
 
-sealed class VideoStreamRef {
+sealed interface VideoStreamRef {
     /**
      * Name of the hosting site (informative).
      */
-    abstract val serviceName: String
+    val serviceName: String
 
     /**
      * URL to the streaming page (or a redirect in case this is [Unresolved]).
      */
-    abstract val url: String
+    val url: String
 
     /**
      * A redirect to a streaming page.
-     * Needs a HTML GET request to resolve the redirect.
+     * Needs an HTML GET request to resolve the redirect.
      */
     data class Unresolved(
         override val serviceName: String,
         override val url: String,
-    ) : VideoStreamRef() {
-
-        fun asResolved(resolvedUrl: String): Resolved {
-            return Resolved(serviceName, resolvedUrl)
-        }
-    }
+    ) : VideoStreamRef
 
     /**
      * A real URL to the video streaming page.
@@ -31,5 +26,5 @@ sealed class VideoStreamRef {
     data class Resolved(
         override val serviceName: String,
         override val url: String
-    ) : VideoStreamRef()
+    ) : VideoStreamRef
 }

@@ -1,6 +1,6 @@
 package com.tajmoti.libtulip.service.impl
 
-import com.tajmoti.commonutils.combine
+import com.tajmoti.commonutils.combineNonEmpty
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.StreamableKey
@@ -12,7 +12,7 @@ import com.tajmoti.libtulip.repository.getStreamableInfo
 import com.tajmoti.libtulip.repository.getStreamableInfoByTmdbKey
 import com.tajmoti.libtulip.service.StreamExtractionService
 import com.tajmoti.libtulip.service.StreamService
-import com.tajmoti.libtvprovider.VideoStreamRef
+import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
@@ -58,7 +58,7 @@ class StreamServiceImpl(
                     .onStart { emit(StreamsResult.Success(emptyList(), false)) }
                     .withIndex()
             }
-            .combine()
+            .combineNonEmpty()
             .filterNot { it.all { (index) -> index == 0 } } // Skips first useless emission caused by onStart
             .map { indexedResults ->
                 val streams = indexedResults

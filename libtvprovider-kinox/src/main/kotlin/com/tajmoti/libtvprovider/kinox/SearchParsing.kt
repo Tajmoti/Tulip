@@ -1,7 +1,7 @@
 package com.tajmoti.libtvprovider.kinox
 
-import com.tajmoti.libtvprovider.SearchResult
-import com.tajmoti.libtvprovider.TvItemInfo
+import com.tajmoti.libtvprovider.model.SearchResult
+import com.tajmoti.libtvprovider.model.TvItemInfo
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 
@@ -40,7 +40,7 @@ private fun elemToSearchResult(element: Element, throwAwayItemsWithNoYear: Boole
         .toInt()
     if (throwAwayItemsWithNoYear && firstAirYear == 0)
         return null
-    val info = TvItemInfo(link, title, language, firstAirYear)
+    val info = TvItemInfo(title, language, firstAirYear)
     return when (type) {
         "series" -> SearchResult.TvShow(link, info)
         "movie" -> SearchResult.Movie(link, info)

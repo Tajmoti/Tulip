@@ -1,7 +1,7 @@
 package com.tajmoti.libprimewiretvprovider
 
-import com.tajmoti.libtvprovider.SearchResult
-import com.tajmoti.libtvprovider.TvItemInfo
+import com.tajmoti.libtvprovider.model.SearchResult
+import com.tajmoti.libtvprovider.model.TvItemInfo
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 
@@ -31,7 +31,7 @@ private fun elemToSearchResult(element: Element): SearchResult {
         .ownText()
     val year = yearParen.substring(1 until yearParen.length - 1)
     val yearInt = year.toIntOrNull()
-    val info = TvItemInfo(itemUrl, name, "en", yearInt)
+    val info = TvItemInfo(name, "en", yearInt)
     return if (isShow) {
         SearchResult.TvShow(itemUrl, info)
     } else {

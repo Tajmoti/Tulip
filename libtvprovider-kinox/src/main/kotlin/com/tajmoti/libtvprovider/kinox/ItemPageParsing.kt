@@ -1,10 +1,10 @@
 package com.tajmoti.libtvprovider.kinox
 
-import com.tajmoti.libtvprovider.TvItemInfo
+import com.tajmoti.libtvprovider.model.TvItemInfo
 import org.jsoup.nodes.Document
 
 
-fun parseTvShowInfo(key: String, document: Document): TvItemInfo {
+fun parseTvItemInfo(key: String, document: Document): TvItemInfo {
     val name =
         document.selectFirst("div.leftOpt:nth-child(3) > h1:nth-child(1) > span:nth-child(1)")!!
             .ownText()
@@ -16,5 +16,5 @@ fun parseTvShowInfo(key: String, document: Document): TvItemInfo {
         .replaceBeforeLast("/", "")
         .substring(1)
         .toInt()
-    return TvItemInfo(key, name, languageNumberToLanguageCode(flag), year.toInt())
+    return TvItemInfo(name, languageNumberToLanguageCode(flag), year.toInt())
 }

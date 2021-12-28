@@ -1,6 +1,6 @@
 package com.tajmoti.libprimewiretvprovider
 
-import com.tajmoti.libtvprovider.VideoStreamRef
+import com.tajmoti.libtvprovider.model.VideoStreamRef
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 

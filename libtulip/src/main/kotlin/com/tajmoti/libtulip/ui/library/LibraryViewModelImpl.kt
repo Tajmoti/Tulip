@@ -1,7 +1,11 @@
 package com.tajmoti.libtulip.ui.library
 
-import com.tajmoti.commonutils.combine
-import com.tajmoti.commonutils.parallelMapBoth
+import com.tajmoti.commonutils.combineNonEmpty
+import com.tajmoti.commonutils.mapBoth
+import com.tajmoti.libtulip.misc.job.NetFlow
+import com.tajmoti.libtulip.misc.job.NetworkResult
+import com.tajmoti.libtulip.model.history.LastPlayedPosition
+import com.tajmoti.libtulip.model.info.TulipItem
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.repository.*
 import kotlinx.coroutines.CoroutineScope
@@ -25,30 +29,51 @@ class LibraryViewModelImpl constructor(
         val tmdbFavorites = favorites.filterIsInstance(ItemKey.Tmdb::class.java)
         val hostedFavorites = favorites.filterIsInstance(ItemKey.Hosted::class.java)
         val a = getTmdbFavorites(tmdbFavorites)
-        val b = flow { emit(getHostedFavorites(hostedFavorites)) }
+        val b = getHostedFavorites(hostedFavorites)
         return merge(a, b).onEmpty { emit(emptyList()) }
     }
 
-    private suspend inline fun getHostedFavorites(items: List<ItemKey.Hosted>): List<LibraryItem> {
-        return items
-            .parallelMapBoth { hostedTvDataRepository.getItemByKey(it).firstOrNull()?.toResult()?.getOrNull() }
-            .mapNotNull { (key, item) ->
-                val lastPlayedPosition = historyRepository.getLastPlayedPosition(key).firstOrNull()
-                item?.let { LibraryItem(key, item.name ?: "", null, lastPlayedPosition) }
-            }
+    private fun getTmdbFavorites(keys: List<ItemKey.Tmdb>): Flow<List<LibraryItem>> {
+        return mapKeysToLibraryItems(keys, tmdbRepo::getItem, ::createTmdbLibraryItem)
     }
 
-    private fun getTmdbFavorites(keyFlow: List<ItemKey.Tmdb>): Flow<List<LibraryItem>> {
-        return keyFlow
-            .map { key -> tmdbRepo.getItem(key).map { itemResult -> key to itemResult } }
-            .combine()
-            .flatMapLatest { keysToResults ->
-                keysToResults.map { (key, result) ->
-                    historyRepository.getLastPlayedPosition(key)
-                        .mapNotNull { pos ->
-                            result.data?.let { item -> LibraryItem(key, item.name, item.posterUrl, pos) }
-                        }
-                }.combine()
-            }
+    private fun getHostedFavorites(keys: List<ItemKey.Hosted>): Flow<List<LibraryItem>> {
+        return mapKeysToLibraryItems(keys, hostedTvDataRepository::getItemByKey, ::createHostedLibraryItem)
     }
+
+    private fun <K : ItemKey, I : TulipItem> mapKeysToLibraryItems(
+        keys: List<K>,
+        itemGetter: (K) -> NetFlow<out I>,
+        libraryItemCreator: (K, I, LastPlayedPosition?) -> LibraryItem
+    ): Flow<List<LibraryItem>> {
+        return keys
+            .map { key -> itemGetter(key).mapBoth(key) }
+            .combineNonEmpty()
+            .flatMapLatest { keysToResults -> mapKeyResultPairsToLibraryItems(keysToResults, libraryItemCreator) }
+    }
+
+    private fun <I : TulipItem, K : ItemKey> mapKeyResultPairsToLibraryItems(
+        keysToResults: List<Pair<K, NetworkResult<out I>>>,
+        libraryItemCreator: (K, I, LastPlayedPosition?) -> LibraryItem
+    ): Flow<List<LibraryItem>> {
+        return keysToResults
+            .mapNotNull { (key, itemResult) -> itemResult.data?.let { item -> key to item } }
+            .map { (key, data) ->
+                historyRepository.getLastPlayedPosition(key)
+                    .map { pos -> libraryItemCreator(key, data, pos) }
+            }
+            .combineNonEmpty()
+    }
+
+    private fun createTmdbLibraryItem(
+        key: ItemKey.Tmdb,
+        item: TulipItem.Tmdb,
+        pos: LastPlayedPosition?
+    ) = LibraryItem(key, item.name, item.posterUrl, pos)
+
+    private fun createHostedLibraryItem(
+        key: ItemKey.Hosted,
+        item: TulipItem.Hosted,
+        pos: LastPlayedPosition?
+    ) = LibraryItem(key, item.name, null, pos)
 }

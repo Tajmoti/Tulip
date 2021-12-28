@@ -1,7 +1,7 @@
 package com.tajmoti.libtulip.service
 
 import arrow.core.Either
-import com.tajmoti.libtvprovider.VideoStreamRef
+import com.tajmoti.libtvprovider.model.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.ExtractionError
 
 /**

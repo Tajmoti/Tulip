@@ -1,7 +1,7 @@
 package com.tajmoti.libtulip.model.info
 
 import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtvprovider.TvItemInfo
+import com.tajmoti.libtvprovider.model.TvItemInfo
 
 interface TulipTvShowInfo: TulipItem {
     val seasons: List<TulipSeasonInfo>

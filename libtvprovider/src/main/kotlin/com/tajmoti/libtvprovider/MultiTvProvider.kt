@@ -1,14 +1,18 @@
 package com.tajmoti.libtvprovider
 
-import com.tajmoti.commonutils.logger
-import com.tajmoti.commonutils.parallelMapToFlow
-import com.tajmoti.commonutils.runningFoldConcatDropInitial
+import com.tajmoti.commonutils.flatMap
+import com.tajmoti.commonutils.combineRunningFold
+import com.tajmoti.libtvprovider.model.SearchResult
+import com.tajmoti.libtvprovider.model.TvItem
+import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeout
 
-class MultiTvProvider<ID>(
-    private val providers: Map<ID, TvProvider>,
+class MultiTvProvider<S>(
+    private val providers: Map<S, TvProvider>,
     /**
      * Timeout used for each of the providers.
      */
@@ -18,43 +22,40 @@ class MultiTvProvider<ID>(
     /**
      * Searches [query] using all TV providers in parallel.
      */
-    fun search(query: String): Flow<Map<ID, Result<List<SearchResult>>>> {
-        val results = providers.parallelMapToFlow { key, value ->
-            key to searchAsync(query, key, value)
-        }
-        return results.runningFoldConcatDropInitial()
+    fun search(query: String): Flow<Map<S, Result<List<SearchResult>>>> {
+        return providers
+            .map { (service, provider) -> searchAsFlow(provider, query).map { result -> (service to result) } }
+            .combineRunningFold()
+            .map { it.toMap() }
     }
 
-    private suspend inline fun searchAsync(query: String, id: ID, provider: TvProvider): Result<List<SearchResult>> {
-        logger.debug("Searching '$query' using $id")
-        return searchWithTimeout(provider, query)
+    private fun searchAsFlow(provider: TvProvider, query: String): Flow<Result<List<SearchResult>>> {
+        return flow { emit(search(provider, query)) }
     }
 
-    private suspend fun searchWithTimeout(
-        it: TvProvider,
-        query: String
-    ): Result<List<SearchResult>> {
+    private suspend fun search(provider: TvProvider, query: String): Result<List<SearchResult>> {
         return try {
-            withTimeout(timeoutMs) {
-                it.search(query)
-            }
+            withTimeout(timeoutMs) { provider.search(query) }
         } catch (e: TimeoutCancellationException) {
             Result.failure(e)
         }
     }
 
-    suspend fun getShow(service: ID, id: String): Result<TvShowInfo> {
-        return providers[service]!!.getTvShow(id)
+    suspend fun getShow(service: S, id: String): Result<TvItem.TvShow> {
+        return getProvider(service).flatMap { it.getTvShow(id) }
     }
 
-    suspend fun getMovie(service: ID, id: String): Result<MovieInfo> {
-        return providers[service]!!.getMovie(id)
+    suspend fun getMovie(service: S, id: String): Result<TvItem.Movie> {
+        return getProvider(service).flatMap { it.getMovie(id) }
     }
 
-    suspend fun getStreamableLinks(
-        service: ID,
-        episodeOrMovieKey: String
-    ): Result<List<VideoStreamRef>> {
-        return providers[service]!!.getStreamableLinks(episodeOrMovieKey)
+    suspend fun getStreamableLinks(service: S, episodeOrMovieKey: String): Result<List<VideoStreamRef>> {
+        return getProvider(service).flatMap { it.getStreamableLinks(episodeOrMovieKey) }
+    }
+
+
+    private fun getProvider(service: S): Result<TvProvider> {
+        return providers[service]?.let { Result.success(it) }
+            ?: return Result.failure(IllegalArgumentException("No provider for $service"))
     }
 }

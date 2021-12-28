@@ -1,4 +1,4 @@
-package com.tajmoti.libtvprovider
+package com.tajmoti.libtvprovider.model
 
 data class EpisodeInfo(
     /**

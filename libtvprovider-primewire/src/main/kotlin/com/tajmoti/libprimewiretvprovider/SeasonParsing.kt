@@ -1,26 +1,23 @@
 package com.tajmoti.libprimewiretvprovider
 
-import com.tajmoti.libtvprovider.EpisodeInfo
-import com.tajmoti.libtvprovider.Season
+import com.tajmoti.libtvprovider.model.EpisodeInfo
+import com.tajmoti.libtvprovider.model.Season
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
 
-internal fun parseSearchResultPageBlockingSeason(
-    tvShowKey: String,
-    page: Document
-): Result<List<Season>> {
+internal fun parseSearchResultPageBlockingSeason(page: Document): Result<List<Season>> {
     return try {
         val items = page
             .getElementsByClass("show_season")
-            .map { elemToSeason(tvShowKey, it) }
+            .map { elemToSeason(it) }
         Result.success(items)
     } catch (e: Throwable) {
         Result.failure(e)
     }
 }
 
-private fun elemToSeason(tvShowKey: String, element: Element): Season {
+private fun elemToSeason(element: Element): Season {
     val number = element
         .previousElementSibling()!!
         .getElementsByTag("a")
@@ -31,7 +28,7 @@ private fun elemToSeason(tvShowKey: String, element: Element): Season {
     val episodes = element
         .getElementsByClass("tv_episode_item")
         .map { elemToEpisode(it) }
-    return Season(tvShowKey, number, episodes)
+    return Season(number, episodes)
 }
 
 private fun elemToEpisode(element: Element): EpisodeInfo {

@@ -4,81 +4,67 @@ import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.model.hosted.MappedSearchResult
 import com.tajmoti.libtulip.model.search.GroupedSearchResult
 import com.tajmoti.libtulip.service.MappingSearchService
-import com.tajmoti.libtulip.ui.doCancelableJob
 import com.tajmoti.libtulip.ui.search.SearchViewModel.Companion.DEBOUNCE_INTERVAL_MS
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-@OptIn(FlowPreview::class)
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class SearchViewModelImpl(
     private val mappingSearchService: MappingSearchService,
     private val viewModelScope: CoroutineScope,
 ) : SearchViewModel {
-    private val state = MutableStateFlow<State>(State.Idle)
-    override val loading = state.map(viewModelScope) { it is State.Searching }
-    override val results = state.map(viewModelScope) {
-        (it as? State.Success)?.results ?: emptyList()
-    }
-    override val status = state.map(viewModelScope) {
-        when {
-            it is State.Idle ->
-                SearchViewModel.Icon.READY
-            it is State.Success && it.results.isEmpty() ->
-                SearchViewModel.Icon.NO_RESULTS
-            it is State.Error ->
-                SearchViewModel.Icon.ERROR
-            else -> null
+    /**
+     * Flow containing (even partial) queries entered into the search bar.
+     */
+    private val searchQuery = MutableStateFlow<String?>(null)
+
+    /**
+     * State of searching of the [searchQuery].
+     */
+    private val state = searchQuery
+        .debounce { if (it.isNullOrBlank()) 0L else DEBOUNCE_INTERVAL_MS }
+        .flatMapLatest { it?.let { searchQuery(it) } ?: flowOf(State.Idle) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, State.Idle)
+
+    override val loading = state
+        .map(viewModelScope) { it is State.Searching }
+
+    override val results = state
+        .map(viewModelScope) { (it as? State.Success)?.results ?: emptyList() }
+
+    override val status = state
+        .map(viewModelScope) {
+            when {
+                it is State.Idle -> SearchViewModel.Icon.READY
+                it is State.Success && it.results.isEmpty() -> SearchViewModel.Icon.NO_RESULTS
+                it is State.Error -> SearchViewModel.Icon.ERROR
+                else -> null
+            }
         }
-    }
-    override val canTryAgain = state.map(viewModelScope) { it is State.Error }
 
-    /**
-     * Flow containing (even partial) queries entered in the search view
-     */
-    private val searchFlow = MutableStateFlow<String?>(null)
-
-    /**
-     * The currently active search, will be replaced when a new query is submitted
-     */
-    private var searchJob: Job? = null
-
-    init {
-        searchFlow
-            .debounce { if (it.isNullOrBlank()) 0L else DEBOUNCE_INTERVAL_MS }
-            .onEach { onNewSearchQuery(it) }
-            .launchIn(viewModelScope)
-    }
+    override val canTryAgain = state
+        .map(viewModelScope) { it is State.Error }
 
     /**
      * Submit a new query to be searched
      */
     override fun submitNewText(query: String) {
-        val queryNullable = query.takeIf { it.isNotBlank() }
-        viewModelScope.launch { searchFlow.emit(queryNullable) }
+        searchQuery.value = query.takeIf { it.isNotBlank() }
     }
 
     /**
      * Submits an already submitted text again
      */
     override fun resubmitText() {
-        onNewSearchQuery(searchFlow.value ?: "")
+        val existing = searchQuery.value
+        searchQuery.value = null
+        searchQuery.value = existing
     }
 
-    private fun onNewSearchQuery(it: String?) {
-        viewModelScope.doCancelableJob(this::searchJob, null) {
-            val result = if (it == null) {
-                flowOf(State.Idle)
-            } else {
-                startSearchAsync(it)
-            }
-            state.emitAll(result)
-        }
-    }
-
-    private suspend fun startSearchAsync(query: String) = flow {
+    private fun searchQuery(query: String) = flow {
         emit(State.Searching)
         val flowOfStates = mappingSearchService.searchAndCreateMappings(query)
             .map { result -> result.fold({ State.Success(groupAndSortMappedResults(it)) }, { State.Error }) }

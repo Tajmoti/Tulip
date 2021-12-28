@@ -3,7 +3,7 @@ package com.tajmoti.libtulip.model.hosted
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtvprovider.TvItemInfo
+import com.tajmoti.libtvprovider.model.TvItemInfo
 
 sealed interface MappedSearchResult {
     val key: ItemKey.Hosted

@@ -1,7 +1,7 @@
 package com.tajmoti.libtvprovider.kinox
 
 import com.tajmoti.commonutils.parallelMap
-import com.tajmoti.libtvprovider.VideoStreamRef
+import com.tajmoti.libtvprovider.model.VideoStreamRef
 import com.tajmoti.libtvprovider.kinox.model.StreamReferenceObject
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -35,8 +35,12 @@ private suspend fun elementToStream(
 ): VideoStreamRef? {
     val hoster = li.attr("rel")
     val url = "$baseUrl/aGET/Mirror/$hoster"
-    val pageSource = httpLoader(url)
-        .getOrElse { return null }
+    return httpLoader(url)
+        .map(::scrapeStreamRef)
+        .getOrNull()
+}
+
+private fun scrapeStreamRef(pageSource: String): VideoStreamRef.Unresolved? {
     val streamObject: StreamReferenceObject = Json { ignoreUnknownKeys = true }.decodeFromString(pageSource)
     val parsed = Jsoup.parse(streamObject.stream)
     val name = streamObject.hosterName

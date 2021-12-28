@@ -2,7 +2,10 @@ package com.tajmoti.libtvprovider.kinox
 
 import com.tajmoti.commonutils.flatMapWithContext
 import com.tajmoti.commonutils.mapWithContext
-import com.tajmoti.libtvprovider.*
+import com.tajmoti.libtvprovider.model.SearchResult
+import com.tajmoti.libtvprovider.model.TvItem
+import com.tajmoti.libtvprovider.TvProvider
+import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.coroutines.Dispatchers
 import org.jsoup.Jsoup
 import java.net.URLEncoder
@@ -29,20 +32,20 @@ class KinoxTvProvider(
         return "$baseUrl/Search.html?q=$encoded"
     }
 
-    override suspend fun getTvShow(id: String): Result<TvShowInfo> {
+    override suspend fun getTvShow(id: String): Result<TvItem.TvShow> {
         return httpLoader(baseUrl + id)
             .flatMapWithContext(Dispatchers.Default) {
                 val document = Jsoup.parse(it)
-                parseSeasonsBlocking(id, document)
-                    .map { seasons -> TvShowInfo(parseTvShowInfo(id, document), seasons) }
+                parseSeasonsBlocking(document)
+                    .map { seasons -> TvItem.TvShow(parseTvItemInfo(id, document), seasons) }
             }
     }
 
-    override suspend fun getMovie(id: String): Result<MovieInfo> {
+    override suspend fun getMovie(id: String): Result<TvItem.Movie> {
         return httpLoader(baseUrl + id)
             .mapWithContext(Dispatchers.Default) {
                 val document = Jsoup.parse(it)
-                MovieInfo(id, parseTvShowInfo(id, document))
+                TvItem.Movie(parseTvItemInfo(id, document))
             }
     }
 
