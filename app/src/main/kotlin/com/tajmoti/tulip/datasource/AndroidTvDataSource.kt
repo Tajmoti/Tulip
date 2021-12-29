@@ -1,6 +1,8 @@
 package com.tajmoti.tulip.datasource
 
 import com.tajmoti.commonutils.combineNonEmpty
+import com.tajmoti.commonutils.mapWithContext
+import com.tajmoti.commonutils.LibraryDispatchers
 import com.tajmoti.libtulip.data.LocalTvDataSource
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipMovie
@@ -17,7 +19,6 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flattenConcat
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
@@ -45,12 +46,12 @@ class AndroidTvDataSource @Inject constructor(
     }
 
     private fun getSeasonWithEpisodes(key: SeasonKey.Tmdb, dbSeason: DbTmdbSeason): Flow<TulipSeasonInfo.Tmdb> {
-        return getEpisodes(key).map { dbSeason.fromDb(key, it) }
+        return getEpisodes(key).mapWithContext(LibraryDispatchers.libraryContext) { dbSeason.fromDb(key, it) }
     }
 
     private fun getSeasons(key: TvShowKey.Tmdb): Flow<List<TulipSeasonInfo.Tmdb>> {
         return dao.getSeasons(key.id)
-            .map(::getEpisodesForSeasons)
+            .mapWithContext(LibraryDispatchers.libraryContext, ::getEpisodesForSeasons)
             .flattenConcat()
     }
 
@@ -65,13 +66,13 @@ class AndroidTvDataSource @Inject constructor(
 
     private fun getEpisodes(key: SeasonKey.Tmdb): Flow<List<TulipEpisodeInfo.Tmdb>> {
         return dao.getEpisodes(key.tvShowKey.id, key.seasonNumber)
-            .map { it.map { dbEpisode -> dbEpisode.fromDb(key) } }
+            .mapWithContext(LibraryDispatchers.libraryContext) { it.map { dbEpisode -> dbEpisode.fromDb(key) } }
     }
 
 
     override fun getMovie(key: MovieKey.Tmdb): Flow<TulipMovie.Tmdb?> {
         return dao.getMovie(key.id)
-            .map { it?.fromDb() }
+            .mapWithContext(LibraryDispatchers.libraryContext) { it?.fromDb() }
     }
 
     override suspend fun insertMovie(movie: TulipMovie.Tmdb) {

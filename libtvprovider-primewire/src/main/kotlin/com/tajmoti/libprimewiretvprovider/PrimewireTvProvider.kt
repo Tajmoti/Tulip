@@ -1,14 +1,15 @@
 package com.tajmoti.libprimewiretvprovider
 
-import com.tajmoti.commonutils.flatMapWithContext
-import com.tajmoti.commonutils.mapWithContext
-import com.tajmoti.libtvprovider.*
+import com.tajmoti.commonutils.LibraryDispatchers
+import com.tajmoti.commonutils.flatMap
+import com.tajmoti.libtvprovider.TvProvider
 import com.tajmoti.libtvprovider.model.SearchResult
 import com.tajmoti.libtvprovider.model.TvItem
 import com.tajmoti.libtvprovider.model.VideoStreamRef
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import java.net.URLEncoder
+import kotlin.coroutines.CoroutineContext
 
 class PrimewireTvProvider(
     /**
@@ -22,14 +23,15 @@ class PrimewireTvProvider(
     /**
      * Base URL of the primewire domain, in case it changes.
      */
-    private val baseUrl: String = "https://www.primewire.li"
+    private val baseUrl: String = "https://www.primewire.li",
+    private val dispatcher: CoroutineContext = LibraryDispatchers.libraryContext,
 ) : TvProvider {
 
     override suspend fun search(query: String): Result<List<SearchResult>> {
-        return httpLoader(queryToSearchUrl(query))
-            .flatMapWithContext(Dispatchers.Default) {
-                parseSearchResultPageBlocking(it)
-            }
+        return withContext(dispatcher) {
+            httpLoader(queryToSearchUrl(query))
+                .flatMap { parseSearchResultPageBlocking(it) }
+        }
     }
 
     private fun queryToSearchUrl(query: String): String {
@@ -38,35 +40,41 @@ class PrimewireTvProvider(
     }
 
     override suspend fun getTvShow(id: String): Result<TvItem.TvShow> {
-        return httpLoader(baseUrl + id)
-            .flatMapWithContext(Dispatchers.Default) { source ->
-                val document = Jsoup.parse(source)
-                parseSearchResultPageBlockingSeason(document)
-                    .map { seasons -> document to seasons }
-            }
-            .mapWithContext(Dispatchers.Default) { (document, seasons) ->
-                val tvItemInfo = parseTvItemInfo(id, document)
-                TvItem.TvShow(tvItemInfo, seasons)
-            }
+        return withContext(dispatcher) {
+            httpLoader(baseUrl + id)
+                .flatMap { source ->
+                    val document = Jsoup.parse(source)
+                    parseSearchResultPageBlockingSeason(document)
+                        .map { seasons -> document to seasons }
+                }
+                .map { (document, seasons) ->
+                    val tvItemInfo = parseTvItemInfo(id, document)
+                    TvItem.TvShow(tvItemInfo, seasons)
+                }
+        }
     }
 
     override suspend fun getMovie(id: String): Result<TvItem.Movie> {
-        return httpLoader(baseUrl + id)
-            .mapWithContext(Dispatchers.Default) { source ->
-                val tvItemInfo = parseTvItemInfo(id, Jsoup.parse(source))
-                TvItem.Movie(tvItemInfo)
-            }
+        return withContext(dispatcher) {
+            httpLoader(baseUrl + id)
+                .map { source ->
+                    val tvItemInfo = parseTvItemInfo(id, Jsoup.parse(source))
+                    TvItem.Movie(tvItemInfo)
+                }
+        }
     }
 
     override suspend fun getStreamableLinks(episodeOrMovieId: String): Result<List<VideoStreamRef>> {
-        return pageLoader.invoke(
-            baseUrl + episodeOrMovieId,
-            this::shouldAllowUrl,
-            LINK_PAGE_HTML_SUBMIT_TRIGGER
-        )
-            .flatMapWithContext(Dispatchers.Default) {
-                getVideoStreamsBlocking(it, baseUrl)
-            }
+        return withContext(dispatcher) {
+            pageLoader.invoke(
+                baseUrl + episodeOrMovieId,
+                this@PrimewireTvProvider::shouldAllowUrl,
+                LINK_PAGE_HTML_SUBMIT_TRIGGER
+            )
+                .flatMap {
+                    getVideoStreamsBlocking(it, baseUrl)
+                }
+        }
     }
 
 

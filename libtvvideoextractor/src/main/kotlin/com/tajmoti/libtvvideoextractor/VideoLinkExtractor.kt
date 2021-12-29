@@ -2,8 +2,8 @@ package com.tajmoti.libtvvideoextractor
 
 import arrow.core.Either
 import arrow.core.left
+import com.tajmoti.commonutils.LibraryDispatchers
 import com.tajmoti.commonutils.logger
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
@@ -23,7 +23,7 @@ class VideoLinkExtractor(
         val handler = getFirstUsableHandler(url)
             ?: serviceName?.let { getFirstUsableHandlerByName(serviceName) }
             ?: return ExtractionError.NoHandler.left()
-        return withContext(Dispatchers.Default) {
+        return withContext(LibraryDispatchers.libraryContext) {
             runCatching { handler.extractVideoUrl(url, rawSourceLoader, webDriverSourceLoader) }.fold(
                 { it },
                 { ExtractionError.Exception(it).left() }

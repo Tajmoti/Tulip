@@ -4,8 +4,10 @@ import com.dropbox.android.external.store4.Fetcher
 import com.dropbox.android.external.store4.SourceOfTruth
 import com.dropbox.android.external.store4.StoreBuilder
 import com.dropbox.android.external.store4.StoreRequest
+import com.tajmoti.commonutils.LibraryDispatchers
 import com.tajmoti.commonutils.flatMap
 import com.tajmoti.commonutils.logger
+import com.tajmoti.commonutils.mapWithContext
 import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.HostedInfoDataSource
 import com.tajmoti.libtulip.misc.job.*
@@ -34,7 +36,7 @@ class HostedTvDataRepositoryImpl(
 ) : HostedTvDataRepository {
     private val tvShowStore = StoreBuilder
         .from(
-            Fetcher.ofResultFlow { key -> fetchTvShow(key).map { it.toFetcherResult() } },
+            Fetcher.ofResultFlow { key -> fetchTvShow(key).mapWithContext(LibraryDispatchers.libraryContext) { it.toFetcherResult() } },
             SourceOfTruth.of(
                 hostedTvDataRepo::getTvShowByKey,
                 { _, it -> hostedTvDataRepo.insertTvShow(it) },
@@ -44,7 +46,7 @@ class HostedTvDataRepositoryImpl(
         .build()
     private val movieStore = StoreBuilder
         .from(
-            Fetcher.ofResultFlow { key -> fetchMovie(key).map { it.toFetcherResult() } },
+            Fetcher.ofResultFlow { key -> fetchMovie(key).mapWithContext(LibraryDispatchers.libraryContext) { it.toFetcherResult() } },
             SourceOfTruth.of(
                 hostedTvDataRepo::getMovieByKey,
                 { _, it -> hostedTvDataRepo.insertMovie(it) },
@@ -81,7 +83,7 @@ class HostedTvDataRepositoryImpl(
 
     private fun getHostedShowTvInfo(tvShowInfo: TvItem.TvShow, key: TvShowKey.Hosted) =
         tmdbRepo.findTvShowKey(tvShowInfo.info.name, tvShowInfo.info.firstAirDateYear)
-            .map { it.toResult().flatMap { tmdbKey -> Result.success(tvShowInfo.fromNetwork(key, tmdbKey)) } }
+            .mapWithContext(LibraryDispatchers.libraryContext) { it.toResult().flatMap { tmdbKey -> Result.success(tvShowInfo.fromNetwork(key, tmdbKey)) } }
 
     override fun getMovie(key: MovieKey.Hosted): Flow<NetworkResult<TulipMovie.Hosted>> {
         logger.debug("Retrieving $key")
@@ -98,7 +100,7 @@ class HostedTvDataRepositoryImpl(
 
     private fun getHostedMovieInfo(tvShowInfo: TvItem.Movie, key: MovieKey.Hosted) =
         tmdbRepo.findMovieKey(tvShowInfo.info.name, tvShowInfo.info.firstAirDateYear)
-            .map { it.toResult().flatMap { tmdbKey -> Result.success(tvShowInfo.fromNetwork(key, tmdbKey)) } }
+            .mapWithContext(LibraryDispatchers.libraryContext) { it.toResult().flatMap { tmdbKey -> Result.success(tvShowInfo.fromNetwork(key, tmdbKey)) } }
 
     private fun logExceptions(service: StreamingService, result: Result<List<SearchResult>>) {
         val exception = result.exceptionOrNull() ?: return

@@ -1,14 +1,15 @@
 package com.tajmoti.libtvprovider
 
+import com.tajmoti.commonutils.LibraryDispatchers
 import com.tajmoti.commonutils.flatMap
 import com.tajmoti.commonutils.combineRunningFold
+import com.tajmoti.commonutils.mapWithContext
 import com.tajmoti.libtvprovider.model.SearchResult
 import com.tajmoti.libtvprovider.model.TvItem
 import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeout
 
 class MultiTvProvider<S>(
@@ -24,9 +25,9 @@ class MultiTvProvider<S>(
      */
     fun search(query: String): Flow<Map<S, Result<List<SearchResult>>>> {
         return providers
-            .map { (service, provider) -> searchAsFlow(provider, query).map { result -> (service to result) } }
+            .map { (service, provider) -> searchAsFlow(provider, query).mapWithContext(LibraryDispatchers.libraryContext) { result -> (service to result) } }
             .combineRunningFold()
-            .map { it.toMap() }
+            .mapWithContext(LibraryDispatchers.libraryContext) { it.toMap() }
     }
 
     private fun searchAsFlow(provider: TvProvider, query: String): Flow<Result<List<SearchResult>>> {

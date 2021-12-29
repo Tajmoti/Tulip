@@ -7,9 +7,7 @@ import com.dropbox.android.external.store4.Fetcher
 import com.dropbox.android.external.store4.SourceOfTruth
 import com.dropbox.android.external.store4.StoreBuilder
 import com.dropbox.android.external.store4.StoreRequest
-import com.tajmoti.commonutils.allOrNone
-import com.tajmoti.commonutils.combineNonEmpty
-import com.tajmoti.commonutils.logger
+import com.tajmoti.commonutils.*
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtmdb.model.movie.Movie
 import com.tajmoti.libtmdb.model.search.SearchMovieResponse
@@ -30,7 +28,10 @@ import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalTime::class)
@@ -41,7 +42,7 @@ class TmdbTvDataRepositoryImpl(
 ) : TmdbTvDataRepository {
     private val tvStore = StoreBuilder
         .from<TvShowKey.Tmdb, TulipTvShowInfo.Tmdb, TulipTvShowInfo.Tmdb>(
-            fetcher = Fetcher.ofResultFlow { fetchFullTvInfo(it).map { result -> result.toFetcherResult() } },
+            fetcher = Fetcher.ofResultFlow { fetchFullTvInfo(it).mapWithContext(LibraryDispatchers.libraryContext) { result -> result.toFetcherResult() } },
             sourceOfTruth = SourceOfTruth.of(
                 reader = { db.getTvShow(it) },
                 writer = { _, it -> db.insertTvShow(it) },
@@ -84,14 +85,14 @@ class TmdbTvDataRepositoryImpl(
         logger.debug("Looking up TMDB ID for TV show $name ($firstAirYear)")
         return tmdbTvIdStore.stream(StoreRequest.cached(name to firstAirYear, true))
             .toNetFlow()
-            .map { it.convert { opt -> opt.orNull() } }
+            .mapWithContext(LibraryDispatchers.libraryContext) { it.convert { opt -> opt.orNull() } }
     }
 
     override fun findMovieKey(name: String, firstAirYear: Int?): Flow<NetworkResult<MovieKey.Tmdb?>> {
         logger.debug("Looking up TMDB ID for movie $name ($firstAirYear)")
         return tmdbMovieIdStore.stream(StoreRequest.cached(name to firstAirYear, true))
             .toNetFlow()
-            .map { it.convert { opt -> opt.orNull() } }
+            .mapWithContext(LibraryDispatchers.libraryContext) { it.convert { opt -> opt.orNull() } }
     }
 
     private suspend fun fetchSearchResultTv(name: String, firstAirDateYear: Int?): Result<TvShowKey.Tmdb?> {
@@ -140,7 +141,7 @@ class TmdbTvDataRepositoryImpl(
         return tv.seasons
             .map { season -> getSeasonAsFlow(tv, season, key) }
             .combineNonEmpty()
-            .map { it.allOrNone().map(tv::fromNetwork) }
+            .mapWithContext(LibraryDispatchers.libraryContext) { it.allOrNone().map(tv::fromNetwork) }
     }
 
     private fun getSeasonAsFlow(tv: Tv, slim: SlimSeason, key: TvShowKey.Tmdb): Flow<Result<TulipSeasonInfo.Tmdb>> {

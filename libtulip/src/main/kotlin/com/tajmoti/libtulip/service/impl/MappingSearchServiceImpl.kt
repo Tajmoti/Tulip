@@ -12,9 +12,7 @@ import com.tajmoti.libtulip.repository.ItemMappingRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.libtulip.service.MappingSearchService
 import com.tajmoti.libtvprovider.model.SearchResult
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 
 class MappingSearchServiceImpl(
     private val hostedRepository: HostedTvDataRepository,
@@ -24,8 +22,8 @@ class MappingSearchServiceImpl(
 
     override fun searchAndCreateMappings(query: String): Flow<Result<List<MappedSearchResult>>> {
         return hostedRepository.search(query)
-            .map { resMap -> resMap.takeUnless { it.all { (_, v) -> v.isFailure } } }
-            .mapNotNullsWithContext(Dispatchers.Default, this::mapWithTmdbIds)
+            .mapWithContext(LibraryDispatchers.libraryContext) { resMap -> resMap.takeUnless { it.all { (_, v) -> v.isFailure } } }
+            .mapNotNullsWithContext(LibraryDispatchers.libraryContext, this::mapWithTmdbIds)
             .onEachNotNull(this::persistTmdbMappings)
             .onEachNull { logger.warn("No successful results!") }
             .mapFold({ Result.success(it) }, { Result.failure(NoSuccessfulResultsException) })
@@ -34,7 +32,7 @@ class MappingSearchServiceImpl(
 
     private suspend inline fun mapWithTmdbIds(resultMap: Map<StreamingService, Result<List<SearchResult>>>): List<MappedSearchResult> {
         val serviceToResults = resultMap
-            .mapNotNull { (service, result) -> result.map { service to it }.getOrNull() }
+            .mapNotNull { (service, result) -> result.map{ service to it }.getOrNull() }
         val successfulItemsTv = serviceToResults
             .flatMap { (service, results) -> findTmdbIdForResults(service, results.mapNotNull { it as? SearchResult.TvShow }) }
         val successfulItemsMovie = serviceToResults
