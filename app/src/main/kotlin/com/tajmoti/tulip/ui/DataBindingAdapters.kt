@@ -8,6 +8,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.annotation.ColorInt
 import androidx.core.view.isVisible
 import androidx.databinding.BindingAdapter
+import com.bumptech.glide.Glide
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.progressindicator.CircularProgressIndicator
 
@@ -22,6 +23,12 @@ object DataBindingAdapters {
     @BindingAdapter("android:src")
     fun setImageResource(imageView: ImageView, resource: Int) {
         imageView.setImageResource(resource)
+    }
+
+    @JvmStatic
+    @BindingAdapter("srcUrl")
+    fun setImageResourceUrl(imageView: ImageView, srcUrl: String?) {
+        Glide.with(imageView).load(srcUrl).into(imageView)
     }
 
     @JvmStatic

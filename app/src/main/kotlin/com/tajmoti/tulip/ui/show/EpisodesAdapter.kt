@@ -1,6 +1,10 @@
 package com.tajmoti.tulip.ui.show
 
 import android.content.Context
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.viewbinding.ViewBinding
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.ui.player.VideoPlayerUtils.episodeToLabel
 import com.tajmoti.tulip.R
@@ -10,8 +14,13 @@ import com.tajmoti.tulip.ui.loadImageAsBackground
 
 class EpisodesAdapter(
     val onPlayClickedListener: ((TulipEpisodeInfo) -> Unit),
-    onDetailsClickedListener: ((TulipEpisodeInfo) -> Unit)
-) : BaseAdapter<TulipEpisodeInfo, ItemEpisodeBinding>(ItemEpisodeBinding::inflate, onDetailsClickedListener) {
+    onDetailsClickedListener: ((TulipEpisodeInfo) -> Unit),
+    headerCreator: ((LayoutInflater, ViewGroup, Boolean) -> ViewBinding)? = null
+) : BaseAdapter<TulipEpisodeInfo, ItemEpisodeBinding>(
+    ItemEpisodeBinding::inflate,
+    onDetailsClickedListener,
+    headerCreator
+) {
 
     override fun onBindViewHolder(context: Context, index: Int, binding: ItemEpisodeBinding, item: TulipEpisodeInfo) {
         binding.episodeNumberAndTitle = episodeToLabel(item)

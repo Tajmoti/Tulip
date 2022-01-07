@@ -12,8 +12,12 @@ abstract class BaseAdapter<T, B : ViewBinding>(
     /**
      * Callback to use for when the item is clicked.
      */
-    private val callback: ((T) -> Unit)? = null
-) : RecyclerView.Adapter<BaseAdapter.Holder<B>>() {
+    private val callback: ((T) -> Unit)? = null,
+    /**
+     * Optional header view.
+     */
+    private val headerCreator: ((LayoutInflater, ViewGroup, Boolean) -> ViewBinding)? = null
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     /**
      * Items to display in this adapter.
      * Diffs are calculated automatically.
@@ -55,20 +59,37 @@ abstract class BaseAdapter<T, B : ViewBinding>(
         super.onAttachedToRecyclerView(recyclerView)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder<B> {
+    override fun getItemViewType(position: Int): Int {
+        return if (headerCreator != null && position == 0) {
+            ITEM_TYPE_HEADER
+        } else {
+            ITEM_TYPE_ITEM
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder<*> {
         val inflater = LayoutInflater.from(parent.context)
+        if (viewType == ITEM_TYPE_HEADER) {
+            return Holder(headerCreator!!.invoke(inflater, parent, false))
+        }
         val binding = bindingCreator(inflater, parent, false)
         return Holder(binding)
     }
 
-    override fun onBindViewHolder(holder: Holder<B>, position: Int) {
-        val item = items[position]
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        if (headerCreator != null && position == 0) {
+            return
+        }
+        @Suppress("UNCHECKED_CAST")
+        holder as Holder<B>
+        val pos = adjustPosHeader(position)
+        val item = items[pos]
         callback?.let { cb -> holder.itemView.setOnClickListener { cb(item) } }
         onBindViewHolder(context, holder.adapterPosition, holder.binding, item)
     }
 
     override fun getItemCount(): Int {
-        return items.size
+        return adjustByHeader(items.size)
     }
 
     class Holder<B : ViewBinding>(val binding: B) : RecyclerView.ViewHolder(binding.root)
@@ -78,16 +99,49 @@ abstract class BaseAdapter<T, B : ViewBinding>(
         private var oldVideos: List<T>
     ) : DiffUtil.Callback() {
 
-        override fun getOldListSize() = oldVideos.size
+        override fun getOldListSize(): Int {
+            return adjustByHeader(oldVideos.size)
+        }
 
-        override fun getNewListSize() = newVideos.size
+        override fun getNewListSize(): Int {
+            return adjustByHeader(newVideos.size)
+        }
 
         override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return this@BaseAdapter.areItemsTheSame(oldVideos[oldItemPosition], newVideos[newItemPosition])
+            if (oldItemPosition == 0 || newItemPosition == 0) {
+                return oldItemPosition == 0 && newItemPosition == 0
+            }
+            val oldItemPos = adjustPosHeader(oldItemPosition)
+            val newItemPos = adjustPosHeader(newItemPosition)
+            return this@BaseAdapter.areItemsTheSame(oldVideos[oldItemPos], newVideos[newItemPos])
         }
 
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return this@BaseAdapter.areContentsTheSame(oldVideos[oldItemPosition], newVideos[newItemPosition])
+            if (oldItemPosition == 0 || newItemPosition == 0) {
+                return oldItemPosition == 0 && newItemPosition == 0
+            }
+            val oldItemPos = adjustPosHeader(oldItemPosition)
+            val newItemPos = adjustPosHeader(newItemPosition)
+            return this@BaseAdapter.areContentsTheSame(oldVideos[oldItemPos], newVideos[newItemPos])
         }
+    }
+
+    private fun adjustByHeader(size: Int): Int {
+        var count = size
+        if (headerCreator != null)
+            count++
+        return count
+    }
+
+    private fun adjustPosHeader(size: Int): Int {
+        var pos = size
+        if (headerCreator != null)
+            pos--
+        return pos
+    }
+
+    companion object {
+        private const val ITEM_TYPE_HEADER = 0
+        private const val ITEM_TYPE_ITEM = 1
     }
 }

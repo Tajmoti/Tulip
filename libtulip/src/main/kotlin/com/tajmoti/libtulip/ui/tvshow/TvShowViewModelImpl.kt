@@ -34,6 +34,7 @@ class TvShowViewModelImpl constructor(
         .map(viewModelScope) { (it as? State.Success)?.backdropPath }
     override val seasons = state
         .map(viewModelScope) { (it as? State.Success)?.seasons?.let { s -> sortSpecialsLast(s) } }
+    override val selectedSeason = MutableStateFlow<TulipSeasonInfo?>(null)
     override val isFavorite = favoritesRepository.isFavorite(initialItemKey)
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
     override val error = state
@@ -60,6 +61,10 @@ class TvShowViewModelImpl constructor(
                 favoritesRepository.addUserFavorite(initialItemKey)
             }
         }
+    }
+
+    override fun onSeasonSelected(season: TulipSeasonInfo) {
+        selectedSeason.value = season
     }
 
     private fun fetchSeasonsToState(key: TvShowKey): Flow<StateWithName> {

@@ -21,6 +21,11 @@ interface TvShowViewModel {
     val seasons: StateFlow<List<TulipSeasonInfo>?>
 
     /**
+     * Season to display episodes from.
+     */
+    val selectedSeason: StateFlow<TulipSeasonInfo?>
+
+    /**
      * True if an error occurred during show loading
      */
     val error: StateFlow<Boolean>
@@ -39,4 +44,9 @@ interface TvShowViewModel {
      * Adds or removes this show from favorites
      */
     fun toggleFavorites()
+
+    /**
+     * The user has selected a season.
+     */
+    fun onSeasonSelected(season: TulipSeasonInfo)
 }

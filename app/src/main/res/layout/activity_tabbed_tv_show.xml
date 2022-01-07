@@ -14,28 +14,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <androidx.core.widget.NestedScrollView
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_tv_show"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:fillViewport="true">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:visibility="@{viewModel.seasons != null &amp;&amp; !viewModel.error}">
-
-                <include
-                    android:id="@+id/header"
-                    layout="@layout/layout_tv_show_header" />
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recycler_tv_show"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    app:layoutManager="LinearLayoutManager" />
-            </LinearLayout>
-        </androidx.core.widget.NestedScrollView>
+            android:clipToPadding="false"
+            android:fitsSystemWindows="false"
+            android:visibility="@{viewModel.seasons != null &amp;&amp; !viewModel.error}"
+            app:layoutManager="LinearLayoutManager" />
 
         <LinearLayout
             android:layout_width="wrap_content"

@@ -19,6 +19,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
+            app:srcUrl="@{viewModel.backdropPath}"
             tools:ignore="ContentDescription" />
 
         <View
@@ -36,7 +37,6 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fitsSystemWindows="true"
             app:layout_constraintTop_toTopOf="parent"
             app:popupTheme="@style/Theme.Tulip.PopupOverlay"
             app:title="" />
@@ -51,6 +51,7 @@
             android:fontFamily="sans-serif-condensed-light"
             android:gravity="center_horizontal|bottom"
             android:maxLines="1"
+            android:text="@{viewModel.name}"
             android:textColor="@color/white"
             android:textStyle="bold"
             app:autoSizeMaxTextSize="48sp"
@@ -79,6 +80,7 @@
             android:drawableStart="@{viewModel.isFavorite() ? @drawable/ic_baseline_star_24 : @drawable/ic_baseline_star_border_24}"
             android:ems="15"
             android:lines="1"
+            android:onClick="@{() -> viewModel.toggleFavorites()}"
             android:text="@{viewModel.isFavorite() ? @string/library_remove : @string/library_add}"
             android:textColor="@color/design_default_color_on_primary"
             app:layout_constraintBottom_toBottomOf="parent"

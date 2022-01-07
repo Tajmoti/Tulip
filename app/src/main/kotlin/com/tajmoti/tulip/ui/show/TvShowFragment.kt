@@ -1,20 +1,21 @@
 package com.tajmoti.tulip.ui.show
 
-import android.content.Context
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import android.view.WindowInsets
 import android.widget.AdapterView
 import android.widget.AdapterView.OnItemSelectedListener
 import android.widget.ArrayAdapter
-import androidx.appcompat.widget.Toolbar
+import androidx.core.view.updatePadding
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.DividerItemDecoration
-import com.bumptech.glide.Glide
+import androidx.viewbinding.ViewBinding
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
-import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import com.tajmoti.tulip.databinding.ActivityTabbedTvShowBinding
+import com.tajmoti.tulip.databinding.LayoutTvShowHeaderBinding
 import com.tajmoti.tulip.ui.*
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -35,69 +36,58 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
     private lateinit var episodesAdapter: EpisodesAdapter
 
     /**
-     * Toolbar included in the layout.
+     * TV show info header. Inflated when RecyclerView requests it.
      */
-    private lateinit var toolbar: Toolbar
+    private var header: LayoutTvShowHeaderBinding? = null
 
     /**
-     * Previously selected season (restore on re-creation)
+     * Padding to be applied to the toolbar included in the header item.
      */
-    private var selectedSeasonIndex: Int? = null
+    private var topPadding = 0
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        selectedSeasonIndex = savedInstanceState
-            ?.getInt(SAVED_STATE_SELECTED_SEASON, -1)
-            .takeIf { it != -1 }
 
         binding.viewModel = viewModel
-        setupHeader(view.context)
-        binding.recyclerTvShow.adapter = episodesAdapter
-        val divider = DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
-        binding.recyclerTvShow.addItemDecoration(divider)
-        consume(viewModel.backdropPath) { it?.let { onBackdropPathChanged(it) } }
-        consume(viewModel.seasons) { it?.let { onSeasonsChanged(it) } }
-        consume(viewModel.name) { it?.let { onNameChanged(it) } }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        val selectedSeason = binding.header.spinnerSelectSeason.selectedItemPosition
-        outState.putInt(SAVED_STATE_SELECTED_SEASON, selectedSeason)
-    }
-
-    private fun setupHeader(context: Context) {
-        val binding = binding.header
-        toolbar = binding.toolbar
-        binding.viewModel = viewModel
-        binding.fab.setOnClickListener { viewModel.toggleFavorites() }
-        seasonsAdapter = ArrayAdapter<String>(
-            context,
-            android.R.layout.simple_spinner_dropdown_item
-        )
+        seasonsAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item)
         episodesAdapter = EpisodesAdapter(
-            { goToStreamsScreen(it.key) },
-            { showEpisodeDetailsDialog(requireContext(), it) }
+            this::goToStreamsScreen,
+            this::showEpisodeDetailsDialog,
+            this::inflateAndSetupHeader
         )
+        binding.recyclerTvShow.setupWithAdapterAndDivider(episodesAdapter)
+        consume(viewModel.seasons, this::onSeasonsChanged)
+        consume(viewModel.selectedSeason, this::onSeasonSelected)
+
+        binding.recyclerTvShow.setOnApplyWindowInsetsListener { _, insets ->
+            topPadding = insets.getInsets(WindowInsets.Type.systemBars()).top
+            insets
+        }
+    }
+
+    private fun inflateAndSetupHeader(inflater: LayoutInflater, root: ViewGroup, attach: Boolean): ViewBinding {
+        val binding = LayoutTvShowHeaderBinding.inflate(inflater, root, attach)
+        binding.lifecycleOwner = viewLifecycleOwner
+        header = binding
+        binding.viewModel = viewModel
+        binding.toolbar.updatePadding(top = topPadding)
         binding.spinnerSelectSeason.adapter = seasonsAdapter
         binding.spinnerSelectSeason.onItemSelectedListener = SpinnerListener()
+        (requireActivity() as MainActivity).swapActionBar(binding.toolbar)
+        binding.toolbar.title = ""
+        viewModel.seasons.value?.let(this::onSeasonsChanged)
+        return binding
     }
 
     inner class SpinnerListener : OnItemSelectedListener {
-        override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-            onSeasonClicked(p2)
+        override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+            onSeasonClicked(position)
         }
 
-        override fun onNothingSelected(p0: AdapterView<*>?) {
+        override fun onNothingSelected(parent: AdapterView<*>?) {
 
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        (requireActivity() as MainActivity).swapActionBar(toolbar)
-        toolbar.title = ""
     }
 
     override fun onStop() {
@@ -105,38 +95,33 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
         (requireActivity() as MainActivity).swapActionBar(null)
     }
 
-    private fun onNameChanged(name: String) {
-        binding.header.title.text = name
-    }
-
-    private fun onBackdropPathChanged(backdropPath: String) {
-        Glide.with(this).load(backdropPath).into(binding.header.imgTvShow)
-    }
-
-    private fun onSeasonsChanged(seasons: List<TulipSeasonInfo>) {
-        val oldPos = selectedSeasonIndex ?: binding.header.spinnerSelectSeason.selectedItemPosition
-        selectedSeasonIndex = null
+    private fun onSeasonsChanged(seasons: List<TulipSeasonInfo>?) {
+        seasons ?: return
+        val header = header ?: return
+        val oldPos = seasons.indexOf(viewModel.selectedSeason.value).takeIf { it != -1 }
+            ?: header.spinnerSelectSeason.selectedItemPosition
         seasonsAdapter.clear()
         seasonsAdapter.addAll(seasons.map { getSeasonTitle(requireContext(), it) })
         if (oldPos < seasons.size)
-            binding.header.spinnerSelectSeason.setSelection(oldPos)
+            header.spinnerSelectSeason.setSelection(oldPos)
     }
 
     private fun onSeasonClicked(index: Int) {
         val item = viewModel.seasons.value?.getOrNull(index) ?: return
-        onSeasonChanged(item.episodes)
+        viewModel.onSeasonSelected(item)
     }
 
-    private fun onSeasonChanged(episodes: List<TulipEpisodeInfo>) {
-        episodesAdapter.items = episodes
+    private fun onSeasonSelected(season: TulipSeasonInfo?) {
+        season ?: return
+        episodesAdapter.items = season.episodes
     }
 
-    private fun goToStreamsScreen(episodeKey: EpisodeKey) {
-        TvShowFragmentDirections.actionNavigationTvShowToVideoPlayerActivity(episodeKey)
+    private fun goToStreamsScreen(episode: TulipEpisodeInfo) {
+        TvShowFragmentDirections.actionNavigationTvShowToVideoPlayerActivity(episode.key)
             .let { findNavController().navigate(it) }
     }
 
-    companion object {
-        private const val SAVED_STATE_SELECTED_SEASON = "selected_season"
+    private fun showEpisodeDetailsDialog(episode: TulipEpisodeInfo) {
+        showEpisodeDetailsDialog(requireContext(), episode)
     }
 }
