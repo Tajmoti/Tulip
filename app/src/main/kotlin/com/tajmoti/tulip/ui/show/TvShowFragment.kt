@@ -50,8 +50,7 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
         selectedSeasonIndex = savedInstanceState
             ?.getInt(SAVED_STATE_SELECTED_SEASON, -1)
             .takeIf { it != -1 }
-        binding.root.systemUiVisibility =
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+
         binding.viewModel = viewModel
         setupHeader(view.context)
         binding.recyclerTvShow.adapter = episodesAdapter

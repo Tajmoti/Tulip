@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Changed
+- Transparent status bar on Library screen
 
 ## [0.12.0] - 2021-11-07
 ### Added
