@@ -114,7 +114,7 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
     private fun onSelectedSeasonChanged(season: SeasonKey?) {
         val seasons = viewModel.seasons.value
         episodesAdapter.items = seasons
-            ?.first { it.key == season }
+            ?.firstOrNull { it.key == season }
             ?.episodes
             ?: return
         val spinner = header?.spinnerSelectSeason ?: return
