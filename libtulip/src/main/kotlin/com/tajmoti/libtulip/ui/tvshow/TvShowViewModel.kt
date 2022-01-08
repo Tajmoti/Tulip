@@ -1,6 +1,7 @@
 package com.tajmoti.libtulip.ui.tvshow
 
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
+import com.tajmoti.libtulip.model.key.SeasonKey
 import kotlinx.coroutines.flow.StateFlow
 
 interface TvShowViewModel {
@@ -23,7 +24,7 @@ interface TvShowViewModel {
     /**
      * Season to display episodes from.
      */
-    val selectedSeason: StateFlow<TulipSeasonInfo?>
+    val selectedSeason: StateFlow<SeasonKey?>
 
     /**
      * True if an error occurred during show loading
@@ -48,5 +49,5 @@ interface TvShowViewModel {
     /**
      * The user has selected a season.
      */
-    fun onSeasonSelected(season: TulipSeasonInfo)
+    fun onSeasonSelected(season: SeasonKey)
 }

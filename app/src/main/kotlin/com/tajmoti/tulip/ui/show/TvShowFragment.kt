@@ -8,11 +8,13 @@ import android.view.WindowInsets
 import android.widget.AdapterView
 import android.widget.AdapterView.OnItemSelectedListener
 import android.widget.ArrayAdapter
+import android.widget.Spinner
 import androidx.core.view.updatePadding
 import androidx.navigation.fragment.findNavController
 import androidx.viewbinding.ViewBinding
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
+import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import com.tajmoti.tulip.databinding.ActivityTabbedTvShowBinding
 import com.tajmoti.tulip.databinding.LayoutTvShowHeaderBinding
@@ -58,7 +60,7 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
         )
         binding.recyclerTvShow.setupWithAdapterAndDivider(episodesAdapter)
         consume(viewModel.seasons, this::onSeasonsChanged)
-        consume(viewModel.selectedSeason, this::onSeasonSelected)
+        consume(viewModel.selectedSeason, this::onSelectedSeasonChanged)
 
         binding.recyclerTvShow.setOnApplyWindowInsetsListener { _, insets ->
             topPadding = insets.getInsets(WindowInsets.Type.systemBars()).top
@@ -98,22 +100,34 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
     private fun onSeasonsChanged(seasons: List<TulipSeasonInfo>?) {
         seasons ?: return
         val header = header ?: return
-        val oldPos = seasons.indexOf(viewModel.selectedSeason.value).takeIf { it != -1 }
-            ?: header.spinnerSelectSeason.selectedItemPosition
+        val seasonKey = viewModel.selectedSeason.value
         seasonsAdapter.clear()
         seasonsAdapter.addAll(seasons.map { getSeasonTitle(requireContext(), it) })
-        if (oldPos < seasons.size)
-            header.spinnerSelectSeason.setSelection(oldPos)
+        updateSpinnerSelection(header.spinnerSelectSeason, seasons, seasonKey)
     }
 
     private fun onSeasonClicked(index: Int) {
         val item = viewModel.seasons.value?.getOrNull(index) ?: return
-        viewModel.onSeasonSelected(item)
+        viewModel.onSeasonSelected(item.key)
     }
 
-    private fun onSeasonSelected(season: TulipSeasonInfo?) {
-        season ?: return
-        episodesAdapter.items = season.episodes
+    private fun onSelectedSeasonChanged(season: SeasonKey?) {
+        val seasons = viewModel.seasons.value
+        episodesAdapter.items = seasons
+            ?.first { it.key == season }
+            ?.episodes
+            ?: return
+        val spinner = header?.spinnerSelectSeason ?: return
+        updateSpinnerSelection(spinner, seasons, season)
+    }
+
+    private fun updateSpinnerSelection(spinner: Spinner, seasons: List<TulipSeasonInfo>, seasonKey: SeasonKey?) {
+        val oldPos = seasons
+            .indexOfFirst { it.key == seasonKey }
+            .takeIf { it != -1 }
+            ?: return
+        if (oldPos < seasons.size)
+            spinner.setSelection(oldPos)
     }
 
     private fun goToStreamsScreen(episode: TulipEpisodeInfo) {

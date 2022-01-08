@@ -5,19 +5,19 @@ import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
 import com.tajmoti.libtulip.model.info.TulipTvShowInfo
 import com.tajmoti.libtulip.model.info.seasonNumber
+import com.tajmoti.libtulip.model.key.EpisodeKey
+import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtulip.repository.FavoritesRepository
-import com.tajmoti.libtulip.repository.HostedTvDataRepository
-import com.tajmoti.libtulip.repository.TmdbTvDataRepository
-import com.tajmoti.libtulip.repository.getSeasons
+import com.tajmoti.libtulip.repository.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
-@OptIn(FlowPreview::class)
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class TvShowViewModelImpl constructor(
     private val hostedTvDataRepository: HostedTvDataRepository,
     private val tmdbRepo: TmdbTvDataRepository,
     private val favoritesRepository: FavoritesRepository,
+    private val historyRepository: PlayingHistoryRepository,
     private val viewModelScope: CoroutineScope,
     private val initialItemKey: TvShowKey,
 ) : TvShowViewModel {
@@ -34,7 +34,12 @@ class TvShowViewModelImpl constructor(
         .map(viewModelScope) { (it as? State.Success)?.backdropPath }
     override val seasons = state
         .map(viewModelScope) { (it as? State.Success)?.seasons?.let { s -> sortSpecialsLast(s) } }
-    override val selectedSeason = MutableStateFlow<TulipSeasonInfo?>(null)
+    private val manuallySelectedSeason = MutableSharedFlow<SeasonKey?>(1)
+    private val lastPlayedSeason = itemKey
+        .flatMapLatest { historyRepository.getLastPlayedPosition(it) }
+        .map { (it?.key as? EpisodeKey)?.seasonKey }
+    override val selectedSeason = merge(manuallySelectedSeason, lastPlayedSeason)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
     override val isFavorite = favoritesRepository.isFavorite(initialItemKey)
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
     override val error = state
@@ -63,8 +68,8 @@ class TvShowViewModelImpl constructor(
         }
     }
 
-    override fun onSeasonSelected(season: TulipSeasonInfo) {
-        selectedSeason.value = season
+    override fun onSeasonSelected(season: SeasonKey) {
+        viewModelScope.launch { manuallySelectedSeason.emit(season) }
     }
 
     private fun fetchSeasonsToState(key: TvShowKey): Flow<StateWithName> {
