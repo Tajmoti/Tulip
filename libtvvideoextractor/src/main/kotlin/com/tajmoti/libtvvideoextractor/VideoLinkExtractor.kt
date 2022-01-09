@@ -24,10 +24,9 @@ class VideoLinkExtractor(
             ?: serviceName?.let { getFirstUsableHandlerByName(serviceName) }
             ?: return ExtractionError.NoHandler.left()
         return withContext(LibraryDispatchers.libraryContext) {
-            runCatching { handler.extractVideoUrl(url, rawSourceLoader, webDriverSourceLoader) }.fold(
-                { it },
-                { ExtractionError.Exception(it).left() }
-            )
+            runCatching { handler.extractVideoUrl(url, rawSourceLoader, webDriverSourceLoader) }
+                .onFailure { logger.warn("Unable to extract $url", it) }
+                .fold({ it }, { ExtractionError.Exception(it).left() })
         }
     }
 
