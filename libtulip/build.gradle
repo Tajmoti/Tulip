@@ -31,7 +31,7 @@ dependencies {
     implementation project(":libopensubtitles")
 
     // Arrow
-    implementation "io.arrow-kt:arrow-core:0.13.2"
+    implementation "io.arrow-kt:arrow-core:$arrow_version"
 
     // Ktor
     implementation "io.ktor:ktor-client-core:$ktor_version"
@@ -40,7 +40,7 @@ dependencies {
     // Retrofit and Moshi
     implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
     implementation "com.squareup.retrofit2:converter-moshi:$retrofit_version"
-    implementation "com.squareup.okhttp3:logging-interceptor:4.9.1"
+    implementation "com.squareup.okhttp3:logging-interceptor:4.9.3"
 
     // DI
     implementation "javax.inject:javax.inject:1"
@@ -48,13 +48,13 @@ dependencies {
     kapt "com.google.dagger:dagger-compiler:$dagger_version"
 
     // Store
-    implementation "com.dropbox.mobile.store:store4:4.0.3-KT15"
+    implementation "com.dropbox.mobile.store:store4:4.0.4-KT15"
 
     // Testing
-    def junit_jupiter_version = "5.8.1"
+    def junit_jupiter_version = "5.8.2"
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_jupiter_version"
-    testImplementation "org.junit.platform:junit-platform-suite:1.8.1"
-    testImplementation "org.mockito:mockito-core:4.0.0"
+    testImplementation "org.junit.platform:junit-platform-suite:1.8.2"
+    testImplementation "org.mockito:mockito-core:4.2.0"
     testImplementation "org.mockito.kotlin:mockito-kotlin:4.0.0"
     testImplementation "org.slf4j:slf4j-simple:$slf4j_version"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_jupiter_version"
