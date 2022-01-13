@@ -15,14 +15,14 @@ import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentVideoControlsBinding
-import com.tajmoti.tulip.ui.BaseFragment
-import com.tajmoti.tulip.ui.activityViewModelsDelegated
+import com.tajmoti.tulip.ui.base.BaseFragment
 import com.tajmoti.tulip.ui.player.AndroidVideoPlayerViewModel
 import com.tajmoti.tulip.ui.player.VideoPlayerActivity
 import com.tajmoti.tulip.ui.player.episodes.EpisodesFragment
 import com.tajmoti.tulip.ui.player.streams.StreamsFragment
 import com.tajmoti.tulip.ui.player.subtitles.SubtitleItem
 import com.tajmoti.tulip.ui.player.subtitles.SubtitleLanguageHeaderItem
+import com.tajmoti.tulip.ui.utils.activityViewModelsDelegated
 import com.xwray.groupie.ExpandableGroup
 import com.xwray.groupie.Group
 import com.xwray.groupie.GroupieAdapter

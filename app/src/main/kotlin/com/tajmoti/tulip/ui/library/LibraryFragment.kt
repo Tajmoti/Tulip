@@ -11,9 +11,9 @@ import com.tajmoti.libtulip.ui.library.LibraryItem
 import com.tajmoti.libtulip.ui.library.LibraryViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentLibraryBinding
-import com.tajmoti.tulip.ui.BaseFragment
-import com.tajmoti.tulip.ui.consume
-import com.tajmoti.tulip.ui.viewModelsDelegated
+import com.tajmoti.tulip.ui.base.BaseFragment
+import com.tajmoti.tulip.ui.utils.consume
+import com.tajmoti.tulip.ui.utils.viewModelsDelegated
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

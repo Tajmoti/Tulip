@@ -1,4 +1,4 @@
-package com.tajmoti.tulip.ui
+package com.tajmoti.tulip.ui.utils
 
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels

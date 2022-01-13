@@ -1,4 +1,4 @@
-package com.tajmoti.tulip.ui
+package com.tajmoti.tulip.ui.base
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

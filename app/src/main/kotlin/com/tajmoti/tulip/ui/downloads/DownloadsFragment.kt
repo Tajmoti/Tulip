@@ -2,7 +2,7 @@ package com.tajmoti.tulip.ui.downloads
 
 import androidx.fragment.app.viewModels
 import com.tajmoti.tulip.databinding.FragmentDownloadsBinding
-import com.tajmoti.tulip.ui.BaseFragment
+import com.tajmoti.tulip.ui.base.BaseFragment
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

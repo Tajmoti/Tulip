@@ -5,8 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager.*
-import com.tajmoti.libtulip.ui.player.VideoPlayer
 import com.tajmoti.libtulip.ui.player.MediaPlayerState
+import com.tajmoti.libtulip.ui.player.VideoPlayer
 
 abstract class AudioFocusAwareVideoPlayer(
     private val context: Context,

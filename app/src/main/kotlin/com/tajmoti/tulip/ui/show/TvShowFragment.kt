@@ -19,6 +19,10 @@ import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import com.tajmoti.tulip.databinding.ActivityTabbedTvShowBinding
 import com.tajmoti.tulip.databinding.LayoutTvShowHeaderBinding
 import com.tajmoti.tulip.ui.*
+import com.tajmoti.tulip.ui.base.BaseFragment
+import com.tajmoti.tulip.ui.utils.consume
+import com.tajmoti.tulip.ui.utils.setupWithAdapterAndDivider
+import com.tajmoti.tulip.ui.utils.viewModelsDelegated
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

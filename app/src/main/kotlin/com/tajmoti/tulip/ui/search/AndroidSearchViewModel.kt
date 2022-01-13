@@ -4,7 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.tajmoti.libtulip.service.MappingSearchService
 import com.tajmoti.libtulip.ui.search.SearchViewModel
 import com.tajmoti.libtulip.ui.search.SearchViewModelImpl
-import com.tajmoti.tulip.ui.DelegatingViewModel
+import com.tajmoti.tulip.ui.utils.DelegatingViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

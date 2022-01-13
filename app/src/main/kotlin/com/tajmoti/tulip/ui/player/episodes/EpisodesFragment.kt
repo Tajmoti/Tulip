@@ -11,9 +11,15 @@ import com.tajmoti.libtulip.model.info.seasonNumber
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import com.tajmoti.tulip.databinding.FragmentEpisodesBinding
-import com.tajmoti.tulip.ui.*
+import com.tajmoti.tulip.ui.base.BaseFragment
+import com.tajmoti.tulip.ui.utils.consume
+import com.tajmoti.tulip.ui.getSeasonTitle
 import com.tajmoti.tulip.ui.player.AndroidVideoPlayerViewModel
 import com.tajmoti.tulip.ui.show.EpisodesAdapter
+import com.tajmoti.tulip.ui.showEpisodeDetailsDialog
+import com.tajmoti.tulip.ui.utils.slideToBottomDismiss
+import com.tajmoti.tulip.ui.utils.activityViewModelsDelegated
+import com.tajmoti.tulip.ui.utils.viewModelsDelegated
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

@@ -1,4 +1,4 @@
-package com.tajmoti.tulip.ui
+package com.tajmoti.tulip.ui.utils
 
 import android.os.Handler
 import android.os.Message

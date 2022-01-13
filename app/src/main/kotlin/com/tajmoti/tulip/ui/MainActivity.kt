@@ -9,6 +9,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ActivityMainBinding
+import com.tajmoti.tulip.ui.base.BaseActivity
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

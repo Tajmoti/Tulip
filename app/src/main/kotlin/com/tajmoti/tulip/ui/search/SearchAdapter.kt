@@ -8,7 +8,7 @@ import com.tajmoti.libtulip.model.search.GroupedSearchResult
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.IconSearchResultLanguageBinding
 import com.tajmoti.tulip.databinding.ItemSearchBinding
-import com.tajmoti.tulip.ui.BaseIdentityAdapter
+import com.tajmoti.tulip.ui.base.BaseIdentityAdapter
 import com.tajmoti.tulip.ui.languageToIcon
 
 class SearchAdapter(

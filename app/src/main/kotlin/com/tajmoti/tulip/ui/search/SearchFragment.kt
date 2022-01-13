@@ -17,7 +17,11 @@ import com.tajmoti.libtulip.model.search.GroupedSearchResult
 import com.tajmoti.libtulip.ui.search.SearchViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentSearchBinding
-import com.tajmoti.tulip.ui.*
+import com.tajmoti.tulip.ui.MainActivity
+import com.tajmoti.tulip.ui.base.BaseFragment
+import com.tajmoti.tulip.ui.utils.consume
+import com.tajmoti.tulip.ui.utils.setToRecyclerWithDividers
+import com.tajmoti.tulip.ui.utils.viewModelsDelegated
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

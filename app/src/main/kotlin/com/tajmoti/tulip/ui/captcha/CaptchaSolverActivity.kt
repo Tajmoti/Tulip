@@ -11,7 +11,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ActivityCaptchaSolverBinding
-import com.tajmoti.tulip.ui.BaseActivity
+import com.tajmoti.tulip.ui.base.BaseActivity
 
 class CaptchaSolverActivity : BaseActivity<ActivityCaptchaSolverBinding>(
     R.layout.activity_captcha_solver

@@ -4,7 +4,7 @@ import android.content.Context
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ItemStreamBinding
-import com.tajmoti.tulip.ui.BaseIdentityAdapter
+import com.tajmoti.tulip.ui.base.BaseIdentityAdapter
 import com.tajmoti.tulip.ui.languageToIcon
 
 class StreamsAdapter(

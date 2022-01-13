@@ -1,4 +1,4 @@
-package com.tajmoti.tulip.ui
+package com.tajmoti.tulip.ui.utils
 
 import android.graphics.drawable.Drawable
 import android.view.View

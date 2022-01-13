@@ -2,15 +2,14 @@ package com.tajmoti.tulip.ui.show
 
 import android.content.Context
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.viewbinding.ViewBinding
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.ui.player.VideoPlayerUtils.episodeToLabel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ItemEpisodeBinding
-import com.tajmoti.tulip.ui.BaseAdapter
-import com.tajmoti.tulip.ui.loadImageAsBackground
+import com.tajmoti.tulip.ui.base.BaseAdapter
+import com.tajmoti.tulip.ui.utils.loadImageAsBackground
 
 class EpisodesAdapter(
     val onPlayClickedListener: ((TulipEpisodeInfo) -> Unit),

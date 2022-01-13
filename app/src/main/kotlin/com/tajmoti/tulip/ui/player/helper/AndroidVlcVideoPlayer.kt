@@ -2,9 +2,9 @@ package com.tajmoti.tulip.ui.player.helper
 
 import android.net.Uri
 import com.tajmoti.commonutils.logger
-import com.tajmoti.libtulip.ui.player.VideoPlayer
 import com.tajmoti.libtulip.ui.player.MediaPlayerState
 import com.tajmoti.libtulip.ui.player.Position
+import com.tajmoti.libtulip.ui.player.VideoPlayer
 import com.tajmoti.tulip.ui.player.format
 import com.tajmoti.tulip.ui.player.isSpam
 import kotlinx.coroutines.flow.MutableStateFlow
