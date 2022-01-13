@@ -5,9 +5,11 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtulip.model.search.GroupedSearchResult
+import com.tajmoti.libtvprovider.model.TvItemInfo
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.IconSearchResultLanguageBinding
 import com.tajmoti.tulip.databinding.ItemSearchBinding
+import com.tajmoti.tulip.ui.PREFERRED_LANGUAGE
 import com.tajmoti.tulip.ui.base.BaseIdentityAdapter
 import com.tajmoti.tulip.ui.languageToIcon
 
@@ -28,13 +30,19 @@ class SearchAdapter(
     }
 
     private fun getNameForItem(context: Context, item: GroupedSearchResult): String {
-        val firstResult = item.results.first()
+        val info = getItemInfoForDisplay(item)
         return when (item) {
-            is GroupedSearchResult.Movie -> firstResult.info.name
-            is GroupedSearchResult.TvShow -> firstResult.info.name
+            is GroupedSearchResult.Movie -> info.name
+            is GroupedSearchResult.TvShow -> info.name
             is GroupedSearchResult.UnrecognizedTvShow -> context.getString(R.string.other_tv_shows)
             is GroupedSearchResult.UnrecognizedMovie -> context.getString(R.string.other_movies)
         }
+    }
+
+    private fun getItemInfoForDisplay(item: GroupedSearchResult): TvItemInfo {
+        val firstResult = item.results.firstOrNull { it.info.language == PREFERRED_LANGUAGE }
+            ?: item.results.first()
+        return firstResult.info
     }
 
     private fun getLanguagesForItem(item: GroupedSearchResult): List<LanguageCode> {

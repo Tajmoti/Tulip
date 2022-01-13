@@ -1,7 +1,8 @@
 ## [Unreleased]
 ### Changed
 - Transparent status bar on Library screen
-- Preselect last played seasons when enterin TV show screen
+- Preselect last played seasons when entering TV show screen
+- Prefer english names for search results
 
 ## [0.12.0] - 2021-11-07
 ### Added
