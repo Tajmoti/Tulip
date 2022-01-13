@@ -10,13 +10,16 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
 import androidx.lifecycle.*
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.tajmoti.libtulip.model.info.*
+import com.tajmoti.libtulip.model.info.LanguageCode
+import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
+import com.tajmoti.libtulip.model.info.TulipSeasonInfo
+import com.tajmoti.libtulip.model.info.seasonNumber
 import com.tajmoti.libtulip.ui.player.VideoPlayerUtils.episodeToLabel
 import com.tajmoti.tulip.R
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlin.reflect.KMutableProperty0
 
@@ -54,35 +57,28 @@ inline val AppCompatActivity.isInPipModeCompat: Boolean
         isInPipMode
     }
 
-inline fun <T> Fragment.consume(flow: Flow<T>, crossinline action: suspend (value: T) -> Unit) {
-    viewLifecycleOwner.lifecycleScope.launch {
-        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            flow.collect(action)
-        }
-    }
+fun <T> Fragment.consume(flow: Flow<T>, collector: FlowCollector<T>) {
+    viewLifecycleOwner.consume(flow, collector)
 }
 
-inline fun <T> AppCompatActivity.consume(
-    flow: Flow<T>,
-    crossinline action: suspend (value: T) -> Unit
-) {
+fun <T> LifecycleOwner.consume(flow: Flow<T>, collector: FlowCollector<T>) {
     lifecycleScope.launch {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            flow.collect(action)
+            flow.collect(collector)
         }
     }
 }
 
 fun Fragment.slideToBottomDismiss(fm: FragmentManager = requireActivity().supportFragmentManager) {
     fm.commit {
-            setCustomAnimations(
-                R.anim.slide_from_top_enter,
-                R.anim.slide_from_top_exit,
-                R.anim.slide_from_top_enter,
-                R.anim.slide_from_top_exit
-            )
-            remove(this@slideToBottomDismiss)
-        }
+        setCustomAnimations(
+            R.anim.slide_from_top_enter,
+            R.anim.slide_from_top_exit,
+            R.anim.slide_from_top_enter,
+            R.anim.slide_from_top_exit
+        )
+        remove(this@slideToBottomDismiss)
+    }
 }
 
 fun ViewModel.doCancelableJob(
