@@ -8,7 +8,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
-import androidx.lifecycle.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
@@ -16,12 +19,9 @@ import com.tajmoti.libtulip.model.info.TulipSeasonInfo
 import com.tajmoti.libtulip.model.info.seasonNumber
 import com.tajmoti.libtulip.ui.player.VideoPlayerUtils.episodeToLabel
 import com.tajmoti.tulip.R
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import kotlin.reflect.KMutableProperty0
 
 fun languageToIcon(language: LanguageCode): Int? {
     return when (language.code) {
@@ -50,12 +50,7 @@ fun showEpisodeDetailsDialog(ctx: Context, episodeInfo: TulipEpisodeInfo) {
 }
 
 inline val AppCompatActivity.isInPipModeCompat: Boolean
-    get() = run {
-        var isInPipMode = false
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-            isInPipMode = isInPictureInPictureMode
-        isInPipMode
-    }
+    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode
 
 fun <T> Fragment.consume(flow: Flow<T>, collector: FlowCollector<T>) {
     viewLifecycleOwner.consume(flow, collector)
@@ -79,21 +74,4 @@ fun Fragment.slideToBottomDismiss(fm: FragmentManager = requireActivity().suppor
         )
         remove(this@slideToBottomDismiss)
     }
-}
-
-fun ViewModel.doCancelableJob(
-    job: KMutableProperty0<Job?>,
-    state: MutableStateFlow<Boolean>?,
-    task: suspend () -> Unit
-) {
-    job.get()?.cancel()
-    val newJob = viewModelScope.launch {
-        state?.value = true
-        try {
-            task()
-        } finally {
-            state?.value = false
-        }
-    }
-    job.set(newJob)
 }
