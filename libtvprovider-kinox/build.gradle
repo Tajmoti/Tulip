@@ -1,7 +1,7 @@
 plugins {
-    id 'java-library'
-    id 'kotlin'
-    id 'org.jetbrains.kotlin.plugin.serialization'
+    id "java-library"
+    id "kotlin"
+    id "org.jetbrains.kotlin.plugin.serialization"
 }
 
 java {
@@ -11,8 +11,8 @@ java {
 
 compileKotlin {
     kotlinOptions {
-        jvmTarget = '11'
-        freeCompilerArgs += '-Xopt-in=kotlin.RequiresOptIn'
+        jvmTarget = "11"
+        freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
     }
 }
 
@@ -25,11 +25,11 @@ dependencies {
 
     // Business logic libs
     implementation "org.jsoup:jsoup:$jsoup_version"
-    api project(':libtvprovider')
+    api project(":libtvprovider")
 
     // Serialization
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0"
 
     // Utils
-    api project(':commonutils')
+    api project(":commonutils")
 }

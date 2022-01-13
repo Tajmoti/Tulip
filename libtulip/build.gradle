@@ -1,7 +1,7 @@
 plugins {
-    id 'java-library'
-    id 'kotlin'
-    id 'kotlin-kapt'
+    id "java-library"
+    id "kotlin"
+    id "kotlin-kapt"
 }
 
 java {
@@ -11,8 +11,8 @@ java {
 
 compileKotlin {
     kotlinOptions {
-        jvmTarget = '11'
-        freeCompilerArgs += '-Xopt-in=kotlin.RequiresOptIn'
+        jvmTarget = "11"
+        freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
     }
 }
 
@@ -22,13 +22,13 @@ test {
 
 dependencies {
     // Business logic libs
-    implementation project(':libtvprovider')
-    implementation project(':libtvprovider-kinox')
-    implementation project(':libtvprovider-primewire')
-    implementation project(':libwebdriver')
-    implementation project(':libtvvideoextractor')
-    implementation project(':libtmdb')
-    implementation project(':libopensubtitles')
+    implementation project(":libtvprovider")
+    implementation project(":libtvprovider-kinox")
+    implementation project(":libtvprovider-primewire")
+    implementation project(":libwebdriver")
+    implementation project(":libtvvideoextractor")
+    implementation project(":libtmdb")
+    implementation project(":libopensubtitles")
 
     // Arrow
     implementation "io.arrow-kt:arrow-core:0.13.2"
@@ -40,18 +40,18 @@ dependencies {
     // Retrofit and Moshi
     implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
     implementation "com.squareup.retrofit2:converter-moshi:$retrofit_version"
-    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.1'
+    implementation "com.squareup.okhttp3:logging-interceptor:4.9.1"
 
     // DI
-    implementation 'javax.inject:javax.inject:1'
+    implementation "javax.inject:javax.inject:1"
     implementation "com.google.dagger:dagger:$dagger_version"
     kapt "com.google.dagger:dagger-compiler:$dagger_version"
 
     // Store
-    implementation 'com.dropbox.mobile.store:store4:4.0.3-KT15'
+    implementation "com.dropbox.mobile.store:store4:4.0.3-KT15"
 
     // Testing
-    def junit_jupiter_version = '5.8.1'
+    def junit_jupiter_version = "5.8.1"
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_jupiter_version"
     testImplementation "org.junit.platform:junit-platform-suite:1.8.1"
     testImplementation "org.mockito:mockito-core:4.0.0"

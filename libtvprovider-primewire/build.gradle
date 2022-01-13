@@ -1,6 +1,6 @@
 plugins {
-    id 'java-library'
-    id 'kotlin'
+    id "java-library"
+    id "kotlin"
 }
 
 java {
@@ -10,7 +10,7 @@ java {
 
 compileKotlin {
     kotlinOptions {
-        jvmTarget = '11'
+        jvmTarget = "11"
     }
 }
 
@@ -23,8 +23,8 @@ dependencies {
 
     // Business logic libs
     implementation "org.jsoup:jsoup:$jsoup_version"
-    api project(':libtvprovider')
+    api project(":libtvprovider")
 
     // Utils
-    api project(':commonutils')
+    api project(":commonutils")
 }
