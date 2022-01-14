@@ -19,7 +19,7 @@ import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
-import com.tajmoti.libtvprovider.*
+import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.model.SearchResult
 import com.tajmoti.libtvprovider.model.TvItem
 import com.tajmoti.libtvprovider.model.VideoStreamRef
@@ -81,9 +81,23 @@ class HostedTvDataRepositoryImpl(
             }
     }
 
-    private fun getHostedShowTvInfo(tvShowInfo: TvItem.TvShow, key: TvShowKey.Hosted) =
-        tmdbRepo.findTvShowKey(tvShowInfo.info.name, tvShowInfo.info.firstAirDateYear)
-            .mapWithContext(LibraryDispatchers.libraryContext) { it.toResult().flatMap { tmdbKey -> Result.success(tvShowInfo.fromNetwork(key, tmdbKey)) } }
+    private fun getHostedShowTvInfo(
+        tvShowInfo: TvItem.TvShow,
+        key: TvShowKey.Hosted
+    ): Flow<Result<TulipTvShowInfo.Hosted>> {
+        return tmdbRepo.findTvShowKey(tvShowInfo.info.name, tvShowInfo.info.firstAirDateYear)
+            .mapWithContext(LibraryDispatchers.libraryContext) { mapTmdbOrRecover(it.toResult(), tvShowInfo, key) }
+    }
+
+    private fun mapTmdbOrRecover(
+        result: Result<TvShowKey.Tmdb?>,
+        tvShowInfo: TvItem.TvShow,
+        key: TvShowKey.Hosted
+    ): Result<TulipTvShowInfo.Hosted> {
+        return result
+            .map { tmdbKey -> tvShowInfo.fromNetwork(key, tmdbKey) }
+            .recover { tvShowInfo.fromNetwork(key, null) }
+    }
 
     override fun getMovie(key: MovieKey.Hosted): Flow<NetworkResult<TulipMovie.Hosted>> {
         logger.debug("Retrieving $key")
@@ -100,7 +114,9 @@ class HostedTvDataRepositoryImpl(
 
     private fun getHostedMovieInfo(tvShowInfo: TvItem.Movie, key: MovieKey.Hosted) =
         tmdbRepo.findMovieKey(tvShowInfo.info.name, tvShowInfo.info.firstAirDateYear)
-            .mapWithContext(LibraryDispatchers.libraryContext) { it.toResult().flatMap { tmdbKey -> Result.success(tvShowInfo.fromNetwork(key, tmdbKey)) } }
+            .mapWithContext(LibraryDispatchers.libraryContext) {
+                it.toResult().flatMap { tmdbKey -> Result.success(tvShowInfo.fromNetwork(key, tmdbKey)) }
+            }
 
     private fun logExceptions(service: StreamingService, result: Result<List<SearchResult>>) {
         val exception = result.exceptionOrNull() ?: return
