@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EpisodeDao {
-    @Query("SELECT * FROM DbEpisode WHERE service == :service AND tvShowKey == :tvShowKey AND seasonNumber == :seasonNumber")
+    @Query("SELECT * FROM DbEpisode WHERE service == :service AND tvShowKey == :tvShowKey AND seasonNumber == :seasonNumber ORDER BY number ASC")
     fun getForSeason(
         service: StreamingService,
         tvShowKey: String,
