@@ -1,4 +1,4 @@
-package com.tajmoti.libtvvideoextractor.module
+package com.tajmoti.commonutils
 
 fun String.substringBetween(startSequence: String, endSequence: String): String {
     val start = indexOf(startSequence) + startSequence.length

@@ -26,17 +26,12 @@ class EpisodesAdapter(
         binding.episodeRatingStr = getRating(context, item)
         binding.episodeDescription = item.overview
         binding.imageEpisode.setOnClickListener { onPlayClickedListener(item) }
-        getStillPath(item)?.let { stillPath ->
+        item.stillPath?.let { stillPath ->
             binding.imageEpisode.loadImageAsBackground(
                 stillPath,
                 R.drawable.ic_baseline_live_tv_128
             )
         }
-    }
-
-    private fun getStillPath(item: TulipEpisodeInfo): String? {
-        val path = (item as? TulipEpisodeInfo.Tmdb)?.stillPath ?: return null
-        return "https://image.tmdb.org/t/p/original$path"
     }
 
     private fun getRating(context: Context, item: TulipEpisodeInfo): String {

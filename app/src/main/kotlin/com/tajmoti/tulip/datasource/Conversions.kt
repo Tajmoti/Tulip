@@ -124,7 +124,7 @@ internal inline fun DbEpisode.fromDb(): TulipEpisodeInfo.Hosted {
 
 internal inline fun DbEpisode.fromDb(seasonKey: SeasonKey.Hosted): TulipEpisodeInfo.Hosted {
     val key = EpisodeKey.Hosted(seasonKey, key)
-    return TulipEpisodeInfo.Hosted(key, number, name, overview)
+    return TulipEpisodeInfo.Hosted(key, number, name, overview, stillPath)
 }
 
 internal inline fun DbMovie.fromDb(tmdbId: Long?): TulipMovie.Hosted {
@@ -159,7 +159,8 @@ internal inline fun TulipEpisodeInfo.Hosted.toDb(): DbEpisode {
         key.id,
         episodeNumber,
         name,
-        overview
+        overview,
+        stillPath
     )
 }
 

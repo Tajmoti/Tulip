@@ -8,19 +8,21 @@ sealed interface TulipEpisodeInfo : IdentityItem<EpisodeKey> {
     val episodeNumber: Int
     val name: String?
     val overview: String?
+    val stillPath: String?
 
     data class Hosted(
         override val key: EpisodeKey.Hosted,
         override val episodeNumber: Int,
         override val name: String?,
-        override val overview: String?
+        override val overview: String?,
+        override val stillPath: String?,
     ) : TulipEpisodeInfo
 
     data class Tmdb(
         override val key: EpisodeKey.Tmdb,
         override val name: String,
         override val overview: String?,
-        val stillPath: String?,
+        override val stillPath: String?,
         val voteAverage: Float?
     ) : TulipEpisodeInfo {
         override val episodeNumber = key.episodeNumber

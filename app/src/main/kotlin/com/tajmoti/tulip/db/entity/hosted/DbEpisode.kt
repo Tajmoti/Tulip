@@ -19,5 +19,6 @@ data class DbEpisode(
     val key: String,
     val number: Int,
     val name: String?,
-    val overview: String?
+    val overview: String?,
+    val stillPath: String?
 )

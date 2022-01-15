@@ -3,6 +3,7 @@
 - Transparent status bar on Library screen
 - Preselect last played seasons when entering TV show screen
 - Prefer english names for search results
+- Add `southparkstudios.com` as a data source
 
 ## [0.12.0] - 2021-11-07
 ### Added

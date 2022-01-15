@@ -15,6 +15,7 @@ import com.tajmoti.libtulip.service.impl.StreamServiceImpl
 import com.tajmoti.libtulip.service.impl.SubtitleServiceImpl
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.kinox.KinoxTvProvider
+import com.tajmoti.libtvprovider.southpark.SouthParkTvProvider
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
 import com.tajmoti.libtvvideoextractor.WebDriverPageSourceLoader
 import com.tajmoti.libtvvideoextractor.WebDriverPageSourceLoaderWithCustomJs
@@ -75,10 +76,12 @@ object BusinessLogicModule {
         val httpGetter = makeHttpGetter(okHttpClient)
         val primewire = PrimewireTvProvider(webViewGetter, httpGetter)
         val kinox = KinoxTvProvider(httpGetter)
+        val southPark = SouthParkTvProvider(httpGetter)
         return MultiTvProvider(
             mapOf(
                 StreamingService.PRIMEWIRE to primewire,
-                StreamingService.KINOX to kinox
+                StreamingService.KINOX to kinox,
+                StreamingService.SOUTH_PARK to southPark
             ),
             30_000L
         )

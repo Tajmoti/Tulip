@@ -45,7 +45,7 @@ inline fun TvItem.Movie.fromNetwork(
 
 inline fun EpisodeInfo.fromNetwork(seasonKey: SeasonKey.Hosted): TulipEpisodeInfo.Hosted {
     val key = EpisodeKey.Hosted(seasonKey, key)
-    return TulipEpisodeInfo.Hosted(key, number, name, overview)
+    return TulipEpisodeInfo.Hosted(key, number, name, overview, stillPath)
 }
 
 inline fun Season.fromNetwork(tvShowKey: TvShowKey.Hosted): TulipSeasonInfo.Hosted {
@@ -72,6 +72,6 @@ fun Episode.fromNetwork(seasonKey: SeasonKey.Tmdb): TulipEpisodeInfo.Tmdb {
         key,
         name,
         overview,
-        stillPath,
+        "https://image.tmdb.org/t/p/original$stillPath",
         voteAverage.takeUnless { it == 0.0f })
 }

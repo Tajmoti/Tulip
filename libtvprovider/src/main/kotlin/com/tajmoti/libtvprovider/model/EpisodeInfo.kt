@@ -16,5 +16,9 @@ data class EpisodeInfo(
     /**
      * Episode overview or null if none
      */
-    val overview: String?
+    val overview: String?,
+    /**
+     * Episode still image URL or null if none
+     */
+    val stillPath: String? = null
 )
