@@ -1,0 +1,13 @@
+rootProject.name = "Tulip"
+include(":app")
+include(":libtvprovider")
+include(":libtvprovider-primewire")
+include(":libwebdriver-android")
+include(":libtvvideoextractor")
+include(":commonutils")
+include(":libwebdriver")
+include(":libtvprovider-kinox")
+include(":libtvprovider-southpark")
+include(":libtulip")
+include(":libtmdb")
+include(":libopensubtitles")
