@@ -25,6 +25,7 @@ import dagger.Provides
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import okhttp3.OkHttpClient
 import javax.inject.Singleton
 
@@ -131,7 +132,7 @@ object BusinessLogicModule {
         }
         return {
             try {
-                Result.success(client.get(it))
+                Result.success(client.get(it).bodyAsText(Charsets.UTF_8))
             } catch (e: Throwable) {
                 Result.failure(e)
             }
