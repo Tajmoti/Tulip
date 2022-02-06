@@ -4,13 +4,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import org.slf4j.Logger
+import mu.KLogger
 import kotlin.reflect.KProperty0
 
 fun logAllFlowValues(
     sourceObject: Any,
     scope: CoroutineScope,
-    logger: Logger,
+    logger: KLogger,
     ignoreList: List<KProperty0<Flow<*>>> = emptyList()
 ) {
     val clazz = sourceObject::class.java
@@ -23,7 +23,7 @@ fun logAllFlowValues(
         .forEach { (name, flow) -> logEach(scope, logger, name, flow) }
 }
 
-fun <T> logEach(scope: CoroutineScope, logger: Logger, name: String, flow: Flow<T>) {
+fun <T> logEach(scope: CoroutineScope, logger: KLogger, name: String, flow: Flow<T>) {
     scope.launch {
         flow.collect {
             logger.debug("Flowing on [$name]: ${thingToString(it)}")
