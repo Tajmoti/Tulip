@@ -9,7 +9,6 @@ import com.tajmoti.libtulip.ui.streams.LoadedLink
 import com.tajmoti.libtulip.ui.streams.SelectedLink
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import java.io.File
 
 interface VideoPlayerViewModel {
     /**
@@ -129,7 +128,7 @@ interface VideoPlayerViewModel {
     /**
      * Subtitles to be applied to the currently playing video
      */
-    val subtitleFile: StateFlow<File?>
+    val subtitleFile: StateFlow<String?>
 
     /**
      * How much the subtitles should be offset.

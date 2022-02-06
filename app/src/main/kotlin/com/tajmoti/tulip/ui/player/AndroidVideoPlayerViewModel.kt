@@ -43,7 +43,7 @@ class AndroidVideoPlayerViewModel @Inject constructor(
             extractionService,
             streamService,
             subtitleService,
-            context.getExternalFilesDir(null)!!,
+            context.getExternalFilesDir(null)!!.absolutePath,
             viewModelScope,
             args.streamableKey
         )

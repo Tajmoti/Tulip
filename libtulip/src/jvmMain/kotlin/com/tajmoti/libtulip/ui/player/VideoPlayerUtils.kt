@@ -1,7 +1,9 @@
 package com.tajmoti.libtulip.ui.player
 
 import com.tajmoti.libtulip.model.info.*
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 
 object VideoPlayerUtils {
     @JvmStatic
@@ -34,11 +36,11 @@ object VideoPlayerUtils {
     @JvmStatic
     fun formatTimeForDisplay(timeMs: Long): String {
         var mutableTimeMs = timeMs
-        val hours = TimeUnit.MILLISECONDS.toHours(mutableTimeMs)
-        mutableTimeMs -= TimeUnit.HOURS.toMillis(hours)
-        val minutes = TimeUnit.MILLISECONDS.toMinutes(mutableTimeMs)
-        mutableTimeMs -= TimeUnit.MINUTES.toMillis(minutes)
-        val seconds = TimeUnit.MILLISECONDS.toSeconds(mutableTimeMs)
+        val hours = mutableTimeMs.milliseconds.inWholeHours
+        mutableTimeMs -= hours.hours.inWholeMilliseconds
+        val minutes = mutableTimeMs.milliseconds.inWholeMinutes
+        mutableTimeMs -= minutes.minutes.inWholeMilliseconds
+        val seconds = mutableTimeMs.milliseconds.inWholeSeconds
         return when {
             hours > 0 -> hours.toString() + ':' + timePad(minutes) + ':' + timePad(seconds)
             minutes > 0 -> timePad(minutes) + ':' + timePad(seconds)

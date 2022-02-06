@@ -14,11 +14,11 @@ class SubtitleServiceImpl(
     private val openSubtitlesFallbackService: OpenSubtitlesFallbackService
 ) : SubtitleService {
 
-    override suspend fun downloadSubtitleToFile(info: SubtitleInfo, directory: File): Result<File> {
+    override suspend fun downloadSubtitleToFile(info: SubtitleInfo, directory: String): Result<String> {
         return openSubtitleStream(info)
             .flatMap { subtitleStream ->
                 val subtitleFile = File(directory, "sub.srt")
-                writeStreamToFile(subtitleFile, subtitleStream).map { subtitleFile }
+                writeStreamToFile(subtitleFile, subtitleStream).map { subtitleFile.absolutePath }
             }
             .onFailure { logger.warn("Failed to save subtitles", it) }
     }

@@ -1,9 +1,8 @@
 package com.tajmoti.libtulip.model.history
 
 import com.tajmoti.libtulip.model.key.StreamableKey
-import java.io.Serializable
 
-sealed interface LastPlayedPosition : Serializable {
+sealed interface LastPlayedPosition {
     val key: StreamableKey
 
     /**

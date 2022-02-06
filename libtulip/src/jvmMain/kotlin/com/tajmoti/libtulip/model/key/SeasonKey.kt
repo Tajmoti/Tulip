@@ -1,8 +1,8 @@
 package com.tajmoti.libtulip.model.key
 
-import java.io.Serializable
+import com.tajmoti.multiplatform.JvmSerializable
 
-sealed interface SeasonKey : Serializable {
+sealed interface SeasonKey : JvmSerializable {
     val tvShowKey: TvShowKey
 
     /**

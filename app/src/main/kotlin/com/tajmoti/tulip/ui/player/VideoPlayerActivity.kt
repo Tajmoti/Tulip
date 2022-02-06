@@ -404,9 +404,9 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
         }
     }
 
-    private fun onSubtitlesChanged(file: File?) {
+    private fun onSubtitlesChanged(file: String?) {
         if (file != null) {
-            val uri = Uri.fromFile(file).toString()
+            val uri = Uri.fromFile(File(file)).toString()
             player?.setSubtitles(VideoPlayer.SubtitleInfo(uri))
         } else {
             player?.setSubtitles(null)

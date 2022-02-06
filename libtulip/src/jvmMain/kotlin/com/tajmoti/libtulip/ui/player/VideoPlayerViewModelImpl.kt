@@ -23,9 +23,11 @@ import com.tajmoti.libtulip.ui.streams.SelectedLink
 import com.tajmoti.libtvprovider.model.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.CaptchaInfo
 import com.tajmoti.libtvvideoextractor.ExtractionError
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
-import java.io.File
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class VideoPlayerViewModelImpl constructor(
@@ -37,7 +39,7 @@ class VideoPlayerViewModelImpl constructor(
     private val streamExtractionService: StreamExtractionService,
     private val streamService: StreamService,
     private val subtitleService: SubtitleService,
-    private val subDirectory: File,
+    private val subDirectory: String,
     private val viewModelScope: CoroutineScope,
     streamableKeyInitial: StreamableKey,
 ) : VideoPlayerViewModel {
@@ -546,7 +548,7 @@ class VideoPlayerViewModelImpl constructor(
     sealed interface SubtitleDownloadingState {
         object Idle : SubtitleDownloadingState
         object Loading : SubtitleDownloadingState
-        data class Success(val subtitles: File) : SubtitleDownloadingState
+        data class Success(val subtitles: String) : SubtitleDownloadingState
         object Error : SubtitleDownloadingState
     }
 

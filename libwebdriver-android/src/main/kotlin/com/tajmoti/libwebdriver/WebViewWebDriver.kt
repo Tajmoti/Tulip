@@ -9,7 +9,6 @@ import android.webkit.*
 import com.tajmoti.commonutils.logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.concurrent.TimeoutException
 import kotlin.coroutines.suspendCoroutine
 
 class WebViewWebDriver(

@@ -40,7 +40,7 @@ class StreamExtractionServiceImpl(
      */
     private suspend fun resolveRedirects(url: String): Result<String?> {
         return runCatching {
-            val originalHost = URI.create(url).host
+            val originalHost = URI(url).host
             logger.debug("Resolving redirects of '$url'")
             var nextLocation = url
             var attempts = 0
@@ -55,7 +55,7 @@ class StreamExtractionServiceImpl(
     }
 
     private fun shouldRetryRedirect(nextLocation: String, originalHost: String): Boolean {
-        val nextHost = URI.create(nextLocation).host
+        val nextHost = URI(nextLocation).host
         return nextHost.contains(originalHost) || originalHost.contains(nextHost)
     }
 
