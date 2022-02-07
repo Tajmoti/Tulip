@@ -27,6 +27,7 @@ kotlin {
 }
 
 fun KotlinDependencyHandler.mainDeps() {
+    implementation(project(":libtvvideoextractor"))
     implementation(project(":libwebdriver"))
     implementation(project(":commonutils"))
 
@@ -46,7 +47,6 @@ fun KotlinDependencyHandler.jvmDeps() {
     implementation(project(":libtvprovider-kinox"))
     implementation(project(":libtvprovider-primewire"))
     implementation(project(":libtvprovider-southpark"))
-    implementation(project(":libtvvideoextractor"))
     implementation(project(":libtmdb"))
     implementation(project(":libopensubtitles"))
 
