@@ -19,13 +19,28 @@ kotlin {
         browser()
     }
     sourceSets {
-        sourceSets["jvmMain"].dependencies { mainDeps() }
+        sourceSets["commonMain"].dependencies { mainDeps() }
         sourceSets["jvmMain"].dependencies { jvmDeps() }
+        sourceSets["jsMain"].dependencies { jsDeps() }
         sourceSets["jvmTest"].dependencies { jvmTestDeps() }
     }
 }
 
 fun KotlinDependencyHandler.mainDeps() {
+    implementation(project(":commonutils"))
+
+    with(Versions.Arrow) {
+        implementation(core)
+    }
+    with(Versions.Kotlin) {
+        implementation(coroutines)
+    }
+    with(Versions.Ktor) {
+        implementation(core)
+    }
+}
+
+fun KotlinDependencyHandler.jvmDeps() {
     implementation(project(":libtvprovider"))
     implementation(project(":libtvprovider-kinox"))
     implementation(project(":libtvprovider-primewire"))
@@ -36,23 +51,14 @@ fun KotlinDependencyHandler.mainDeps() {
     implementation(project(":libopensubtitles"))
 
     with(Versions.Ktor) {
-        implementation(core)
-    }
-    with(Versions.Arrow) {
-        implementation(core)
-    }
-    with(Versions.Store) {
-        implementation(core)
-    }
-}
-
-fun KotlinDependencyHandler.jvmDeps() {
-    with(Versions.Ktor) {
         implementation(clientJvm)
     }
     with(Versions.OkHttp) {
         implementation(loggingInterceptor)
         implementation(moshi)
+    }
+    with(Versions.Store) {
+        implementation(storeJvm)
     }
     with(Versions.JvmDi) {
         implementation(inject)
@@ -69,5 +75,11 @@ fun KotlinDependencyHandler.jvmTestDeps() {
         implementation(mockitoKt)
         implementation(slf4j)
         implementation(jupiterEngine)
+    }
+}
+
+fun KotlinDependencyHandler.jsDeps() {
+    with(Versions.Ktor) {
+        implementation(clientJs)
     }
 }

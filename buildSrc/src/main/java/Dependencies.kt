@@ -42,7 +42,7 @@ object Versions {
     }
 
     object Store {
-        const val core = "com.dropbox.mobile.store:store4:$store"
+        const val storeJvm = "com.dropbox.mobile.store:store4:$store"
     }
 
     object JvmTest {
