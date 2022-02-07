@@ -11,7 +11,16 @@ object Versions {
     private const val okHttpLogger = "4.9.3"
     private const val dagger = "2.40.5"
     private const val moshiAdapter = "2.9.0"
+    private const val coroutinesVer = "1.6.0"
+    private const val kotlinLoggingVer = "2.1.21"
 
+    object Kotlin {
+        const val coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer"
+    }
+
+    object KotlinLogging {
+        const val kotlinLogging = "io.github.microutils:kotlin-logging:$kotlinLoggingVer"
+    }
 
     object Ktor {
         const val core = "io.ktor:ktor-client-core:$ktor"
