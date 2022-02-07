@@ -20,7 +20,7 @@ class SubtitleServiceImpl(
                 val subtitleFile = File(directory, "sub.srt")
                 writeStreamToFile(subtitleFile, subtitleStream).map { subtitleFile.absolutePath }
             }
-            .onFailure { logger.warn("Failed to save subtitles", it) }
+            .onFailure { logger.warn { "Failed to save subtitles $it" } }
     }
 
     private fun writeStreamToFile(file: File, stream: InputStream): Result<Unit> {
@@ -37,7 +37,7 @@ class SubtitleServiceImpl(
 //        val request = DownloadSubtitlesRequestBody(info.fileId)
 //        return runCatching { openSubtitlesService.downloadSubtitles(request) }
 //            .mapWithContext(LibraryDispatchers.libraryContext) { it.byteStream() }
-        logger.debug("Downloading subtitles by $info")
+        logger.debug { "Downloading subtitles by $info" }
         return runCatching { openSubtitlesFallbackService.downloadSubtitlesFallback(info.legacyId) }
             .map { ZipInputStream(it.byteStream()) }
             .flatMap { getSubtitleFileFromZip(it) }

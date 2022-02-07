@@ -16,7 +16,7 @@ class SubtitleRepositoryImpl(
     override suspend fun getAvailableSubtitles(key: StreamableKey): Result<List<SubtitleInfo>> {
         return fetchForTmdbId(key)
             .map { it.data.mapNotNull { subtitlesResponse -> subtitlesResponse.fromApi() } }
-            .onFailure { logger.warn("Subtitle list fetch failed for $key", it) }
+            .onFailure { logger.warn { "Subtitle list fetch failed for $key" } }
     }
 
     private suspend fun fetchForTmdbId(itemId: StreamableKey): Result<SubtitlesResponse> {

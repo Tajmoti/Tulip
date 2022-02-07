@@ -26,7 +26,7 @@ fun logAllFlowValues(
 fun <T> logEach(scope: CoroutineScope, logger: KLogger, name: String, flow: Flow<T>) {
     scope.launch {
         flow.collect {
-            logger.debug("Flowing on [$name]: ${thingToString(it)}")
+            logger.debug { "Flowing on [$name]: ${thingToString(it)}" }
         }
     }
 }

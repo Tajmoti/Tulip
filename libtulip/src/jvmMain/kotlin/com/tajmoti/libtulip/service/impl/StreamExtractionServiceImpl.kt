@@ -26,7 +26,7 @@ class StreamExtractionServiceImpl(
     ): Result<VideoStreamRef.Resolved> {
         // If there were no redirects, assume that the link already points to the streaming page
         return resolveRedirects(ref.url)
-            .onFailure { logger.warn("Failed to resolve redirects of $ref", it) }
+            .onFailure { logger.warn { "Failed to resolve redirects of $ref" } }
             .map { ref.asResolved(it ?: ref.url) }
     }
 
@@ -41,15 +41,15 @@ class StreamExtractionServiceImpl(
     private suspend fun resolveRedirects(url: String): Result<String?> {
         return runCatching {
             val originalHost = URI(url).host
-            logger.debug("Resolving redirects of '$url'")
+            logger.debug { "Resolving redirects of '$url'" }
             var nextLocation = url
             var attempts = 0
             while (attempts++ < MAX_REDIRECTS && shouldRetryRedirect(nextLocation, originalHost)) {
                 val response: HttpResponse = httpClient.request(nextLocation)
                 nextLocation = response.headers["location"] ?: return@runCatching nextLocation
-                logger.debug("Next location for '$url' is '$nextLocation'")
+                logger.debug { "Next location for '$url' is '$nextLocation'" }
             }
-            logger.debug("Redirects of '$url' resolved into '$nextLocation'")
+            logger.debug { "Redirects of '$url' resolved into '$nextLocation'" }
             nextLocation
         }
     }

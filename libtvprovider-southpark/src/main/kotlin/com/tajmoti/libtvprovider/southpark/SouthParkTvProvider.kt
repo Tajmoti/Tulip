@@ -45,7 +45,7 @@ class SouthParkTvProvider(
         return getAllEpisodesUsingPages()
             .map(::groupAndSortEpisodes)
             .map(::seasonsToTvShow)
-            .onFailure { logger.warn("Failed to fetch South Park episode data $it") }
+            .onFailure { logger.warn { "Failed to fetch South Park episode data $it" } }
     }
 
     private fun seasonsToTvShow(seasons: List<Season>): TvItem.TvShow {

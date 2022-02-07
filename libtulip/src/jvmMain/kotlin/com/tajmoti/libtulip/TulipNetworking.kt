@@ -21,7 +21,7 @@ private const val USER_AGENT =
 
 private val interceptorLogger = object : HttpLoggingInterceptor.Logger {
     override fun log(message: String) {
-        logger.debug(message)
+        logger.debug { message }
     }
 }
 

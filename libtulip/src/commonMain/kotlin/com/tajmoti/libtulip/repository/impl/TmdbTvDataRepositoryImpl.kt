@@ -82,14 +82,14 @@ class TmdbTvDataRepositoryImpl(
         .build()
 
     override fun findTvShowKey(name: String, firstAirYear: Int?): Flow<NetworkResult<TvShowKey.Tmdb?>> {
-        logger.debug("Looking up TMDB ID for TV show $name ($firstAirYear)")
+        logger.debug { "Looking up TMDB ID for TV show $name ($firstAirYear)" }
         return tmdbTvIdStore.stream(StoreRequest.cached(name to firstAirYear, true))
             .toNetFlow()
             .mapWithContext(LibraryDispatchers.libraryContext) { it.convert { opt -> opt.orNull() } }
     }
 
     override fun findMovieKey(name: String, firstAirYear: Int?): Flow<NetworkResult<MovieKey.Tmdb?>> {
-        logger.debug("Looking up TMDB ID for movie $name ($firstAirYear)")
+        logger.debug { "Looking up TMDB ID for movie $name ($firstAirYear)" }
         return tmdbMovieIdStore.stream(StoreRequest.cached(name to firstAirYear, true))
             .toNetFlow()
             .mapWithContext(LibraryDispatchers.libraryContext) { it.convert { opt -> opt.orNull() } }
@@ -101,7 +101,7 @@ class TmdbTvDataRepositoryImpl(
                 .map { firstResultIdOrNull(it) }
                 .getOrNull()
                 ?.let { TvShowKey.Tmdb(it) }
-        }.onFailure { logger.warn("Exception searching $name ($firstAirDateYear)") }
+        }.onFailure { logger.warn { "Exception searching $name ($firstAirDateYear)" } }
     }
 
     private suspend fun fetchSearchResultMovie(name: String, firstAirDateYear: Int?): Result<MovieKey.Tmdb?> {
@@ -110,7 +110,7 @@ class TmdbTvDataRepositoryImpl(
                 .map { firstResultIdOrNull(it) }
                 .getOrNull()
                 ?.let { MovieKey.Tmdb(it) }
-        }.onFailure { logger.warn("Exception searching $name ($firstAirDateYear)") }
+        }.onFailure { logger.warn { "Exception searching $name ($firstAirDateYear)" } }
     }
 
 
@@ -128,7 +128,7 @@ class TmdbTvDataRepositoryImpl(
     }
 
     private fun fetchFullTvInfo(key: TvShowKey.Tmdb): Flow<Result<TulipTvShowInfo.Tmdb>> {
-        logger.debug("Downloading full TV info of $key")
+        logger.debug { "Downloading full TV info of $key" }
         return getTvAsFlow(key)
             .flatMapLatest { it.fold({ tv -> pairTvWithSeasons(tv, key) }, { th -> flowOf(Result.failure(th)) }) }
     }
@@ -149,12 +149,12 @@ class TmdbTvDataRepositoryImpl(
     }
 
     override fun getTvShow(key: TvShowKey.Tmdb): Flow<NetworkResult<TulipTvShowInfo.Tmdb>> {
-        logger.debug("Retrieving $key")
+        logger.debug { "Retrieving $key" }
         return tvStore.stream(StoreRequest.cached(key, false)).toNetFlow()
     }
 
     override fun getMovie(key: MovieKey.Tmdb): Flow<NetworkResult<TulipMovie.Tmdb>> {
-        logger.debug("Retrieving $key")
+        logger.debug { "Retrieving $key" }
         return movieStore.stream(StoreRequest.cached(key, false)).toNetFlow()
     }
 

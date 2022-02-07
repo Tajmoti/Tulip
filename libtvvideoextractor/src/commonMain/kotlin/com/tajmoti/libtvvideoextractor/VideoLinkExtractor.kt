@@ -19,13 +19,13 @@ class VideoLinkExtractor(
      * Attempts to extract a direct video link from the provided [url].
      */
     suspend fun extractVideoLink(url: String, serviceName: String?): Either<ExtractionError, String> {
-        logger.debug("Extracting '$url'")
+        logger.debug { "Extracting '$url'" }
         val handler = getFirstUsableHandler(url)
             ?: serviceName?.let { getFirstUsableHandlerByName(serviceName) }
             ?: return ExtractionError.NoHandler.left()
         return withContext(LibraryDispatchers.libraryContext) {
             runCatching { handler.extractVideoUrl(url, rawSourceLoader, webDriverSourceLoader) }
-                .onFailure { logger.warn("Unable to extract $url", it) }
+                .onFailure { logger.warn { "Unable to extract $url" } }
                 .fold({ it }, { ExtractionError.Exception(it).left() })
         }
     }

@@ -31,7 +31,7 @@ class DownloadManagerVideoDownloadService @Inject constructor(
             .setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, savePath)
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
             .apply { @Suppress("DEPRECATION") allowScanningByMediaScanner() }
-        logger.debug("Downloading '{}' as {} to path '{}'", uri, info, savePath)
+        logger.debug { "Downloading '$uri' as $info to path '$savePath'" }
         return downloadManager.enqueue(request)
     }
 

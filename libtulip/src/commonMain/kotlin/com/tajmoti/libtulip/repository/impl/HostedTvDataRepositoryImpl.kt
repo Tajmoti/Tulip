@@ -63,13 +63,13 @@ class HostedTvDataRepositoryImpl(
 
 
     override fun search(query: String): Flow<Map<StreamingService, Result<List<SearchResult>>>> {
-        logger.debug("Searching '{}'", query)
+        logger.debug { "Searching '$query'" }
         return tvProvider.search(query)
             .onEach { it.onEach { (service, listResult) -> logExceptions(service, listResult) } }
     }
 
     override fun getTvShow(key: TvShowKey.Hosted): NetFlow<TulipTvShowInfo.Hosted> {
-        logger.debug("Retrieving $key")
+        logger.debug { "Retrieving $key" }
         return tvShowStore.stream(StoreRequest.cached(key, false)).toNetFlow()
     }
 
@@ -100,7 +100,7 @@ class HostedTvDataRepositoryImpl(
     }
 
     override fun getMovie(key: MovieKey.Hosted): Flow<NetworkResult<TulipMovie.Hosted>> {
-        logger.debug("Retrieving $key")
+        logger.debug { "Retrieving $key" }
         return movieStore.stream(StoreRequest.cached(key, false)).toNetFlow()
     }
 
@@ -120,11 +120,11 @@ class HostedTvDataRepositoryImpl(
 
     private fun logExceptions(service: StreamingService, result: Result<List<SearchResult>>) {
         val exception = result.exceptionOrNull() ?: return
-        logger.warn("{} failed with", service, exception)
+        logger.warn { "$service failed with $exception" }
     }
 
     override fun fetchStreams(key: StreamableKey.Hosted): NetFlow<List<VideoStreamRef>> {
-        logger.debug("Retrieving $key")
+        logger.debug { "Retrieving $key" }
         return streamsStore.stream(StoreRequest.cached(key, false)).toNetFlow()
     }
 }

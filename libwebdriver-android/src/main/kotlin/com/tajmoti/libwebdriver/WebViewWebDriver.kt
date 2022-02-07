@@ -49,7 +49,7 @@ class WebViewWebDriver(
                 mainHandler.post { submitOnce(wv, Result.success(html)) }
             },
             { wv, error ->
-                logger.warn("WebView returned error {}", error)
+                logger.warn { "WebView returned error $error" }
                 val throwable = Exception("Received error '$error'")
                 mainHandler.post { submitOnce(wv, Result.failure(throwable)) }
             })
@@ -179,7 +179,7 @@ class WebViewWebDriver(
 
         @JavascriptInterface
         fun logPrint(message: String) {
-            logger.debug(message)
+            logger.debug { message }
         }
     }
 

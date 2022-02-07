@@ -25,7 +25,7 @@ class MappingSearchServiceImpl(
             .mapWithContext(LibraryDispatchers.libraryContext) { resMap -> resMap.takeUnless { it.all { (_, v) -> v.isFailure } } }
             .mapNotNullsWithContext(LibraryDispatchers.libraryContext, this::mapWithTmdbIds)
             .onEachNotNull(this::persistTmdbMappings)
-            .onEachNull { logger.warn("No successful results!") }
+            .onEachNull { logger.warn { "No successful results!" } }
             .mapFold({ Result.success(it) }, { Result.failure(NoSuccessfulResultsException) })
     }
 

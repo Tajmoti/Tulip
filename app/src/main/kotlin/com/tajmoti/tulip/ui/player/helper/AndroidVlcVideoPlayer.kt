@@ -114,7 +114,7 @@ class AndroidVlcVideoPlayer(
 
     override fun onEvent(event: MediaPlayer.Event) {
         if (!event.isSpam)
-            logger.debug("VLC event ${event.format()}")
+            logger.debug { "VLC event ${event.format()}" }
         val newState = when (event.type) {
             MediaPlayer.Event.PositionChanged ->
                 MediaPlayerState.Playing(Position(event.positionChanged, player.time))
