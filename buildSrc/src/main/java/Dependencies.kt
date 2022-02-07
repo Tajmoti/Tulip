@@ -13,9 +13,11 @@ object Versions {
     private const val moshiAdapter = "2.9.0"
     private const val coroutinesVer = "1.6.0"
     private const val kotlinLoggingVer = "2.1.21"
+    private const val kotlinSerialization = "1.3.2"
 
     object Kotlin {
         const val coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer"
+        const val serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinSerialization"
     }
 
     object KotlinLogging {
