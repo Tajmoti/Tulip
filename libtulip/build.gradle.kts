@@ -27,6 +27,7 @@ kotlin {
 }
 
 fun KotlinDependencyHandler.mainDeps() {
+    implementation(project(":libwebdriver"))
     implementation(project(":commonutils"))
 
     with(Versions.Arrow) {
@@ -45,7 +46,6 @@ fun KotlinDependencyHandler.jvmDeps() {
     implementation(project(":libtvprovider-kinox"))
     implementation(project(":libtvprovider-primewire"))
     implementation(project(":libtvprovider-southpark"))
-    implementation(project(":libwebdriver"))
     implementation(project(":libtvvideoextractor"))
     implementation(project(":libtmdb"))
     implementation(project(":libopensubtitles"))
