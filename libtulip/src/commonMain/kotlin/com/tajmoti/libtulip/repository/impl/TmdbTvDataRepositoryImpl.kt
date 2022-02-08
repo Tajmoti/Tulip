@@ -96,21 +96,17 @@ class TmdbTvDataRepositoryImpl(
     }
 
     private suspend fun fetchSearchResultTv(name: String, firstAirDateYear: Int?): Result<TvShowKey.Tmdb?> {
-        return runCatching {
-            searchTv(name, firstAirDateYear)
-                .map { firstResultIdOrNull(it) }
-                .getOrNull()
-                ?.let { TvShowKey.Tmdb(it) }
-        }.onFailure { logger.warn { "Exception searching $name ($firstAirDateYear)" } }
+        return searchTv(name, firstAirDateYear)
+            .map { firstResultIdOrNull(it) }
+            .map { it?.let { TvShowKey.Tmdb(it) } }
+            .onFailure { logger.warn(it) { "Exception searching $name ($firstAirDateYear)" } }
     }
 
     private suspend fun fetchSearchResultMovie(name: String, firstAirDateYear: Int?): Result<MovieKey.Tmdb?> {
-        return runCatching {
-            searchMovie(name, firstAirDateYear)
-                .map { firstResultIdOrNull(it) }
-                .getOrNull()
-                ?.let { MovieKey.Tmdb(it) }
-        }.onFailure { logger.warn { "Exception searching $name ($firstAirDateYear)" } }
+        return searchMovie(name, firstAirDateYear)
+            .map { firstResultIdOrNull(it) }
+            .map { it?.let { MovieKey.Tmdb(it) } }
+            .onFailure { logger.warn(it) { "Exception searching $name ($firstAirDateYear)" } }
     }
 
 
