@@ -8,6 +8,7 @@ import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.createOpenSubtitlesFallbackRetrofit
 import com.tajmoti.libtulip.createOpenSubtitlesRetrofit
 import com.tajmoti.rektor.KtorRektor
+import com.tajmoti.rektor.LoggingRektor
 import dagger.Module
 import dagger.Provides
 import io.ktor.client.*
@@ -20,7 +21,8 @@ object ApiServiceModule {
     @Singleton
     fun provideTmdbService(config: TulipConfiguration, ktor: HttpClient): TmdbService {
         val queryParams = mapOf("api_key" to config.tmdbApiKey)
-        return RektorTmdbService(KtorRektor(ktor, "https://api.themoviedb.org/", queryParams))
+        val rektor = KtorRektor(ktor, "https://api.themoviedb.org/", queryParams)
+        return RektorTmdbService(LoggingRektor(rektor))
     }
 
     @Provides

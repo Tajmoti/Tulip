@@ -21,6 +21,9 @@ kotlin {
             with(Versions.Ktor) {
                 implementation(core)
             }
+            with(Versions.KotlinLogging) {
+                implementation(kotlinLogging)
+            }
         }
         sourceSets["commonTest"].dependencies {
             implementation(kotlin("test-common"))
