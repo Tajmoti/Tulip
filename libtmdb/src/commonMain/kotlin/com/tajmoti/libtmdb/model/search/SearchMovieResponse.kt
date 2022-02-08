@@ -1,9 +1,11 @@
 package com.tajmoti.libtmdb.model.search
 
-import com.squareup.moshi.Json
 import com.tajmoti.libtmdb.model.movie.Movie
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class SearchMovieResponse(
-    @field:Json(name = "results")
+    @SerialName("results")
     override val results: List<Movie>,
 ) : SearchResponse

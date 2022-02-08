@@ -2,7 +2,6 @@ package com.tajmoti.libtulip
 
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libopensubtitles.OpenSubtitlesKeyInterceptor
-import com.tajmoti.libtmdb.TmdbKeyInterceptor
 import com.tajmoti.libtulip.misc.net.UserAgentInterceptor
 import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
@@ -50,21 +49,6 @@ fun createAppOkHttpClient(
         builder.addInterceptor(logger)
     }
     return builder.build()
-}
-
-fun createTmdbRetrofit(tmdbApiKey: String, debug: Boolean = false): Retrofit {
-    val builder = OkHttpClient.Builder()
-        .addInterceptor(TmdbKeyInterceptor(tmdbApiKey))
-    if (debug) {
-        val logger = HttpLoggingInterceptor(interceptorLogger)
-            .also { it.level = HttpLoggingInterceptor.Level.BODY }
-        builder.addInterceptor(logger)
-    }
-    return Retrofit.Builder()
-        .client(builder.build())
-        .baseUrl("https://api.themoviedb.org/")
-        .addConverterFactory(MoshiConverterFactory.create())
-        .build()
 }
 
 fun createOpenSubtitlesRetrofit(openSubtitlesApiKey: String, debug: Boolean = false): Retrofit {

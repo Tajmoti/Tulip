@@ -1,18 +1,20 @@
 package com.tajmoti.libtmdb.model.movie
 
-import com.squareup.moshi.Json
 import com.tajmoti.libtmdb.model.FindResult
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Movie(
-    @field:Json(name = "id")
+    @SerialName("id")
     override val id: Long,
-    @field:Json(name = "title")
+    @SerialName("title")
     val title: String,
-    @field:Json(name = "overview")
+    @SerialName("overview")
     val overview: String?,
-    @field:Json(name = "poster_path")
+    @SerialName("poster_path")
     override val posterPath: String?,
-    @field:Json(name = "backdrop_path")
+    @SerialName("backdrop_path")
     override val backdropPath: String?
 ) : FindResult {
     override val name: String

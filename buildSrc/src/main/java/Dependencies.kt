@@ -26,6 +26,8 @@ object Versions {
 
     object Ktor {
         const val core = "io.ktor:ktor-client-core:$ktor"
+        const val json = "io.ktor:ktor-serialization-kotlinx-json:$ktor"
+        const val contentNegotiation = "io.ktor:ktor-client-content-negotiation:$ktor"
         const val clientJvm = "io.ktor:ktor-client-okhttp:$ktor"
         const val clientJs = "io.ktor:ktor-client-js:$ktor"
     }

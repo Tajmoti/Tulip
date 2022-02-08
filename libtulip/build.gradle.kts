@@ -27,10 +27,12 @@ kotlin {
 }
 
 fun KotlinDependencyHandler.mainDeps() {
+    implementation(project(":libtmdb"))
     implementation(project(":libtvprovider"))
     implementation(project(":libtvprovider-southpark"))
     implementation(project(":libtvvideoextractor"))
     implementation(project(":libwebdriver"))
+    implementation(project(":rektor"))
     implementation(project(":commonutils"))
 
     with(Versions.Arrow) {
@@ -41,13 +43,14 @@ fun KotlinDependencyHandler.mainDeps() {
     }
     with(Versions.Ktor) {
         implementation(core)
+        implementation(json)
+        implementation(contentNegotiation)
     }
 }
 
 fun KotlinDependencyHandler.jvmDeps() {
     implementation(project(":libtvprovider-kinox"))
     implementation(project(":libtvprovider-primewire"))
-    implementation(project(":libtmdb"))
     implementation(project(":libopensubtitles"))
 
     with(Versions.Ktor) {
