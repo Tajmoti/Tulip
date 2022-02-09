@@ -41,6 +41,7 @@ object Versions {
 
     object KotlinTestJUnit {
         const val testJunit = "org.jetbrains.kotlin:kotlin-test-junit:$kt"
+        const val testJs = "org.jetbrains.kotlin:kotlin-test-js:$kt"
     }
 
     object Store {

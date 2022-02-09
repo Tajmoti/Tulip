@@ -35,5 +35,10 @@ kotlin {
                 implementation(testJunit)
             }
         }
+        sourceSets["jsTest"].dependencies {
+            with(Versions.KotlinTestJUnit) {
+                implementation(testJs)
+            }
+        }
     }
 }
