@@ -11,13 +11,15 @@ interface Rektor {
     suspend fun <T : Any> execute(
         template: Template<T>,
         queryParams: Map<String, String> = emptyMap(),
-        placeholders: Map<String, String> = emptyMap()
-    ): T
+        placeholders: Map<String, String> = emptyMap(),
+        headers: Map<String, String> = emptyMap(),
+        requestBody: Any? = null
+    ): T {
+        return execute(Request<T>(template, queryParams, placeholders, headers, requestBody))
+    }
 
     /**
      * Performs an HTTP request described by [request].
      */
-    suspend fun <T : Any> execute(request: Request<T>): T {
-        return execute(request.template, request.queryParams, request.placeholders)
-    }
+    suspend fun <T : Any> execute(request: Request<T>): T
 }

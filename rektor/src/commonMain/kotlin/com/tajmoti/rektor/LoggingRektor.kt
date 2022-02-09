@@ -5,11 +5,8 @@ import mu.KotlinLogging
 class LoggingRektor(val impl: Rektor) : Rektor by impl {
     private val logger = KotlinLogging.logger {}
 
-    override suspend fun <T : Any> execute(
-        template: Template<T>,
-        queryParams: Map<String, String>,
-        placeholders: Map<String, String>
-    ): T {
+    override suspend fun <T : Any> execute(request: Request<T>): T {
+        val (template, queryParams, placeholders) = request
         val url = template.url
         val requestLogLine = ">>> ${template.method} $url $queryParams"
         try {

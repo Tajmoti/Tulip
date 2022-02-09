@@ -1,12 +1,9 @@
 package com.tajmoti.libtulip
 
 import com.tajmoti.commonutils.logger
-import com.tajmoti.libopensubtitles.OpenSubtitlesKeyInterceptor
 import com.tajmoti.libtulip.misc.net.UserAgentInterceptor
 import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -49,39 +46,6 @@ fun createAppOkHttpClient(
         builder.addInterceptor(logger)
     }
     return builder.build()
-}
-
-fun createOpenSubtitlesRetrofit(openSubtitlesApiKey: String, debug: Boolean = false): Retrofit {
-    val builder = OkHttpClient.Builder()
-        .addInterceptor(OpenSubtitlesKeyInterceptor(openSubtitlesApiKey))
-    if (debug) {
-        val logger = HttpLoggingInterceptor(interceptorLogger)
-            .also { it.level = HttpLoggingInterceptor.Level.BODY }
-        builder.addInterceptor(logger)
-    }
-    return Retrofit.Builder()
-        .client(builder.build())
-        .baseUrl("https://api.opensubtitles.com/")
-        .addConverterFactory(MoshiConverterFactory.create())
-        .build()
-}
-
-fun createOpenSubtitlesFallbackRetrofit(
-    openSubtitlesApiKey: String,
-    debug: Boolean = false,
-): Retrofit {
-    val builder = OkHttpClient.Builder()
-        .addInterceptor(OpenSubtitlesKeyInterceptor(openSubtitlesApiKey))
-    if (debug) {
-        val logger = HttpLoggingInterceptor(interceptorLogger)
-            .also { it.level = HttpLoggingInterceptor.Level.BODY }
-        builder.addInterceptor(logger)
-    }
-    return Retrofit.Builder()
-        .client(builder.build())
-        .baseUrl("https://www.opensubtitles.org/")
-        .addConverterFactory(MoshiConverterFactory.create())
-        .build()
 }
 
 private fun makeCacheInterceptor(chain: Interceptor.Chain, hasNetwork: () -> Boolean): Response {

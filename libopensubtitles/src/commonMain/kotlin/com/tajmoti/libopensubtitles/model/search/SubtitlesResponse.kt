@@ -1,8 +1,10 @@
 package com.tajmoti.libopensubtitles.model.search
 
-import com.squareup.moshi.Json
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class SubtitlesResponse(
-    @field:Json(name = "data")
+    @SerialName("data")
     val data: List<SubtitlesResponseData>
 )

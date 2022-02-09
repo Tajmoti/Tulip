@@ -27,6 +27,7 @@ kotlin {
 }
 
 fun KotlinDependencyHandler.mainDeps() {
+    implementation(project(":libopensubtitles"))
     implementation(project(":libtmdb"))
     implementation(project(":libtvprovider"))
     implementation(project(":libtvprovider-southpark"))
@@ -51,7 +52,6 @@ fun KotlinDependencyHandler.mainDeps() {
 fun KotlinDependencyHandler.jvmDeps() {
     implementation(project(":libtvprovider-kinox"))
     implementation(project(":libtvprovider-primewire"))
-    implementation(project(":libopensubtitles"))
 
     with(Versions.Ktor) {
         implementation(clientJvm)

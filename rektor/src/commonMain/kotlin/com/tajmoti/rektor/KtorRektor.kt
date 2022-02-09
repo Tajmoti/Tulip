@@ -12,25 +12,25 @@ class KtorRektor(
     private val extraQueryParams: Map<String, String> = emptyMap()
 ) : Rektor {
 
-    override suspend fun <T : Any> execute(
-        template: Template<T>,
-        queryParams: Map<String, String>,
-        placeholders: Map<String, String>,
-    ): T {
-        val fullUrl = buildUrl(template, placeholders)
+    override suspend fun <T : Any> execute(request: Request<T>): T {
+        val fullUrl = buildUrl(request)
+        val template = request.template
         val typeInfo = TypeInfo(template.clazz, template.type.platformType, template.type)
-        return doRequest(fullUrl, queryParams).body(typeInfo)
+        return doRequest(fullUrl, request).body(typeInfo)
     }
 
-    private suspend fun doRequest(url: String, queryParams: Map<String, String>): HttpResponse {
+    private suspend fun doRequest(url: String, request: Request<*>): HttpResponse {
+        val (_, queryParams, _, headers, body) = request
         return client.get(url) {
             queryParams.forEach { (key, value) -> this.url.parameters[key] = value }
             extraQueryParams.forEach { (key, value) -> this.url.parameters[key] = value }
+            headers.forEach { (key, value) -> this.headers[key] = value }
+            body?.let(::setBody)
         }
     }
 
-    private fun <T : Any> buildUrl(template: Template<T>, urlPlaceholders: Map<String, String>): String {
-        val finalPath = Templater.buildUrl(template.url, urlPlaceholders)
+    private fun <T : Any> buildUrl(request: Request<T>): String {
+        val finalPath = Templater.buildUrl(request.template.url, request.placeholders)
         return baseUrl + finalPath
     }
 }

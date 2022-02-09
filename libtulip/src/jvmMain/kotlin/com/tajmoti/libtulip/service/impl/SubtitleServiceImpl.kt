@@ -5,6 +5,7 @@ import com.tajmoti.commonutils.logger
 import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.service.SubtitleService
+import io.ktor.utils.io.jvm.javaio.*
 import java.io.File
 import java.io.InputStream
 import java.util.zip.ZipEntry
@@ -39,7 +40,7 @@ class SubtitleServiceImpl(
 //            .mapWithContext(LibraryDispatchers.libraryContext) { it.byteStream() }
         logger.debug { "Downloading subtitles by $info" }
         return runCatching { openSubtitlesFallbackService.downloadSubtitlesFallback(info.legacyId) }
-            .map { ZipInputStream(it.byteStream()) }
+            .map { ZipInputStream(it.toInputStream()) }
             .flatMap { getSubtitleFileFromZip(it) }
     }
 

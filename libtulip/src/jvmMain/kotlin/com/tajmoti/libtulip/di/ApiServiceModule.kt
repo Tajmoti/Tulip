@@ -2,11 +2,11 @@ package com.tajmoti.libtulip.di
 
 import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libopensubtitles.OpenSubtitlesService
+import com.tajmoti.libopensubtitles.RektorOpenSubtitlesFallbackService
+import com.tajmoti.libopensubtitles.RektorOpenSubtitlesService
 import com.tajmoti.libtmdb.RektorTmdbService
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtulip.TulipConfiguration
-import com.tajmoti.libtulip.createOpenSubtitlesFallbackRetrofit
-import com.tajmoti.libtulip.createOpenSubtitlesRetrofit
 import com.tajmoti.rektor.KtorRektor
 import com.tajmoti.rektor.LoggingRektor
 import dagger.Module
@@ -27,15 +27,17 @@ object ApiServiceModule {
 
     @Provides
     @Singleton
-    fun provideOpenSubtitlesService(config: TulipConfiguration): OpenSubtitlesService {
-        return createOpenSubtitlesRetrofit(config.openSubtitlesApiKey, config.httpDebug)
-            .create(OpenSubtitlesService::class.java)
+    fun provideOpenSubtitlesService(config: TulipConfiguration, ktor: HttpClient): OpenSubtitlesService {
+        val queryParams = mapOf("Api-Key" to config.openSubtitlesApiKey)
+        val rektor = KtorRektor(ktor, "https://api.opensubtitles.com/", queryParams)
+        return RektorOpenSubtitlesService(LoggingRektor(rektor))
     }
 
     @Provides
     @Singleton
-    fun provideOpenSubtitlesFallbackService(config: TulipConfiguration): OpenSubtitlesFallbackService {
-        return createOpenSubtitlesFallbackRetrofit(config.openSubtitlesApiKey, config.httpDebug)
-            .create(OpenSubtitlesFallbackService::class.java)
+    fun provideOpenSubtitlesFallbackService(config: TulipConfiguration, ktor: HttpClient): OpenSubtitlesFallbackService {
+        val queryParams = mapOf("Api-Key" to config.openSubtitlesApiKey)
+        val rektor = KtorRektor(ktor, "https://www.opensubtitles.org/", queryParams)
+        return RektorOpenSubtitlesFallbackService(LoggingRektor(rektor))
     }
 }
