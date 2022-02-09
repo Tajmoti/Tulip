@@ -9,7 +9,7 @@ internal class TemplaterTest {
 
 
     @Test
-    fun `buildUrl() replaces placeholders`() {
+    fun buildUrl_replaces_placeholders() {
         assertEquals("ABC", builder.buildUrl("{cawko}", mapOf("cawko" to "ABC")))
         assertEquals("/root/ABC/", builder.buildUrl("/root/{cawko}/", mapOf("cawko" to "ABC")))
         assertEquals("/ABC/", builder.buildUrl("/{cawko}/", mapOf("cawko" to "ABC")))
@@ -18,12 +18,12 @@ internal class TemplaterTest {
     }
 
     @Test
-    fun `buildUrl() throws on empty placeholder`() {
+    fun `buildUrl_throws_on_empty_placeholder`() {
         assertFailsWith(IllegalArgumentException::class) { builder.buildUrl("{}", emptyMap()) }
     }
 
     @Test
-    fun `buildUrl() fails on missing value`() {
+    fun `buildUrl_fails_on_missing_value`() {
         assertFailsWith(IllegalArgumentException::class) { builder.buildUrl("{caw}", emptyMap()) }
     }
 }
