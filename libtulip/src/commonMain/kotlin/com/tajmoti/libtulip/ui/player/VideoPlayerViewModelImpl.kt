@@ -1,6 +1,5 @@
 package com.tajmoti.libtulip.ui.player
 
-import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtulip.model.info.StreamableInfo
@@ -16,7 +15,6 @@ import com.tajmoti.libtulip.service.StreamExtractionService
 import com.tajmoti.libtulip.service.StreamService
 import com.tajmoti.libtulip.service.SubtitleService
 import com.tajmoti.libtulip.service.VideoDownloadService
-import com.tajmoti.libtulip.ui.logAllFlowValues
 import com.tajmoti.libtulip.ui.streams.FailedLink
 import com.tajmoti.libtulip.ui.streams.LoadedLink
 import com.tajmoti.libtulip.ui.streams.SelectedLink
@@ -310,19 +308,6 @@ class VideoPlayerViewModelImpl constructor(
     init {
         startPersistPlayingPosition()
         startRestorePlayingPosition()
-        if (logger.isDebugEnabled) {
-            logAllFlowValues(
-                this,
-                viewModelScope,
-                logger,
-                listOf(
-                    this::position,
-                    this::progress,
-                    this::mediaPlayerState,
-                    this::persistedPlayingProgress
-                )
-            )
-        }
     }
 
     override fun goToNextEpisode() {

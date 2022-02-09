@@ -1,6 +1,7 @@
 package com.tajmoti.libtulip.ui.player
 
 import com.tajmoti.libtulip.model.info.*
+import kotlin.jvm.JvmStatic
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes

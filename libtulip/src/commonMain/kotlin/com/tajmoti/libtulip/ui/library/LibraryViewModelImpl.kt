@@ -26,8 +26,8 @@ class LibraryViewModelImpl constructor(
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     private fun mapFavorites(favorites: List<ItemKey>): Flow<List<LibraryItem>> {
-        val tmdbFavorites = favorites.filterIsInstance(ItemKey.Tmdb::class.java)
-        val hostedFavorites = favorites.filterIsInstance(ItemKey.Hosted::class.java)
+        val tmdbFavorites = favorites.filterIsInstance<ItemKey.Tmdb>()
+        val hostedFavorites = favorites.filterIsInstance<ItemKey.Hosted>()
         val a = getTmdbFavorites(tmdbFavorites)
         val b = getHostedFavorites(hostedFavorites)
         return merge(a, b).onEmpty { emit(emptyList()) }
