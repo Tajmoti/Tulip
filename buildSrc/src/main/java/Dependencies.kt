@@ -10,7 +10,6 @@ object Versions {
     private const val slf4jSimple = "1.7.32"
     private const val okHttpLogger = "4.9.3"
     private const val dagger = "2.40.5"
-    private const val moshiAdapter = "2.9.0"
     private const val coroutinesVer = "1.6.0"
     private const val kotlinLoggingVer = "2.1.21"
     private const val kotlinSerialization = "1.3.2"
@@ -34,7 +33,6 @@ object Versions {
 
     object OkHttp {
         const val loggingInterceptor = "com.squareup.okhttp3:logging-interceptor:$okHttpLogger"
-        const val moshi = "com.squareup.retrofit2:converter-moshi:$moshiAdapter"
     }
 
     object Arrow {

@@ -58,7 +58,6 @@ fun KotlinDependencyHandler.jvmDeps() {
     }
     with(Versions.OkHttp) {
         implementation(loggingInterceptor)
-        implementation(moshi)
     }
     with(Versions.Store) {
         implementation(storeJvm)
