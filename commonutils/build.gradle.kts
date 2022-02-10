@@ -24,7 +24,7 @@ kotlin {
 
 fun KotlinDependencyHandler.mainDeps() {
     with(Versions.Kotlin) {
-        implementation(coroutines)
+        implementation(coroutinesCore)
     }
     with(Versions.KotlinLogging) {
         api(kotlinLogging)

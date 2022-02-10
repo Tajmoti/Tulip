@@ -13,10 +13,16 @@ object Versions {
     private const val coroutinesVer = "1.6.0"
     private const val kotlinLoggingVer = "2.1.21"
     private const val kotlinSerialization = "1.3.2"
+    private const val kotlin = "1.6.20-M1"
+    private const val jsoup = "1.14.3"
+
 
     object Kotlin {
-        const val coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer"
-        const val serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinSerialization"
+        const val plugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin"
+        const val coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVer"
+        const val coroutinesAndroid = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVer"
+        const val serializationJson = "org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinSerialization"
+        const val serializationPlugin = "org.jetbrains.kotlin:kotlin-serialization:$kotlin"
     }
 
     object KotlinLogging {
@@ -29,6 +35,7 @@ object Versions {
         const val contentNegotiation = "io.ktor:ktor-client-content-negotiation:$ktor"
         const val clientJvm = "io.ktor:ktor-client-okhttp:$ktor"
         const val clientJs = "io.ktor:ktor-client-js:$ktor"
+        const val clientOkhttp = "io.ktor:ktor-client-okhttp:$ktor"
     }
 
     object OkHttp {
@@ -60,5 +67,71 @@ object Versions {
     object JvmDi {
         const val inject = "javax.inject:javax.inject:1"
         const val daggerCore = "com.google.dagger:dagger:$dagger"
+    }
+
+    object Jsoup {
+        const val core = "org.jsoup:jsoup:$jsoup"
+    }
+
+    object Android {
+        private const val nav = "2.4.0"
+        private const val hilt = "2.40.5"
+        private const val hiltNavigationFragmentVer = "1.0.0"
+        private const val gradleSecrets = "2.0.0"
+        private const val room = "2.4.1"
+        private const val legacySupportVer = "1.0.0"
+        private const val groupieVer = "2.9.0"
+        private const val constraintLayout = "2.1.3"
+        private const val lifecycle = "2.4.0"
+        private const val androidxCore = "1.7.0"
+        private const val appCompatVer = "1.4.1"
+        private const val materialCoreVer = "1.5.0"
+
+
+        object Core {
+            val coreKtx = "androidx.core:core-ktx:$androidxCore"
+        }
+        object AppCompat {
+            val appCompat = "androidx.appcompat:appcompat:$appCompatVer"
+        }
+        object Material {
+            val materialCore = "com.google.android.material:material:$materialCoreVer"
+        }
+        object Hilt {
+            val plugin = "com.google.dagger:hilt-android-gradle-plugin:$hilt"
+            val hiltAndroid = "com.google.dagger:hilt-android:$hilt"
+            val hiltAndroidCompiler = "com.google.dagger:hilt-android-compiler:$hilt"
+            val hiltNavigationFragment = "androidx.hilt:hilt-navigation-fragment:$hiltNavigationFragmentVer"
+        }
+        object Nav {
+            val safeArgsPlugin = "androidx.navigation:navigation-safe-args-gradle-plugin:$nav"
+            val fragmentKtx = "androidx.navigation:navigation-fragment-ktx:$nav"
+            val uiKtx = "androidx.navigation:navigation-ui-ktx:$nav"
+            val dynamicFeaturesFragment = "androidx.navigation:navigation-dynamic-features-fragment:$nav"
+        }
+        object Room {
+            val roomRuntime = "androidx.room:room-runtime:$room"
+            val roomKtx = "androidx.room:room-ktx:$room"
+            val roomCompiler = "androidx.room:room-compiler:$room"
+        }
+        object Support {
+            val legacySupport = "androidx.legacy:legacy-support-v4:$legacySupportVer"
+        }
+        object Lifecycle {
+            val livedataKtx = "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle"
+            val viewmodelKtx = "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle"
+            val runtimeKtx = "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle"
+        }
+        object ConstraintLayout {
+            val core = "androidx.constraintlayout:constraintlayout:$constraintLayout"
+        }
+        object Groupie {
+            val groupie = "com.github.lisawray.groupie:groupie:$groupieVer"
+            val groupieViewbinding = "com.github.lisawray.groupie:groupie-viewbinding:$groupieVer"
+            val groupieDatabinding = "com.github.lisawray.groupie:groupie-databinding:$groupieVer"
+        }
+        object GradleSecrets {
+            val plugin = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:$gradleSecrets"
+        }
     }
 }

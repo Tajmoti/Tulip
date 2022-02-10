@@ -27,7 +27,7 @@ fun KotlinDependencyHandler.mainDeps() {
     implementation(project(":rektor"))
 
     with(Versions.Kotlin) {
-        implementation(coroutines)
-        implementation(serialization)
+        implementation(coroutinesCore)
+        implementation(serializationJson)
     }
 }

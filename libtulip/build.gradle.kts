@@ -10,6 +10,13 @@ java {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        jvmTarget = "11"
+        freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+    }
+}
+
 kotlin {
     jvm {
         compilations.all { kotlinOptions.jvmTarget = "11" }
@@ -40,7 +47,7 @@ fun KotlinDependencyHandler.mainDeps() {
         implementation(core)
     }
     with(Versions.Kotlin) {
-        implementation(coroutines)
+        implementation(coroutinesCore)
     }
     with(Versions.Ktor) {
         implementation(core)

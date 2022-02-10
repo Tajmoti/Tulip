@@ -26,6 +26,6 @@ fun KotlinDependencyHandler.mainDeps() {
     implementation(project(":commonutils"))
 
     with(Versions.Kotlin) {
-        implementation(coroutines)
+        implementation(coroutinesCore)
     }
 }

@@ -30,7 +30,7 @@ fun KotlinDependencyHandler.mainDeps() {
         implementation(core)
     }
     with(Versions.Kotlin) {
-        implementation(coroutines)
-        implementation(serialization)
+        implementation(coroutinesCore)
+        implementation(serializationJson)
     }
 }

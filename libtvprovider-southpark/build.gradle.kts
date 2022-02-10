@@ -28,7 +28,7 @@ fun KotlinDependencyHandler.mainDeps() {
     implementation(project(":commonutils"))
 
     with(Versions.Kotlin) {
-        implementation(coroutines)
-        implementation(serialization)
+        implementation(coroutinesCore)
+        implementation(serializationJson)
     }
 }
