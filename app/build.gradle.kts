@@ -33,6 +33,13 @@ android {
         debug {
             buildConfigField("boolean", "HTTP_DEBUG", "$HTTP_DEBUG")
         }
+        forEach { buildType ->
+            buildType.javaCompileOptions {
+                annotationProcessorOptions {
+                    argument("room.schemaLocation", "$projectDir/schemas")
+                }
+            }
+        }
     }
 
     splits {
