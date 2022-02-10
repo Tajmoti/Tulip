@@ -84,7 +84,7 @@ interface UserDataDataSource {
     suspend fun setLastPlayedPosition(key: StreamableKey, progress: Float)
 
     /**
-     * Removes the last playing progress for [item].
+     * Removes the last playing progress for [key].
      */
-    suspend fun removeLastPlayedPosition(item: StreamableKey)
+    suspend fun removeLastPlayedPosition(key: StreamableKey)
 }

@@ -13,7 +13,6 @@ java {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
         jvmTarget = "11"
-        freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
     }
 }
 
@@ -26,6 +25,7 @@ kotlin {
         browser()
     }
     sourceSets {
+        all { languageSettings.optIn("kotlin.RequiresOptIn") }
         sourceSets["commonMain"].dependencies { mainDeps() }
         sourceSets["jvmMain"].dependencies { jvmDeps() }
         sourceSets["jsMain"].dependencies { jsDeps() }
@@ -72,7 +72,7 @@ fun KotlinDependencyHandler.jvmDeps() {
     with(Versions.JvmDi) {
         implementation(inject)
         implementation(daggerCore)
-        configurations["kapt"].dependencies.add(project.dependencies.create("com.google.dagger:dagger-compiler:2.40.5"))
+        configurations["kapt"].dependencies.add(project.dependencies.create(daggerCompiler))
     }
 }
 

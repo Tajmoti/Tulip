@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
-@ExperimentalCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
 class AndroidHostedInfoDataSource @Inject constructor(
     private val tvShowDao: TvShowDao,
     private val seasonDao: SeasonDao,

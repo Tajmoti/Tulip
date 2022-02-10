@@ -47,6 +47,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
         consume(viewModel.status, this::setStatusView)
     }
 
+    @Suppress("DEPRECATION")
     private fun fixLayoutCentering() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
             ViewCompat.onApplyWindowInsets(

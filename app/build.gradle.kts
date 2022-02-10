@@ -99,7 +99,7 @@ dependencies {
     }
     with(Versions.Android.Lifecycle) {
         implementation(livedataKtx)
-        implementation(viewmodelKtx)
+        implementation(viewModelKtx)
         implementation(runtimeKtx)
     }
     with(Versions.Android.Nav) {
@@ -126,8 +126,8 @@ dependencies {
 
     with(Versions.Android.Groupie) {
         implementation(groupie)
-        implementation(groupieViewbinding)
-        implementation(groupieDatabinding)
+        implementation(groupieViewBinding)
+        implementation(groupieDataBinding)
     }
 
     with(Versions.Ktor) {

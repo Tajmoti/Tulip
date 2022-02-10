@@ -1,3 +1,4 @@
+@file:Suppress("DEPRECATION")
 package com.tajmoti.tulip.di
 
 import android.content.Context

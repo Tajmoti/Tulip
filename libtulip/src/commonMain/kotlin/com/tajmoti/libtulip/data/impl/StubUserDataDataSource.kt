@@ -44,7 +44,7 @@ class StubUserDataDataSource : UserDataDataSource {
 
     }
 
-    override suspend fun removeLastPlayedPosition(item: StreamableKey) {
+    override suspend fun removeLastPlayedPosition(key: StreamableKey) {
 
     }
 }

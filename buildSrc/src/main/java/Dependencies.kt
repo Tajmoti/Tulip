@@ -67,6 +67,7 @@ object Versions {
     object JvmDi {
         const val inject = "javax.inject:javax.inject:1"
         const val daggerCore = "com.google.dagger:dagger:$dagger"
+        const val daggerCompiler = "com.google.dagger:dagger-compiler:$dagger"
     }
 
     object Jsoup {
@@ -89,49 +90,49 @@ object Versions {
 
 
         object Core {
-            val coreKtx = "androidx.core:core-ktx:$androidxCore"
+            const val coreKtx = "androidx.core:core-ktx:$androidxCore"
         }
         object AppCompat {
-            val appCompat = "androidx.appcompat:appcompat:$appCompatVer"
+            const val appCompat = "androidx.appcompat:appcompat:$appCompatVer"
         }
         object Material {
-            val materialCore = "com.google.android.material:material:$materialCoreVer"
+            const val materialCore = "com.google.android.material:material:$materialCoreVer"
         }
         object Hilt {
-            val plugin = "com.google.dagger:hilt-android-gradle-plugin:$hilt"
-            val hiltAndroid = "com.google.dagger:hilt-android:$hilt"
-            val hiltAndroidCompiler = "com.google.dagger:hilt-android-compiler:$hilt"
-            val hiltNavigationFragment = "androidx.hilt:hilt-navigation-fragment:$hiltNavigationFragmentVer"
+            const val plugin = "com.google.dagger:hilt-android-gradle-plugin:$hilt"
+            const val hiltAndroid = "com.google.dagger:hilt-android:$hilt"
+            const val hiltAndroidCompiler = "com.google.dagger:hilt-android-compiler:$hilt"
+            const val hiltNavigationFragment = "androidx.hilt:hilt-navigation-fragment:$hiltNavigationFragmentVer"
         }
         object Nav {
-            val safeArgsPlugin = "androidx.navigation:navigation-safe-args-gradle-plugin:$nav"
-            val fragmentKtx = "androidx.navigation:navigation-fragment-ktx:$nav"
-            val uiKtx = "androidx.navigation:navigation-ui-ktx:$nav"
-            val dynamicFeaturesFragment = "androidx.navigation:navigation-dynamic-features-fragment:$nav"
+            const val safeArgsPlugin = "androidx.navigation:navigation-safe-args-gradle-plugin:$nav"
+            const val fragmentKtx = "androidx.navigation:navigation-fragment-ktx:$nav"
+            const val uiKtx = "androidx.navigation:navigation-ui-ktx:$nav"
+            const val dynamicFeaturesFragment = "androidx.navigation:navigation-dynamic-features-fragment:$nav"
         }
         object Room {
-            val roomRuntime = "androidx.room:room-runtime:$room"
-            val roomKtx = "androidx.room:room-ktx:$room"
-            val roomCompiler = "androidx.room:room-compiler:$room"
+            const val roomRuntime = "androidx.room:room-runtime:$room"
+            const val roomKtx = "androidx.room:room-ktx:$room"
+            const val roomCompiler = "androidx.room:room-compiler:$room"
         }
         object Support {
-            val legacySupport = "androidx.legacy:legacy-support-v4:$legacySupportVer"
+            const val legacySupport = "androidx.legacy:legacy-support-v4:$legacySupportVer"
         }
         object Lifecycle {
-            val livedataKtx = "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle"
-            val viewmodelKtx = "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle"
-            val runtimeKtx = "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle"
+            const val livedataKtx = "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle"
+            const val viewModelKtx = "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle"
+            const val runtimeKtx = "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle"
         }
         object ConstraintLayout {
-            val core = "androidx.constraintlayout:constraintlayout:$constraintLayout"
+            const val core = "androidx.constraintlayout:constraintlayout:$constraintLayout"
         }
         object Groupie {
-            val groupie = "com.github.lisawray.groupie:groupie:$groupieVer"
-            val groupieViewbinding = "com.github.lisawray.groupie:groupie-viewbinding:$groupieVer"
-            val groupieDatabinding = "com.github.lisawray.groupie:groupie-databinding:$groupieVer"
+            const val groupie = "com.github.lisawray.groupie:groupie:$groupieVer"
+            const val groupieViewBinding = "com.github.lisawray.groupie:groupie-viewbinding:$groupieVer"
+            const val groupieDataBinding = "com.github.lisawray.groupie:groupie-databinding:$groupieVer"
         }
         object GradleSecrets {
-            val plugin = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:$gradleSecrets"
+            const val plugin = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:$gradleSecrets"
         }
     }
 }

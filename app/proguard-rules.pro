@@ -1,3 +1,7 @@
 -keep class com.tajmoti.** {*;}
 -keep class org.videolan.libvlc.** {*;}
 -keep class ch.qos.logback.** {*;}
+-dontwarn javax.mail.**
+-dontwarn org.bouncycastle.jsse.**
+-dontwarn org.conscrypt.**
+-dontwarn org.openjsse.**

@@ -4,9 +4,8 @@ import com.tajmoti.libtvprovider.model.TvItemInfo
 import org.jsoup.nodes.Document
 
 
-fun parseTvItemInfo(key: String, document: Document): TvItemInfo {
-    val name =
-        document.selectFirst("div.leftOpt:nth-child(3) > h1:nth-child(1) > span:nth-child(1)")!!
+fun parseTvItemInfo(@Suppress("UNUSED_PARAMETER") key: String, document: Document): TvItemInfo {
+    val name = document.selectFirst("div.leftOpt:nth-child(3) > h1:nth-child(1) > span:nth-child(1)")!!
             .ownText()
     val yearStr = document.selectFirst(".Year")!!
         .ownText()

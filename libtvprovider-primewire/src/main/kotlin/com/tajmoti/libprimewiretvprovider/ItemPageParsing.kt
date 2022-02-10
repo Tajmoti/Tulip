@@ -4,7 +4,7 @@ import com.tajmoti.libtvprovider.model.TvItemInfo
 import org.jsoup.nodes.Document
 
 
-fun parseTvItemInfo(key: String, page: Document): TvItemInfo {
+fun parseTvItemInfo(@Suppress("UNUSED_PARAMETER") key: String, page: Document): TvItemInfo {
     val title =
         page.selectFirst(".stage_navigation > h1:nth-child(1) > span:nth-child(1) > a:nth-child(1)")!!
             .attr("title")

@@ -6,7 +6,7 @@ import com.dropbox.android.external.store4.StoreResponse
 import com.tajmoti.libtulip.TulipConfiguration
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
-import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.ExperimentalTime
 
 
@@ -18,7 +18,7 @@ fun <T : Any> Result<T>.toFetcherResult(): FetcherResult<T> {
 fun <K : Any, V : Any> createCache(params: TulipConfiguration.CacheParameters): MemoryPolicy<K, V> {
     return MemoryPolicy.builder<K, V>()
         .setMaxSize(params.size.toLong())
-        .setExpireAfterWrite(Duration.milliseconds(params.validityMs))
+        .setExpireAfterWrite(params.validityMs.milliseconds)
         .build()
 }
 
