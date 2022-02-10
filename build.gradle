@@ -10,7 +10,7 @@ buildscript {
         slf4j_version = "1.7.32"
         ktor_version = "1.6.7"
         retrofit_version = "2.9.0"
-        nav_version = "2.4.0-rc01"
+        nav_version = "2.4.0"
     }
     repositories {
         google()
