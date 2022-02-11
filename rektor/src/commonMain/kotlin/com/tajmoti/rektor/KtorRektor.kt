@@ -25,7 +25,7 @@ class KtorRektor(
             queryParams.forEach { (key, value) -> this.url.parameters[key] = value }
             extraQueryParams.forEach { (key, value) -> this.url.parameters[key] = value }
             headers.forEach { (key, value) -> this.headers[key] = value }
-            body?.let(::setBody)
+            body?.let { setBody(body) }
         }
     }
 
