@@ -1,4 +1,4 @@
-package com.tajmoti.libtulip.di
+package com.tajmoti.libtulip.di.impl
 
 import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libopensubtitles.OpenSubtitlesService
@@ -7,76 +7,60 @@ import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.HostedInfoDataSource
 import com.tajmoti.libtulip.data.LocalTvDataSource
 import com.tajmoti.libtulip.data.UserDataDataSource
-import com.tajmoti.libtulip.di.impl.DataRepositoryModuleImpl
+import com.tajmoti.libtulip.di.IDataRepositoryModule
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.repository.*
+import com.tajmoti.libtulip.repository.impl.*
 import com.tajmoti.libtulip.service.StreamExtractionService
+import com.tajmoti.libtulip.service.impl.StreamExtractionServiceImpl
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
-import dagger.Module
-import dagger.Provides
 import io.ktor.client.*
-import javax.inject.Singleton
 
-@Module
-object DataRepositoryModule : IDataRepositoryModule {
+object DataRepositoryModuleImpl : IDataRepositoryModule {
 
-    @Provides
-    @Singleton
     override fun bindHostedTvDataRepository(
         hostedTvDataRepo: HostedInfoDataSource,
         tvProvider: MultiTvProvider<StreamingService>,
         tmdbRepo: TmdbTvDataRepository,
         config: TulipConfiguration
     ): HostedTvDataRepository {
-        return DataRepositoryModuleImpl.bindHostedTvDataRepository(hostedTvDataRepo, tvProvider, tmdbRepo, config)
+        return HostedTvDataRepositoryImpl(hostedTvDataRepo, tvProvider, tmdbRepo, config)
     }
 
-    @Provides
-    @Singleton
     override fun provideItemMappingRepository(
         hostedTvDataRepo: HostedInfoDataSource
     ): ItemMappingRepository {
-        return DataRepositoryModuleImpl.provideItemMappingRepository(hostedTvDataRepo)
+        return ItemMappingRepositoryImpl(hostedTvDataRepo)
     }
 
-    @Provides
-    @Singleton
     override fun provideStreamsRepository(
         linkExtractor: VideoLinkExtractor,
         httpClient: HttpClient
     ): StreamExtractionService {
-        return DataRepositoryModuleImpl.provideStreamsRepository(linkExtractor, httpClient)
+        return StreamExtractionServiceImpl(linkExtractor, httpClient)
     }
 
-    @Provides
-    @Singleton
     override fun provideTmdbTvDataRepository(
         service: TmdbService,
         db: LocalTvDataSource,
         config: TulipConfiguration
     ): TmdbTvDataRepository {
-        return DataRepositoryModuleImpl.provideTmdbTvDataRepository(service, db, config)
+        return TmdbTvDataRepositoryImpl(service, db, config.tmdbCacheParams)
     }
 
-    @Provides
-    @Singleton
     override fun provideFavoritesRepository(repo: UserDataDataSource): FavoritesRepository {
-        return DataRepositoryModuleImpl.provideFavoritesRepository(repo)
+        return FavoriteRepositoryImpl(repo)
     }
 
-    @Provides
-    @Singleton
     override fun provideSubtitleRepository(
         openSubtitlesService: OpenSubtitlesService,
         openSubtitlesFallbackService: OpenSubtitlesFallbackService,
     ): SubtitleRepository {
-        return DataRepositoryModuleImpl.provideSubtitleRepository(openSubtitlesService, openSubtitlesFallbackService)
+        return SubtitleRepositoryImpl(openSubtitlesService, openSubtitlesFallbackService)
     }
 
-    @Provides
-    @Singleton
     override fun providePlayingHistoryRepository(dataSource: UserDataDataSource): PlayingHistoryRepository {
-        return DataRepositoryModuleImpl.providePlayingHistoryRepository(dataSource)
+        return PlayingHistoryRepositoryImpl(dataSource)
     }
 }

@@ -15,6 +15,7 @@ object Versions {
     private const val kotlinSerialization = "1.3.2"
     private const val kotlin = "1.6.20-M1"
     private const val jsoup = "1.14.3"
+    private const val koin = "3.1.5"
 
 
     object Kotlin {
@@ -36,6 +37,11 @@ object Versions {
         const val clientJvm = "io.ktor:ktor-client-okhttp:$ktor"
         const val clientJs = "io.ktor:ktor-client-js:$ktor"
         const val clientOkhttp = "io.ktor:ktor-client-okhttp:$ktor"
+    }
+
+
+    object Koin {
+        const val core = "io.insert-koin:koin-core:$koin"
     }
 
     object OkHttp {

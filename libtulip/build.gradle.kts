@@ -56,6 +56,9 @@ fun KotlinDependencyHandler.mainDeps() {
         implementation(json)
         implementation(contentNegotiation)
     }
+    with(Versions.Koin) {
+        implementation(core)
+    }
 }
 
 fun KotlinDependencyHandler.jvmDeps() {
