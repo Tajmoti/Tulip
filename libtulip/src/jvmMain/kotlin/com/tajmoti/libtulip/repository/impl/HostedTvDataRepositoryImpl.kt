@@ -120,7 +120,7 @@ class HostedTvDataRepositoryImpl(
 
     private fun logExceptions(service: StreamingService, result: Result<List<SearchResult>>) {
         val exception = result.exceptionOrNull() ?: return
-        logger.warn { "$service failed with $exception" }
+        logger.warn(exception) { "$service failed" }
     }
 
     override fun fetchStreams(key: StreamableKey.Hosted): NetFlow<List<VideoStreamRef>> {
