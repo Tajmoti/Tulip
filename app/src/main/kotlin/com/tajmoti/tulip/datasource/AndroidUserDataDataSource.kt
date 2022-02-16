@@ -1,7 +1,5 @@
 package com.tajmoti.tulip.datasource
 
-import com.tajmoti.commonutils.LibraryDispatchers
-import com.tajmoti.commonutils.mapWithContext
 import com.tajmoti.libtulip.data.UserDataDataSource
 import com.tajmoti.libtulip.model.history.LastPlayedPosition
 import com.tajmoti.libtulip.model.key.*
@@ -27,9 +25,9 @@ class AndroidUserDataDataSource @Inject constructor(
 
     override fun getUserFavorites(): Flow<List<ItemKey>> {
         val tmdbItems = userDataDao.getAllTmdbFavorites()
-            .mapWithContext(LibraryDispatchers.libraryContext) { it.map { item -> item.fromDb() } }
+            .map { it.map { item -> item.fromDb() } }
         val hostedItems = userDataDao.getAllHostedFavorites()
-            .mapWithContext(LibraryDispatchers.libraryContext) { it.map { item -> item.fromDb() } }
+            .map { it.map { item -> item.fromDb() } }
         return combine(tmdbItems, hostedItems) { a, b -> a + b }
     }
 
@@ -50,18 +48,18 @@ class AndroidUserDataDataSource @Inject constructor(
     override fun getLastPlayedPositionTmdb(key: ItemKey.Tmdb): Flow<LastPlayedPosition.Tmdb?> {
         return when (key) {
             is TvShowKey.Tmdb -> playingHistoryDao.getLastPlayingPositionTvShowTmdb(key.id)
-                .mapWithContext(LibraryDispatchers.libraryContext) { it?.fromDb() }
+                .map { it?.fromDb() }
             is MovieKey.Tmdb -> playingHistoryDao.getLastPlayingPositionMovieTmdb(key.id)
-                .mapWithContext(LibraryDispatchers.libraryContext) { it?.fromDb() }
+                .map { it?.fromDb() }
         }
     }
 
     override fun getLastPlayedPositionHosted(key: ItemKey.Hosted): Flow<LastPlayedPosition.Hosted?> {
         return when (key) {
             is TvShowKey.Hosted -> playingHistoryDao.getLastPlayingPositionHosted(key.streamingService, key.id)
-                .mapWithContext(LibraryDispatchers.libraryContext) { it?.fromDb() }
+                .map { it?.fromDb() }
             is MovieKey.Hosted -> playingHistoryDao.getLastPlayingPositionMovieHosted(key.streamingService, key.id)
-                .mapWithContext(LibraryDispatchers.libraryContext) { it?.fromDb() }
+                .map { it?.fromDb() }
         }
     }
 
@@ -71,9 +69,9 @@ class AndroidUserDataDataSource @Inject constructor(
                 key.seasonKey.tvShowKey.id,
                 key.seasonNumber,
                 key.episodeNumber
-            ).mapWithContext(LibraryDispatchers.libraryContext) { it?.fromDb() }
+            ).map { it?.fromDb() }
             is MovieKey.Tmdb -> playingHistoryDao.getLastPlayingPositionMovieTmdb(key.id)
-                .mapWithContext(LibraryDispatchers.libraryContext) { it?.fromDb() }
+                .map { it?.fromDb() }
         }
     }
 
@@ -84,9 +82,9 @@ class AndroidUserDataDataSource @Inject constructor(
                 key.tvShowKey.id,
                 key.seasonNumber,
                 key.id
-            ).mapWithContext(LibraryDispatchers.libraryContext) { it?.fromDb() }
+            ).map { it?.fromDb() }
             is MovieKey.Hosted -> playingHistoryDao.getLastPlayingPositionMovieHosted(key.streamingService, key.id)
-                .mapWithContext(LibraryDispatchers.libraryContext) { it?.fromDb() }
+                .map { it?.fromDb() }
         }
     }
 

@@ -2,10 +2,8 @@
 
 package com.tajmoti.libtulip.repository
 
-import com.tajmoti.commonutils.LibraryDispatchers
 import com.tajmoti.commonutils.combineNonEmpty
 import com.tajmoti.commonutils.flatMap
-import com.tajmoti.commonutils.mapWithContext
 import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.MissingEntityException
 import com.tajmoti.libtulip.model.info.*
@@ -13,6 +11,7 @@ import com.tajmoti.libtulip.model.key.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 
 /**
  * Retrieves information about either a movie, or a TV show on a specific streaming site by its [key].
@@ -29,7 +28,7 @@ fun HostedTvDataRepository.getItemByKey(key: ItemKey.Hosted) = when (key) {
  */
 fun HostedTvDataRepository.getStreamableInfo(key: StreamableKey.Hosted) = when (key) {
     is EpisodeKey.Hosted -> getEpisodeInfo(key)
-    is MovieKey.Hosted -> getMovie(key).mapWithContext(LibraryDispatchers.libraryContext) { it.toResult() }
+    is MovieKey.Hosted -> getMovie(key).map { it.toResult() }
 }
 
 /**
@@ -37,21 +36,21 @@ fun HostedTvDataRepository.getStreamableInfo(key: StreamableKey.Hosted) = when (
  * The returned flow may never complete, and it may emit an updated value at any time!
  */
 fun HostedTvDataRepository.getSeason(key: SeasonKey.Hosted) = getTvShow(key.tvShowKey)
-    .mapWithContext(LibraryDispatchers.libraryContext) { it.convert { showInfo -> showInfo.findSeasonOrNull(key) } }
+    .map { it.convert { showInfo -> showInfo.findSeasonOrNull(key) } }
 
 /**
  * Retrieves all seasons of a TV show by the TV show [key].
  * The returned flow may never complete, and it may emit an updated value at any time!
  */
 fun HostedTvDataRepository.getSeasons(key: TvShowKey.Hosted) = getTvShow(key)
-    .mapWithContext(LibraryDispatchers.libraryContext) { it.map { tvShow -> tvShow.seasons } }
+    .map { it.map { tvShow -> tvShow.seasons } }
 
 /**
  * Retrieves an episode by its [key].
  * The returned flow may never complete, and it may emit an updated value at any time!
  */
 fun HostedTvDataRepository.getEpisodeInfo(key: EpisodeKey.Hosted) = getTvShow(key.tvShowKey)
-    .mapWithContext(LibraryDispatchers.libraryContext) { netResult -> netResult.toResult().flatMap { tvShow -> tvShow.findCompleteEpisodeInfoAsResult(key) } }
+    .map { netResult -> netResult.toResult().flatMap { tvShow -> tvShow.findCompleteEpisodeInfoAsResult(key) } }
 
 
 /**
@@ -89,7 +88,7 @@ fun HostedTvDataRepository.getEpisodesByTmdbKey(
     mappingRepository: ItemMappingRepository,
     key: EpisodeKey.Tmdb
 ) = getTvShowsByTmdbKey(mappingRepository, key.tvShowKey)
-    .mapWithContext(LibraryDispatchers.libraryContext) { tvListResult ->
+    .map { tvListResult ->
         tvListResult.map { tvList ->
             tvList.flatMap { tv -> tv.findCompleteEpisodeFromTvAsResult(key) }
         }
@@ -125,5 +124,5 @@ private fun TulipTvShowInfo.Hosted.findCompleteEpisodeFromTvAsResult(
 ) = findEpisodeAsResult(key).map { episode -> TulipCompleteEpisodeInfo.Hosted(this, episode) }
 
 private fun <T> Flow<List<NetworkResult<T>>>.mapNetworkResultToResultInListFlow(): Flow<List<Result<T>>> {
-    return mapWithContext(LibraryDispatchers.libraryContext) { it.map { networkResult -> networkResult.toResult() } }
+    return map { it.map { networkResult -> networkResult.toResult() } }
 }

@@ -1,7 +1,5 @@
 package com.tajmoti.tulip.datasource
 
-import com.tajmoti.commonutils.LibraryDispatchers
-import com.tajmoti.commonutils.mapWithContext
 import com.tajmoti.libtulip.data.HostedInfoDataSource
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipMovie
@@ -17,6 +15,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -39,7 +38,7 @@ class AndroidHostedInfoDataSource @Inject constructor(
 
     private fun getSeasonsByTvShow(key: TvShowKey.Hosted): Flow<List<TulipSeasonInfo.Hosted>> {
         return seasonDao.getForShow(key.streamingService, key.id)
-            .mapWithContext(LibraryDispatchers.libraryContext) { seasons ->
+            .map { seasons ->
                 seasons.map { season ->
                     val seasonKey = SeasonKey.Hosted(key, season.number)
                     season.fromDb(key, getEpisodesBySeason(seasonKey).first()) // TODO Properly fix .first()
@@ -49,7 +48,7 @@ class AndroidHostedInfoDataSource @Inject constructor(
 
     private fun getEpisodesBySeason(key: SeasonKey.Hosted): Flow<List<TulipEpisodeInfo.Hosted>> {
         return episodeDao.getForSeason(key.streamingService, key.tvShowKey.id, key.seasonNumber)
-            .mapWithContext(LibraryDispatchers.libraryContext) { episodes -> episodes.map { episode -> episode.fromDb(key) } }
+            .map { episodes -> episodes.map { episode -> episode.fromDb(key) } }
     }
 
     override suspend fun insertTvShow(show: TulipTvShowInfo.Hosted) {
@@ -91,11 +90,11 @@ class AndroidHostedInfoDataSource @Inject constructor(
 
     override fun getTmdbMappingForTvShow(tmdb: TvShowKey.Tmdb): Flow<List<TvShowKey.Hosted>> {
         return tmdbMappingDao.getHostedKeysByTmdbId(tmdb.id)
-            .mapWithContext(LibraryDispatchers.libraryContext) { mappings -> mappings.map { mapping -> TvShowKey.Hosted(mapping.service, mapping.key) } }
+            .map { mappings -> mappings.map { mapping -> TvShowKey.Hosted(mapping.service, mapping.key) } }
     }
 
     override fun getTmdbMappingForMovie(tmdb: MovieKey.Tmdb): Flow<List<MovieKey.Hosted>> {
         return tmdbMappingDao.getHostedKeysByTmdbId(tmdb.id)
-            .mapWithContext(LibraryDispatchers.libraryContext) { mappings -> mappings.map { mapping -> MovieKey.Hosted(mapping.service, mapping.key) } }
+            .map { mappings -> mappings.map { mapping -> MovieKey.Hosted(mapping.service, mapping.key) } }
     }
 }

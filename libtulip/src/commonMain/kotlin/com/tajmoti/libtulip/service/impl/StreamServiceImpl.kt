@@ -1,9 +1,7 @@
 package com.tajmoti.libtulip.service.impl
 
-import com.tajmoti.commonutils.LibraryDispatchers
 import com.tajmoti.commonutils.combineNonEmpty
 import com.tajmoti.commonutils.logger
-import com.tajmoti.commonutils.mapWithContext
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.stream.StreamsResult
@@ -34,7 +32,7 @@ class StreamServiceImpl(
 
     private fun fetchStreamsForInfo(result: StreamableInfo.Hosted): Flow<StreamsResult> {
         return hostedTvDataRepository.fetchStreams(result.key)
-            .mapWithContext(LibraryDispatchers.libraryContext) {
+            .map {
                 it.toResult()
                     .map { streams -> streams.map { stream -> addMiscInfo(stream, result) } }
                     .map { streams -> sortByExtractionSupport(streams) }
@@ -62,7 +60,7 @@ class StreamServiceImpl(
             }
             .combineNonEmpty()
             .filterNot { it.all { (index) -> index == 0 } } // Skips first useless emission caused by onStart
-            .mapWithContext(LibraryDispatchers.libraryContext) { indexedResults ->
+            .map { indexedResults ->
                 val streams = indexedResults
                     .mapNotNull { (_, value) -> (value as? StreamsResult.Success)?.streams }
                     .flatten()
