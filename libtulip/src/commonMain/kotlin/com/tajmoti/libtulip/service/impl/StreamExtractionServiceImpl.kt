@@ -6,10 +6,10 @@ import com.tajmoti.libtulip.service.StreamExtractionService
 import com.tajmoti.libtvprovider.model.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.ExtractionError
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
+import com.tajmoti.multiplatform.Uri
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
-import java.net.URI
 
 class StreamExtractionServiceImpl(
     private val linkExtractor: VideoLinkExtractor,
@@ -40,7 +40,7 @@ class StreamExtractionServiceImpl(
      */
     private suspend fun resolveRedirects(url: String): Result<String?> {
         return runCatching {
-            val originalHost = URI(url).host
+            val originalHost = Uri(url).host
             logger.debug { "Resolving redirects of '$url'" }
             var nextLocation = url
             var attempts = 0
@@ -55,7 +55,7 @@ class StreamExtractionServiceImpl(
     }
 
     private fun shouldRetryRedirect(nextLocation: String, originalHost: String): Boolean {
-        val nextHost = URI(nextLocation).host
+        val nextHost = Uri(nextLocation).host
         return nextHost.contains(originalHost) || originalHost.contains(nextHost)
     }
 

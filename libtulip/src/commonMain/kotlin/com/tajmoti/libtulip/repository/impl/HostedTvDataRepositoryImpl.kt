@@ -1,16 +1,13 @@
 package com.tajmoti.libtulip.repository.impl
 
-import com.dropbox.android.external.store4.Fetcher
-import com.dropbox.android.external.store4.SourceOfTruth
-import com.dropbox.android.external.store4.StoreBuilder
-import com.dropbox.android.external.store4.StoreRequest
 import com.tajmoti.commonutils.LibraryDispatchers
 import com.tajmoti.commonutils.flatMap
 import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.mapWithContext
 import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.HostedInfoDataSource
-import com.tajmoti.libtulip.misc.job.*
+import com.tajmoti.libtulip.misc.job.NetFlow
+import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.TulipTvShowInfo
@@ -23,6 +20,7 @@ import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.model.SearchResult
 import com.tajmoti.libtvprovider.model.TvItem
 import com.tajmoti.libtvprovider.model.VideoStreamRef
+import com.tajmoti.multiplatform.store.TStoreFactory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlin.time.ExperimentalTime
@@ -34,32 +32,22 @@ class HostedTvDataRepositoryImpl(
     private val tmdbRepo: TmdbTvDataRepository,
     config: TulipConfiguration
 ) : HostedTvDataRepository {
-    private val tvShowStore = StoreBuilder
-        .from(
-            Fetcher.ofResultFlow { key -> fetchTvShow(key).mapWithContext(LibraryDispatchers.libraryContext) { it.toFetcherResult() } },
-            SourceOfTruth.of(
-                hostedTvDataRepo::getTvShowByKey,
-                { _, it -> hostedTvDataRepo.insertTvShow(it) },
-            )
-        )
-        .cachePolicy(createCache(config.hostedItemCacheParams))
-        .build()
-    private val movieStore = StoreBuilder
-        .from(
-            Fetcher.ofResultFlow { key -> fetchMovie(key).mapWithContext(LibraryDispatchers.libraryContext) { it.toFetcherResult() } },
-            SourceOfTruth.of(
-                hostedTvDataRepo::getMovieByKey,
-                { _, it -> hostedTvDataRepo.insertMovie(it) },
-            )
-        )
-        .cachePolicy(createCache(config.hostedItemCacheParams))
-        .build()
-    private val streamsStore = StoreBuilder
-        .from<StreamableKey.Hosted, List<VideoStreamRef>>(
-            Fetcher.ofResult { tvProvider.getStreamableLinks(it.streamingService, it.id).toFetcherResult() },
-        )
-        .cachePolicy(createCache(config.streamCacheParams))
-        .build()
+    private val tvShowStore = TStoreFactory.createStore(
+        cache = config.hostedItemCacheParams,
+        source = ::fetchTvShow,
+        reader = hostedTvDataRepo::getTvShowByKey,
+        writer = { _, it -> hostedTvDataRepo.insertTvShow(it) }
+    )
+    private val movieStore = TStoreFactory.createStore(
+        cache = config.hostedItemCacheParams,
+        source = ::fetchMovie,
+        reader = hostedTvDataRepo::getMovieByKey,
+        writer = { _, it -> hostedTvDataRepo.insertMovie(it) }
+    )
+    private val streamsStore = TStoreFactory.createStore(
+        cache = config.hostedItemCacheParams,
+        source = ::getStreamableLinksAsFlow
+    )
 
 
     override fun search(query: String): Flow<Map<StreamingService, Result<List<SearchResult>>>> {
@@ -70,7 +58,7 @@ class HostedTvDataRepositoryImpl(
 
     override fun getTvShow(key: TvShowKey.Hosted): NetFlow<TulipTvShowInfo.Hosted> {
         logger.debug { "Retrieving $key" }
-        return tvShowStore.stream(StoreRequest.cached(key, false)).toNetFlow()
+        return tvShowStore.stream(key)
     }
 
     private fun fetchTvShow(key: TvShowKey.Hosted): Flow<Result<TulipTvShowInfo.Hosted>> {
@@ -101,7 +89,7 @@ class HostedTvDataRepositoryImpl(
 
     override fun getMovie(key: MovieKey.Hosted): Flow<NetworkResult<TulipMovie.Hosted>> {
         logger.debug { "Retrieving $key" }
-        return movieStore.stream(StoreRequest.cached(key, false)).toNetFlow()
+        return movieStore.stream(key)
     }
 
     private fun fetchMovie(key: MovieKey.Hosted): Flow<Result<TulipMovie.Hosted>> {
@@ -125,6 +113,10 @@ class HostedTvDataRepositoryImpl(
 
     override fun fetchStreams(key: StreamableKey.Hosted): NetFlow<List<VideoStreamRef>> {
         logger.debug { "Retrieving $key" }
-        return streamsStore.stream(StoreRequest.cached(key, false)).toNetFlow()
+        return streamsStore.stream(key)
+    }
+
+    private fun getStreamableLinksAsFlow(it: StreamableKey.Hosted): Flow<Result<List<VideoStreamRef>>> {
+        return flow { emit(tvProvider.getStreamableLinks(it.streamingService, it.id)) }
     }
 }
