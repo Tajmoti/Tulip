@@ -1,8 +1,10 @@
 package com.tajmoti.commonutils
 
 import mu.KLogger
+import mu.KotlinLogging
 
 /**
  * Access (or create) the logger of this class.
  */
-expect val Any.logger: KLogger
+actual val Any.logger: KLogger
+    get() = KotlinLogging.logger { }
