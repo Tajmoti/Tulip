@@ -1,5 +1,6 @@
 rootProject.name = "Tulip"
 include(":app")
+include(":ksoup")
 include(":libtvprovider")
 include(":libtvprovider-primewire")
 include(":libwebdriver-android")
