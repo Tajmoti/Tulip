@@ -55,9 +55,9 @@ class MappingSearchServiceImpl(
     private suspend fun persistTmdbMapping(mapped: MappedSearchResult) {
         when (mapped) {
             is MappedSearchResult.Movie -> mapped.tmdbId
-                ?.let { mappingRepository.createTmdbMapping(it, mapped.key) }
+                ?.let { mappingRepository.createTmdbMappingMovie(it, mapped.key) }
             is MappedSearchResult.TvShow -> mapped.tmdbId
-                ?.let { mappingRepository.createTmdbMapping(mapped.tmdbId, mapped.key) }
+                ?.let { mappingRepository.createTmdbMappingTv(it, mapped.key) }
         }
     }
 

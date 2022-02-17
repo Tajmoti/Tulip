@@ -31,14 +31,14 @@ class InMemoryHostedInfoDataSource : HostedInfoDataSource {
         movies.value = movies.value.plus(movie)
     }
 
-    override suspend fun createTmdbMapping(hosted: TvShowKey.Hosted, tmdb: TvShowKey.Tmdb) {
+    override suspend fun createTmdbTvMapping(hosted: TvShowKey.Hosted, tmdb: TvShowKey.Tmdb) {
         val oldValue = tmdbTvShowMappings.value
         val oldSet = oldValue[tmdb] ?: mutableSetOf()
         val newSet = oldSet.plus(hosted)
         tmdbTvShowMappings.value = oldValue.plus(tmdb to newSet)
     }
 
-    override suspend fun createTmdbMapping(hosted: MovieKey.Hosted, tmdb: MovieKey.Tmdb) {
+    override suspend fun createTmdbMovieMapping(hosted: MovieKey.Hosted, tmdb: MovieKey.Tmdb) {
         val oldValue = tmdbMovieMappings.value
         val oldSet = oldValue[tmdb] ?: mutableSetOf()
         val newSet = oldSet.plus(hosted)

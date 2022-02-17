@@ -81,11 +81,11 @@ class AndroidHostedInfoDataSource @Inject constructor(
         movieDao.insert(movie.toDb(movie.info))
     }
 
-    override suspend fun createTmdbMapping(hosted: TvShowKey.Hosted, tmdb: TvShowKey.Tmdb) {
+    override suspend fun createTmdbTvMapping(hosted: TvShowKey.Hosted, tmdb: TvShowKey.Tmdb) {
         tmdbMappingDao.insert(DbTmdbMapping(hosted.streamingService, hosted.id, tmdb.id))
     }
 
-    override suspend fun createTmdbMapping(hosted: MovieKey.Hosted, tmdb: MovieKey.Tmdb) {
+    override suspend fun createTmdbMovieMapping(hosted: MovieKey.Hosted, tmdb: MovieKey.Tmdb) {
         tmdbMappingDao.insert(DbTmdbMapping(hosted.streamingService, hosted.id, tmdb.id))
     }
 

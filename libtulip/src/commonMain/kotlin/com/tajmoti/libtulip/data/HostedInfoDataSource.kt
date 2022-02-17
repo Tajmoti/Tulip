@@ -17,9 +17,9 @@ interface HostedInfoDataSource {
     suspend fun insertMovie(movie: TulipMovie.Hosted)
 
 
-    suspend fun createTmdbMapping(hosted: TvShowKey.Hosted, tmdb: TvShowKey.Tmdb)
+    suspend fun createTmdbTvMapping(hosted: TvShowKey.Hosted, tmdb: TvShowKey.Tmdb)
 
-    suspend fun createTmdbMapping(hosted: MovieKey.Hosted, tmdb: MovieKey.Tmdb)
+    suspend fun createTmdbMovieMapping(hosted: MovieKey.Hosted, tmdb: MovieKey.Tmdb)
 
     fun getTmdbMappingForTvShow(tmdb: TvShowKey.Tmdb): Flow<List<TvShowKey.Hosted>>
 
