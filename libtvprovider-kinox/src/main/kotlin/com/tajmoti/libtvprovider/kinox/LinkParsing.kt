@@ -1,5 +1,6 @@
 package com.tajmoti.libtvprovider.kinox
 
+import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.parallelMap
 import com.tajmoti.libtvprovider.model.VideoStreamRef
 import com.tajmoti.libtvprovider.kinox.model.StreamReferenceObject
@@ -56,5 +57,8 @@ private fun extractVideoUrlFromResult(parsed: Document): String? {
     val iframeSrc = body.getElementsByTag("iframe")
         .firstOrNull()
         ?.attr("src")
-    return anchorHref ?: iframeSrc
+    var result = anchorHref ?: iframeSrc ?: return null
+    if (!result.startsWith("http"))
+        result = "https:$result"
+    return result
 }
