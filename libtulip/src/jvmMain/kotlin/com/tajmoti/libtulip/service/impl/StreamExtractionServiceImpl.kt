@@ -26,7 +26,7 @@ class StreamExtractionServiceImpl(
     ): Result<VideoStreamRef.Resolved> {
         // If there were no redirects, assume that the link already points to the streaming page
         return resolveRedirects(ref.url)
-            .onFailure { logger.warn { "Failed to resolve redirects of $ref" } }
+            .onFailure { logger.warn(it) { "Failed to resolve redirects of $ref" } }
             .map { ref.asResolved(it ?: ref.url) }
     }
 
