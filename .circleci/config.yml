@@ -1,0 +1,46 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: cimg/openjdk:16.0.2
+    steps:
+      - checkout
+      - run:
+          name: "Build production JS"
+          command: |
+            ./gradlew app-web:browserProductionWebpack
+      - store_artifacts:
+          path: ./app-web/build/distributions
+      - persist_to_workspace:
+          root: .
+          paths:
+            - app-web/build/distributions/*
+  deploy:
+    docker:
+      - image: cimg/base:2022.02
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ./
+      - add_ssh_keys:
+          fingerprints:
+            - "bb:7a:94:bc:1c:cb:d3:3b:58:9d:a8:1a:fa:e9:e9:4d"
+      - run:
+          name: "Deploy to GitHub Pages"
+          command: |
+            git clone "${GIT_DEPLOY_REPO_URL}"
+            cp -r ./app-web/build/distributions/* "${GIT_DEPLOY_REPO_NAME}/"
+            cd "${GIT_DEPLOY_REPO_NAME}/"
+            git add .
+            git config user.email "${GIT_DEPLOY_EMAIL}"
+            git config user.name "${GIT_DEPLOY_NAME}"
+            git commit -m "${CIRCLE_BUILD_NUM}" && git push || true
+
+workflows:
+  build-deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
