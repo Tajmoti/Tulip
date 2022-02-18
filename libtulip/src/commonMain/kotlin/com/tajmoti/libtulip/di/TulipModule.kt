@@ -2,11 +2,18 @@ package com.tajmoti.libtulip.di
 
 import com.tajmoti.libtulip.data.HostedInfoDataSource
 import com.tajmoti.libtulip.data.LocalTvDataSource
+import com.tajmoti.libtulip.data.UserDataDataSource
 import com.tajmoti.libtulip.data.impl.InMemoryHostedInfoDataSource
 import com.tajmoti.libtulip.data.impl.InMemoryLocalTvDataSource
+import com.tajmoti.libtulip.data.impl.StubUserDataDataSource
 import com.tajmoti.libtulip.di.impl.ApiServiceModuleImpl
 import com.tajmoti.libtulip.di.impl.BusinessLogicModuleImpl
 import com.tajmoti.libtulip.di.impl.DataRepositoryModuleImpl
+import com.tajmoti.libtulip.misc.HardcodedConfigStore
+import com.tajmoti.libtulip.misc.TulipJsWebDriver
+import com.tajmoti.libtulip.service.VideoDownloadService
+import com.tajmoti.libtulip.service.impl.StubVideoDownloadService
+import com.tajmoti.libwebdriver.TulipWebDriver
 import com.tajmoti.multiplatform.getAppHttpClient
 import org.koin.dsl.module
 
@@ -32,7 +39,13 @@ val tulipModule = module {
     single { DataRepositoryModuleImpl.provideSubtitleRepository(get(), get()) }
     single { DataRepositoryModuleImpl.providePlayingHistoryRepository(get()) }
 
+    single { HardcodedConfigStore.tulipConfiguration }
+
     single<LocalTvDataSource> { InMemoryLocalTvDataSource() }
     single<HostedInfoDataSource> { InMemoryHostedInfoDataSource() }
+    single<UserDataDataSource> { StubUserDataDataSource() }
+    single<VideoDownloadService> { StubVideoDownloadService() }
     single { getAppHttpClient() }
+
+    single<TulipWebDriver> { TulipJsWebDriver() }
 }
