@@ -10,6 +10,7 @@ buildscript {
         classpath(Versions.Android.Hilt.plugin)
         classpath(Versions.Android.Nav.safeArgsPlugin)
         classpath(Versions.Android.GradleSecrets.plugin)
+        classpath(Versions.BuildKonfig.core)
     }
 }
 

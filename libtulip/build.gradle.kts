@@ -1,8 +1,11 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec
+import com.codingfeline.buildkonfig.gradle.TargetConfigDsl
 import org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler
 
 plugins {
     kotlin("multiplatform")
     kotlin("kapt")
+    id("com.codingfeline.buildkonfig")
 }
 
 java {
@@ -30,6 +33,15 @@ kotlin {
         sourceSets["jvmMain"].dependencies { jvmDeps() }
         sourceSets["jsMain"].dependencies { jsDeps() }
         sourceSets["jvmTest"].dependencies { jvmTestDeps() }
+    }
+}
+
+buildkonfig {
+    packageName = "com.tajmoti.libtulip"
+
+    defaultConfigs {
+        addSecretFromEnvOrFile("tmdbApiKey", "TMDB_API_KEY")
+        addSecretFromEnvOrFile("openSubtitlesApiKey", "OPENSUBTITLES_API_KEY")
     }
 }
 
@@ -95,4 +107,8 @@ fun KotlinDependencyHandler.jsDeps() {
     with(Versions.Ktor) {
         implementation(clientJs)
     }
+}
+
+fun TargetConfigDsl.addSecretFromEnvOrFile(name: String, envName: String) {
+    buildConfigField(FieldSpec.Type.STRING, name, getEnvOrLocalSecret(rootProject, envName, name))
 }

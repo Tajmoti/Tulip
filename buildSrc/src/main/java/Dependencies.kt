@@ -16,6 +16,7 @@ object Versions {
     private const val kotlin = "1.6.20-M1"
     private const val jsoup = "1.14.3"
     private const val koin = "3.1.5"
+    private const val buildKonfig = "0.11.0"
 
 
     object Kotlin {
@@ -78,6 +79,10 @@ object Versions {
 
     object Jsoup {
         const val core = "org.jsoup:jsoup:$jsoup"
+    }
+
+    object BuildKonfig {
+        const val core = "com.codingfeline.buildkonfig:buildkonfig-gradle-plugin:$buildKonfig"
     }
 
     object Android {
