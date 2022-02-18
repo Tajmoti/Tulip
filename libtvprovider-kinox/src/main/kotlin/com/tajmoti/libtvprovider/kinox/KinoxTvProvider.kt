@@ -13,7 +13,7 @@ import kotlin.coroutines.CoroutineContext
 
 class KinoxTvProvider(
     private val httpLoader: SimplePageSourceLoader,
-    private val baseUrl: String = "https://kinox.to",
+    private val baseUrl: String = "https://kinoz.to",
     /**
      * Whether search results which don't have a first air year set (it's set to 0)
      * should be thrown away. This is an optimization to throw away trash results.
