@@ -1,12 +1,10 @@
 package com.tajmoti.libprimewiretvprovider
 
+import com.tajmoti.ksoup.KElement
 import com.tajmoti.libtvprovider.model.EpisodeInfo
 import com.tajmoti.libtvprovider.model.Season
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
 
-
-internal fun parseSearchResultPageBlockingSeason(page: Document): Result<List<Season>> {
+internal fun parseSearchResultPageBlockingSeason(page: KElement): Result<List<Season>> {
     return try {
         val items = page
             .getElementsByClass("show_season")
@@ -17,11 +15,11 @@ internal fun parseSearchResultPageBlockingSeason(page: Document): Result<List<Se
     }
 }
 
-private fun elemToSeason(element: Element): Season {
+private fun elemToSeason(element: KElement): Season {
     val number = element
         .previousElementSibling()!!
         .getElementsByTag("a")
-        .first()!!
+        .first()
         .ownText()
         .replaceFirst("► Season ", "")
         .toInt()
@@ -31,7 +29,7 @@ private fun elemToSeason(element: Element): Season {
     return Season(number, episodes)
 }
 
-private fun elemToEpisode(element: Element): EpisodeInfo {
+private fun elemToEpisode(element: KElement): EpisodeInfo {
     val elemText = element.text()
     val number = if (elemText.startsWith("Special")) {
         null
@@ -44,11 +42,12 @@ private fun elemToEpisode(element: Element): EpisodeInfo {
 
     val name = element
         .getElementsByClass("tv_episode_name")
+        .first()
         .text()
         .replaceFirst("- ", "")
     val url = element
         .getElementsByTag("a")
-        .first()!!
+        .first()
         .attr("href")
     return EpisodeInfo(url, number ?: 0, name, null) // TODO Overview
 }

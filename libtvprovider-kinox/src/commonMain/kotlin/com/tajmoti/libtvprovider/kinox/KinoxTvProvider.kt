@@ -1,14 +1,14 @@
 package com.tajmoti.libtvprovider.kinox
 
 import com.tajmoti.commonutils.LibraryDispatchers
+import com.tajmoti.commonutils.UrlEncoder
 import com.tajmoti.commonutils.flatMap
+import com.tajmoti.ksoup.KSoup
 import com.tajmoti.libtvprovider.TvProvider
 import com.tajmoti.libtvprovider.model.SearchResult
 import com.tajmoti.libtvprovider.model.TvItem
 import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.coroutines.withContext
-import org.jsoup.Jsoup
-import java.net.URLEncoder
 import kotlin.coroutines.CoroutineContext
 
 class KinoxTvProvider(
@@ -30,7 +30,7 @@ class KinoxTvProvider(
     }
 
     private fun queryToSearchUrl(query: String): String {
-        val encoded = URLEncoder.encode(query, "utf-8")
+        val encoded = UrlEncoder.encode(query)
         return "$baseUrl/Search.html?q=$encoded"
     }
 
@@ -38,7 +38,7 @@ class KinoxTvProvider(
         return withContext(dispatcher) {
             httpLoader(baseUrl + id)
                 .flatMap {
-                    val document = Jsoup.parse(it)
+                    val document = KSoup.parse(it)
                     parseSeasonsBlocking(document)
                         .map { seasons -> TvItem.TvShow(parseTvItemInfo(id, document), seasons) }
                 }
@@ -49,7 +49,7 @@ class KinoxTvProvider(
         return withContext(dispatcher) {
             httpLoader(baseUrl + id)
                 .map {
-                    val document = Jsoup.parse(it)
+                    val document = KSoup.parse(it)
                     TvItem.Movie(parseTvItemInfo(id, document))
                 }
         }

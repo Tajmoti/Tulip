@@ -1,13 +1,13 @@
 package com.tajmoti.libprimewiretvprovider
 
+import com.tajmoti.ksoup.KElement
+import com.tajmoti.ksoup.KSoup
 import com.tajmoti.libtvprovider.model.SearchResult
 import com.tajmoti.libtvprovider.model.TvItemInfo
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Element
 
 internal fun parseSearchResultPageBlocking(pageSource: String): Result<List<SearchResult>> {
     return try {
-        val items = Jsoup.parse(pageSource)
+        val items = KSoup.parse(pageSource)
             .getElementsByClass("index_item")
             .map { elemToSearchResult(it) }
         Result.success(items)
@@ -16,16 +16,16 @@ internal fun parseSearchResultPageBlocking(pageSource: String): Result<List<Sear
     }
 }
 
-private fun elemToSearchResult(element: Element): SearchResult {
+private fun elemToSearchResult(element: KElement): SearchResult {
     val anchor = element.getElementsByTag("a")
-        .firstOrNull()!!
+        .first()
     val itemUrl = anchor
         .attr("href")
     val isShow = itemUrl
         .startsWith("/tv/")
     val nameElem = anchor
         .getElementsByClass("title-cutoff")
-        .first()!!
+        .first()
     val name = nameElem.ownText()
     val yearParen = nameElem.parent()!!
         .ownText()

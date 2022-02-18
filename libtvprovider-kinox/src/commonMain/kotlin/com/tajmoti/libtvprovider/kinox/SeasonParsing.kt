@@ -1,15 +1,15 @@
 package com.tajmoti.libtvprovider.kinox
 
+import com.tajmoti.ksoup.KDocument
+import com.tajmoti.ksoup.KElement
 import com.tajmoti.libtvprovider.model.EpisodeInfo
 import com.tajmoti.libtvprovider.model.Season
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
 
-internal fun parseSeasonsBlocking(page: Document): Result<List<Season>> {
+internal fun parseSeasonsBlocking(page: KDocument): Result<List<Season>> {
     return try {
         val dropdown = page
             .select("html body div#frmMain div#dontbeevil div#Vadda div.MirrorModule div select#SeasonSelection")
-            .first() ?: return Result.failure(SeasonsNotPresentException)
+            .firstOrNull() ?: return Result.failure(SeasonsNotPresentException)
         val rel = dropdown.attr("rel")
         val result = dropdown.children()
             .map { optionToSeason(it, rel) }
@@ -19,7 +19,7 @@ internal fun parseSeasonsBlocking(page: Document): Result<List<Season>> {
     }
 }
 
-private fun optionToSeason(option: Element, rel: String): Season {
+private fun optionToSeason(option: KElement, rel: String): Season {
     val number = option.attr("value").toInt()
     val episodes = option.attr("rel")
         .split(',')

@@ -1,14 +1,14 @@
 package com.tajmoti.libprimewiretvprovider
 
 import com.tajmoti.commonutils.LibraryDispatchers
+import com.tajmoti.commonutils.UrlEncoder
 import com.tajmoti.commonutils.flatMap
+import com.tajmoti.ksoup.KSoup
 import com.tajmoti.libtvprovider.TvProvider
 import com.tajmoti.libtvprovider.model.SearchResult
 import com.tajmoti.libtvprovider.model.TvItem
 import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.coroutines.withContext
-import org.jsoup.Jsoup
-import java.net.URLEncoder
 import kotlin.coroutines.CoroutineContext
 
 class PrimewireTvProvider(
@@ -35,7 +35,7 @@ class PrimewireTvProvider(
     }
 
     private fun queryToSearchUrl(query: String): String {
-        val encoded = URLEncoder.encode(query, "utf-8")
+        val encoded = UrlEncoder.encode(query)
         return "$baseUrl?s=$encoded&t=y&m=m&w=q"
     }
 
@@ -43,7 +43,7 @@ class PrimewireTvProvider(
         return withContext(dispatcher) {
             httpLoader(baseUrl + id)
                 .flatMap { source ->
-                    val document = Jsoup.parse(source)
+                    val document = KSoup.parse(source)
                     parseSearchResultPageBlockingSeason(document)
                         .map { seasons -> document to seasons }
                 }
@@ -58,7 +58,7 @@ class PrimewireTvProvider(
         return withContext(dispatcher) {
             httpLoader(baseUrl + id)
                 .map { source ->
-                    val tvItemInfo = parseTvItemInfo(id, Jsoup.parse(source))
+                    val tvItemInfo = parseTvItemInfo(id, KSoup.parse(source))
                     TvItem.Movie(tvItemInfo)
                 }
         }

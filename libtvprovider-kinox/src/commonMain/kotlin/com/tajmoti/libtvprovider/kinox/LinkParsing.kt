@@ -2,13 +2,13 @@ package com.tajmoti.libtvprovider.kinox
 
 import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.parallelMap
-import com.tajmoti.libtvprovider.model.VideoStreamRef
+import com.tajmoti.ksoup.KDocument
+import com.tajmoti.ksoup.KElement
+import com.tajmoti.ksoup.KSoup
 import com.tajmoti.libtvprovider.kinox.model.StreamReferenceObject
+import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
 
 internal suspend fun fetchSources(
     baseUrl: String,
@@ -16,9 +16,9 @@ internal suspend fun fetchSources(
     pageSourceLoader: SimplePageSourceLoader
 ): Result<List<VideoStreamRef>> {
     return try {
-        val links = Jsoup.parse(pageSource)
+        val links = KSoup.parse(pageSource)
             .select("#HosterList")
-            .first()!!
+            .first()
             .children()
         val result = links.parallelMap {
             runCatching { elementToStream(baseUrl, it, pageSourceLoader) }.getOrNull()
@@ -31,7 +31,7 @@ internal suspend fun fetchSources(
 
 private suspend fun elementToStream(
     baseUrl: String,
-    li: Element,
+    li: KElement,
     httpLoader: SimplePageSourceLoader
 ): VideoStreamRef? {
     val hoster = li.attr("rel")
@@ -43,13 +43,13 @@ private suspend fun elementToStream(
 
 private fun scrapeStreamRef(pageSource: String): VideoStreamRef.Unresolved? {
     val streamObject: StreamReferenceObject = Json { ignoreUnknownKeys = true }.decodeFromString(pageSource)
-    val parsed = Jsoup.parse(streamObject.stream)
+    val parsed = KSoup.parse(streamObject.stream)
     val name = streamObject.hosterName
     val videoUrl = extractVideoUrlFromResult(parsed) ?: return null
     return VideoStreamRef.Unresolved(name, videoUrl)
 }
 
-private fun extractVideoUrlFromResult(parsed: Document): String? {
+private fun extractVideoUrlFromResult(parsed: KDocument): String? {
     val body = parsed.body()
     val anchorHref = body.getElementsByTag("a")
         .firstOrNull()
