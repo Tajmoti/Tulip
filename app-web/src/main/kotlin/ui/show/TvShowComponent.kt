@@ -6,8 +6,8 @@ import com.tajmoti.libtulip.ui.tvshow.TvShowViewModelImpl
 import react.RBuilder
 import react.dom.div
 import react.dom.onClick
-import react.dom.span
 import ui.TulipReactComponent
+import ui.activeListItem
 import ui.listButton
 import ui.renderLoading
 
@@ -37,7 +37,7 @@ class TvShowComponent(props: TvShowProps) : TulipReactComponent<TvShowProps, TvS
     }
 
     private fun RBuilder.renderSeason(season: TulipSeasonInfo) {
-        span("list-group-item active") { +"Season ${season.key.seasonNumber}" }
+        activeListItem { +"Season ${season.key.seasonNumber}" }
         for (episode in season.episodes) {
             renderEpisode(episode)
         }

@@ -4,7 +4,6 @@ import com.tajmoti.libtulip.ui.player.VideoPlayerViewModelImpl
 import com.tajmoti.libtulip.ui.streams.LoadedLink
 import react.RBuilder
 import react.dom.h1
-import react.dom.source
 import react.dom.video
 import ui.TulipReactComponent
 import ui.renderLoading
@@ -33,18 +32,24 @@ class VideoPlayerComponent(props: VideoPlayerProps) : TulipReactComponent<VideoP
     override fun RBuilder.render() {
         when (val state = state.status) {
             is VideoPlayerStatus.Loaded -> renderVideoPlayer(state.link)
-            is VideoPlayerStatus.Loading -> renderLoading()
+            is VideoPlayerStatus.Loading -> renderLoading("mb-5")
             is VideoPlayerStatus.Error -> renderError()
+        }
+        renderLinkList()
+    }
+
+    private fun RBuilder.renderLinkList() {
+        child(LinkListComponent::class) {
+            attrs.viewModel = viewModel
+            attrs.itemCallback = { viewModel.onStreamClicked(it, false) }
         }
     }
 
     private fun RBuilder.renderVideoPlayer(link: LoadedLink) {
         video("w-100") {
+            attrs.src = link.directLink
             attrs.controls = true
             attrs.autoPlay = true
-            source {
-                attrs.src = link.directLink
-            }
         }
     }
 

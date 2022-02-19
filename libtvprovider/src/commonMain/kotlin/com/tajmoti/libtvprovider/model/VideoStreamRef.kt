@@ -25,6 +25,7 @@ sealed interface VideoStreamRef {
      */
     data class Resolved(
         override val serviceName: String,
-        override val url: String
+        override val url: String,
+        val origin: Unresolved? = null,
     ) : VideoStreamRef
 }

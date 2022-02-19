@@ -1,6 +1,5 @@
 package ui.search
 
-import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtulip.model.search.GroupedSearchResult
 import com.tajmoti.libtulip.ui.search.SearchUi.getItemInfoForDisplay
 import com.tajmoti.libtulip.ui.search.SearchUi.getLanguagesForItem
@@ -10,6 +9,7 @@ import react.RBuilder
 import react.dom.*
 import ui.TulipReactComponent
 import ui.listButton
+import ui.renderLanguageBadge
 import ui.renderLoading
 
 class SearchComponent(props: SearchProps) : TulipReactComponent<SearchProps, SearchState>(props) {
@@ -65,10 +65,6 @@ class SearchComponent(props: SearchProps) : TulipReactComponent<SearchProps, Sea
                 }
             }
         }
-    }
-
-    private fun RBuilder.renderLanguageBadge(language: LanguageCode) {
-        span("badge badge-pill badge-info") { +language.code.uppercase() }
     }
 
     private fun RBuilder.renderYearBadge(it: Int) {

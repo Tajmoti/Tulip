@@ -31,7 +31,7 @@ class StreamExtractionServiceImpl(
     }
 
     private fun VideoStreamRef.Unresolved.asResolved(resolvedUrl: String): VideoStreamRef.Resolved {
-        return VideoStreamRef.Resolved(serviceName, resolvedUrl)
+        return VideoStreamRef.Resolved(serviceName, resolvedUrl, this)
     }
 
     /**
