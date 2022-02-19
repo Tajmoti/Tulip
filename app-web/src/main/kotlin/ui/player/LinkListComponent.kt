@@ -1,6 +1,7 @@
 package ui.player
 
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
+import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.html.CommonAttributeGroupFacade
 import react.RBuilder
 import react.dom.RDOMBuilder
@@ -17,7 +18,7 @@ class LinkListComponent(props: LinkListProps) : TulipReactComponent<LinkListProp
         state.items = emptyList()
         state.playingLink = null
         props.viewModel.linksResult flowValTo { updateState { items = it } }
-        props.viewModel.videoLinkToPlay flowValTo { updateState { playingLink = it.stream.origin ?: it.stream } }
+        props.viewModel.videoLinkPreparingOrPlaying flowValTo { updateState { playingLink = it } }
     }
 
     override fun RBuilder.render() {
@@ -29,7 +30,7 @@ class LinkListComponent(props: LinkListProps) : TulipReactComponent<LinkListProp
     }
 
     private fun RBuilder.renderLink(ref: UnloadedVideoStreamRef) {
-        if (state.playingLink == ref.info) {
+        if (state.playingLink?.getInitiallySelectedLink() == ref.info) {
             activeListItem { fillBadge(ref) }
         } else {
             listButton { fillBadge(ref) }
@@ -42,5 +43,12 @@ class LinkListComponent(props: LinkListProps) : TulipReactComponent<LinkListProp
         +"${info.serviceName} $watchable"
         renderLanguageBadge(lang, extraClasses = "ml-1")
         attrs.onClick = { props.itemCallback(ref) }
+    }
+
+    private fun VideoStreamRef.getInitiallySelectedLink(): VideoStreamRef {
+        return when(this) {
+            is VideoStreamRef.Unresolved -> this
+            is VideoStreamRef.Resolved -> origin ?: this
+        }
     }
 }

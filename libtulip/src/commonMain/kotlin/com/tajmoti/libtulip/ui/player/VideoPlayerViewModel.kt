@@ -7,6 +7,7 @@ import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.ui.streams.FailedLink
 import com.tajmoti.libtulip.ui.streams.LoadedLink
 import com.tajmoti.libtulip.ui.streams.SelectedLink
+import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -83,6 +84,11 @@ interface VideoPlayerViewModel {
      * Selected item which has redirects resolved, but doesn't support direct link loading.
      */
     val directLoadingUnsupported: SharedFlow<SelectedLink>
+
+    /**
+     * Link that was selected for playback. It might be loading, be already loaded, or errored out.
+     */
+    val videoLinkPreparingOrPlaying: StateFlow<VideoStreamRef?>
 
     /**
      * Selected item with direct link loaded.

@@ -149,6 +149,10 @@ class VideoPlayerViewModelImpl constructor(
         }
         .shareIn(viewModelScope, SharingStarted.Eagerly)
 
+    override val videoLinkPreparingOrPlaying = linkLoadingState
+        .map { state -> state.stream.takeIf { !state.download } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     override val videoLinkToPlay = linkLoadingState
         .map { state ->
             (state as? LinkLoadingState.LoadedDirect)
@@ -574,45 +578,58 @@ class VideoPlayerViewModelImpl constructor(
     }
 
     sealed interface LinkLoadingState {
-        object Idle : LinkLoadingState
+        /**
+         * The video stream that was selected.
+         */
+        val stream: VideoStreamRef?
+
+        /**
+         * Whether the stream is to be downloaded (else played).
+         */
+        val download: Boolean
+
+        object Idle : LinkLoadingState {
+            override val stream: VideoStreamRef? = null
+            override val download = false
+        }
 
         /**
          * The streaming page URL is being resolved.
          */
         data class Loading(
-            val stream: VideoStreamRef.Unresolved,
-            val download: Boolean,
+            override val stream: VideoStreamRef.Unresolved,
+            override val download: Boolean,
         ) : LinkLoadingState
 
         /**
          * Direct link extraction is not supported for the clicked streaming site.
          */
         data class DirectLinkUnsupported(
-            val stream: VideoStreamRef.Resolved,
-            val download: Boolean,
+            override val stream: VideoStreamRef.Resolved,
+            override val download: Boolean,
         ) : LinkLoadingState
 
         /**
          * A direct video link is being extracted.
          */
         data class LoadingDirect(
-            val stream: VideoStreamRef.Resolved,
-            val download: Boolean,
+            override val stream: VideoStreamRef.Resolved,
+            override val download: Boolean,
         ) : LinkLoadingState
 
         /**
          * A direct video link was extracted successfully.
          */
         data class LoadedDirect(
-            val stream: VideoStreamRef.Resolved,
-            val download: Boolean,
+            override val stream: VideoStreamRef.Resolved,
+            override val download: Boolean,
             val directLink: String,
         ) : LinkLoadingState
 
         data class Error(
-            val stream: VideoStreamRef,
+            override val stream: VideoStreamRef,
             val languageCode: LanguageCode,
-            val download: Boolean,
+            override val download: Boolean,
             val captcha: CaptchaInfo?,
         ) : LinkLoadingState
     }
