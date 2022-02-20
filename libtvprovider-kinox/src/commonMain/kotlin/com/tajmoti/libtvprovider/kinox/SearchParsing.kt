@@ -1,6 +1,5 @@
 package com.tajmoti.libtvprovider.kinox
 
-import com.tajmoti.commonutils.logger
 import com.tajmoti.ksoup.KElement
 import com.tajmoti.ksoup.KSoup
 import com.tajmoti.libtvprovider.model.SearchResult
@@ -11,13 +10,11 @@ internal fun parseSearchResultPageBlocking(
     throwAwayItemsWithNoYear: Boolean
 ): Result<List<SearchResult>> {
     return try {
-        KElement::class.logger.warn { "1" }
         val items = KSoup.parse(pageSource)
             .select("#RsltTableStatic > tbody:nth-child(2)")
             .first()
             .children()
             .mapNotNull { elemToSearchResult(it, throwAwayItemsWithNoYear) }
-        KElement::class.logger.warn { "2" }
         Result.success(items)
     } catch (e: Throwable) {
         Result.failure(e)
