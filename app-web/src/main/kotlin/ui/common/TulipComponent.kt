@@ -1,5 +1,7 @@
 package ui.common
 
+import com.tajmoti.libtulip.model.key.ItemKey
+import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import kotlinx.html.InputType
 import kotlinx.html.js.onChangeFunction
@@ -28,7 +30,7 @@ class TulipComponent : BaseComponent<Props, TulipState>() {
                 }
                 is TulipScreen.Search -> child(SearchComponent::class) {
                     attrs.query = scr.query
-                    attrs.onResultClicked = { updateState { screen = TulipScreen.TvShow(it as TvShowKey) } }
+                    attrs.onResultClicked = { updateState { screen = getScreenForKey(it) } }
                 }
                 is TulipScreen.TvShow -> child(TvShowComponent::class) {
                     attrs.tvShowKey = scr.key
@@ -38,6 +40,13 @@ class TulipComponent : BaseComponent<Props, TulipState>() {
                     attrs.streamableKey = scr.key
                 }
             }
+        }
+    }
+
+    private fun getScreenForKey(key: ItemKey): TulipScreen {
+        return when (key) {
+            is TvShowKey -> TulipScreen.TvShow(key)
+            is MovieKey -> TulipScreen.Player(key)
         }
     }
 
