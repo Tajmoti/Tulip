@@ -15,8 +15,8 @@ import ui.activeListItem
 import ui.listButton
 import ui.renderLanguageBadge
 
-class LinkListComponent(props: LinkListProps) :
-    ViewModelComponent<LinkListProps, VideoPlayerViewModel.State>(props.viewModel, props) {
+class LinkListComponent(props: LinkListProps) : ViewModelComponent<LinkListProps, VideoPlayerViewModel.State, VideoPlayerViewModel>(props) {
+    override fun getViewModel() = props.viewModel
 
     override fun RBuilder.render() {
         div("list-group") {

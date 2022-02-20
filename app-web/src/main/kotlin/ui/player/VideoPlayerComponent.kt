@@ -1,15 +1,19 @@
 package ui.player
 
+import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModelImpl
+import com.tajmoti.libtulip.ui.player.linkLoadingError
+import com.tajmoti.libtulip.ui.player.videoLinkToPlay
 import com.tajmoti.libtulip.ui.streams.LoadedLink
 import react.RBuilder
 import react.dom.h1
 import react.dom.video
-import ui.BaseComponent
+import ui.ViewModelComponent
 import ui.renderLoading
 
-class VideoPlayerComponent(props: VideoPlayerProps) : BaseComponent<VideoPlayerProps, VideoPlayerState>(props) {
-    private val viewModel = VideoPlayerViewModelImpl(
+class VideoPlayerComponent(props: VideoPlayerProps) :
+    ViewModelComponent<VideoPlayerProps, VideoPlayerViewModel.State, VideoPlayerViewModel>(props) {
+    override fun getViewModel() = VideoPlayerViewModelImpl(
         di.get(),
         di.get(),
         di.get(),
@@ -23,17 +27,14 @@ class VideoPlayerComponent(props: VideoPlayerProps) : BaseComponent<VideoPlayerP
         props.streamableKey
     )
 
-    init {
-        state.status = VideoPlayerStatus.Loading
-        viewModel.videoLinkToPlay flowValTo { updateState { status = VideoPlayerStatus.Loaded(it) } }
-        viewModel.linkLoadingError flowTo { updateState { status = VideoPlayerStatus.Error } }
-    }
-
     override fun RBuilder.render() {
-        when (val state = state.status) {
-            is VideoPlayerStatus.Loaded -> renderVideoPlayer(state.link)
-            is VideoPlayerStatus.Loading -> renderLoading("mb-5")
-            is VideoPlayerStatus.Error -> renderError()
+        val link = vmState.videoLinkToPlay
+        if (vmState.linkLoadingError != null) {
+            renderError()
+        } else if (link != null) {
+            renderVideoPlayer(link)
+        } else {
+            renderLoading("mb-5")
         }
         renderLinkList()
     }
