@@ -1,36 +1,33 @@
 package ui.player
 
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
+import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
+import com.tajmoti.libtulip.ui.player.linksResult
+import com.tajmoti.libtulip.ui.player.videoLinkPreparingOrPlaying
 import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.html.CommonAttributeGroupFacade
 import react.RBuilder
 import react.dom.RDOMBuilder
 import react.dom.div
 import react.dom.onClick
-import ui.TulipReactComponent
+import ui.ViewModelComponent
 import ui.activeListItem
 import ui.listButton
 import ui.renderLanguageBadge
 
-class LinkListComponent(props: LinkListProps) : TulipReactComponent<LinkListProps, LinkListState>(props) {
-
-    init {
-        state.items = emptyList()
-        state.playingLink = null
-        props.viewModel.linksResult flowValTo { updateState { items = it } }
-        props.viewModel.videoLinkPreparingOrPlaying flowValTo { updateState { playingLink = it } }
-    }
+class LinkListComponent(props: LinkListProps) :
+    ViewModelComponent<LinkListProps, VideoPlayerViewModel.State>(props.viewModel, props) {
 
     override fun RBuilder.render() {
         div("list-group") {
-            for (ref in state.items) {
+            for (ref in vmState.linksResult ?: emptyList()) {
                 renderLink(ref)
             }
         }
     }
 
     private fun RBuilder.renderLink(ref: UnloadedVideoStreamRef) {
-        if (state.playingLink?.getInitiallySelectedLink() == ref.info) {
+        if (vmState.videoLinkPreparingOrPlaying?.getInitiallySelectedLink() == ref.info) {
             activeListItem { fillBadge(ref) }
         } else {
             listButton { fillBadge(ref) }
@@ -46,7 +43,7 @@ class LinkListComponent(props: LinkListProps) : TulipReactComponent<LinkListProp
     }
 
     private fun VideoStreamRef.getInitiallySelectedLink(): VideoStreamRef {
-        return when(this) {
+        return when (this) {
             is VideoStreamRef.Unresolved -> this
             is VideoStreamRef.Resolved -> origin ?: this
         }

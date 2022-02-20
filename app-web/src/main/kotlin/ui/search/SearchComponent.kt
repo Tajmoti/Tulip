@@ -7,12 +7,12 @@ import com.tajmoti.libtulip.ui.search.SearchViewModelImpl
 import kotlinx.html.SPAN
 import react.RBuilder
 import react.dom.*
-import ui.TulipReactComponent
+import ui.BaseComponent
 import ui.listButton
 import ui.renderLanguageBadge
 import ui.renderLoading
 
-class SearchComponent(props: SearchProps) : TulipReactComponent<SearchProps, SearchState>(props) {
+class SearchComponent(props: SearchProps) : BaseComponent<SearchProps, SearchState>(props) {
     private val viewModel = SearchViewModelImpl(di.get(), scope)
 
     init {

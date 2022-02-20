@@ -9,7 +9,7 @@ import react.Props
 import react.RComponent
 import react.State
 
-abstract class TulipReactComponent<P : Props, S : State> : RComponent<P, S> {
+abstract class BaseComponent<P : Props, S : State> : RComponent<P, S> {
     constructor() : super()
     constructor(props: P) : super(props)
 

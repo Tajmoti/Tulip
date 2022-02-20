@@ -6,6 +6,7 @@ import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
+import com.tajmoti.libtulip.ui.StateViewModel
 import com.tajmoti.libtulip.ui.streams.FailedLink
 import com.tajmoti.libtulip.ui.streams.LoadedLink
 import com.tajmoti.libtulip.ui.streams.SelectedLink
@@ -14,13 +15,8 @@ import com.tajmoti.libtvvideoextractor.CaptchaInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 
-interface VideoPlayerViewModel {
+interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
     val viewModelScope: CoroutineScope
-
-    /**
-     * State of this ViewModel.
-     */
-    val state: StateFlow<State>
 
     data class State(
         /**

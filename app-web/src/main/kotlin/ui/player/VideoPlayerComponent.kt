@@ -5,10 +5,10 @@ import com.tajmoti.libtulip.ui.streams.LoadedLink
 import react.RBuilder
 import react.dom.h1
 import react.dom.video
-import ui.TulipReactComponent
+import ui.BaseComponent
 import ui.renderLoading
 
-class VideoPlayerComponent(props: VideoPlayerProps) : TulipReactComponent<VideoPlayerProps, VideoPlayerState>(props) {
+class VideoPlayerComponent(props: VideoPlayerProps) : BaseComponent<VideoPlayerProps, VideoPlayerState>(props) {
     private val viewModel = VideoPlayerViewModelImpl(
         di.get(),
         di.get(),

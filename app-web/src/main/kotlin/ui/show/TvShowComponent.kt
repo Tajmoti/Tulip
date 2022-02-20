@@ -6,12 +6,12 @@ import com.tajmoti.libtulip.ui.tvshow.TvShowViewModelImpl
 import react.RBuilder
 import react.dom.div
 import react.dom.onClick
-import ui.TulipReactComponent
+import ui.BaseComponent
 import ui.activeListItem
 import ui.listButton
 import ui.renderLoading
 
-class TvShowComponent(props: TvShowProps) : TulipReactComponent<TvShowProps, TvShowState>(props) {
+class TvShowComponent(props: TvShowProps) : BaseComponent<TvShowProps, TvShowState>(props) {
     private val viewModel = TvShowViewModelImpl(di.get(), di.get(), di.get(), di.get(), scope, props.tvShowKey)
 
     init {

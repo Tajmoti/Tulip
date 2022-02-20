@@ -7,13 +7,13 @@ import org.w3c.dom.HTMLInputElement
 import react.Props
 import react.RBuilder
 import react.dom.*
-import ui.TulipReactComponent
+import ui.BaseComponent
 import ui.library.LibraryComponent
 import ui.player.VideoPlayerComponent
 import ui.search.SearchComponent
 import ui.show.TvShowComponent
 
-class TulipComponent : TulipReactComponent<Props, TulipState>() {
+class TulipComponent : BaseComponent<Props, TulipState>() {
 
     init {
         state.screen = TulipScreen.Library
