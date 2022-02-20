@@ -3,8 +3,11 @@ package ui.player
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModelImpl
 import com.tajmoti.libtulip.ui.streams.LoadedLink
+import com.tajmoti.libtvprovider.model.VideoStreamRef
+import kotlinx.html.IframeSandbox
 import react.RBuilder
 import react.dom.h1
+import react.dom.iframe
 import react.dom.video
 import ui.ViewModelComponent
 import ui.renderLoading
@@ -27,12 +30,18 @@ class VideoPlayerComponent(props: VideoPlayerProps) :
 
     override fun RBuilder.render() {
         val link = vmState.selectedLinkState.videoLinkToPlay
-        if (vmState.selectedLinkState.linkLoadingError != null) {
-            renderError()
+        val linkError = vmState.selectedLinkState.linkLoadingError
+        val nonDirectLink = vmState.selectedLinkState.directLoadingUnsupported
+        if (vmState.linkListState.linksLoading) {
+            renderLoading("mb-5 text-info")
+        } else if (vmState.selectedLinkState.loadingStreamOrDirectLink) {
+            renderLoading("mb-5 text-primary")
         } else if (link != null) {
             renderVideoPlayer(link)
-        } else {
-            renderLoading("mb-5")
+        } else if (linkError != null) {
+            renderEmbeddedVideoPlayer(linkError.stream)
+        } else if (nonDirectLink != null) {
+            renderEmbeddedVideoPlayer(nonDirectLink.stream)
         }
         renderLinkList()
     }
@@ -49,6 +58,13 @@ class VideoPlayerComponent(props: VideoPlayerProps) :
             attrs.src = link.directLink
             attrs.controls = true
             attrs.autoPlay = true
+        }
+    }
+
+    private fun RBuilder.renderEmbeddedVideoPlayer(link: VideoStreamRef) {
+        iframe(classes = "w-100") {
+            attrs.src = link.url
+            attrs.height = "480px"
         }
     }
 

@@ -3,33 +3,32 @@ package ui.search
 import com.tajmoti.libtulip.model.search.GroupedSearchResult
 import com.tajmoti.libtulip.ui.search.SearchUi.getItemInfoForDisplay
 import com.tajmoti.libtulip.ui.search.SearchUi.getLanguagesForItem
+import com.tajmoti.libtulip.ui.search.SearchViewModel
 import com.tajmoti.libtulip.ui.search.SearchViewModelImpl
 import kotlinx.html.SPAN
 import react.RBuilder
 import react.dom.*
-import ui.BaseComponent
-import ui.listButton
-import ui.renderLanguageBadge
-import ui.renderLoading
+import ui.*
 
-class SearchComponent(props: SearchProps) : BaseComponent<SearchProps, SearchState>(props) {
-    private val viewModel = SearchViewModelImpl(di.get(), scope)
+class SearchComponent(props: SearchProps) : ViewModelComponent<SearchProps, SearchViewModel.State, SearchViewModel>(props) {
 
-    init {
-        state.results = emptyList()
-        viewModel.results flowTo { newResults -> updateState { results = newResults } }
+    override fun getViewModel(): SearchViewModel {
+        return SearchViewModelImpl(di.get(), scope)
     }
 
-    override fun componentDidUpdate(prevProps: SearchProps, prevState: SearchState, snapshot: Any) {
+    override fun componentDidUpdate(prevProps: SearchProps, prevState: ViewModelState<SearchViewModel.State>, snapshot: Any) {
         viewModel.submitNewText(props.query)
     }
 
     override fun RBuilder.render() {
-        val results = state.results
-        if (results != null) {
-            renderSearchResults(results)
-        } else {
+        if (vmState.loading) {
             renderLoading()
+        } else if (vmState.status == SearchViewModel.Icon.NO_RESULTS) {
+            renderNoResults()
+        } else if (vmState.status == SearchViewModel.Icon.ERROR) {
+            renderError()
+        } else {
+            renderSearchResults(vmState.results)
         }
     }
 
@@ -39,6 +38,14 @@ class SearchComponent(props: SearchProps) : BaseComponent<SearchProps, SearchSta
                 renderSearchResult(group)
             }
         }
+    }
+
+    private fun RBuilder.renderNoResults() {
+        h1 { +"No results :(" }
+    }
+
+    private fun RBuilder.renderError() {
+        h1 { +"Shit, error :/" }
     }
 
     private fun RBuilder.badge(block: RDOMBuilder<SPAN>.() -> Unit) {

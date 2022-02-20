@@ -2,25 +2,20 @@ package ui.show
 
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
+import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModelImpl
 import react.RBuilder
 import react.dom.div
 import react.dom.onClick
-import ui.BaseComponent
-import ui.activeListItem
-import ui.listButton
-import ui.renderLoading
+import ui.*
 
-class TvShowComponent(props: TvShowProps) : BaseComponent<TvShowProps, TvShowState>(props) {
-    private val viewModel = TvShowViewModelImpl(di.get(), di.get(), di.get(), di.get(), scope, props.tvShowKey)
-
-    init {
-        state.results = null
-        viewModel.seasons flowTo { updateState { results = it } }
+class TvShowComponent(props: TvShowProps) : ViewModelComponent<TvShowProps, TvShowViewModel.State, TvShowViewModel>(props) {
+    override fun getViewModel(): TvShowViewModel {
+        return TvShowViewModelImpl(di.get(), di.get(), di.get(), di.get(), scope, props.tvShowKey)
     }
 
     override fun RBuilder.render() {
-        val seasons = state.results
+        val seasons = vmState.seasons
         if (seasons != null) {
             renderSeasons(seasons)
         } else {
