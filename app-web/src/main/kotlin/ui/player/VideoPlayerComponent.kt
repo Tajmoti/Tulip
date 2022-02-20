@@ -2,8 +2,6 @@ package ui.player
 
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModelImpl
-import com.tajmoti.libtulip.ui.player.linkLoadingError
-import com.tajmoti.libtulip.ui.player.videoLinkToPlay
 import com.tajmoti.libtulip.ui.streams.LoadedLink
 import react.RBuilder
 import react.dom.h1
@@ -28,8 +26,8 @@ class VideoPlayerComponent(props: VideoPlayerProps) :
     )
 
     override fun RBuilder.render() {
-        val link = vmState.videoLinkToPlay
-        if (vmState.linkLoadingError != null) {
+        val link = vmState.selectedLinkState.videoLinkToPlay
+        if (vmState.selectedLinkState.linkLoadingError != null) {
             renderError()
         } else if (link != null) {
             renderVideoPlayer(link)

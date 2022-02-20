@@ -1,6 +1,6 @@
 package com.tajmoti.libtulip.ui.search
 
-import com.tajmoti.commonutils.map
+import com.tajmoti.commonutils.mapWith
 import com.tajmoti.libtulip.model.hosted.MappedSearchResult
 import com.tajmoti.libtulip.model.search.GroupedSearchResult
 import com.tajmoti.libtulip.service.MappingSearchService
@@ -9,12 +9,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class SearchViewModelImpl(
     private val mappingSearchService: MappingSearchService,
-    private val viewModelScope: CoroutineScope,
+    override val viewModelScope: CoroutineScope,
 ) : SearchViewModel {
     /**
      * Flow containing (even partial) queries entered into the search bar.
@@ -24,29 +23,10 @@ class SearchViewModelImpl(
     /**
      * State of searching of the [searchQuery].
      */
-    private val state = searchQuery
+    private val loadingState = searchQuery
         .debounce { if (it.isNullOrBlank()) 0L else DEBOUNCE_INTERVAL_MS }
-        .flatMapLatest { it?.let { searchQuery(it) } ?: flowOf(State.Idle) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, State.Idle)
-
-    override val loading = state
-        .map(viewModelScope) { it is State.Searching }
-
-    override val results = state
-        .map(viewModelScope) { (it as? State.Success)?.results ?: emptyList() }
-
-    override val status = state
-        .map(viewModelScope) {
-            when {
-                it is State.Idle -> SearchViewModel.Icon.READY
-                it is State.Success && it.results.isEmpty() -> SearchViewModel.Icon.NO_RESULTS
-                it is State.Error -> SearchViewModel.Icon.ERROR
-                else -> null
-            }
-        }
-
-    override val canTryAgain = state
-        .map(viewModelScope) { it is State.Error }
+        .flatMapLatest { it?.let { searchQuery(it) } ?: flowOf(LoadingState.Idle) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, LoadingState.Idle)
 
     /**
      * Submit a new query to be searched
@@ -65,9 +45,13 @@ class SearchViewModelImpl(
     }
 
     private fun searchQuery(query: String) = flow {
-        emit(State.Searching)
+        emit(LoadingState.Searching)
         val flowOfStates = mappingSearchService.searchAndCreateMappings(query)
-            .map { result -> result.fold({ State.Success(groupAndSortMappedResults(it)) }, { State.Error }) }
+            .map { result ->
+                result.fold(
+                    { LoadingState.Success(groupAndSortMappedResults(it)) },
+                    { LoadingState.Error })
+            }
         emitAll(flowOfStates)
     }
 
@@ -95,19 +79,41 @@ class SearchViewModelImpl(
     private fun groupItemsByTmdbIds(items: List<MappedSearchResult.TvShow>): List<GroupedSearchResult> {
         return items
             .groupBy { it.tmdbId }
-            .mapNotNull { (key, value) -> key?.let { GroupedSearchResult.TvShow(key, value) } ?: GroupedSearchResult.UnrecognizedTvShow(value) }
+            .mapNotNull { (key, value) ->
+                key?.let { GroupedSearchResult.TvShow(key, value) } ?: GroupedSearchResult.UnrecognizedTvShow(value)
+            }
     }
 
     private fun groupItemsByTmdbIdsMovie(items: List<MappedSearchResult.Movie>): List<GroupedSearchResult> {
         return items
             .groupBy { it.tmdbId }
-            .mapNotNull { (key, value) -> key?.let { GroupedSearchResult.Movie(key, value) } ?: GroupedSearchResult.UnrecognizedMovie(value) }
+            .mapNotNull { (key, value) ->
+                key?.let { GroupedSearchResult.Movie(key, value) } ?: GroupedSearchResult.UnrecognizedMovie(value)
+            }
     }
 
-    sealed interface State {
-        object Idle : State
-        object Searching : State
-        data class Success(val results: List<GroupedSearchResult>) : State
-        object Error : State
+
+    sealed interface LoadingState {
+        object Idle : LoadingState
+        object Searching : LoadingState
+        data class Success(val results: List<GroupedSearchResult>) : LoadingState
+        object Error : LoadingState
+    }
+
+
+    override val state = loadingState.mapWith(viewModelScope) {
+        SearchViewModel.State(
+            loading = this is LoadingState.Searching,
+            results = (this as? LoadingState.Success)?.results ?: emptyList(),
+            status = this.toStatusIcon(),
+            canTryAgain = this is LoadingState.Error
+        )
+    }
+
+    private fun LoadingState.toStatusIcon() = when {
+        this is LoadingState.Idle -> SearchViewModel.Icon.READY
+        this is LoadingState.Success && this.results.isEmpty() -> SearchViewModel.Icon.NO_RESULTS
+        this is LoadingState.Error -> SearchViewModel.Icon.ERROR
+        else -> null
     }
 }

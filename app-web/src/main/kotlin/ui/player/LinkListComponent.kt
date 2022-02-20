@@ -2,8 +2,6 @@ package ui.player
 
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
-import com.tajmoti.libtulip.ui.player.linksResult
-import com.tajmoti.libtulip.ui.player.videoLinkPreparingOrPlaying
 import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.html.CommonAttributeGroupFacade
 import react.RBuilder
@@ -20,14 +18,14 @@ class LinkListComponent(props: LinkListProps) : ViewModelComponent<LinkListProps
 
     override fun RBuilder.render() {
         div("list-group") {
-            for (ref in vmState.linksResult ?: emptyList()) {
+            for (ref in vmState.linkListState.linksResult ?: emptyList()) {
                 renderLink(ref)
             }
         }
     }
 
     private fun RBuilder.renderLink(ref: UnloadedVideoStreamRef) {
-        if (vmState.videoLinkPreparingOrPlaying?.getInitiallySelectedLink() == ref.info) {
+        if (vmState.selectedLinkState.videoLinkPreparingOrPlaying?.getInitiallySelectedLink() == ref.info) {
             activeListItem { fillBadge(ref) }
         } else {
             listButton { fillBadge(ref) }

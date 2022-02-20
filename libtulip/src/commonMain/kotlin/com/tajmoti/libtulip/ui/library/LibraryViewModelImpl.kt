@@ -1,6 +1,7 @@
 package com.tajmoti.libtulip.ui.library
 
 import com.tajmoti.commonutils.combineNonEmpty
+import com.tajmoti.commonutils.map
 import com.tajmoti.commonutils.mapBoth
 import com.tajmoti.libtulip.misc.job.NetFlow
 import com.tajmoti.libtulip.misc.job.NetworkResult
@@ -18,10 +19,10 @@ class LibraryViewModelImpl constructor(
     private val historyRepository: PlayingHistoryRepository,
     private val hostedTvDataRepository: HostedTvDataRepository,
     private val tmdbRepo: TmdbTvDataRepository,
-    viewModelScope: CoroutineScope,
+    override val viewModelScope: CoroutineScope,
 ) : LibraryViewModel {
 
-    override val favoriteItems = favoritesRepo.getUserFavorites()
+    private val favoriteItemsImpl = favoritesRepo.getUserFavorites()
         .flatMapLatest { mapFavorites(it) }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
@@ -76,4 +77,7 @@ class LibraryViewModelImpl constructor(
         item: TulipItem.Hosted,
         pos: LastPlayedPosition?
     ) = LibraryItem(key, item.name, null, pos)
+
+
+    override val state = favoriteItemsImpl.map(viewModelScope) { LibraryViewModel.State(it) }
 }

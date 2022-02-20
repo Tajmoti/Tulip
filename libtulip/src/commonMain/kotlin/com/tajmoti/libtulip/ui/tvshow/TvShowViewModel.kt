@@ -1,40 +1,77 @@
 package com.tajmoti.libtulip.ui.tvshow
 
+import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
 import com.tajmoti.libtulip.model.key.SeasonKey
+import com.tajmoti.libtulip.ui.StateViewModel
 import kotlinx.coroutines.flow.StateFlow
 
-interface TvShowViewModel {
+interface TvShowViewModel : StateViewModel<TvShowViewModel.State> {
+
+    data class State(
+        /**
+         * Name of the TV show
+         */
+        val name: String?,
+        /**
+         * Backdrop image path of this TV show
+         */
+        val backdropPath: String?,
+        /**
+         * Seasons belonging to this TV show.
+         * The list is sorted - specials come after all real seasons.
+         */
+        val seasons: List<TulipSeasonInfo>?,
+        /**
+         * Season to display episodes from.
+         */
+        val selectedSeason: SeasonKey?,
+        /**
+         * True if an error occurred during show loading
+         */
+        val error: Boolean,
+        /**
+         * True if this item is saved in the user's favorites
+         */
+        val isFavorite: Boolean,
+    )
+
     /**
      * Name of the TV show
      */
     val name: StateFlow<String?>
+        get() = state.map(viewModelScope, State::name)
 
     /**
      * Backdrop image path of this TV show
      */
     val backdropPath: StateFlow<String?>
+        get() = state.map(viewModelScope, State::backdropPath)
 
     /**
      * Seasons belonging to this TV show.
      * The list is sorted - specials come after all real seasons.
      */
     val seasons: StateFlow<List<TulipSeasonInfo>?>
+        get() = state.map(viewModelScope, State::seasons)
 
     /**
      * Season to display episodes from.
      */
     val selectedSeason: StateFlow<SeasonKey?>
+        get() = state.map(viewModelScope, State::selectedSeason)
 
     /**
      * True if an error occurred during show loading
      */
     val error: StateFlow<Boolean>
+        get() = state.map(viewModelScope, State::error)
 
     /**
      * True if this item is saved in the user's favorites
      */
     val isFavorite: StateFlow<Boolean>
+        get() = state.map(viewModelScope, State::isFavorite)
 
     /**
      * Retries the last fetching request

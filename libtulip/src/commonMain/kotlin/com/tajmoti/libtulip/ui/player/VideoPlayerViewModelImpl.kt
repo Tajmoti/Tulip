@@ -1,6 +1,8 @@
 package com.tajmoti.libtulip.ui.player
 
 import com.tajmoti.commonutils.map
+import com.tajmoti.commonutils.mapWith
+import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
 import com.tajmoti.libtulip.model.key.EpisodeKey
@@ -14,7 +16,11 @@ import com.tajmoti.libtulip.service.StreamExtractionService
 import com.tajmoti.libtulip.service.StreamService
 import com.tajmoti.libtulip.service.SubtitleService
 import com.tajmoti.libtulip.service.VideoDownloadService
+import com.tajmoti.libtulip.ui.streams.FailedLink
+import com.tajmoti.libtulip.ui.streams.LoadedLink
+import com.tajmoti.libtulip.ui.streams.SelectedLink
 import com.tajmoti.libtvprovider.model.VideoStreamRef
+import com.tajmoti.libtvvideoextractor.CaptchaInfo
 import com.tajmoti.libtvvideoextractor.ExtractionError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -63,7 +69,7 @@ class VideoPlayerViewModelImpl constructor(
      */
     private val linkListLoadingState = keyWithLinkListLoadingState
         .map { (_, state) -> state }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, VideoPlayerViewModel.LinkListLoadingState.Loading)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, LinkListLoadingState.Loading)
 
     /**
      * Manually selected stream to play.
@@ -74,7 +80,7 @@ class VideoPlayerViewModelImpl constructor(
      * Auto-selected stream to play.
      */
     private val autoStream = keyWithLinkListLoadingState
-        .mapNotNull { (key, state) -> (state as? VideoPlayerViewModel.LinkListLoadingState.Success)?.let { key to state.streams } }
+        .mapNotNull { (key, state) -> (state as? LinkListLoadingState.Success)?.let { key to state.streams } }
         .filter { (_, streams) -> anyGoodStreams(streams) }
         .distinctUntilChangedBy { (key, _) -> key }
         .map { (_, streams) -> firstGoodStream(streams) to false }
@@ -98,11 +104,11 @@ class VideoPlayerViewModelImpl constructor(
     private val linkLoadingState = streamToPlay
         .flatMapLatest {
             it?.let { fetchStreams(it.first, it.second) }
-                ?: flowOf(VideoPlayerViewModel.LinkLoadingState.Idle)
+                ?: flowOf(LinkLoadingState.Idle)
         }
         .shareIn(viewModelScope, SharingStarted.Lazily)
 
-    override val streamableInfo = streamableKeyImpl
+    private val internalStreamableInfo = streamableKeyImpl
         .flatMapLatest { getStreamableInfo(it) }
         .map { it.getOrNull() }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
@@ -116,15 +122,12 @@ class VideoPlayerViewModelImpl constructor(
         .map { (episodes, key) -> episodes?.let { selectNextEpisode(it, key) } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    private val hasNextEpisodeImpl = nextEpisode
-        .map(viewModelScope) { it != null }
-
     /**
      * State of subtitle list loading.
      */
     private val loadingSubtitlesState = streamableKeyImpl
         .flatMapLatest { loadSubtitleList(it) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, VideoPlayerViewModel.SubtitleListLoadingState.Loading)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, SubtitleListLoadingState.Loading)
 
     /**
      * Subtitles that should be downloaded and applied.
@@ -135,8 +138,8 @@ class VideoPlayerViewModelImpl constructor(
      * State of downloading of the selected subtitles.
      */
     private val subtitleDownloadState = subtitlesToDownload
-        .flatMapLatest { if (it != null) downloadSubtitles(it) else flowOf(VideoPlayerViewModel.SubtitleDownloadingState.Idle) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, VideoPlayerViewModel.SubtitleDownloadingState.Idle)
+        .flatMapLatest { if (it != null) downloadSubtitles(it) else flowOf(SubtitleDownloadingState.Idle) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, SubtitleDownloadingState.Idle)
 
     /**
      * Currently attached media player.
@@ -146,14 +149,17 @@ class VideoPlayerViewModelImpl constructor(
     /**
      * State of the currently attached media player.
      */
-    override val mediaPlayerState = attachedMediaPlayer
+    private val mediaPlayerStateImpl = attachedMediaPlayer
         .flatMapLatest { it?.state ?: flowOf(MediaPlayerState.Idle) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, MediaPlayerState.Idle)
+
+    private val positionImpl = mediaPlayerStateImpl
+        .map(viewModelScope) { state -> state.validPositionOrNull }
 
     /**
      * Progress of the currently playing media or null if nothing is currently playing.
      */
-    private val progress = position
+    private val progress = positionImpl
         .map { state -> state?.fraction }
 
     /**
@@ -187,13 +193,16 @@ class VideoPlayerViewModelImpl constructor(
      * If not null, the user has pressed a button because they
      * saw a word that they want to match to a later shown subtitle text or vice versa.
      */
-    private val subSyncState = MutableStateFlow<VideoPlayerViewModel.SubtitleSyncState?>(null)
+    private val subSyncState = MutableStateFlow<SubtitleSyncState?>(null)
+
+    private val isPlayingImpl = mediaPlayerStateImpl
+        .map(viewModelScope) { it is MediaPlayerState.Playing }
 
     /**
      * The current playing position while the media is actively playing,
      * sampled each [PLAY_POSITION_SAMPLE_PERIOD_MS] milliseconds.
      */
-    private val playingPositionToPersist = combine(streamableKeyImpl, progress, isPlaying)
+    private val playingPositionToPersist = combine(streamableKeyImpl, progress, isPlayingImpl)
     { key, progress, playing -> Triple(key, progress, playing) }
         // This prevents an existing position from being applied to a newly selected streamable
         .distinctUntilChanged { (_, pos1), (_, pos2) -> pos1 == pos2 }
@@ -234,22 +243,22 @@ class VideoPlayerViewModelImpl constructor(
     }
 
     override fun onWordHeard() {
-        val time = position.value?.timeMs ?: return
-        val seen = subSyncState.value as? VideoPlayerViewModel.SubtitleSyncState.Seen
+        val time = positionImpl.value?.timeMs ?: return
+        val seen = subSyncState.value as? SubtitleSyncState.Seen
         if (seen == null) {
             val existingOffset = subSyncState.value?.offsetMs ?: 0L
-            subSyncState.value = VideoPlayerViewModel.SubtitleSyncState.Heard(time, existingOffset)
+            subSyncState.value = SubtitleSyncState.Heard(time, existingOffset)
         } else {
             calculateAndSetSubtitleDelay(time, seen.time)
         }
     }
 
     override fun onTextSeen() {
-        val time = position.value?.timeMs ?: return
-        val heard = subSyncState.value as? VideoPlayerViewModel.SubtitleSyncState.Heard
+        val time = positionImpl.value?.timeMs ?: return
+        val heard = subSyncState.value as? SubtitleSyncState.Heard
         if (heard == null) {
             val existingOffset = subSyncState.value?.offsetMs ?: 0L
-            subSyncState.value = VideoPlayerViewModel.SubtitleSyncState.Seen(time, existingOffset)
+            subSyncState.value = SubtitleSyncState.Seen(time, existingOffset)
         } else {
             calculateAndSetSubtitleDelay(heard.time, time)
         }
@@ -299,9 +308,9 @@ class VideoPlayerViewModelImpl constructor(
     }
 
     private fun loadSubtitleList(id: StreamableKey) = flow {
-        emit(VideoPlayerViewModel.SubtitleListLoadingState.Loading)
+        emit(SubtitleListLoadingState.Loading)
         val result = subtitleRepository.getAvailableSubtitles(id)
-            .fold({ VideoPlayerViewModel.SubtitleListLoadingState.Success(it) }, { VideoPlayerViewModel.SubtitleListLoadingState.Error })
+            .fold({ SubtitleListLoadingState.Success(it) }, { SubtitleListLoadingState.Error })
         emit(result)
     }
 
@@ -309,13 +318,13 @@ class VideoPlayerViewModelImpl constructor(
         val existingOffset = subSyncState.value?.offsetMs ?: 0L
         val newOffset = heardTime - seenTime
         val delaySubtitlesByMs = existingOffset + newOffset
-        subSyncState.value = VideoPlayerViewModel.SubtitleSyncState.OffsetUsed(delaySubtitlesByMs)
+        subSyncState.value = SubtitleSyncState.OffsetUsed(delaySubtitlesByMs)
     }
 
     private fun downloadSubtitles(subtitleInfo: SubtitleInfo) = flow {
-        emit(VideoPlayerViewModel.SubtitleDownloadingState.Loading)
+        emit(SubtitleDownloadingState.Loading)
         val subtitleResult = subtitleService.downloadSubtitleToFile(subtitleInfo, subDirectory)
-            .fold({ VideoPlayerViewModel.SubtitleDownloadingState.Success(it) }, { VideoPlayerViewModel.SubtitleDownloadingState.Error })
+            .fold({ SubtitleDownloadingState.Success(it) }, { SubtitleDownloadingState.Error })
         emit(subtitleResult)
     }
 
@@ -344,7 +353,7 @@ class VideoPlayerViewModelImpl constructor(
     }
 
     private fun fetchStreams(stream: UnloadedVideoStreamRef, download: Boolean) = flow {
-        emit(VideoPlayerViewModel.LinkLoadingState.Idle)
+        emit(LinkLoadingState.Idle)
         val flow = when (val info = stream.info) {
             is VideoStreamRef.Resolved ->
                 processResolvedLink(stream, info, download)
@@ -363,10 +372,10 @@ class VideoPlayerViewModelImpl constructor(
         info: VideoStreamRef.Unresolved,
         download: Boolean,
     ) = flow {
-        emit(VideoPlayerViewModel.LinkLoadingState.Loading(info, download))
+        emit(LinkLoadingState.Loading(info, download))
         streamExtractionService.resolveStream(info)
             .onSuccess { emitAll(processResolvedLink(ref, it, download)) }
-            .onFailure { emit(VideoPlayerViewModel.LinkLoadingState.Error(info, ref.language, download, null)) }
+            .onFailure { emit(LinkLoadingState.Error(info, ref.language, download, null)) }
     }
 
     private suspend fun processResolvedLink(
@@ -375,15 +384,15 @@ class VideoPlayerViewModelImpl constructor(
         download: Boolean,
     ) = flow {
         if (!ref.linkExtractionSupported) {
-            emit(VideoPlayerViewModel.LinkLoadingState.DirectLinkUnsupported(info, download))
+            emit(LinkLoadingState.DirectLinkUnsupported(info, download))
             return@flow
         }
-        emit(VideoPlayerViewModel.LinkLoadingState.LoadingDirect(info, download))
+        emit(LinkLoadingState.LoadingDirect(info, download))
         val result = streamExtractionService.extractVideoLink(info)
             .map { result -> if (download) downloadVideo(result); result }
             .fold(
-                { VideoPlayerViewModel.LinkLoadingState.Error(info, ref.language, download, captchaOrNull(it)) },
-                { VideoPlayerViewModel.LinkLoadingState.LoadedDirect(info, download, it) },
+                { LinkLoadingState.Error(info, ref.language, download, captchaOrNull(it)) },
+                { LinkLoadingState.LoadedDirect(info, download, it) },
             )
         emit(result)
     }
@@ -392,13 +401,13 @@ class VideoPlayerViewModelImpl constructor(
         (it as? ExtractionError.Captcha)?.info
 
     private fun downloadVideo(link: String) {
-        downloadService.downloadFileToFiles(link, streamableInfo.value!!)
+        downloadService.downloadFileToFiles(link, internalStreamableInfo.value!!)
     }
 
-    private fun mapStreamsResult(result: StreamsResult): VideoPlayerViewModel.LinkListLoadingState {
+    private fun mapStreamsResult(result: StreamsResult): LinkListLoadingState {
         return when (result) {
-            is StreamsResult.Success -> VideoPlayerViewModel.LinkListLoadingState.Success(result.streams, result.possiblyFinished)
-            is StreamsResult.Error -> VideoPlayerViewModel.LinkListLoadingState.Error
+            is StreamsResult.Success -> LinkListLoadingState.Success(result.streams, result.possiblyFinished)
+            is StreamsResult.Error -> LinkListLoadingState.Error
         }
     }
 
@@ -411,18 +420,127 @@ class VideoPlayerViewModelImpl constructor(
         }
     }
 
-    override val state = com.tajmoti.commonutils.combine(
+
+    sealed interface SubtitleListLoadingState {
+        object Loading : SubtitleListLoadingState
+        data class Success(val subtitles: List<SubtitleInfo>) : SubtitleListLoadingState
+        object Error : SubtitleListLoadingState
+    }
+
+    sealed interface SubtitleDownloadingState {
+        object Idle : SubtitleDownloadingState
+        object Loading : SubtitleDownloadingState
+        data class Success(val subtitles: String) : SubtitleDownloadingState
+        object Error : SubtitleDownloadingState
+    }
+
+    sealed interface SubtitleSyncState {
+        /**
+         * Subtitle offset to use.
+         * Positive values mean that subtitles must be delayed,
+         * negative values mean they need to be shown earlier.
+         */
+        val offsetMs: Long
+
+        class Heard(val time: Long, override val offsetMs: Long) : SubtitleSyncState
+        class Seen(val time: Long, override val offsetMs: Long) : SubtitleSyncState
+        class OffsetUsed(override val offsetMs: Long) : SubtitleSyncState
+    }
+
+    sealed interface LinkListLoadingState {
+        /**
+         * Marker state before the loading is started.
+         */
+        object Loading : LinkListLoadingState
+
+        /**
+         * Streamable item loaded successfully.
+         */
+        data class Success(
+            val streams: List<UnloadedVideoStreamRef>,
+            /**
+             * Whether this is the final value and no more will be loaded.
+             */
+            val final: Boolean,
+        ) : LinkListLoadingState
+
+        /**
+         * Error during loading of the item.
+         */
+        object Error : LinkListLoadingState
+    }
+
+    sealed interface LinkLoadingState {
+        /**
+         * The video stream that was selected.
+         */
+        val stream: VideoStreamRef?
+
+        /**
+         * Whether the stream is to be downloaded (else played).
+         */
+        val download: Boolean
+
+        object Idle : LinkLoadingState {
+            override val stream: VideoStreamRef? = null
+            override val download = false
+        }
+
+        /**
+         * The streaming page URL is being resolved.
+         */
+        data class Loading(
+            override val stream: VideoStreamRef.Unresolved,
+            override val download: Boolean,
+        ) : LinkLoadingState
+
+        /**
+         * Direct link extraction is not supported for the clicked streaming site.
+         */
+        data class DirectLinkUnsupported(
+            override val stream: VideoStreamRef.Resolved,
+            override val download: Boolean,
+        ) : LinkLoadingState
+
+        /**
+         * A direct video link is being extracted.
+         */
+        data class LoadingDirect(
+            override val stream: VideoStreamRef.Resolved,
+            override val download: Boolean,
+        ) : LinkLoadingState
+
+        /**
+         * A direct video link was extracted successfully.
+         */
+        data class LoadedDirect(
+            override val stream: VideoStreamRef.Resolved,
+            override val download: Boolean,
+            val directLink: String,
+        ) : LinkLoadingState
+
+        data class Error(
+            override val stream: VideoStreamRef,
+            val languageCode: LanguageCode,
+            override val download: Boolean,
+            val captcha: CaptchaInfo?,
+        ) : LinkLoadingState
+    }
+
+
+    private val internalState = com.tajmoti.commonutils.combine(
         streamableKeyImpl,
-        streamableInfo,
+        internalStreamableInfo,
         linkListLoadingState,
         linkLoadingState,
         loadingSubtitlesState,
         subtitleDownloadState,
+        mediaPlayerStateImpl,
         subSyncState,
-        hasNextEpisodeImpl
-    ) { a, b, c, d, e, f, g, h ->
-        VideoPlayerViewModel.State(a, b, c, d, e, f, g, h)
-    }.stateIn(viewModelScope, SharingStarted.Lazily, VideoPlayerViewModel.State())
+        nextEpisode
+    ) { a, b, c, d, e, f, g, h, i ->
+        InternalState(a, b, c, d, e, f, g, h, i)
+    }.stateIn(viewModelScope, SharingStarted.Lazily, InternalState())
 
     companion object {
         /**
@@ -434,5 +552,95 @@ class VideoPlayerViewModelImpl constructor(
          * How much will be skipped when skipping backward or forward.
          */
         private const val REWIND_TIME_MS = 10_000
+    }
+
+    data class InternalState(
+        /**
+         * Key of the streamable that is currently being loaded or played.
+         */
+        val streamableKey: StreamableKey? = null,
+        /**
+         * Streamable info of [InternalState.streamableKey] or null if not yet available.
+         */
+        val streamableInfo: StreamableInfo? = null,
+        /**
+         * Status of video link list loading.
+         */
+        val linkListLoadingState: LinkListLoadingState = LinkListLoadingState.Loading,
+        /**
+         * Status of loading of a selected link.
+         */
+        val linkLoadingState: LinkLoadingState = LinkLoadingState.Idle,
+        /**
+         * Status of subtitle list loading.
+         */
+        val loadingSubtitlesState: SubtitleListLoadingState = SubtitleListLoadingState.Loading,
+        /**
+         * Status of selected subtitle file downloading.
+         */
+        val subtitleDownloadState: SubtitleDownloadingState = SubtitleDownloadingState.Idle,
+        /**
+         * Media player state.
+         */
+        val playerState: MediaPlayerState = MediaPlayerState.Idle,
+        /**
+         * Subtitle synchronization state.
+         */
+        val subSyncState: SubtitleSyncState? = null,
+        /**
+         * If a TV show is playing, this is the next episode.
+         */
+        val nextEpisode: EpisodeKey? = null
+    )
+
+    override val state = internalState.mapWith(viewModelScope) {
+        val streamLoadingFinalSuccessState = (linkListLoadingState as? LinkListLoadingState.Success)?.takeIf { success -> success.final }
+        VideoPlayerViewModel.State(
+            isTvShow = streamableKey is EpisodeKey,
+            hasNextEpisode = nextEpisode != null,
+            streamableKey = streamableKey,
+            streamableInfo = streamableInfo,
+            linkListState = VideoPlayerViewModel.LinkListState(
+                linksLoading = linkListLoadingState is LinkListLoadingState.Loading || (linkListLoadingState is LinkListLoadingState.Success && linkListLoadingState.streams.isEmpty() && !(streamLoadingFinalSuccessState?.streams?.none() ?: false)),
+                linksResult = (linkListLoadingState as? LinkListLoadingState.Success)?.streams,
+                linksAnyResult = (linkListLoadingState as? LinkListLoadingState.Success)?.streams?.any() ?: false,
+                linksNoResult = streamLoadingFinalSuccessState?.streams?.none() ?: false,
+            ),
+            selectedLinkState = VideoPlayerViewModel.SelectedLinkState(
+                loadingStreamOrDirectLink = linkLoadingState is LinkLoadingState.Loading || linkLoadingState is LinkLoadingState.LoadingDirect,
+                videoLinkPreparingOrPlaying = linkLoadingState.stream.takeIf { !linkLoadingState.download },
+                videoLinkToPlay = (linkLoadingState as? LinkLoadingState.LoadedDirect)?.takeIf { !it.download }?.let { LoadedLink(it.stream, it.directLink) },
+                videoLinkToDownload = (linkLoadingState as? LinkLoadingState.LoadedDirect)?.takeIf { it.download }?.let { LoadedLink(it.stream, it.directLink) },
+                linkLoadingError = (linkLoadingState as? LinkLoadingState.Error)?.let { FailedLink(it.stream, it.languageCode, it.download, it.captcha) },
+                directLoadingUnsupported = (linkLoadingState as? LinkLoadingState.DirectLinkUnsupported)?.let { SelectedLink(it.stream, it.download) }
+            ),
+            playbackState = VideoPlayerViewModel.PlaybackState(
+                subtitleOffset = (subSyncState as? SubtitleSyncState.OffsetUsed)?.offsetMs ?: 0L,
+                showPlayButton = playerStateToPlayButtonState(playerState),
+                isPlaying = playerState is MediaPlayerState.Playing,
+                buffering = (playerState as? MediaPlayerState.Buffering)?.percent,
+                position = playerState.validPositionOrNull,
+                isDonePlaying = playerState is MediaPlayerState.Finished,
+                isError = playerState is MediaPlayerState.Error,
+                mediaPlayerState = playerState
+            ),
+            subtitleState = VideoPlayerViewModel.SubtitleState(
+                subtitleList = (loadingSubtitlesState as? SubtitleListLoadingState.Success)?.subtitles ?: emptyList(),
+                loadingSubtitleList = loadingSubtitlesState is SubtitleListLoadingState.Loading,
+                subtitlesReadyToSelect = loadingSubtitlesState is SubtitleListLoadingState.Success,
+                downloadingSubtitles = subtitleDownloadState is SubtitleDownloadingState.Loading,
+                subtitleDownloadError = subtitleDownloadState is SubtitleDownloadingState.Error,
+                subtitleFile = (subtitleDownloadState as? SubtitleDownloadingState.Success)?.subtitles,
+            )
+        )
+    }
+
+    private fun playerStateToPlayButtonState(state: MediaPlayerState) = when (state) {
+        is MediaPlayerState.Buffering -> VideoPlayerViewModel.PlayButtonState.HIDE
+        is MediaPlayerState.Error -> VideoPlayerViewModel.PlayButtonState.HIDE
+        is MediaPlayerState.Idle -> VideoPlayerViewModel.PlayButtonState.HIDE
+        is MediaPlayerState.Paused -> VideoPlayerViewModel.PlayButtonState.SHOW_PLAY
+        is MediaPlayerState.Playing -> VideoPlayerViewModel.PlayButtonState.SHOW_PAUSE
+        is MediaPlayerState.Finished -> VideoPlayerViewModel.PlayButtonState.HIDE
     }
 }
