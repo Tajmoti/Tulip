@@ -3,6 +3,7 @@ package ui
 import AppDiHolder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import react.Props
@@ -16,10 +17,9 @@ abstract class BaseComponent<P : Props, S : State> : RComponent<P, S> {
     protected val scope = CoroutineScope(Dispatchers.Default)
     protected val di = AppDiHolder.di
 
-//    override fun componentWillUnmount() {
-//        scope.cancel()
-//        super.componentWillUnmount()
-//    }
+    override fun componentWillUnmount() {
+        scope.cancel()
+    }
 
     protected fun updateState(block: S.() -> Unit) {
         setState({ block(it); it })
