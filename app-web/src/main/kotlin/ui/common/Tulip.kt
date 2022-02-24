@@ -1,5 +1,6 @@
 package ui.common
 
+import com.tajmoti.libtulip.TulipBuildInfo
 import kotlinx.html.InputType
 import kotlinx.html.js.onChangeFunction
 import org.w3c.dom.HTMLInputElement
@@ -58,6 +59,7 @@ val Tulip = fc<Props> {
                 }
             }
         }
+        TulipFooter {}
     }
 }
 
@@ -75,6 +77,14 @@ private val TulipNavBar = fc<Props> {
                     nav.invoke("/search?query=${query}")
                 }
             }
+        }
+    }
+}
+
+private val TulipFooter = fc<Props> {
+    footer("navbar navbar-dark bg-dark text-light mt-auto mt-2") {
+        span("navbar-text") {
+            +"Build ${TulipBuildInfo.commit}"
         }
     }
 }

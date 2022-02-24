@@ -1,5 +1,6 @@
 import org.gradle.api.Project
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 fun getEnvOrLocalSecret(project: Project, name: String, secretName: String): String {
     return System.getenv()[name]
@@ -20,4 +21,13 @@ private fun getLocalSecret(project: Project, secretName: String): String? {
 
 private fun getLocalDefaultSecret(project: Project, secretName: String): String? {
     return getLocalProp(project, secretName, "default.secrets.properties")
+}
+
+fun getGitCommitHash(): String {
+    val proc = ProcessBuilder("git", "rev-parse", "--short", "HEAD")
+        .redirectOutput(ProcessBuilder.Redirect.PIPE)
+        .redirectError(ProcessBuilder.Redirect.PIPE)
+        .start()
+    proc.waitFor(5, TimeUnit.SECONDS)
+    return proc.inputStream.bufferedReader().readText()
 }

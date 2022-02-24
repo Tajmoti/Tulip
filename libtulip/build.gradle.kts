@@ -42,6 +42,7 @@ buildkonfig {
     defaultConfigs {
         addSecretFromEnvOrFile("tmdbApiKey", "TMDB_API_KEY")
         addSecretFromEnvOrFile("openSubtitlesApiKey", "OPENSUBTITLES_API_KEY")
+        buildConfigField(FieldSpec.Type.STRING, "commit", getGitCommitHash())
     }
 }
 
