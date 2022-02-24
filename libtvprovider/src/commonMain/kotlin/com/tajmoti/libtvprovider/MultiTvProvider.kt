@@ -30,10 +30,10 @@ class MultiTvProvider<S>(
     }
 
     private fun searchAsFlow(provider: TvProvider, query: String): Flow<Result<List<SearchResult>>> {
-        return flow { emit(search(provider, query)) }
+        return flow { search(provider, query)?.let { emit(it) } }
     }
 
-    private suspend fun search(provider: TvProvider, query: String): Result<List<SearchResult>> {
+    private suspend fun search(provider: TvProvider, query: String): Result<List<SearchResult>>? {
         return try {
             withTimeout(timeoutMs) { provider.search(query) }
         } catch (e: TimeoutCancellationException) {

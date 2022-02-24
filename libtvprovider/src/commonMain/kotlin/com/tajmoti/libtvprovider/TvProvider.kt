@@ -7,8 +7,9 @@ import com.tajmoti.libtvprovider.model.VideoStreamRef
 interface TvProvider {
     /**
      * Searches for shows or movies by their name.
+     * Return null if this provider should be ignored for the [query].
      */
-    suspend fun search(query: String): Result<List<SearchResult>>
+    suspend fun search(query: String): Result<List<SearchResult>>?
 
     /**
      * Retrieves TV show info by its [id].

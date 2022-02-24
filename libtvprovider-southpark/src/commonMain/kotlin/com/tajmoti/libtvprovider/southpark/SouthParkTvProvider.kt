@@ -20,13 +20,9 @@ class SouthParkTvProvider(
     private val info = TvItemInfo("South Park", "en", 1997)
     private val item = SearchResult.TvShow("8618fe26-7d1a-4b02-9119-752a92e72e4f", info)
 
-    override suspend fun search(query: String): Result<List<SearchResult>> {
-        val result = if (shouldReturnSouthPark(query)) {
-            listOf(item)
-        } else {
-            emptyList<SearchResult>()
-        }
-        return Result.success(result)
+    override suspend fun search(query: String): Result<List<SearchResult>>? {
+        if (!shouldReturnSouthPark(query)) return null
+        return Result.success(listOf(item))
     }
 
     private fun shouldReturnSouthPark(query: String): Boolean {
