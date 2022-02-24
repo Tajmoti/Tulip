@@ -3,6 +3,7 @@ package ui.common
 import com.tajmoti.libtulip.TulipBuildInfo
 import kotlinx.html.InputType
 import kotlinx.html.js.onChangeFunction
+import kotlinx.html.js.onClickFunction
 import org.w3c.dom.HTMLInputElement
 import react.Props
 import react.createElement
@@ -67,6 +68,7 @@ private val TulipNavBar = fc<Props> {
     val nav = useNavigate()
     nav("navbar navbar-dark bg-dark") {
         a(classes = "navbar-brand text-light bg-dark") {
+            attrs.onClickFunction = { nav.invoke("/") }
             +"Tulip"
         }
         form(classes = "form-inline") {
