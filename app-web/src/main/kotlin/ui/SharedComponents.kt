@@ -5,11 +5,10 @@ import kotlinx.html.BUTTON
 import kotlinx.html.ButtonType
 import kotlinx.html.SPAN
 import kotlinx.html.role
+import react.Props
 import react.RBuilder
-import react.dom.RDOMBuilder
-import react.dom.button
-import react.dom.div
-import react.dom.span
+import react.dom.*
+import react.fc
 
 fun RBuilder.renderLoading(extraClasses: String = "") {
     div("d-flex justify-content-center mt-5 $extraClasses") {
@@ -30,4 +29,12 @@ fun RBuilder.activeListItem(block: RDOMBuilder<SPAN>.() -> Unit) {
 
 fun RBuilder.renderLanguageBadge(language: LanguageCode, extraClasses: String = "") {
     span("badge badge-pill badge-info $extraClasses") { +language.code.uppercase() }
+}
+
+val ErrorMessage = fc<ErrorMessageProps> { props ->
+    h4("text-center mt-5") { +props.message }
+}
+
+external interface ErrorMessageProps : Props {
+    var message: String
 }

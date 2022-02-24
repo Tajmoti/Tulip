@@ -24,9 +24,9 @@ class SearchComponent(props: SearchProps) : ViewModelComponent<SearchProps, Sear
         if (vmState.loading) {
             renderLoading()
         } else if (vmState.status == SearchViewModel.Icon.NO_RESULTS) {
-            renderNoResults()
+            ErrorMessage { attrs.message = "No results" }
         } else if (vmState.status == SearchViewModel.Icon.ERROR) {
-            renderError()
+            ErrorMessage { attrs.message = "Shit, error :/" }
         } else {
             renderSearchResults(vmState.results)
         }
@@ -38,14 +38,6 @@ class SearchComponent(props: SearchProps) : ViewModelComponent<SearchProps, Sear
                 renderSearchResult(group)
             }
         }
-    }
-
-    private fun RBuilder.renderNoResults() {
-        h1 { +"No results :(" }
-    }
-
-    private fun RBuilder.renderError() {
-        h1 { +"Shit, error :/" }
     }
 
     private fun RBuilder.badge(block: RDOMBuilder<SPAN>.() -> Unit) {
