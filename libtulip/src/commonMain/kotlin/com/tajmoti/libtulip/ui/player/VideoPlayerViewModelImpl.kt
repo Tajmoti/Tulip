@@ -1,5 +1,6 @@
 package com.tajmoti.libtulip.ui.player
 
+import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.map
 import com.tajmoti.commonutils.mapWith
 import com.tajmoti.libtulip.model.info.LanguageCode
@@ -62,12 +63,13 @@ class VideoPlayerViewModelImpl constructor(
                 .map(::mapStreamsResult)
                 .map { key to it }
         }
-        .shareIn(viewModelScope, SharingStarted.Eagerly)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /**
      * Loading state of the list of available streams.
      */
     private val linkListLoadingState = keyWithLinkListLoadingState
+        .filterNotNull()
         .map { (_, state) -> state }
         .stateIn(viewModelScope, SharingStarted.Eagerly, LinkListLoadingState.Loading)
 
@@ -80,11 +82,12 @@ class VideoPlayerViewModelImpl constructor(
      * Auto-selected stream to play.
      */
     private val autoStream = keyWithLinkListLoadingState
+        .filterNotNull()
         .mapNotNull { (key, state) -> (state as? LinkListLoadingState.Success)?.let { key to state.streams } }
         .filter { (_, streams) -> anyGoodStreams(streams) }
         .distinctUntilChangedBy { (key, _) -> key }
         .map { (_, streams) -> firstGoodStream(streams) to false }
-        .shareIn(viewModelScope, SharingStarted.Lazily)
+        .stateIn(viewModelScope, SharingStarted.Lazily, null)
 
     private fun firstGoodStream(it: List<UnloadedVideoStreamRef>) =
         it.first { video -> video.linkExtractionSupported }
@@ -96,7 +99,7 @@ class VideoPlayerViewModelImpl constructor(
      * The stream that should actually be played.
      */
     private val streamToPlay = merge(manualStream, autoStream)
-        .shareIn(viewModelScope, SharingStarted.Lazily)
+        .stateIn(viewModelScope, SharingStarted.Lazily, null)
 
     /**
      * Loading state of a selected streaming service video
@@ -106,7 +109,7 @@ class VideoPlayerViewModelImpl constructor(
             it?.let { fetchStreams(it.first, it.second) }
                 ?: flowOf(LinkLoadingState.Idle)
         }
-        .shareIn(viewModelScope, SharingStarted.Lazily)
+        .stateIn(viewModelScope, SharingStarted.Lazily, LinkLoadingState.Idle)
 
     private val internalStreamableInfo = streamableKeyImpl
         .flatMapLatest { getStreamableInfo(it) }
