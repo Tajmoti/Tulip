@@ -6,10 +6,7 @@ import com.tajmoti.libopensubtitles.model.search.SubtitleAttributes
 import com.tajmoti.libopensubtitles.model.search.SubtitlesResponseData
 import com.tajmoti.libtmdb.model.tv.Episode
 import com.tajmoti.libtmdb.model.tv.Tv
-import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
-import com.tajmoti.libtulip.model.info.TulipMovie
-import com.tajmoti.libtulip.model.info.TulipSeasonInfo
-import com.tajmoti.libtulip.model.info.TulipTvShowInfo
+import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.SeasonKey
@@ -33,7 +30,7 @@ inline fun TvItem.TvShow.fromNetwork(
     tmdbId: TvShowKey.Tmdb?
 ): TulipTvShowInfo.Hosted {
     val seasons = seasons.map { it.fromNetwork(key) }
-    return TulipTvShowInfo.Hosted(key, info, tmdbId, seasons)
+    return TulipTvShowInfo.Hosted(key, info.name, LanguageCode(info.language), info.firstAirDateYear, tmdbId, seasons)
 }
 
 inline fun TvItem.Movie.fromNetwork(

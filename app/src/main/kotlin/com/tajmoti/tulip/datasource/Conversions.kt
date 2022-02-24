@@ -105,7 +105,7 @@ internal inline fun DbTvShow.fromDb(
     seasons: List<TulipSeasonInfo.Hosted>
 ): TulipTvShowInfo.Hosted {
     val info = TvItemInfo(name, language, firstAirDateYear)
-    return TulipTvShowInfo.Hosted(tvShowKey, info, tmdbId?.let { TvShowKey.Tmdb(it) }, seasons)
+    return TulipTvShowInfo.Hosted(tvShowKey, info.name, LanguageCode(info.language), info.firstAirDateYear, tmdbId?.let { TvShowKey.Tmdb(it) }, seasons)
 }
 
 internal inline fun DbSeason.fromDb(
@@ -137,12 +137,12 @@ internal inline fun DbMovie.fromDb(movieKey: MovieKey.Hosted, tmdbId: Long?): Tu
     return TulipMovie.Hosted(movieKey, info, tmdbId?.let { MovieKey.Tmdb(it) })
 }
 
-internal inline fun TulipTvShowInfo.Hosted.toDb(info: TvItemInfo): DbTvShow {
+internal inline fun TulipTvShowInfo.Hosted.toDb(info: TulipTvShowInfo.Hosted): DbTvShow {
     return DbTvShow(
         key.streamingService,
         key.id,
         info.name,
-        info.language,
+        info.language.code,
         info.firstAirDateYear
     )
 }

@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler
 plugins {
     kotlin("multiplatform")
     kotlin("kapt")
+    kotlin("plugin.serialization")
     id("com.codingfeline.buildkonfig")
 }
 
