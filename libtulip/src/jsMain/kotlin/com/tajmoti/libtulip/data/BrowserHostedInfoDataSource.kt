@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class BrowserHostedInfoDataSource : HostedInfoDataSource {
-    private val tvShows = BrowserStorage<TvShowKey.Hosted, TulipTvShowInfo.Hosted>()
-    private val movies = BrowserStorage<MovieKey.Hosted, TulipMovie.Hosted>()
-    private val tmdbTvShowMappings = BrowserStorage<TvShowKey.Tmdb, Set<TvShowKey.Hosted>>()
-    private val tmdbMovieMappings = BrowserStorage<MovieKey.Tmdb, Set<MovieKey.Hosted>>()
+    private val tvShows = BrowserStorage<TvShowKey.Hosted, TulipTvShowInfo.Hosted>("1")
+    private val movies = BrowserStorage<MovieKey.Hosted, TulipMovie.Hosted>("2")
+    private val tmdbTvShowMappings = BrowserStorage<TvShowKey.Tmdb, Set<TvShowKey.Hosted>>("3")
+    private val tmdbMovieMappings = BrowserStorage<MovieKey.Tmdb, Set<MovieKey.Hosted>>("4")
 
     override fun getTvShowByKey(key: TvShowKey.Hosted): Flow<TulipTvShowInfo.Hosted?> {
         return tvShows.get(key)

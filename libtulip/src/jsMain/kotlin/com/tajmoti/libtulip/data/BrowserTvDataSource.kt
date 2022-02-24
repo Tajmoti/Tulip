@@ -7,8 +7,8 @@ import com.tajmoti.libtulip.model.key.TvShowKey
 import kotlinx.coroutines.flow.Flow
 
 class BrowserTvDataSource : LocalTvDataSource {
-    private val tvStorage = BrowserStorage<TvShowKey.Tmdb, TulipTvShowInfo.Tmdb>()
-    private val movieStorage = BrowserStorage<MovieKey.Tmdb, TulipMovie.Tmdb>()
+    private val tvStorage = BrowserStorage<TvShowKey.Tmdb, TulipTvShowInfo.Tmdb>("5")
+    private val movieStorage = BrowserStorage<MovieKey.Tmdb, TulipMovie.Tmdb>("6")
 
 
     override fun getTvShow(key: TvShowKey.Tmdb): Flow<TulipTvShowInfo.Tmdb?> {
