@@ -24,10 +24,10 @@ interface ItemMappingRepository {
     /**
      * Retrieves all [TvShowKey.Hosted] keys that were paired with [key].
      */
-    fun getHostedTvShowKeysByTmdbKey(key: TvShowKey.Tmdb): Flow<List<TvShowKey.Hosted>>
+    fun getHostedTvShowKeysByTmdbKey(key: TvShowKey.Tmdb): Flow<Set<TvShowKey.Hosted>>
 
     /**
      * Retrieves all [MovieKey.Hosted] keys that were paired with [key].
      */
-    fun getHostedMovieKeysByTmdbKey(key: MovieKey.Tmdb): Flow<List<MovieKey.Hosted>>
+    fun getHostedMovieKeysByTmdbKey(key: MovieKey.Tmdb): Flow<Set<MovieKey.Hosted>>
 }

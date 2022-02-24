@@ -18,11 +18,11 @@ class ItemMappingRepositoryImpl(
         hostedInfoDataSource.createTmdbMovieMapping(hostedKey, tmdbKey)
     }
 
-    override fun getHostedTvShowKeysByTmdbKey(key: TvShowKey.Tmdb): Flow<List<TvShowKey.Hosted>> {
+    override fun getHostedTvShowKeysByTmdbKey(key: TvShowKey.Tmdb): Flow<Set<TvShowKey.Hosted>> {
         return hostedInfoDataSource.getTmdbMappingForTvShow(key)
     }
 
-    override fun getHostedMovieKeysByTmdbKey(key: MovieKey.Tmdb): Flow<List<MovieKey.Hosted>> {
+    override fun getHostedMovieKeysByTmdbKey(key: MovieKey.Tmdb): Flow<Set<MovieKey.Hosted>> {
         return hostedInfoDataSource.getTmdbMappingForMovie(key)
     }
 }

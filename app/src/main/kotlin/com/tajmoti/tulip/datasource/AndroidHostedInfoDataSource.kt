@@ -88,13 +88,21 @@ class AndroidHostedInfoDataSource @Inject constructor(
         tmdbMappingDao.insert(DbTmdbMapping(hosted.streamingService, hosted.id, tmdb.id))
     }
 
-    override fun getTmdbMappingForTvShow(tmdb: TvShowKey.Tmdb): Flow<List<TvShowKey.Hosted>> {
+    override fun getTmdbMappingForTvShow(tmdb: TvShowKey.Tmdb): Flow<Set<TvShowKey.Hosted>> {
         return tmdbMappingDao.getHostedKeysByTmdbId(tmdb.id)
-            .map { mappings -> mappings.map { mapping -> TvShowKey.Hosted(mapping.service, mapping.key) } }
+            .map { mappings ->
+                mappings
+                    .map { mapping -> TvShowKey.Hosted(mapping.service, mapping.key) }
+                    .toSet()
+            }
     }
 
-    override fun getTmdbMappingForMovie(tmdb: MovieKey.Tmdb): Flow<List<MovieKey.Hosted>> {
+    override fun getTmdbMappingForMovie(tmdb: MovieKey.Tmdb): Flow<Set<MovieKey.Hosted>> {
         return tmdbMappingDao.getHostedKeysByTmdbId(tmdb.id)
-            .map { mappings -> mappings.map { mapping -> MovieKey.Hosted(mapping.service, mapping.key) } }
+            .map { mappings ->
+                mappings
+                    .map { mapping -> MovieKey.Hosted(mapping.service, mapping.key) }
+                    .toSet()
+            }
     }
 }

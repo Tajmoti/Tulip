@@ -44,15 +44,19 @@ class InMemoryHostedInfoDataSource : HostedInfoDataSource {
         tmdbMovieMappings.value = oldValue.plus(tmdb to newSet)
     }
 
-    override fun getTmdbMappingForTvShow(tmdb: TvShowKey.Tmdb): Flow<List<TvShowKey.Hosted>> {
+    override fun getTmdbMappingForTvShow(tmdb: TvShowKey.Tmdb): Flow<Set<TvShowKey.Hosted>> {
         return tmdbTvShowMappings.map { keyMap ->
-            keyMap.filterKeys { tmdbKey -> tmdbKey == tmdb }.flatMap { (_, hostedKeys) -> hostedKeys }
+            keyMap.filterKeys { tmdbKey -> tmdbKey == tmdb }
+                .flatMap { (_, hostedKeys) -> hostedKeys }
+                .toSet()
         }
     }
 
-    override fun getTmdbMappingForMovie(tmdb: MovieKey.Tmdb): Flow<List<MovieKey.Hosted>> {
+    override fun getTmdbMappingForMovie(tmdb: MovieKey.Tmdb): Flow<Set<MovieKey.Hosted>> {
         return tmdbMovieMappings.map { keyMap ->
-            keyMap.filterKeys { tmdbKey -> tmdbKey == tmdb }.flatMap { (_, hostedKeys) -> hostedKeys }
+            keyMap.filterKeys { tmdbKey -> tmdbKey == tmdb }
+                .flatMap { (_, hostedKeys) -> hostedKeys }
+                .toSet()
         }
     }
 }
