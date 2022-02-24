@@ -52,7 +52,7 @@ class AndroidHostedInfoDataSource @Inject constructor(
     }
 
     override suspend fun insertTvShow(show: TulipTvShowInfo.Hosted) {
-        tvShowDao.insert(show.toDb(show.info))
+        tvShowDao.insert(show.toDb(show))
         insertSeasons(show.seasons)
     }
 

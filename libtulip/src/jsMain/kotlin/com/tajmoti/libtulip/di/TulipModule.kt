@@ -1,10 +1,6 @@
 package com.tajmoti.libtulip.di
 
-import com.tajmoti.libtulip.data.HostedInfoDataSource
-import com.tajmoti.libtulip.data.LocalTvDataSource
-import com.tajmoti.libtulip.data.UserDataDataSource
-import com.tajmoti.libtulip.data.impl.InMemoryHostedInfoDataSource
-import com.tajmoti.libtulip.data.impl.InMemoryLocalTvDataSource
+import com.tajmoti.libtulip.data.*
 import com.tajmoti.libtulip.data.impl.StubUserDataDataSource
 import com.tajmoti.libtulip.di.impl.ApiServiceModuleImpl
 import com.tajmoti.libtulip.di.impl.BusinessLogicModuleImpl
@@ -54,8 +50,8 @@ private val businessLogicModule = module {
 }
 
 private val dataSourceModule = module {
-    single<LocalTvDataSource> { InMemoryLocalTvDataSource() }
-    single<HostedInfoDataSource> { InMemoryHostedInfoDataSource() }
+    single<LocalTvDataSource> { BrowserTvDataSource() }
+    single<HostedInfoDataSource> { BrowserHostedInfoDataSource() }
     single<UserDataDataSource> { StubUserDataDataSource() }
     single<VideoDownloadService> { StubVideoDownloadService() }
 }
