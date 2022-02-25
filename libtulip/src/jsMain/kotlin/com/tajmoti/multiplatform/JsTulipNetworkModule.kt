@@ -1,20 +1,23 @@
 package com.tajmoti.multiplatform
 
 import com.tajmoti.commonutils.UrlEncoder
+import com.tajmoti.libtulip.di.ProxyType
 import com.tajmoti.libtulip.misc.UrlRewriter
 import com.tajmoti.libtulip.setupTulipKtor
 import io.ktor.client.*
 import io.ktor.client.engine.js.*
+import org.koin.core.qualifier.qualifier
 import org.koin.dsl.module
 
 val jsNetworkModule = module {
-    single { getAppHttpClient() }
+    single(qualifier(ProxyType.PROXY)) { getAppHttpClient(proxy = true) }
+    single(qualifier(ProxyType.DIRECT)) { getAppHttpClient(proxy = false) }
 }
 
-fun getAppHttpClient(): HttpClient {
+fun getAppHttpClient(proxy: Boolean): HttpClient {
     return HttpClient(Js) {
         setupTulipKtor(this)
-        install(UrlRewriter) { wrapper = ::wrapUrlInCorsProxy }
+        if (proxy) install(UrlRewriter) { wrapper = ::wrapUrlInCorsProxy }
     }
 }
 

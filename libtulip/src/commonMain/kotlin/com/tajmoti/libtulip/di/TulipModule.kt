@@ -15,6 +15,7 @@ import com.tajmoti.libtulip.misc.KtorWebDriver
 import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.libtulip.service.impl.StubVideoDownloadService
 import com.tajmoti.libwebdriver.TulipWebDriver
+import org.koin.core.qualifier.qualifier
 import org.koin.dsl.module
 
 private val configModule = module {
@@ -22,7 +23,8 @@ private val configModule = module {
 }
 
 private val networkModule = module {
-    single { NetworkingModuleImpl.makeHttpGetter(get()) }
+    single { NetworkingModuleImpl.makeHttpGetter(get(qualifier(ProxyType.PROXY))) }
+    single(qualifier(ProxyType.DIRECT)) { NetworkingModuleImpl.makeHttpGetter(get(qualifier(ProxyType.DIRECT))) }
     single { NetworkingModuleImpl.makeWebViewGetterWithCustomJs(get()) }
     single { NetworkingModuleImpl.makeWebViewGetter(get()) }
     single<TulipWebDriver> { KtorWebDriver(get()) }
@@ -49,7 +51,7 @@ private val businessLogicModule = module {
     single { BusinessLogicModuleImpl.provideSubtitleService(get()) }
     single { BusinessLogicModuleImpl.provideMappingSearchService(get(), get(), get()) }
     single { BusinessLogicModuleImpl.provideMultiTvProvider(get(), get()) }
-    single { BusinessLogicModuleImpl.provideLinkExtractor(get(), get()) }
+    single { BusinessLogicModuleImpl.provideLinkExtractor(get(qualifier(ProxyType.DIRECT)), get()) }
 }
 
 private val dataSourceModule = module {
