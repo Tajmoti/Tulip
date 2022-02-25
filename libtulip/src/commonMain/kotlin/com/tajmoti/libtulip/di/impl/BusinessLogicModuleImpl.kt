@@ -1,11 +1,9 @@
 package com.tajmoti.libtulip.di.impl
 
+import com.tajmoti.commonutils.PageSourceLoader
 import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libprimewiretvprovider.PrimewireTvProvider
-import com.tajmoti.libtulip.HtmlGetter
 import com.tajmoti.libtulip.di.IBusinessLogicModule
-import com.tajmoti.libtulip.di.impl.NetworkingModuleImpl.makeWebViewGetter
-import com.tajmoti.libtulip.di.impl.NetworkingModuleImpl.makeWebViewGetterWithCustomJs
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
@@ -21,7 +19,6 @@ import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.kinox.KinoxTvProvider
 import com.tajmoti.libtvprovider.southpark.SouthParkTvProvider
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
-import com.tajmoti.libwebdriver.TulipWebDriver
 
 object BusinessLogicModuleImpl : IBusinessLogicModule {
 
@@ -59,14 +56,10 @@ object BusinessLogicModuleImpl : IBusinessLogicModule {
         )
     }
 
-    override fun provideMultiTvProvider(
-        webDriver: TulipWebDriver,
-        htmlGetter: HtmlGetter,
-    ): MultiTvProvider<StreamingService> {
-        val webViewGetter = makeWebViewGetterWithCustomJs(webDriver)
-        val primewire = PrimewireTvProvider(webViewGetter::load, htmlGetter::getHtml)
-        val kinox = KinoxTvProvider(htmlGetter::getHtml)
-        val southPark = SouthParkTvProvider(htmlGetter::getHtml)
+    override fun provideMultiTvProvider(loader: PageSourceLoader): MultiTvProvider<StreamingService> {
+        val primewire = PrimewireTvProvider(loader)
+        val kinox = KinoxTvProvider(loader)
+        val southPark = SouthParkTvProvider(loader)
         return MultiTvProvider(
             mapOf(
                 StreamingService.PRIMEWIRE to primewire,
@@ -77,8 +70,7 @@ object BusinessLogicModuleImpl : IBusinessLogicModule {
         )
     }
 
-    override fun provideLinkExtractor(httpGetter: HtmlGetter, webDriver: TulipWebDriver): VideoLinkExtractor {
-        val webViewGetter = makeWebViewGetter(webDriver)
-        return VideoLinkExtractor(httpGetter::getHtml, webViewGetter)
+    override fun provideLinkExtractor(loader: PageSourceLoader): VideoLinkExtractor {
+        return VideoLinkExtractor(loader)
     }
 }

@@ -1,6 +1,7 @@
 package com.tajmoti.libtvprovider.southpark
 
 import com.tajmoti.commonutils.LibraryDispatchers
+import com.tajmoti.commonutils.PageSourceLoader
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtvprovider.TvProvider
 import com.tajmoti.libtvprovider.model.*
@@ -12,7 +13,7 @@ import kotlinx.serialization.json.Json
 import kotlin.coroutines.CoroutineContext
 
 class SouthParkTvProvider(
-    private val httpLoader: SimplePageSourceLoader,
+    private val loader: PageSourceLoader,
     private val dispatcher: CoroutineContext = LibraryDispatchers.libraryContext,
 ) : TvProvider {
     private val deserializer = Json { ignoreUnknownKeys = true }
@@ -85,7 +86,7 @@ class SouthParkTvProvider(
 
     private suspend fun fetchSinglePaginatedEpisodeData(page: Int): Result<List<Item>> {
         val url = "$baseUrl/api/episodes/$page/$MAX_PAGE_SIZE"
-        return httpLoader(url).mapCatching(::deserializeSinglePaginatedEpisodeData)
+        return loader.loadWithGet(url).mapCatching(::deserializeSinglePaginatedEpisodeData)
     }
 
     private fun deserializeSinglePaginatedEpisodeData(json: String): List<Item> {

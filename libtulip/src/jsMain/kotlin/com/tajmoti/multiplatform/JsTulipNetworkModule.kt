@@ -10,6 +10,7 @@ import org.koin.core.qualifier.qualifier
 import org.koin.dsl.module
 
 val jsNetworkModule = module {
+    single { getAppHttpClient(proxy = true) }
     single(qualifier(ProxyType.PROXY)) { getAppHttpClient(proxy = true) }
     single(qualifier(ProxyType.DIRECT)) { getAppHttpClient(proxy = false) }
 }

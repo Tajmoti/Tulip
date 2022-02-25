@@ -1,6 +1,7 @@
 package com.tajmoti.libprimewiretvprovider
 
 import com.tajmoti.commonutils.LibraryDispatchers
+import com.tajmoti.commonutils.PageSourceLoader
 import com.tajmoti.commonutils.UrlEncoder
 import com.tajmoti.commonutils.flatMap
 import com.tajmoti.ksoup.KSoup
@@ -12,14 +13,7 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 
 class PrimewireTvProvider(
-    /**
-     * Loads web pages into a real browser to run any JS loading obfuscated data.
-     */
-    private val pageLoader: PageSourceLoader,
-    /**
-     * Only performs a GET request, does not run any JS.
-     */
-    private val httpLoader: SimplePageSourceLoader,
+    private val loader: PageSourceLoader,
     /**
      * Base URL of the primewire domain, in case it changes.
      */
@@ -29,7 +23,7 @@ class PrimewireTvProvider(
 
     override suspend fun search(query: String): Result<List<SearchResult>> {
         return withContext(dispatcher) {
-            httpLoader(queryToSearchUrl(query))
+            loader.loadWithGet(queryToSearchUrl(query))
                 .flatMap { parseSearchResultPageBlocking(it) }
         }
     }
@@ -41,7 +35,7 @@ class PrimewireTvProvider(
 
     override suspend fun getTvShow(id: String): Result<TvItem.TvShow> {
         return withContext(dispatcher) {
-            httpLoader(baseUrl + id)
+            loader.loadWithGet(baseUrl + id)
                 .flatMap { source ->
                     val document = KSoup.parse(source)
                     parseSearchResultPageBlockingSeason(document)
@@ -56,7 +50,7 @@ class PrimewireTvProvider(
 
     override suspend fun getMovie(id: String): Result<TvItem.Movie> {
         return withContext(dispatcher) {
-            httpLoader(baseUrl + id)
+            loader.loadWithGet(baseUrl + id)
                 .map { source ->
                     val tvItemInfo = parseTvItemInfo(id, KSoup.parse(source))
                     TvItem.Movie(tvItemInfo)
@@ -66,7 +60,7 @@ class PrimewireTvProvider(
 
     override suspend fun getStreamableLinks(episodeOrMovieId: String): Result<List<VideoStreamRef>> {
         return withContext(dispatcher) {
-            pageLoader.invoke(
+            loader.loadWithBrowser(
                 baseUrl + episodeOrMovieId,
                 this@PrimewireTvProvider::shouldAllowUrl,
                 LINK_PAGE_HTML_SUBMIT_TRIGGER

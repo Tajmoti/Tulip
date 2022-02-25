@@ -1,6 +1,7 @@
 package com.tajmoti.libtvprovider.kinox
 
 import com.tajmoti.commonutils.LibraryDispatchers
+import com.tajmoti.commonutils.PageSourceLoader
 import com.tajmoti.commonutils.UrlEncoder
 import com.tajmoti.commonutils.flatMap
 import com.tajmoti.ksoup.KSoup
@@ -12,7 +13,7 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 
 class KinoxTvProvider(
-    private val httpLoader: SimplePageSourceLoader,
+    private val loader: PageSourceLoader,
     private val baseUrl: String = "https://kinoz.to",
     /**
      * Whether search results which don't have a first air year set (it's set to 0)
@@ -24,7 +25,7 @@ class KinoxTvProvider(
 
     override suspend fun search(query: String): Result<List<SearchResult>> {
         return withContext(dispatcher) {
-            httpLoader(queryToSearchUrl(query))
+            loader.loadWithGet(queryToSearchUrl(query))
                 .flatMap { parseSearchResultPageBlocking(it, throwAwayItemsWithNoYear) }
         }
     }
@@ -36,7 +37,7 @@ class KinoxTvProvider(
 
     override suspend fun getTvShow(id: String): Result<TvItem.TvShow> {
         return withContext(dispatcher) {
-            httpLoader(baseUrl + id)
+            loader.loadWithGet(baseUrl + id)
                 .flatMap {
                     val document = KSoup.parse(it)
                     parseSeasonsBlocking(document)
@@ -47,7 +48,7 @@ class KinoxTvProvider(
 
     override suspend fun getMovie(id: String): Result<TvItem.Movie> {
         return withContext(dispatcher) {
-            httpLoader(baseUrl + id)
+            loader.loadWithGet(baseUrl + id)
                 .map {
                     val document = KSoup.parse(it)
                     TvItem.Movie(parseTvItemInfo(id, document))
@@ -57,8 +58,8 @@ class KinoxTvProvider(
 
     override suspend fun getStreamableLinks(episodeOrMovieId: String): Result<List<VideoStreamRef>> {
         return withContext(dispatcher) {
-            httpLoader(baseUrl + episodeOrMovieId)
-                .flatMap { fetchSources(baseUrl, it, httpLoader) }
+            loader.loadWithGet(baseUrl + episodeOrMovieId)
+                .flatMap { fetchSources(baseUrl, it, loader) }
         }
     }
 }

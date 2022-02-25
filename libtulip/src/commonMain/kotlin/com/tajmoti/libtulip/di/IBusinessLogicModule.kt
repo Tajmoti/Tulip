@@ -1,7 +1,7 @@
 package com.tajmoti.libtulip.di
 
+import com.tajmoti.commonutils.PageSourceLoader
 import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
-import com.tajmoti.libtulip.HtmlGetter
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.repository.ItemMappingRepository
@@ -12,7 +12,6 @@ import com.tajmoti.libtulip.service.StreamService
 import com.tajmoti.libtulip.service.SubtitleService
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
-import com.tajmoti.libwebdriver.TulipWebDriver
 
 interface IBusinessLogicModule {
     fun provideStreamService(
@@ -31,10 +30,7 @@ interface IBusinessLogicModule {
         hostedToTmdbMappingRepository: ItemMappingRepository,
     ): MappingSearchService
 
-    fun provideMultiTvProvider(
-        webDriver: TulipWebDriver,
-        htmlGetter: HtmlGetter,
-    ): MultiTvProvider<StreamingService>
+    fun provideMultiTvProvider(loader: PageSourceLoader): MultiTvProvider<StreamingService>
 
-    fun provideLinkExtractor(httpGetter: HtmlGetter, webDriver: TulipWebDriver): VideoLinkExtractor
+    fun provideLinkExtractor(loader: PageSourceLoader): VideoLinkExtractor
 }

@@ -1,6 +1,6 @@
 package com.tajmoti.libtvprovider.kinox
 
-import com.tajmoti.commonutils.logger
+import com.tajmoti.commonutils.PageSourceLoader
 import com.tajmoti.commonutils.parallelMap
 import com.tajmoti.ksoup.KDocument
 import com.tajmoti.ksoup.KElement
@@ -13,7 +13,7 @@ import kotlinx.serialization.json.Json
 internal suspend fun fetchSources(
     baseUrl: String,
     pageSource: String,
-    pageSourceLoader: SimplePageSourceLoader
+    pageSourceLoader: PageSourceLoader
 ): Result<List<VideoStreamRef>> {
     return try {
         val links = KSoup.parse(pageSource)
@@ -32,11 +32,11 @@ internal suspend fun fetchSources(
 private suspend fun elementToStream(
     baseUrl: String,
     li: KElement,
-    httpLoader: SimplePageSourceLoader
+    httpLoader: PageSourceLoader
 ): VideoStreamRef? {
     val hoster = li.attr("rel")
     val url = "$baseUrl/aGET/Mirror/$hoster"
-    return httpLoader(url)
+    return httpLoader.loadWithGet(url)
         .map(::scrapeStreamRef)
         .getOrNull()
 }

@@ -23,10 +23,7 @@ private val configModule = module {
 }
 
 private val networkModule = module {
-    single { NetworkingModuleImpl.makeHttpGetter(get(qualifier(ProxyType.PROXY))) }
-    single(qualifier(ProxyType.DIRECT)) { NetworkingModuleImpl.makeHttpGetter(get(qualifier(ProxyType.DIRECT))) }
-    single { NetworkingModuleImpl.makeWebViewGetterWithCustomJs(get()) }
-    single { NetworkingModuleImpl.makeWebViewGetter(get()) }
+    single { NetworkingModuleImpl.makeHttpGetter(get(), get(qualifier(ProxyType.PROXY)), get(qualifier(ProxyType.DIRECT))) }
     single<TulipWebDriver> { KtorWebDriver(get()) }
 }
 
@@ -50,8 +47,8 @@ private val businessLogicModule = module {
     single { BusinessLogicModuleImpl.provideStreamService(get(), get(), get()) }
     single { BusinessLogicModuleImpl.provideSubtitleService(get()) }
     single { BusinessLogicModuleImpl.provideMappingSearchService(get(), get(), get()) }
-    single { BusinessLogicModuleImpl.provideMultiTvProvider(get(), get()) }
-    single { BusinessLogicModuleImpl.provideLinkExtractor(get(qualifier(ProxyType.DIRECT)), get()) }
+    single { BusinessLogicModuleImpl.provideMultiTvProvider(get()) }
+    single { BusinessLogicModuleImpl.provideLinkExtractor(get()) }
 }
 
 private val dataSourceModule = module {

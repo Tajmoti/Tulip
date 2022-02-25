@@ -1,6 +1,7 @@
 package com.tajmoti.libtvvideoextractor
 
 import arrow.core.Either
+import com.tajmoti.commonutils.PageSourceLoader
 import com.tajmoti.libtvvideoextractor.module.StreamzzTo
 import com.tajmoti.libtvvideoextractor.module.TheVideoMe
 
@@ -27,9 +28,7 @@ interface ExtractorModule {
     val supportedServiceNames: List<String>
 
 
-    suspend fun extractVideoUrl(
-        url: String,
-        rawLoader: RawPageSourceLoader,
-        webDriverLoader: WebDriverPageSourceLoader
-    ): Either<ExtractionError, String>
+    suspend fun extractVideoUrl(url: String, loader: PageSourceLoader): Either<ExtractionError, String>
+
+    suspend fun doBeforePlayback(url: String, loader: PageSourceLoader)
 }
