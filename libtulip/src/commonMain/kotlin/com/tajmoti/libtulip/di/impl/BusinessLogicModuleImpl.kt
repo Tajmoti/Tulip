@@ -4,6 +4,8 @@ import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libprimewiretvprovider.PrimewireTvProvider
 import com.tajmoti.libtulip.HtmlGetter
 import com.tajmoti.libtulip.di.IBusinessLogicModule
+import com.tajmoti.libtulip.di.impl.NetworkingModuleImpl.makeWebViewGetter
+import com.tajmoti.libtulip.di.impl.NetworkingModuleImpl.makeWebViewGetterWithCustomJs
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
@@ -18,15 +20,8 @@ import com.tajmoti.libtulip.service.impl.StreamServiceImpl
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.kinox.KinoxTvProvider
 import com.tajmoti.libtvprovider.southpark.SouthParkTvProvider
-import com.tajmoti.libtvvideoextractor.UrlBlocker
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
-import com.tajmoti.libtvvideoextractor.WebDriverPageSourceLoader
-import com.tajmoti.libtvvideoextractor.WebDriverPageSourceLoaderWithCustomJs
 import com.tajmoti.libwebdriver.TulipWebDriver
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.utils.io.charsets.*
 
 object BusinessLogicModuleImpl : IBusinessLogicModule {
 
@@ -85,42 +80,5 @@ object BusinessLogicModuleImpl : IBusinessLogicModule {
     override fun provideLinkExtractor(httpGetter: HtmlGetter, webDriver: TulipWebDriver): VideoLinkExtractor {
         val webViewGetter = makeWebViewGetter(webDriver)
         return VideoLinkExtractor(httpGetter::getHtml, webViewGetter)
-    }
-
-    override fun makeWebViewGetterWithCustomJs(webDriver: TulipWebDriver): WebDriverPageSourceLoaderWithCustomJs {
-        return object : WebDriverPageSourceLoaderWithCustomJs {
-            override suspend fun load(
-                url: String,
-                urlBlocker: UrlBlocker,
-                submitTriggerJsGenerator: (String) -> String
-            ): Result<String> {
-                val params = TulipWebDriver.Params(
-                    TulipWebDriver.SubmitTrigger.CustomJs(submitTriggerJsGenerator),
-                    urlFilter = urlBlocker
-                )
-                return webDriver.getPageHtml(url, params)
-            }
-        }
-    }
-
-    override fun makeWebViewGetter(webDriver: TulipWebDriver): WebDriverPageSourceLoader {
-        return object : WebDriverPageSourceLoader {
-            override suspend fun load(url: String, urlBlocker: UrlBlocker): Result<String> {
-                val params = TulipWebDriver.Params(urlFilter = urlBlocker)
-                return webDriver.getPageHtml(url, params)
-            }
-        }
-    }
-
-    override fun makeHttpGetter(client: HttpClient): HtmlGetter {
-        return object : HtmlGetter {
-            override suspend fun getHtml(url: String): Result<String> {
-                return try {
-                    Result.success(client.get(url).bodyAsText(Charsets.UTF_8))
-                } catch (e: Throwable) {
-                    Result.failure(e)
-                }
-            }
-        }
     }
 }

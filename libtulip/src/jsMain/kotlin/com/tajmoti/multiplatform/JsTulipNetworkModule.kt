@@ -5,8 +5,13 @@ import com.tajmoti.libtulip.misc.UrlRewriter
 import com.tajmoti.libtulip.setupTulipKtor
 import io.ktor.client.*
 import io.ktor.client.engine.js.*
+import org.koin.dsl.module
 
-actual fun getAppHttpClient(): HttpClient {
+val jsNetworkModule = module {
+    single { getAppHttpClient() }
+}
+
+fun getAppHttpClient(): HttpClient {
     return HttpClient(Js) {
         setupTulipKtor(this)
         install(UrlRewriter) { wrapper = ::wrapUrlInCorsProxy }
