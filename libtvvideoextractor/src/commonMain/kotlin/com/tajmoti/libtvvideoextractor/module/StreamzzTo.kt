@@ -14,6 +14,8 @@ class StreamzzTo : ExtractorModule {
             rawLoader: RawPageSourceLoader,
             webDriverLoader: WebDriverPageSourceLoader
     ): Either<ExtractionError, String> {
+        // This is needed to trick per-IP scraping protection
+        rawLoader.invoke("https://streamzz.to/count.php?bcd=1")
         return rawLoader(url)
                 .fold({ parseResults(it) }, { ExtractionError.Exception(it).left() })
     }
