@@ -17,7 +17,7 @@ class StreamzzTo : ExtractorModule {
 
     override suspend fun doBeforePlayback(url: String, loader: PageSourceLoader) {
         // This is needed to trick per-IP scraping protection
-        loader.loadWithGetLocal("https://streamzz.to/count.php?bcd=1")
+        loader.loadWithGetLocal("https://streamzz.to/count.php?xyz=2")
     }
 
     private fun parseResults(source: String): Either<ExtractionError, String> {
