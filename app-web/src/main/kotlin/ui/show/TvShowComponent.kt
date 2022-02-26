@@ -96,7 +96,16 @@ external interface EpisodeProps : Props {
 private val Episode = fc<EpisodeProps> { props ->
     val nav = useNavigate()
     listButton {
-        +"${props.episode.episodeNumber} ${props.episode.name}"
+        div("d-flex flex-row") {
+            img(src = props.episode.stillPath ?: "", classes = "img-letterbox flex-shrink-0") {
+                attrs.width = "160em"
+                attrs.height = "90em"
+            }
+            div("ml-2") {
+                h5 { +"${props.episode.episodeNumber}. ${props.episode.name}" }
+                span { +(props.episode.overview ?: "Overview unavailable") }
+            }
+        }
         attrs.onClick = { _ -> nav(getUrlForStreamable(props.episode.key)) }
     }
 }
