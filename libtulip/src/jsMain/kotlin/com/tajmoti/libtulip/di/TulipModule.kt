@@ -1,7 +1,6 @@
 package com.tajmoti.libtulip.di
 
 import com.tajmoti.libtulip.data.*
-import com.tajmoti.libtulip.data.impl.StubUserDataDataSource
 import com.tajmoti.libtulip.di.impl.ApiServiceModuleImpl
 import com.tajmoti.libtulip.di.impl.BusinessLogicModuleImpl
 import com.tajmoti.libtulip.di.impl.DataRepositoryModuleImpl
@@ -52,7 +51,7 @@ private val businessLogicModule = module {
 private val dataSourceModule = module {
     single<LocalTvDataSource> { BrowserTvDataSource() }
     single<HostedInfoDataSource> { BrowserHostedInfoDataSource() }
-    single<UserDataDataSource> { StubUserDataDataSource() }
+    single<UserDataDataSource> { BrowserUserInfoDataSource() }
     single<VideoDownloadService> { StubVideoDownloadService() }
 }
 
