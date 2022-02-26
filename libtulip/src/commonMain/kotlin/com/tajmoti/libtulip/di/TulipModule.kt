@@ -14,6 +14,8 @@ import com.tajmoti.libtulip.misc.HardcodedConfigStore
 import com.tajmoti.libtulip.misc.KtorWebDriver
 import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.libtulip.service.impl.StubVideoDownloadService
+import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
+import com.tajmoti.libtulip.ui.tvshow.TvShowViewModelImpl
 import com.tajmoti.libwebdriver.TulipWebDriver
 import org.koin.core.qualifier.qualifier
 import org.koin.dsl.module
@@ -58,11 +60,16 @@ private val dataSourceModule = module {
     single<VideoDownloadService> { StubVideoDownloadService() }
 }
 
+private val screenModule = module {
+    factory<TvShowViewModel> { p -> TvShowViewModelImpl(get(), get(), get(), get(), p.get(), p.get()) }
+}
+
 val tulipModule = listOf(
     configModule,
     networkModule,
     apiServiceModule,
     dataRepositoryModule,
     businessLogicModule,
-    dataSourceModule
+    dataSourceModule,
+    screenModule
 )

@@ -1,35 +1,27 @@
-package ui.show
+package ui
 
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.model.key.*
 import react.Props
-import react.RBuilder
 import react.fc
 import react.router.dom.useSearchParams
 import react.router.useNavigate
 import react.router.useParams
 import ui.player.VideoPlayerComponent
 import ui.search.SearchComponent
+import ui.show.TvShow
+
 
 val UrlTmdbTvShow = fc<Props> {
     val params = useParams()
-    val key = TvShowKey.Tmdb(params["key"]!!.toLong())
-    commonTvShow(key)
+    TvShow { attrs.tvShowKey = TvShowKey.Tmdb(params["key"]!!.toLong()) }
 }
 
 val UrlHostedTvShow = fc<Props> {
     val params = useParams()
     val service = StreamingService.valueOf(params["streamingService"]!!)
     val key = params["key"]!!
-    commonTvShow(TvShowKey.Hosted(service, key))
-}
-
-private fun RBuilder.commonTvShow(key: TvShowKey) {
-    val nav = useNavigate()
-    child(TvShowComponent::class) {
-        attrs.tvShowKey = key
-        attrs.onEpisodeClicked = { nav(getUrlForStreamable(it)) }
-    }
+    TvShow { attrs.tvShowKey = TvShowKey.Hosted(service, key) }
 }
 
 val UrlSearch = fc<Props> {
@@ -82,7 +74,8 @@ val UrlHostedMoviePlayer = fc<Props> {
     }
 }
 
-private fun getUrlForItem(key: ItemKey): String {
+
+fun getUrlForItem(key: ItemKey): String {
     return when (key) {
         is TvShowKey.Tmdb -> "/tv/tmdb/${key.id}"
         is TvShowKey.Hosted -> "/tv/hosted/${key.streamingService}/${key.id}"
@@ -90,7 +83,7 @@ private fun getUrlForItem(key: ItemKey): String {
     }
 }
 
-private fun getUrlForStreamable(key: StreamableKey): String {
+fun getUrlForStreamable(key: StreamableKey): String {
     return when (key) {
         is EpisodeKey.Hosted -> "/player/tv/hosted/${key.streamingService}/${key.id}"
         is MovieKey.Hosted -> "/player/movie/hosted/${key.streamingService}/${key.id}"

@@ -13,8 +13,8 @@ import react.router.Route
 import react.router.Routes
 import react.router.dom.HashRouter
 import react.router.useNavigate
+import ui.*
 import ui.library.LibraryComponent
-import ui.show.*
 
 val Tulip = fc<Props> {
     HashRouter {
@@ -40,7 +40,7 @@ val Tulip = fc<Props> {
                 }
                 Route {
                     attrs.path = "/tv/hosted/:streamingService/:key"
-                    attrs.element = createElement(UrlHostedTvShow)
+                    attrs.element = createElement(UrlHostedTvPlayer)
                 }
                 Route {
                     attrs.path = "/player/tv/tmdb/:tvShowId/:seasonNumber/:episodeNumber"
