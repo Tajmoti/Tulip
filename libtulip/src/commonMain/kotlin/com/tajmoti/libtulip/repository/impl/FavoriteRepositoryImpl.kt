@@ -13,7 +13,7 @@ class FavoriteRepositoryImpl(
         return repo.isFavorite(item)
     }
 
-    override fun getUserFavorites(): Flow<List<ItemKey>> {
+    override fun getUserFavorites(): Flow<Set<ItemKey>> {
         return repo.getUserFavorites()
     }
 

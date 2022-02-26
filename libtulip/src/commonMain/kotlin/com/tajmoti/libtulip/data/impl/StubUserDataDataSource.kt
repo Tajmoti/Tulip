@@ -12,8 +12,8 @@ class StubUserDataDataSource : UserDataDataSource {
         return flowOf(false)
     }
 
-    override fun getUserFavorites(): Flow<List<ItemKey>> {
-        return flowOf(emptyList())
+    override fun getUserFavorites(): Flow<Set<ItemKey>> {
+        return flowOf(emptySet())
     }
 
     override suspend fun deleteUserFavorite(item: ItemKey) {

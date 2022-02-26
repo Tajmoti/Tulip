@@ -23,12 +23,12 @@ class AndroidUserDataDataSource @Inject constructor(
         }
     }
 
-    override fun getUserFavorites(): Flow<List<ItemKey>> {
+    override fun getUserFavorites(): Flow<Set<ItemKey>> {
         val tmdbItems = userDataDao.getAllTmdbFavorites()
             .map { it.map { item -> item.fromDb() } }
         val hostedItems = userDataDao.getAllHostedFavorites()
             .map { it.map { item -> item.fromDb() } }
-        return combine(tmdbItems, hostedItems) { a, b -> a + b }
+        return combine(tmdbItems, hostedItems) { a, b -> (a + b).toSet() }
     }
 
     override suspend fun deleteUserFavorite(item: ItemKey) {

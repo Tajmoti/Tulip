@@ -16,7 +16,7 @@ interface UserDataDataSource {
     /**
      * Returns all user's favorites.
      */
-    fun getUserFavorites(): Flow<List<ItemKey>>
+    fun getUserFavorites(): Flow<Set<ItemKey>>
 
     /**
      * Removes an [item] from the user's favorites.
