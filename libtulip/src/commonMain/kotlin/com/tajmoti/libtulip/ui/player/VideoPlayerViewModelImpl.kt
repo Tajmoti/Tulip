@@ -1,6 +1,5 @@
 package com.tajmoti.libtulip.ui.player
 
-import com.tajmoti.commonutils.logger
 import com.tajmoti.commonutils.map
 import com.tajmoti.commonutils.mapWith
 import com.tajmoti.libtulip.model.info.LanguageCode
@@ -20,6 +19,7 @@ import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.libtulip.ui.streams.FailedLink
 import com.tajmoti.libtulip.ui.streams.LoadedLink
 import com.tajmoti.libtulip.ui.streams.SelectedLink
+import com.tajmoti.libtulip.ui.videoComparator
 import com.tajmoti.libtvprovider.model.VideoStreamRef
 import com.tajmoti.libtvvideoextractor.CaptchaInfo
 import com.tajmoti.libtvvideoextractor.ExtractionError
@@ -409,9 +409,13 @@ class VideoPlayerViewModelImpl constructor(
 
     private fun mapStreamsResult(result: StreamsResult): LinkListLoadingState {
         return when (result) {
-            is StreamsResult.Success -> LinkListLoadingState.Success(result.streams, result.possiblyFinished)
+            is StreamsResult.Success -> LinkListLoadingState.Success(sortStreams(result), result.possiblyFinished)
             is StreamsResult.Error -> LinkListLoadingState.Error
         }
+    }
+
+    private fun sortStreams(result: StreamsResult.Success): List<UnloadedVideoStreamRef> {
+        return result.streams.sortedWith(videoComparator)
     }
 
     private fun getStreamableInfo(key: StreamableKey): Flow<Result<StreamableInfo>> {

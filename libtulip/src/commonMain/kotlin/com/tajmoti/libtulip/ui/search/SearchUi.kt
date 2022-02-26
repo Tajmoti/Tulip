@@ -2,6 +2,7 @@ package com.tajmoti.libtulip.ui.search
 
 import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtulip.model.search.GroupedSearchResult
+import com.tajmoti.libtulip.ui.languageComparator
 import com.tajmoti.libtvprovider.model.TvItemInfo
 
 object SearchUi {
@@ -16,7 +17,7 @@ object SearchUi {
         return item.results
             .map { it.info.language }
             .distinct()
-            .sorted()
             .map { LanguageCode(it) }
+            .sortedWith(languageComparator)
     }
 }

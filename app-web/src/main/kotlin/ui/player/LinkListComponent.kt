@@ -8,10 +8,7 @@ import react.RBuilder
 import react.dom.RDOMBuilder
 import react.dom.div
 import react.dom.onClick
-import ui.ViewModelComponent
-import ui.activeListItem
-import ui.listButton
-import ui.renderLanguageBadge
+import ui.*
 
 class LinkListComponent(props: LinkListProps) : ViewModelComponent<LinkListProps, VideoPlayerViewModel.State, VideoPlayerViewModel>(props) {
     override fun getViewModel() = props.viewModel
@@ -34,9 +31,19 @@ class LinkListComponent(props: LinkListProps) : ViewModelComponent<LinkListProps
 
     private fun RDOMBuilder<CommonAttributeGroupFacade>.fillBadge(ref: UnloadedVideoStreamRef) {
         val (info, extractable, lang) = ref
-        val watchable = if (extractable) "Watchable" else "Not yet watchable"
-        +"${info.serviceName} $watchable"
-        renderLanguageBadge(lang, extraClasses = "ml-1")
+        +info.serviceName
+        if (extractable) {
+            PillBadge {
+                attrs.color = BadgeType.Success
+                attrs.message = "Playable"
+            }
+        } else {
+            PillBadge {
+                attrs.color = BadgeType.Danger
+                attrs.message = "Playable externally"
+            }
+        }
+        renderLanguageBadge(lang)
         attrs.onClick = { props.itemCallback(ref) }
     }
 

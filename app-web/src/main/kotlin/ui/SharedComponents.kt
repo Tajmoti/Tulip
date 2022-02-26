@@ -27,8 +27,37 @@ fun RBuilder.activeListItem(block: RDOMBuilder<SPAN>.() -> Unit) {
     span("list-group-item active", block = block)
 }
 
-fun RBuilder.renderLanguageBadge(language: LanguageCode, extraClasses: String = "") {
-    span("badge badge-pill badge-info $extraClasses") { +language.code.uppercase() }
+fun RBuilder.renderLanguageBadge(language: LanguageCode) {
+    val flag = languageToFlag(language)
+    span("ml-2") {
+        if (flag != null) {
+            +flag
+        } else {
+            span("badge badge-pill badge-info") { language.code.uppercase() }
+        }
+    }
+}
+
+private fun languageToFlag(language: LanguageCode): String? {
+    return when (language.code) {
+        "en" -> "\uD83C\uDDEC\uD83C\uDDE7"
+        "de" -> "\uD83C\uDDE9\uD83C\uDDEA"
+        else -> null
+    }
+}
+
+val PillBadge = fc<BadgeProps> { props ->
+    span("badge badge-pill badge-${props.color.name.lowercase()} ml-1") { +props.message }
+}
+
+external interface BadgeProps : Props {
+    var message: String
+    var color: BadgeType
+}
+
+enum class BadgeType {
+    Success,
+    Danger
 }
 
 val ErrorMessage = fc<ErrorMessageProps> { props ->

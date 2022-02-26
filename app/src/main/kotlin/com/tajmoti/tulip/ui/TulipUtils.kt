@@ -9,11 +9,6 @@ import com.tajmoti.libtulip.model.info.seasonNumber
 import com.tajmoti.libtulip.ui.player.VideoPlayerUtils
 import com.tajmoti.tulip.R
 
-/**
- * Language used for all UI data, if available.
- */
-const val PREFERRED_LANGUAGE = "en"
-
 fun languageToIcon(language: LanguageCode): Int? {
     return when (language.code) {
         "en" -> R.drawable.ic_flag_uk
