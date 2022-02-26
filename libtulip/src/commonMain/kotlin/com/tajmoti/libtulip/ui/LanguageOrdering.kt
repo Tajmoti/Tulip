@@ -15,5 +15,5 @@ val languageComparator = Comparator<LanguageCode> { a, b ->
 }
 
 private fun getItemType(language: LanguageCode): Int {
-    return if (language.code == PREFERRED_LANGUAGE) -1 else 0
+    return if (language == PREFERRED_LANGUAGE) -1 else 0
 }

@@ -2,6 +2,7 @@ package com.tajmoti.libtulip.ui.player
 
 import com.tajmoti.commonutils.map
 import com.tajmoti.commonutils.mapWith
+import com.tajmoti.libtulip.PREFERRED_LANGUAGE
 import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
@@ -93,7 +94,7 @@ class VideoPlayerViewModelImpl constructor(
         it.first { video -> video.linkExtractionSupported }
 
     private fun anyGoodStreams(it: List<UnloadedVideoStreamRef>) =
-        it.any { s -> s.linkExtractionSupported }
+        it.any { s -> s.linkExtractionSupported && s.language == PREFERRED_LANGUAGE }
 
     /**
      * The stream that should actually be played.
