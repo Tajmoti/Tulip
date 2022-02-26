@@ -6,6 +6,7 @@ import com.tajmoti.libtulip.model.info.seasonNumber
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
+import kotlinx.html.ButtonType
 import org.w3c.dom.HTMLSelectElement
 import react.Props
 import react.dom.*
@@ -27,17 +28,20 @@ val TvShow = fc<TvShowProps> { props ->
         TvShowDetails {
             attrs.name = name
             attrs.backdropUrl = vmState.backdropPath
+            attrs.onFavoriteToggled = vm::toggleFavorites
+            attrs.isFavorite = vmState.isFavorite
         }
     }
 
     val seasons = vmState.seasons
     if (seasons != null) {
         val currentSeason = getCurrentSeason(seasons, vmState.selectedSeason)
-        SeasonSelector {
+        LoadedTvShow {
             attrs.seasons = seasons
-            attrs.onSelected = vm::onSeasonSelected
-            attrs.season = currentSeason
-            attrs.onSeasonClick = vm::onSeasonSelected
+            attrs.currentSeason = currentSeason
+            attrs.onSeasonSelected = vm::onSeasonSelected
+            attrs.isFavorite = vm.isFavorite.value
+            attrs.onFavoriteToggled = vm::toggleFavorites
         }
     } else {
         renderLoading()
@@ -49,30 +53,59 @@ private fun getCurrentSeason(seasons: List<TulipSeasonInfo>, preselected: Season
     return seasons.first { it.key == currentSeasonKey }
 }
 
-
-external interface SeasonSelectorProps : Props, SeasonDropdownProps, EpisodeListProps {
-    var onSeasonClick: (SeasonKey) -> Unit
+external interface LoadedTvShowProps : Props {
+    var seasons: List<TulipSeasonInfo>
+    var currentSeason: TulipSeasonInfo
+    var onSeasonSelected: (SeasonKey) -> Unit
+    var isFavorite: Boolean?
+    var onFavoriteToggled: () -> Unit
 }
 
-private val SeasonSelector = fc<SeasonSelectorProps> { props ->
-    SeasonDropdown {
-        attrs.seasons = props.seasons
-        attrs.season = props.season
-        attrs.onSelected = props.onSeasonClick
+private val LoadedTvShow = fc<LoadedTvShowProps> { props ->
+    div("d-flex justify-content-between mb-2") {
+        SeasonDropdown {
+            attrs.seasons = props.seasons
+            attrs.onSelected = props.onSeasonSelected
+            attrs.season = props.currentSeason
+        }
+        FavoriteToggle {
+            attrs.isFavorite = props.isFavorite
+            attrs.onFavoriteToggled = props.onFavoriteToggled
+        }
     }
     Season {
-        attrs.season = props.season
+        attrs.season = props.currentSeason
     }
 }
-
 
 external interface TvShowDetailsProps : Props {
     var name: String
     var backdropUrl: String?
+    var onFavoriteToggled: () -> Unit
+    var isFavorite: Boolean?
 }
 
 private val TvShowDetails = fc<TvShowDetailsProps> { props ->
     h1("mb-4") { +props.name }
+}
+
+
+external interface FavoriteToggleProps : Props {
+    var onFavoriteToggled: () -> Unit
+    var isFavorite: Boolean?
+}
+
+private val FavoriteToggle = fc<FavoriteToggleProps> { props ->
+    button(type = ButtonType.button, classes = "btn btn-primary") {
+        attrs.onClick = { props.onFavoriteToggled() }
+        if (props.isFavorite!!) {
+            i("fa-solid fa-star mr-1") {}
+            +"Remove from favorites"
+        } else {
+            i("fa-regular fa-star mr-1") {}
+            +"Add to favorites"
+        }
+    }
 }
 
 
@@ -118,7 +151,7 @@ external interface SeasonDropdownProps : Props {
 }
 
 private val SeasonDropdown = fc<SeasonDropdownProps> { props ->
-    select("custom-select mb-2") {
+    select("custom-select w-25") {
         for (season in props.seasons) {
             SeasonDropdownItem { attrs.season = season }
         }

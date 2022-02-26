@@ -19,6 +19,16 @@ fun RBuilder.renderLoading(extraClasses: String = "") {
     }
 }
 
+external interface EmptyViewProps : Props {
+    var text: String
+}
+
+val EmptyView = fc<EmptyViewProps> { props ->
+    div("d-flex justify-content-center mt-5") {
+        h5 { +props.text }
+    }
+}
+
 fun RBuilder.listButton(block: RDOMBuilder<BUTTON>.() -> Unit) {
     button(type = ButtonType.button, classes = "list-group-item list-group-item-action", block = block)
 }

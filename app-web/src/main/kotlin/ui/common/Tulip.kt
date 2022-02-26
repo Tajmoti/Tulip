@@ -14,7 +14,7 @@ import react.router.Routes
 import react.router.dom.HashRouter
 import react.router.useNavigate
 import ui.*
-import ui.library.LibraryComponent
+import ui.library.Library
 
 val Tulip = fc<Props> {
     HashRouter {
@@ -24,11 +24,11 @@ val Tulip = fc<Props> {
                 Route {
                     attrs.path = "/"
                     attrs.index = true
-                    attrs.element = createElement { LibraryComponent() }
+                    attrs.element = createElement(Library)
                 }
                 Route {
                     attrs.path = "/library"
-                    attrs.element = createElement { LibraryComponent() }
+                    attrs.element = createElement(Library)
                 }
                 Route {
                     attrs.path = "/search"

@@ -9,6 +9,8 @@ import com.tajmoti.libtulip.misc.HardcodedConfigStore
 import com.tajmoti.libtulip.misc.KtorWebDriver
 import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.libtulip.service.impl.StubVideoDownloadService
+import com.tajmoti.libtulip.ui.library.LibraryViewModel
+import com.tajmoti.libtulip.ui.library.LibraryViewModelImpl
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModelImpl
 import com.tajmoti.libwebdriver.TulipWebDriver
@@ -57,6 +59,7 @@ private val dataSourceModule = module {
 
 private val screenModule = module {
     factory<TvShowViewModel> { p -> TvShowViewModelImpl(get(), get(), get(), get(), p.get(), p.get()) }
+    factory<LibraryViewModel> { p -> LibraryViewModelImpl(get(), get(), get(), get(), p.get()) }
 }
 
 val tulipModule = listOf(
