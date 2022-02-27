@@ -14,7 +14,7 @@ import ui.useViewModel
 val Library = fc<Props> {
     val (_, state) = useViewModel<LibraryViewModel, LibraryViewModel.State>() ?: return@fc
     if (state.favoriteItems.isNotEmpty()) {
-        div("d-flex flex-wrap") {
+        div("d-flex flex-wrap justify-content-center justify-content-md-start") {
             for (item in state.favoriteItems) {
                 LibraryItem { attrs.item = item }
             }
