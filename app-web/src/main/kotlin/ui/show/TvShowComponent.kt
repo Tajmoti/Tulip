@@ -136,7 +136,7 @@ private val Episode = fc<EpisodeProps> { props ->
             }
             div("ml-2") {
                 h5 { +"${props.episode.episodeNumber}. ${props.episode.name}" }
-                span { +(props.episode.overview ?: "Overview unavailable") }
+                span("text-3-lines") { +(props.episode.overview ?: "Overview unavailable") }
             }
         }
         attrs.onClick = { _ -> nav(getUrlForStreamable(props.episode.key)) }
