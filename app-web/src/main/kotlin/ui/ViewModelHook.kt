@@ -2,6 +2,7 @@ package ui
 
 import AppDiHolder
 import com.tajmoti.libtulip.ui.StateViewModel
+import com.tajmoti.commonutils.jsObject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -25,9 +26,7 @@ inline fun <reified VM : StateViewModel<S>, S : Any> useViewModel(vararg paramet
 
 fun <VM : StateViewModel<S>, S : Any> wrapInModel(viewModel: VM): ViewModelStateFc<VM, S> {
     @Suppress("UNCHECKED_CAST_TO_EXTERNAL_INTERFACE", "UNCHECKED_CAST")
-    val initial = object {} as ViewModelStateFc<VM, S>
-    initial.viewModel = viewModel
-    return initial
+    return jsObject { this.viewModel = viewModel }
 }
 
 external interface ViewModelStateFc<VM : StateViewModel<S>, S : Any> : State {

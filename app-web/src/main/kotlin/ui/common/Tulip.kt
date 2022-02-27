@@ -1,6 +1,7 @@
 package ui.common
 
 import com.tajmoti.libtulip.TulipBuildInfo
+import com.tajmoti.commonutils.jsObject
 import kotlinx.html.InputType
 import kotlinx.html.js.onChangeFunction
 import kotlinx.html.js.onClickFunction
@@ -12,6 +13,7 @@ import react.fc
 import react.router.Route
 import react.router.Routes
 import react.router.dom.HashRouter
+import react.router.useLocation
 import react.router.useNavigate
 import ui.*
 import ui.library.Library
@@ -66,6 +68,7 @@ val Tulip = fc<Props> {
 
 private val TulipNavBar = fc<Props> {
     val nav = useNavigate()
+    val location = useLocation()
     nav("navbar navbar-dark bg-dark") {
         a(classes = "navbar-brand text-light bg-dark") {
             attrs.onClickFunction = { nav.invoke("/") }
@@ -76,7 +79,12 @@ private val TulipNavBar = fc<Props> {
                 attrs.placeholder = "Search"
                 attrs.onChangeFunction = { event ->
                     val query = (event.target as HTMLInputElement).value
-                    nav.invoke("/search?query=${query}")
+                    val dstUrl = "/search?query=${query}"
+                    if (location.pathname == "/search") {
+                        nav.invoke(dstUrl, jsObject { replace = true })
+                    } else {
+                        nav.invoke(dstUrl)
+                    }
                 }
             }
         }
