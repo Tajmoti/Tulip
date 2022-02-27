@@ -96,14 +96,14 @@ external interface FavoriteToggleProps : Props {
 }
 
 private val FavoriteToggle = fc<FavoriteToggleProps> { props ->
-    button(type = ButtonType.button, classes = "btn btn-primary") {
+    button(type = ButtonType.button, classes = "btn btn-primary ml-2") {
         attrs.onClick = { props.onFavoriteToggled() }
         if (props.isFavorite!!) {
             i("fa-solid fa-star mr-1") {}
-            +"Remove from favorites"
+            +"Added"
         } else {
             i("fa-regular fa-star mr-1") {}
-            +"Add to favorites"
+            +"Add"
         }
     }
 }
@@ -151,7 +151,7 @@ external interface SeasonDropdownProps : Props {
 }
 
 private val SeasonDropdown = fc<SeasonDropdownProps> { props ->
-    select("custom-select w-25") {
+    select("custom-select w-50 w-sm-25") {
         for (season in props.seasons) {
             SeasonDropdownItem { attrs.season = season }
         }
