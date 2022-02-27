@@ -34,8 +34,8 @@ val LibraryItem = fc<LibraryItemProps> { props ->
         Link {
             attrs.to = getUrlForItem(item.key)
             img(src = item.posterPath ?: "") {
-                attrs.width = "200em"
-                attrs.height = "300em"
+                attrs.width = "150em"
+                attrs.height = "225em"
             }
         }
     }
