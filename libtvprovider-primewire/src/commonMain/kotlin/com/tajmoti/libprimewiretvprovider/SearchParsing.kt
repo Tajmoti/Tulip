@@ -8,6 +8,7 @@ import com.tajmoti.libtvprovider.model.TvItemInfo
 internal fun parseSearchResultPageBlocking(pageSource: String): Result<List<SearchResult>> {
     return try {
         val items = KSoup.parse(pageSource)
+            .getElementsByClass("index_container").first()
             .getElementsByClass("index_item")
             .map { elemToSearchResult(it) }
         Result.success(items)
