@@ -13,6 +13,7 @@ import react.fc
 import react.router.Route
 import react.router.Routes
 import react.router.dom.HashRouter
+import react.router.dom.Link
 import react.router.useLocation
 import react.router.useNavigate
 import ui.*
@@ -70,9 +71,9 @@ private val TulipNavBar = fc<Props> {
     val nav = useNavigate()
     val location = useLocation()
     nav("navbar navbar-dark bg-dark") {
-        a(classes = "navbar-brand text-light bg-dark") {
-            attrs.onClickFunction = { nav.invoke("/") }
-            +"Tulip"
+        Link {
+            attrs.to = "/"
+            span("navbar-brand text-light bg-dark") { +"Tulip" }
         }
         form(classes = "form-inline") {
             input(type = InputType.search, classes = "form-control mr-sm-2") {
