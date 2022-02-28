@@ -2,7 +2,7 @@ package com.tajmoti.libtulip.di.impl
 
 import com.tajmoti.commonutils.PageSourceLoader
 import com.tajmoti.libtulip.di.INetworkingModule
-import com.tajmoti.libtulip.misc.TulipPageSourceLoader
+import com.tajmoti.libtulip.misc.webdriver.TulipPageSourceLoader
 import com.tajmoti.libwebdriver.TulipWebDriver
 import io.ktor.client.*
 

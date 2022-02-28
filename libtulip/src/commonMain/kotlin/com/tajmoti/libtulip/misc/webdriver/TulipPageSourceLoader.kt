@@ -1,4 +1,4 @@
-package com.tajmoti.libtulip.misc
+package com.tajmoti.libtulip.misc.webdriver
 
 import com.tajmoti.commonutils.PageSourceLoader
 import com.tajmoti.libwebdriver.TulipWebDriver

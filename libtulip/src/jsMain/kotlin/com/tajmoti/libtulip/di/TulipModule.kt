@@ -6,7 +6,7 @@ import com.tajmoti.libtulip.di.impl.BusinessLogicModuleImpl
 import com.tajmoti.libtulip.di.impl.DataRepositoryModuleImpl
 import com.tajmoti.libtulip.di.impl.NetworkingModuleImpl
 import com.tajmoti.libtulip.misc.HardcodedConfigStore
-import com.tajmoti.libtulip.misc.KtorWebDriver
+import com.tajmoti.libtulip.misc.webdriver.KtorWebDriver
 import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.libtulip.service.impl.StubVideoDownloadService
 import com.tajmoti.libtulip.ui.library.LibraryViewModel

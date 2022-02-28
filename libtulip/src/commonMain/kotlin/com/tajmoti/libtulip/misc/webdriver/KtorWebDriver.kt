@@ -1,4 +1,4 @@
-package com.tajmoti.libtulip.misc
+package com.tajmoti.libtulip.misc.webdriver
 
 import com.tajmoti.libwebdriver.TulipWebDriver
 import io.ktor.client.*

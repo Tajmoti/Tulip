@@ -2,7 +2,7 @@ package com.tajmoti.multiplatform
 
 import com.tajmoti.commonutils.UrlEncoder
 import com.tajmoti.libtulip.di.ProxyType
-import com.tajmoti.libtulip.misc.UrlRewriter
+import com.tajmoti.libtulip.misc.webdriver.UrlRewriter
 import com.tajmoti.libtulip.setupTulipKtor
 import io.ktor.client.*
 import io.ktor.client.engine.js.*
