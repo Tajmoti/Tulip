@@ -1,5 +1,6 @@
 package com.tajmoti.ksoup
 
+import kotlinx.dom.isText
 import org.w3c.dom.Element
 import org.w3c.dom.asList
 
@@ -30,7 +31,10 @@ actual open class KElement(private val element: Element) {
     }
 
     actual fun ownText(): String {
-        return element.textContent ?: ""
+        return element.childNodes.asList()
+            .filter { it.isText }
+            .joinToString("") { it.textContent ?: "" }
+            .replace("\n", "")
     }
 
     actual fun parent(): KElement? {
@@ -38,7 +42,7 @@ actual open class KElement(private val element: Element) {
     }
 
     actual fun previousElementSibling(): KElement? {
-        TODO("Not yet implemented")
+        return element.previousElementSibling?.let { KElement(it) }
     }
 
     actual fun select(cssQuery: String): List<KElement> {

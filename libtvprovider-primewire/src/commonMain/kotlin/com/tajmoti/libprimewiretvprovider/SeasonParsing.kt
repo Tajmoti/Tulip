@@ -30,7 +30,7 @@ private fun elemToSeason(element: KElement): Season {
 }
 
 private fun elemToEpisode(element: KElement): EpisodeInfo {
-    val elemText = element.text()
+    val elemText = element.children().first().ownText()
     val number = if (elemText.startsWith("Special")) {
         null
     } else {
