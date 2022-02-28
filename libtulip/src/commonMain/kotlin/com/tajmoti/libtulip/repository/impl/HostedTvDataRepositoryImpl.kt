@@ -63,7 +63,9 @@ class HostedTvDataRepositoryImpl(
         val netFlow = flow { emit(tvProvider.getShow(key.streamingService, key.id)) }
         return netFlow
             .flatMapLatest { tvShowInfoResult ->
-                tvShowInfoResult.fold({ getHostedShowTvInfo(it, key) }, { flowOf(Result.failure(it)) })
+                tvShowInfoResult
+                    .onFailure { logger.warn(it) { "Failed to fetch TV show for $key" } }
+                    .fold({ getHostedShowTvInfo(it, key) }, { flowOf(Result.failure(it)) })
             }
     }
 
@@ -115,6 +117,7 @@ class HostedTvDataRepositoryImpl(
     }
 
     private fun getStreamableLinksAsFlow(it: StreamableKey.Hosted): Flow<Result<List<VideoStreamRef>>> {
+        logger.debug { "Getting streamable links by $it" }
         return flow { emit(tvProvider.getStreamableLinks(it.streamingService, it.id)) }
     }
 }
