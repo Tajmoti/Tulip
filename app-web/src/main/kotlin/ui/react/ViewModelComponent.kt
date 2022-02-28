@@ -1,4 +1,4 @@
-package ui
+package ui.react
 
 import com.tajmoti.libtulip.ui.StateViewModel
 import react.Props

@@ -9,7 +9,7 @@ import react.fc
 import react.router.dom.Link
 import ui.EmptyView
 import ui.getUrlForItem
-import ui.useViewModel
+import ui.react.useViewModel
 
 val Library = fc<Props> {
     val (_, state) = useViewModel<LibraryViewModel, LibraryViewModel.State>() ?: return@fc

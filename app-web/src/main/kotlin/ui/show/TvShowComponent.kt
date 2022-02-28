@@ -15,7 +15,7 @@ import react.router.useNavigate
 import ui.getUrlForStreamable
 import ui.listButton
 import ui.renderLoading
-import ui.useViewModel
+import ui.react.useViewModel
 
 external interface TvShowProps : Props {
     var tvShowKey: TvShowKey

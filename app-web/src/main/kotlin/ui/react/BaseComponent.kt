@@ -1,4 +1,4 @@
-package ui
+package ui.react
 
 import AppDiHolder
 import kotlinx.coroutines.CoroutineScope

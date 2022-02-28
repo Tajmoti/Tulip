@@ -9,6 +9,8 @@ import kotlinx.html.SPAN
 import react.RBuilder
 import react.dom.*
 import ui.*
+import ui.react.ViewModelComponent
+import ui.react.ViewModelState
 
 class SearchComponent(props: SearchProps) : ViewModelComponent<SearchProps, SearchViewModel.State, SearchViewModel>(props) {
 

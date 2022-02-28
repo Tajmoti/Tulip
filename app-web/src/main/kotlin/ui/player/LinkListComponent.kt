@@ -9,6 +9,7 @@ import react.dom.RDOMBuilder
 import react.dom.div
 import react.dom.onClick
 import ui.*
+import ui.react.ViewModelComponent
 
 class LinkListComponent(props: LinkListProps) : ViewModelComponent<LinkListProps, VideoPlayerViewModel.State, VideoPlayerViewModel>(props) {
     override fun getViewModel() = props.viewModel

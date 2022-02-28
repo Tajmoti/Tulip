@@ -4,12 +4,11 @@ import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModelImpl
 import com.tajmoti.libtulip.ui.streams.LoadedLink
 import com.tajmoti.libtvprovider.model.VideoStreamRef
-import kotlinx.html.IframeSandbox
 import react.RBuilder
 import react.dom.h1
 import react.dom.iframe
 import react.dom.video
-import ui.ViewModelComponent
+import ui.react.ViewModelComponent
 import ui.renderLoading
 
 class VideoPlayerComponent(props: VideoPlayerProps) :
