@@ -20,7 +20,10 @@ val Library = fc<Props> {
             }
         }
     } else {
-        EmptyView { attrs.text = "Your library is empty. Search for some items and add them to favorites." }
+        EmptyView {
+            attrs.primaryText = "Your library is empty."
+            attrs.secondaryText = "Search for some items and add them to favorites."
+        }
     }
 }
 

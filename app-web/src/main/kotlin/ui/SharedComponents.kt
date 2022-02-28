@@ -20,12 +20,14 @@ fun RBuilder.renderLoading(extraClasses: String = "") {
 }
 
 external interface EmptyViewProps : Props {
-    var text: String
+    var primaryText: String
+    var secondaryText: String
 }
 
 val EmptyView = fc<EmptyViewProps> { props ->
-    div("d-flex justify-content-center mt-5") {
-        h5 { +props.text }
+    div("text-center mt-5") {
+        h5 { +props.primaryText }
+        h6 { +props.secondaryText }
     }
 }
 
