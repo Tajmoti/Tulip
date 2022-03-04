@@ -30,7 +30,10 @@ interface IBusinessLogicModule {
         hostedToTmdbMappingRepository: ItemMappingRepository,
     ): MappingSearchService
 
-    fun provideMultiTvProvider(loader: PageSourceLoader): MultiTvProvider<StreamingService>
+    fun provideMultiTvProvider(
+        loader: PageSourceLoader,
+        blacklist: Set<StreamingService> = emptySet()
+    ): MultiTvProvider<StreamingService>
 
     fun provideLinkExtractor(loader: PageSourceLoader): VideoLinkExtractor
 }

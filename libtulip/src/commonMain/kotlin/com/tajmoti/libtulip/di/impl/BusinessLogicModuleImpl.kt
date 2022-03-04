@@ -56,16 +56,20 @@ object BusinessLogicModuleImpl : IBusinessLogicModule {
         )
     }
 
-    override fun provideMultiTvProvider(loader: PageSourceLoader): MultiTvProvider<StreamingService> {
+    override fun provideMultiTvProvider(
+        loader: PageSourceLoader,
+        blacklist: Set<StreamingService>
+    ): MultiTvProvider<StreamingService> {
         val primewire = PrimewireTvProvider(loader)
         val kinox = KinoxTvProvider(loader)
         val southPark = SouthParkTvProvider(loader)
+        val impls = mapOf(
+            StreamingService.PRIMEWIRE to primewire,
+            StreamingService.KINOX to kinox,
+            StreamingService.SOUTH_PARK to southPark
+        )
         return MultiTvProvider(
-            mapOf(
-                StreamingService.PRIMEWIRE to primewire,
-                StreamingService.KINOX to kinox,
-                StreamingService.SOUTH_PARK to southPark
-            ),
+            impls.filterKeys { !blacklist.contains(it) },
             30_000L
         )
     }

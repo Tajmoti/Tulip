@@ -7,6 +7,7 @@ import com.tajmoti.libtulip.di.impl.DataRepositoryModuleImpl
 import com.tajmoti.libtulip.di.impl.NetworkingModuleImpl
 import com.tajmoti.libtulip.misc.HardcodedConfigStore
 import com.tajmoti.libtulip.misc.webdriver.KtorWebDriver
+import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.libtulip.service.impl.StubVideoDownloadService
 import com.tajmoti.libtulip.ui.library.LibraryViewModel
@@ -50,7 +51,7 @@ private val businessLogicModule = module {
     single { BusinessLogicModuleImpl.provideStreamService(get(), get(), get()) }
     single { BusinessLogicModuleImpl.provideSubtitleService(get()) }
     single { BusinessLogicModuleImpl.provideMappingSearchService(get(), get(), get()) }
-    single { BusinessLogicModuleImpl.provideMultiTvProvider(get()) }
+    single { BusinessLogicModuleImpl.provideMultiTvProvider(get(), setOf(StreamingService.PRIMEWIRE)) }
     single { BusinessLogicModuleImpl.provideLinkExtractor(get()) }
 }
 

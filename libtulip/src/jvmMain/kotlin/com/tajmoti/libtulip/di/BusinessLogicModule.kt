@@ -45,10 +45,17 @@ object BusinessLogicModule : IBusinessLogicModule {
         hostedToTmdbMappingRepository
     )
 
+    override fun provideMultiTvProvider(
+        loader: PageSourceLoader,
+        blacklist: Set<StreamingService>
+    ): MultiTvProvider<StreamingService> {
+        return BusinessLogicModuleImpl.provideMultiTvProvider(loader, blacklist)
+    }
+
     @Provides
     @Singleton
-    override fun provideMultiTvProvider(loader: PageSourceLoader): MultiTvProvider<StreamingService> {
-        return BusinessLogicModuleImpl.provideMultiTvProvider(loader)
+    fun provideMultiTvProvider(loader: PageSourceLoader): MultiTvProvider<StreamingService> {
+        return provideMultiTvProvider(loader, emptySet())
     }
 
     @Provides
