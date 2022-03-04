@@ -1,37 +1,28 @@
-package ui.common
+package ui.application
 
-import com.tajmoti.libtulip.TulipBuildInfo
-import com.tajmoti.commonutils.jsObject
-import kotlinx.html.InputType
-import kotlinx.html.js.onChangeFunction
-import kotlinx.html.js.onClickFunction
-import org.w3c.dom.HTMLInputElement
 import react.Props
 import react.createElement
-import react.dom.*
+import react.dom.div
 import react.fc
 import react.router.Route
 import react.router.Routes
 import react.router.dom.HashRouter
-import react.router.dom.Link
-import react.router.useLocation
-import react.router.useNavigate
 import ui.*
-import ui.library.Library
+import ui.library.LibraryScreen
 
-val Tulip = fc<Props> {
+val Application = fc<Props> {
     HashRouter {
-        TulipNavBar {}
+        NavBar {}
         div("container py-2") {
             Routes {
                 Route {
                     attrs.path = "/"
                     attrs.index = true
-                    attrs.element = createElement(Library)
+                    attrs.element = createElement(LibraryScreen)
                 }
                 Route {
                     attrs.path = "/library"
-                    attrs.element = createElement(Library)
+                    attrs.element = createElement(LibraryScreen)
                 }
                 Route {
                     attrs.path = "/search"
@@ -63,39 +54,6 @@ val Tulip = fc<Props> {
                 }
             }
         }
-        TulipFooter {}
-    }
-}
-
-private val TulipNavBar = fc<Props> {
-    val nav = useNavigate()
-    val location = useLocation()
-    nav("navbar navbar-dark bg-dark") {
-        Link {
-            attrs.to = "/"
-            span("navbar-brand text-light bg-dark") { +"Tulip" }
-        }
-        form(classes = "form-inline") {
-            input(type = InputType.search, classes = "form-control mr-sm-2") {
-                attrs.placeholder = "Search"
-                attrs.onChangeFunction = { event ->
-                    val query = (event.target as HTMLInputElement).value
-                    val dstUrl = "/search?query=${query}"
-                    if (location.pathname == "/search") {
-                        nav.invoke(dstUrl, jsObject { replace = true })
-                    } else {
-                        nav.invoke(dstUrl)
-                    }
-                }
-            }
-        }
-    }
-}
-
-private val TulipFooter = fc<Props> {
-    footer("navbar navbar-dark bg-dark text-light mt-auto mt-2") {
-        span("navbar-text") {
-            +"Build ${TulipBuildInfo.commit}"
-        }
+        Footer {}
     }
 }

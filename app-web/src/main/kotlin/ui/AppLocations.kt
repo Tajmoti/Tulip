@@ -9,19 +9,19 @@ import react.router.useNavigate
 import react.router.useParams
 import ui.player.VideoPlayerComponent
 import ui.search.SearchComponent
-import ui.show.TvShow
+import ui.tvshow.TvShowScreen
 
 
 val UrlTmdbTvShow = fc<Props> {
     val params = useParams()
-    TvShow { attrs.tvShowKey = TvShowKey.Tmdb(params["key"]!!.toLong()) }
+    TvShowScreen { attrs.tvShowKey = TvShowKey.Tmdb(params["key"]!!.toLong()) }
 }
 
 val UrlHostedTvShow = fc<Props> {
     val params = useParams()
     val service = StreamingService.valueOf(params["streamingService"]!!)
     val key = params["key"]!!
-    TvShow { attrs.tvShowKey = TvShowKey.Hosted(service, key) }
+    TvShowScreen { attrs.tvShowKey = TvShowKey.Hosted(service, key) }
 }
 
 val UrlSearch = fc<Props> {
