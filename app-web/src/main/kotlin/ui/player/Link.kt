@@ -4,8 +4,8 @@ import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import react.Props
 import react.dom.onClick
 import react.fc
-import ui.activeListItem
-import ui.listButton
+import ui.shared.ActiveListItem
+import ui.shared.ListButton
 
 internal external interface LinkProps : Props {
     var link: UnloadedVideoStreamRef
@@ -15,14 +15,22 @@ internal external interface LinkProps : Props {
 
 internal val Link = fc<LinkProps> { (link, active, onLinkClicked) ->
     if (active!!) {
-        activeListItem {
-            attrs.onClick = { onLinkClicked(link) }
-            LinkContents { attrs.link = link }
+        ActiveListItem {
+            attrs.contents = {
+                with(it) {
+                    attrs.onClick = { onLinkClicked(link) }
+                    LinkContents { attrs.link = link }
+                }
+            }
         }
     } else {
-        listButton {
-            attrs.onClick = { onLinkClicked(link) }
-            LinkContents { attrs.link = link }
+        ListButton {
+            attrs.contents = {
+                with(it) {
+                    attrs.onClick = { onLinkClicked(link) }
+                    LinkContents { attrs.link = link }
+                }
+            }
         }
     }
 }

@@ -5,7 +5,8 @@ import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import react.Props
 import react.fc
 import ui.react.useViewModel
-import ui.renderLoading
+import ui.shared.LoadingSpinner
+import ui.shared.SpinnerColor
 
 external interface VideoPlayerScreenProps : Props {
     var streamableKey: StreamableKey
@@ -18,9 +19,9 @@ val VideoPlayerScreen = fc<VideoPlayerScreenProps> { (key) ->
     val linkError = state.selectedLinkState.linkLoadingError
     val nonDirectLink = state.selectedLinkState.directLoadingUnsupported
     if (state.linkListState.linksLoading) {
-        renderLoading("mb-5 text-info")
+        LoadingSpinner { attrs.color = SpinnerColor.Info }
     } else if (state.selectedLinkState.loadingStreamOrDirectLink) {
-        renderLoading("mb-5 text-primary")
+        LoadingSpinner { attrs.color = SpinnerColor.Primary }
     } else if (link != null) {
         HtmlVideoPlayer { attrs.link = link }
     } else if (linkError != null) {

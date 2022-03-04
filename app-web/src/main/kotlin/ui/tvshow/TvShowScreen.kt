@@ -7,7 +7,8 @@ import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import react.Props
 import react.fc
 import ui.react.useViewModel
-import ui.renderLoading
+import ui.shared.LoadingSpinner
+import ui.shared.SpinnerColor
 
 external interface TvShowScreenProps : Props {
     var tvShowKey: TvShowKey
@@ -36,7 +37,7 @@ val TvShowScreen = fc<TvShowScreenProps> { props ->
             attrs.onFavoriteToggled = vm::toggleFavorites
         }
     } else {
-        renderLoading()
+        LoadingSpinner { attrs.color = SpinnerColor.Default }
     }
 }
 

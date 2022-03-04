@@ -4,8 +4,8 @@ import com.tajmoti.libtulip.ui.library.LibraryViewModel
 import react.Props
 import react.dom.div
 import react.fc
-import ui.EmptyView
 import ui.react.useViewModel
+import ui.shared.EmptyView
 
 val LibraryScreen = fc<Props> {
     val (_, state) = useViewModel<LibraryViewModel, LibraryViewModel.State>() ?: return@fc

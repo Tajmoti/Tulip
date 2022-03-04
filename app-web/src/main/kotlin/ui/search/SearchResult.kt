@@ -7,8 +7,8 @@ import react.Props
 import react.dom.onClick
 import react.dom.span
 import react.fc
-import ui.listButton
-import ui.renderLanguageBadge
+import ui.shared.LanguageBadge
+import ui.shared.ListButton
 
 internal external interface SearchResultProps : Props {
     var group: GroupedSearchResult
@@ -16,20 +16,24 @@ internal external interface SearchResultProps : Props {
 }
 
 internal val SearchResult = fc<SearchResultProps> { (group, onResultClicked) ->
-    listButton {
-        attrs.onClick = { _ ->
-            val key = group.results.firstOrNull()?.tmdbId!!
-            onResultClicked(key)
-        }
-        TypeBadge { attrs.group = group }
-        val info = SearchUi.getItemInfoForDisplay(group)
-        +info.name
-        group.results.firstNotNullOfOrNull { it.info.firstAirDateYear }?.let {
-            YearBadge { attrs.year = it }
-        }
-        span("ml-2") {
-            for (language in SearchUi.getLanguagesForItem(group)) {
-                renderLanguageBadge(language)
+    ListButton {
+        attrs.contents = {
+            with(it) {
+                attrs.onClick = { _ ->
+                    val key = group.results.firstOrNull()?.tmdbId!!
+                    onResultClicked(key)
+                }
+                TypeBadge { attrs.group = group }
+                val info = SearchUi.getItemInfoForDisplay(group)
+                +info.name
+                group.results.firstNotNullOfOrNull { it.info.firstAirDateYear }?.let {
+                    YearBadge { attrs.year = it }
+                }
+                span("ml-2") {
+                    for (language in SearchUi.getLanguagesForItem(group)) {
+                        LanguageBadge { attrs.language = language }
+                    }
+                }
             }
         }
     }

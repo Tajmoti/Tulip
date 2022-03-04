@@ -4,9 +4,10 @@ import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.ui.search.SearchViewModel
 import react.Props
 import react.fc
-import ui.ErrorMessage
 import ui.react.useViewModel
-import ui.renderLoading
+import ui.shared.ErrorMessage
+import ui.shared.LoadingSpinner
+import ui.shared.SpinnerColor
 
 internal external interface SearchProps : Props {
     var query: String
@@ -18,7 +19,7 @@ internal val SearchScreen = fc<SearchProps> { (query, onResultClicked) ->
     vm.submitNewText(query)
 
     if (vmState.loading) {
-        renderLoading()
+        LoadingSpinner { attrs.color = SpinnerColor.Default }
     } else if (vmState.status == SearchViewModel.Icon.NO_RESULTS) {
         ErrorMessage { attrs.message = "No results" }
     } else if (vmState.status == SearchViewModel.Icon.ERROR) {

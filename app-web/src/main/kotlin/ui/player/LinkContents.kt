@@ -3,9 +3,9 @@ package ui.player
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import react.Props
 import react.fc
-import ui.BadgeType
-import ui.PillBadge
-import ui.renderLanguageBadge
+import ui.shared.BadgeType
+import ui.shared.LanguageBadge
+import ui.shared.PillBadge
 
 internal external interface LinkContentsProps : Props {
     var link: UnloadedVideoStreamRef
@@ -25,7 +25,7 @@ internal val LinkContents = fc<LinkContentsProps> { (ref) ->
             attrs.message = "Playable externally"
         }
     }
-    renderLanguageBadge(lang)
+    LanguageBadge { attrs.language = lang }
 }
 
 
