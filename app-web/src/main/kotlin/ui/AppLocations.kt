@@ -7,7 +7,7 @@ import react.fc
 import react.router.dom.useSearchParams
 import react.router.useNavigate
 import react.router.useParams
-import ui.player.VideoPlayerComponent
+import ui.player.VideoPlayerScreen
 import ui.search.SearchScreen
 import ui.tvshow.TvShowScreen
 
@@ -39,7 +39,7 @@ val UrlTmdbTvPlayer = fc<Props> {
     val tvId = params["tvShowId"]!!.toLong()
     val seasonNumber = params["seasonNumber"]!!.toInt()
     val episodeNumber = params["episodeNumber"]!!.toInt()
-    child(VideoPlayerComponent::class) {
+    VideoPlayerScreen {
         attrs.streamableKey = EpisodeKey.Tmdb(SeasonKey.Tmdb(TvShowKey.Tmdb(tvId), seasonNumber), episodeNumber)
     }
 }
@@ -47,7 +47,7 @@ val UrlTmdbTvPlayer = fc<Props> {
 val UrlTmdbMoviePlayer = fc<Props> {
     val params = useParams()
     val movieId = params["movieId"]!!.toLong()
-    child(VideoPlayerComponent::class) {
+    VideoPlayerScreen {
         attrs.streamableKey = MovieKey.Tmdb(movieId)
     }
 }
@@ -59,7 +59,7 @@ val UrlHostedTvPlayer = fc<Props> {
     val seasonNumber = params["seasonNumber"]!!.toInt()
     val episodeId = params["episodeId"]!!
     val key = EpisodeKey.Hosted(SeasonKey.Hosted(TvShowKey.Hosted(streamingService, tvShowId), seasonNumber), episodeId)
-    child(VideoPlayerComponent::class) {
+    VideoPlayerScreen {
         attrs.streamableKey = key
     }
 }
@@ -69,7 +69,7 @@ val UrlHostedMoviePlayer = fc<Props> {
     val streamingService = StreamingService.valueOf(params["streamingService"]!!)
     val movieId = params[":movieId"]!!
     val key = MovieKey.Hosted(streamingService, movieId)
-    child(VideoPlayerComponent::class) {
+    VideoPlayerScreen {
         attrs.streamableKey = key
     }
 }

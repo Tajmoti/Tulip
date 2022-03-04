@@ -11,6 +11,8 @@ import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.libtulip.service.impl.StubVideoDownloadService
 import com.tajmoti.libtulip.ui.library.LibraryViewModel
 import com.tajmoti.libtulip.ui.library.LibraryViewModelImpl
+import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
+import com.tajmoti.libtulip.ui.player.VideoPlayerViewModelImpl
 import com.tajmoti.libtulip.ui.search.SearchViewModel
 import com.tajmoti.libtulip.ui.search.SearchViewModelImpl
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
@@ -63,6 +65,7 @@ private val screenModule = module {
     factory<TvShowViewModel> { p -> TvShowViewModelImpl(get(), get(), get(), get(), p.get(), p.get()) }
     factory<LibraryViewModel> { p -> LibraryViewModelImpl(get(), get(), get(), get(), p.get()) }
     factory<SearchViewModel> { p -> SearchViewModelImpl(get(), p.get()) }
+    factory<VideoPlayerViewModel> { p -> VideoPlayerViewModelImpl(get(), get(),get(), get(),get(), get(),get(), get(), p.get(), p.get(), p.get()) }
 }
 
 val tulipModule = listOf(
