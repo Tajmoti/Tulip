@@ -8,7 +8,7 @@ import react.router.dom.useSearchParams
 import react.router.useNavigate
 import react.router.useParams
 import ui.player.VideoPlayerComponent
-import ui.search.SearchComponent
+import ui.search.SearchScreen
 import ui.tvshow.TvShowScreen
 
 
@@ -28,7 +28,7 @@ val UrlSearch = fc<Props> {
     val nav = useNavigate()
     val (params, _) = useSearchParams()
 
-    child(SearchComponent::class) {
+    SearchScreen {
         attrs.query = params.get("query")!!
         attrs.onResultClicked = { nav(getUrlForItem(it)) }
     }
