@@ -4,7 +4,7 @@ import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import react.Props
 import react.fc
-import ui.react.useViewModel
+import ui.useViewModel
 import ui.shared.LoadingSpinner
 import ui.shared.SpinnerColor
 

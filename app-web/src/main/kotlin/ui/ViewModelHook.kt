@@ -1,4 +1,4 @@
-package ui.react
+package ui
 
 import AppDiHolder
 import com.tajmoti.libtulip.ui.StateViewModel

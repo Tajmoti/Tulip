@@ -4,7 +4,7 @@ import com.tajmoti.libtulip.ui.library.LibraryViewModel
 import react.Props
 import react.dom.div
 import react.fc
-import ui.react.useViewModel
+import ui.useViewModel
 import ui.shared.EmptyView
 
 val LibraryScreen = fc<Props> {

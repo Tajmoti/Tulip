@@ -6,7 +6,7 @@ import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import react.Props
 import react.fc
-import ui.react.useViewModel
+import ui.useViewModel
 import ui.shared.LoadingSpinner
 import ui.shared.SpinnerColor
 
