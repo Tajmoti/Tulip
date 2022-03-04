@@ -6,15 +6,17 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface LibraryViewModel : StateViewModel<LibraryViewModel.State> {
     /**
-     * All items that the user has marked as favorite
+     * All items that the user has marked as favorite.
+     * If the items are loading, an empty list.
      */
     val favoriteItems: StateFlow<List<LibraryItem>>
-        get() = state.map(viewModelScope, State::favoriteItems)
+        get() = state.map(viewModelScope) { it.favoriteItems ?: emptyList() }
 
     data class State(
         /**
-         * All items that the user has marked as favorite
+         * All items that the user has marked as favorite.
+         * Null if the items are loading.
          */
-        val favoriteItems: List<LibraryItem>
+        val favoriteItems: List<LibraryItem>?
     )
 }

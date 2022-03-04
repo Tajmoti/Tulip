@@ -24,14 +24,14 @@ class LibraryViewModelImpl constructor(
 
     private val favoriteItemsImpl = favoritesRepo.getUserFavorites()
         .flatMapLatest { mapFavorites(it) }
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        .stateIn(viewModelScope, SharingStarted.Lazily, null)
 
-    private fun mapFavorites(favorites: Set<ItemKey>): Flow<List<LibraryItem>> {
+    private fun mapFavorites(favorites: Set<ItemKey>): Flow<List<LibraryItem>?> {
         val tmdbFavorites = favorites.filterIsInstance<ItemKey.Tmdb>()
         val hostedFavorites = favorites.filterIsInstance<ItemKey.Hosted>()
         val a = getTmdbFavorites(tmdbFavorites)
         val b = getHostedFavorites(hostedFavorites)
-        return merge(a, b).onEmpty { emit(emptyList()) }
+        return merge<List<LibraryItem>?>(a, b).onEmpty { emit(null) }
     }
 
     private fun getTmdbFavorites(keys: List<ItemKey.Tmdb>): Flow<List<LibraryItem>> {

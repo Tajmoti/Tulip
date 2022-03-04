@@ -4,14 +4,19 @@ import com.tajmoti.libtulip.ui.library.LibraryViewModel
 import react.Props
 import react.dom.div
 import react.fc
-import ui.useViewModel
 import ui.shared.EmptyView
+import ui.shared.LoadingSpinner
+import ui.shared.SpinnerColor
+import ui.useViewModel
 
 val LibraryScreen = fc<Props> {
     val (_, state) = useViewModel<LibraryViewModel, LibraryViewModel.State>() ?: return@fc
-    if (state.favoriteItems.isNotEmpty()) {
+    val favorites = state.favoriteItems
+    if (favorites == null) {
+        LoadingSpinner { attrs.color = SpinnerColor.Default }
+    } else if (favorites.isNotEmpty()) {
         div("d-flex flex-wrap justify-content-center justify-content-md-start") {
-            for (item in state.favoriteItems) {
+            for (item in favorites) {
                 LibraryItem { attrs.item = item }
             }
         }
