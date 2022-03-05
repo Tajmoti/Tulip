@@ -33,6 +33,7 @@ val VideoPlayerScreen = fc<VideoPlayerScreenProps> { (key) ->
         HtmlVideoPlayer {
             attrs.link = link
             attrs.onStateChanged = { playerState.updateState(it) }
+            attrs.initialProgress = playerState.initialProgress
         }
     } else if (linkError != null) {
         IframeVideoPlayer { attrs.link = linkError.stream }

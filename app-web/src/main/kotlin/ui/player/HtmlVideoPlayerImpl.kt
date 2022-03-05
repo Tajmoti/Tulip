@@ -4,23 +4,28 @@ import com.tajmoti.libtulip.ui.player.MediaPlayerState
 import com.tajmoti.libtulip.ui.player.Position
 import com.tajmoti.libtulip.ui.streams.LoadedLink
 import react.*
-import react.dom.onPause
-import react.dom.onPlay
-import react.dom.onTimeUpdate
-import react.dom.video
+import react.dom.*
 
 internal external interface HtmlVideoPlayerProps : Props {
     var link: LoadedLink
     var onStateChanged: (MediaPlayerState) -> Unit
+    var initialProgress: Float?
 }
 
-internal val HtmlVideoPlayer = fc<HtmlVideoPlayerProps> { (link, onMediaAttached) ->
+internal val HtmlVideoPlayer = fc<HtmlVideoPlayerProps> { (link, onStateChanged, progress) ->
     val reference = useRef<dynamic>(null)
+    val (progressRestored, setProgressRestored) = useState(false)
     video("w-100") {
         attrs.src = link.directLink
-        attrs.onTimeUpdate = { onMediaAttached(playerToState(reference, SimpleState.PLAYING)) }
-        attrs.onPlay = { onMediaAttached(playerToState(reference, SimpleState.PLAYING)) }
-        attrs.onPause = { onMediaAttached(playerToState(reference, SimpleState.PAUSED)) }
+        attrs.onTimeUpdate = { onStateChanged(playerToState(reference, SimpleState.PLAYING)) }
+        attrs.onPlay = { onStateChanged(playerToState(reference, SimpleState.PLAYING)) }
+        attrs.onPause = { onStateChanged(playerToState(reference, SimpleState.PAUSED)) }
+        attrs.onCanPlay = {
+            if (!progressRestored) {
+                reference.current.currentTime = (reference.current.duration * progress)
+                setProgressRestored(true)
+            }
+        }
         attrs.controls = true
         attrs.autoPlay = true
         ref = reference
@@ -48,3 +53,4 @@ enum class SimpleState {
 
 private operator fun HtmlVideoPlayerProps.component1() = link
 private operator fun HtmlVideoPlayerProps.component2() = onStateChanged
+private operator fun HtmlVideoPlayerProps.component3() = initialProgress
