@@ -2,6 +2,7 @@ package com.tajmoti.libtulip.ui.tvshow
 
 import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.model.info.TulipSeasonInfo
+import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.ui.StateViewModel
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +27,10 @@ interface TvShowViewModel : StateViewModel<TvShowViewModel.State> {
          * Season to display episodes from.
          */
         val selectedSeason: SeasonKey?,
+        /**
+         * Episode that isn't finished playing or null if none.
+         */
+        val lastPlayedEpisode: EpisodeKey?,
         /**
          * True if an error occurred during show loading
          */

@@ -10,11 +10,13 @@ import ui.shared.ListButton
 
 internal external interface EpisodeProps : Props {
     var episode: TulipEpisodeInfo
+    var hasSavedProgress: Boolean?
 }
 
 internal val Episode = fc<EpisodeProps> { props ->
     val nav = useNavigate()
     ListButton {
+        attrs.active = props.hasSavedProgress
         attrs.contents = {
             with(it) {
                 div("d-flex flex-row") {

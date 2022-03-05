@@ -32,6 +32,7 @@ val TvShowScreen = fc<TvShowScreenProps> { props ->
         TvShow {
             attrs.seasons = seasons
             attrs.currentSeason = currentSeason
+            attrs.lastPlayedEpisode = vmState.lastPlayedEpisode
             attrs.onSeasonSelected = vm::onSeasonSelected
             attrs.isFavorite = vm.isFavorite.value
             attrs.onFavoriteToggled = vm::toggleFavorites

@@ -28,10 +28,10 @@ class TvShowViewModelImpl constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, LoadingState.Loading)
     private val nameImpl = itemKey
         .flatMapLatest(::loadName)
-    private val lastPlayedSeason = itemKey
+    private val lastPlayedEpisode = itemKey
         .flatMapLatest { historyRepository.getLastPlayedPosition(it) }
-        .map { (it?.key as? EpisodeKey)?.seasonKey }
-    private val selectedSeasonImpl = merge(manuallySelectedSeason, lastPlayedSeason)
+        .map { (it?.key as? EpisodeKey) }
+    private val selectedSeasonImpl = merge(manuallySelectedSeason, lastPlayedEpisode.map { it?.seasonKey })
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
     private val isFavoriteImpl = favoritesRepository.isFavorite(initialItemKey)
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
@@ -109,9 +109,13 @@ class TvShowViewModelImpl constructor(
         return LoadingState.Success(show.backdropUrl, show.seasons)
     }
 
-    private val internalState = combine(stateImpl, nameImpl, selectedSeasonImpl, isFavoriteImpl) { a, b, c, d ->
-        InternalState(a, b, c, d)
-    }
+    private val internalState = combine(
+        stateImpl,
+        nameImpl,
+        selectedSeasonImpl,
+        isFavoriteImpl,
+        lastPlayedEpisode
+    ) { a, b, c, d, e -> InternalState(a, b, c, d, e) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, InternalState())
 
     sealed interface LoadingState {
@@ -138,7 +142,11 @@ class TvShowViewModelImpl constructor(
         /**
          * Whether this item is saved in the user's favorites
          */
-        val isFavorite: Boolean = false
+        val isFavorite: Boolean = false,
+        /**
+         * Last played episode from this TV show.
+         */
+        val lastPlayedEpisode: EpisodeKey? = null,
     )
 
     override val state = internalState.mapWith(viewModelScope) {
@@ -147,6 +155,7 @@ class TvShowViewModelImpl constructor(
             backdropPath = (state as? LoadingState.Success)?.backdropPath,
             seasons = (state as? LoadingState.Success)?.seasons?.let { s -> sortSpecialsLast(s) },
             selectedSeason = selectedSeason,
+            lastPlayedEpisode = lastPlayedEpisode,
             error = (state is LoadingState.Error),
             isFavorite = isFavorite
         )
