@@ -15,7 +15,7 @@ internal external interface SearchProps : Props {
 }
 
 internal val SearchScreen = fc<SearchProps> { (query, onResultClicked) ->
-    val (vm, vmState) = useViewModel<SearchViewModel, SearchViewModel.State>() ?: return@fc
+    val (vm, vmState) = useViewModel<SearchViewModel, SearchViewModel.State>()
     vm.submitNewText(query)
 
     if (vmState.loading) {

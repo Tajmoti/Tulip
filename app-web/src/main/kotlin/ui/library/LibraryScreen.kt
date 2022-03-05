@@ -10,7 +10,7 @@ import ui.shared.SpinnerColor
 import ui.useViewModel
 
 val LibraryScreen = fc<Props> {
-    val (_, state) = useViewModel<LibraryViewModel, LibraryViewModel.State>() ?: return@fc
+    val (_, state) = useViewModel<LibraryViewModel, LibraryViewModel.State>()
     val favorites = state.favoriteItems
     if (favorites == null) {
         LoadingSpinner { attrs.color = SpinnerColor.Default }

@@ -13,7 +13,7 @@ external interface VideoPlayerScreenProps : Props {
 }
 
 val VideoPlayerScreen = fc<VideoPlayerScreenProps> { (key) ->
-    val (vm, state) = useViewModel<VideoPlayerViewModel, VideoPlayerViewModel.State>("", key) ?: return@fc
+    val (vm, state) = useViewModel<VideoPlayerViewModel, VideoPlayerViewModel.State>("", key)
 
     val link = state.selectedLinkState.videoLinkToPlay
     val linkError = state.selectedLinkState.linkLoadingError

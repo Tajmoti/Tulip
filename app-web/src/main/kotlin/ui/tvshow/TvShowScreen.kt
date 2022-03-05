@@ -15,7 +15,7 @@ external interface TvShowScreenProps : Props {
 }
 
 val TvShowScreen = fc<TvShowScreenProps> { props ->
-    val (vm, vmState) = useViewModel<TvShowViewModel, TvShowViewModel.State>(props.tvShowKey) ?: return@fc
+    val (vm, vmState) = useViewModel<TvShowViewModel, TvShowViewModel.State>(props.tvShowKey)
 
     vmState.name?.let { name ->
         TvShowDetails {
