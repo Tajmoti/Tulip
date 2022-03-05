@@ -69,28 +69,24 @@ class AndroidVlcVideoPlayer(
         }
     }
 
-    override var position: Float
-        get() = player.time.toFloat() / player.length.toFloat()
-        set(value) {
-            if (player.isPlaying) {
-                player.time = (value * player.length).toLong()
-            } else {
-                timeToSet = MediaPosition.Fraction(value)
-            }
-        }
-
-    override var time: Long
-        get() = player.time
-        set(value) {
-            if (player.isPlaying) {
-                player.time = value
-            } else {
-                timeToSet = MediaPosition.AbsoluteTime(value)
-            }
-        }
-
     override val length: Long
         get() = player.length
+
+    override fun setProgress(progress: Float) {
+        if (player.isPlaying) {
+            player.time = (progress * player.length).toLong()
+        } else {
+            timeToSet = MediaPosition.Fraction(progress)
+        }
+    }
+
+    override fun setTime(time: Long) {
+        if (player.isPlaying) {
+            player.time = time
+        } else {
+            timeToSet = MediaPosition.AbsoluteTime(time)
+        }
+    }
 
     override fun setSubtitles(info: VideoPlayer.SubtitleInfo?) {
         if (info != null) {
@@ -117,7 +113,7 @@ class AndroidVlcVideoPlayer(
             logger.debug { "VLC event ${event.format()}" }
         val newState = when (event.type) {
             MediaPlayer.Event.PositionChanged ->
-                MediaPlayerState.Playing(Position(event.positionChanged, player.time))
+                MediaPlayerState.Playing(Position(event.positionChanged, player.time), player.length)
             MediaPlayer.Event.Buffering -> {
                 // We don't care about buffering events when the video is paused,
                 // only when it's in the playing state
@@ -126,16 +122,17 @@ class AndroidVlcVideoPlayer(
                 } else {
                     MediaPlayerState.Buffering(
                         Position(player.position, player.time),
-                        event.buffering
+                        event.buffering,
+                        player.length
                     )
                 }
             }
             MediaPlayer.Event.Playing -> {
                 onPlayingEvent()
-                MediaPlayerState.Playing(Position(player.position, player.time))
+                MediaPlayerState.Playing(Position(player.position, player.time), player.length)
             }
             MediaPlayer.Event.Paused ->
-                MediaPlayerState.Paused(Position(player.position, player.time))
+                MediaPlayerState.Paused(Position(player.position, player.time), player.length)
             MediaPlayer.Event.EndReached ->
                 MediaPlayerState.Finished
             MediaPlayer.Event.EncounteredError ->
@@ -146,7 +143,7 @@ class AndroidVlcVideoPlayer(
     }
 
     private fun onPlayingEvent() {
-        timeToSet?.let { time = positionToTimeMs(it) }
+        timeToSet?.let { setTime(positionToTimeMs(it)) }
         timeToSet = null
     }
 

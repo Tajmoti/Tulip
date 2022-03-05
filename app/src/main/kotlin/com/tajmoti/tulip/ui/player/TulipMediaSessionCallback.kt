@@ -16,6 +16,6 @@ class TulipMediaSessionCallback(
     }
 
     override fun onSeekTo(pos: Long) {
-        vlc.time = pos
+        vlc.setTime(pos)
     }
 }

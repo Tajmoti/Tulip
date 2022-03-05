@@ -9,17 +9,17 @@ sealed interface MediaPlayerState {
     /**
      * Some media is actively being played.
      */
-    class Playing(val position: Position) : MediaPlayerState
+    class Playing(val position: Position, val duration: Long) : MediaPlayerState
 
     /**
      * Some media is paused.
      */
-    class Paused(val position: Position) : MediaPlayerState
+    class Paused(val position: Position, val duration: Long) : MediaPlayerState
 
     /**
      * Some media is buffering.
      */
-    class Buffering(val position: Position, val percent: Float) : MediaPlayerState
+    class Buffering(val position: Position, val percent: Float, val duration: Long) : MediaPlayerState
 
     /**
      * The media is done playing.

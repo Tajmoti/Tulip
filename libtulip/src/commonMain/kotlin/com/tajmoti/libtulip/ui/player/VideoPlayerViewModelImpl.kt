@@ -270,14 +270,20 @@ class VideoPlayerViewModelImpl constructor(
 
     override fun skipForwards() {
         // TODO Not the best solution, probably merge with playerProgressToRestore
-        attachedMediaPlayer.value?.let {
-            it.time = (it.time + REWIND_TIME_MS).coerceAtMost(it.length)
+        val player = mediaPlayerState.value
+        player.validPositionOrNull?.let { position ->
+            player.durationOrNull?.let { duration ->
+                attachedMediaPlayer.value?.setTime((position.timeMs + REWIND_TIME_MS).coerceAtMost(duration))
+            }
         }
     }
 
     override fun skipBackwards() {
         // TODO Not the best solution, probably merge with playerProgressToRestore
-        attachedMediaPlayer.value?.let { it.time = (it.time - REWIND_TIME_MS).coerceAtLeast(0) }
+        val player = mediaPlayerState.value
+        player.validPositionOrNull?.let { position ->
+            attachedMediaPlayer.value?.setTime((position.timeMs - REWIND_TIME_MS).coerceAtLeast(0))
+        }
     }
 
     override fun playPause() {
@@ -287,7 +293,7 @@ class VideoPlayerViewModelImpl constructor(
 
     override fun setPlaybackProgress(progress: Float) {
         // TODO Not the best solution
-        attachedMediaPlayer.value?.position = progress
+        attachedMediaPlayer.value?.setProgress(progress)
     }
 
     /**
@@ -307,7 +313,7 @@ class VideoPlayerViewModelImpl constructor(
      */
     private fun startRestorePlayingPosition() {
         viewModelScope.launch {
-            playerProgressToRestore.collect { (player, pos) -> player.position = pos }
+            playerProgressToRestore.collect { (player, pos) -> player.setProgress(pos) }
         }
     }
 

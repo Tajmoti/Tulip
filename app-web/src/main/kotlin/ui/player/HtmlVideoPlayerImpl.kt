@@ -33,8 +33,8 @@ private fun playerToState(ref: MutableRefObject<dynamic>, state: SimpleState): M
     val position = (time.toFloat() / length.toFloat())
     val posObj = Position(position, time)
     return when (state) {
-        SimpleState.PLAYING -> MediaPlayerState.Playing(posObj)
-        SimpleState.PAUSED -> MediaPlayerState.Paused(posObj)
+        SimpleState.PLAYING -> MediaPlayerState.Playing(posObj, length)
+        SimpleState.PAUSED -> MediaPlayerState.Paused(posObj, length)
         SimpleState.STOPPED -> MediaPlayerState.Idle
     }
 }

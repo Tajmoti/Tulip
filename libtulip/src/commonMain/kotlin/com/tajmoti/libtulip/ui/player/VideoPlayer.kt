@@ -13,20 +13,22 @@ interface VideoPlayer {
      */
     val state: MutableStateFlow<MediaPlayerState>
 
-    /**
-     * Current video position represented as a fraction from 0.0 to 1.0.
-     */
-    var position: Float
-
-    /**
-     * Current video time in milliseconds. Value between 0 and [length].
-     */
-    var time: Long
 
     /**
      * Length of the video in milliseconds.
      */
     val length: Long
+
+
+    /**
+     * Seeks the video to position represented as a fraction from 0.0 to 1.0.
+     */
+    fun setProgress(progress: Float)
+
+    /**
+     * Seeks the video time in milliseconds. Value between 0 and [length].
+     */
+    fun setTime(time: Long)
 
     /**
      * Plays the video. Has no effect if the video is already playing or in a state that doesn't allow playback.

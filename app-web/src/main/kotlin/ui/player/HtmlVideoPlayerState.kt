@@ -8,13 +8,16 @@ class HtmlVideoPlayerState : VideoPlayer {
     private val _state = MutableStateFlow<MediaPlayerState>(MediaPlayerState.Idle)
     override val videoUrl = ""
     override val state = _state
-    override var position: Float
-        get() = 0.0f
-        set(_) {}
-    override var time: Long
-        get() = 0
-        set(_) {}
+
     override val length = 0L
+
+    override fun setProgress(progress: Float) {
+
+    }
+
+    override fun setTime(time: Long) {
+
+    }
 
     override fun play() {
 
