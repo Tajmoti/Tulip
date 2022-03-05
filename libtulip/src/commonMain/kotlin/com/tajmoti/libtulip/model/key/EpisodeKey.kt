@@ -2,6 +2,7 @@ package com.tajmoti.libtulip.model.key
 
 import kotlinx.serialization.Serializable
 
+@Serializable
 sealed interface EpisodeKey : StreamableKey {
     val seasonKey: SeasonKey
 
@@ -11,11 +12,14 @@ sealed interface EpisodeKey : StreamableKey {
         override val id: String
     ) : EpisodeKey, StreamableKey.Hosted {
         override val streamingService = seasonKey.tvShowKey.streamingService
+        override val itemKey = seasonKey.tvShowKey
     }
 
     @Serializable
     data class Tmdb(
         override val seasonKey: SeasonKey.Tmdb,
         val episodeNumber: Int
-    ) : EpisodeKey, StreamableKey.Tmdb
+    ) : EpisodeKey, StreamableKey.Tmdb {
+        override val itemKey = seasonKey.tvShowKey
+    }
 }

@@ -36,21 +36,21 @@ interface UserDataDataSource {
      * The returned flow may never complete, and it may emit an updated value at any time!
      */
     fun getLastPlayedPosition(key: ItemKey) = when (key) {
-        is ItemKey.Tmdb -> getLastPlayedPositionTmdb(key)
-        is ItemKey.Hosted -> getLastPlayedPositionHosted(key)
+        is ItemKey.Tmdb -> getLastPlayedPositionForTmdbItem(key)
+        is ItemKey.Hosted -> getLastPlayedPositionForHostedItem(key)
     }
 
     /**
      * Retrieves the last played position of the TV show or movie specified by [key].
      * The returned flow may never complete, and it may emit an updated value at any time!
      */
-    fun getLastPlayedPositionTmdb(key: ItemKey.Tmdb): Flow<LastPlayedPosition.Tmdb?>
+    fun getLastPlayedPositionForTmdbItem(key: ItemKey.Tmdb): Flow<LastPlayedPosition.Tmdb?>
 
     /**
      * Retrieves the last played position of the TV show or movie specified by [key].
      * The returned flow may never complete, and it may emit an updated value at any time!
      */
-    fun getLastPlayedPositionHosted(key: ItemKey.Hosted): Flow<LastPlayedPosition.Hosted?>
+    fun getLastPlayedPositionForHostedItem(key: ItemKey.Hosted): Flow<LastPlayedPosition.Hosted?>
 
 
     /**

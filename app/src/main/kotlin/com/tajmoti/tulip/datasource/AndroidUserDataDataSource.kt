@@ -45,7 +45,7 @@ class AndroidUserDataDataSource @Inject constructor(
         }
     }
 
-    override fun getLastPlayedPositionTmdb(key: ItemKey.Tmdb): Flow<LastPlayedPosition.Tmdb?> {
+    override fun getLastPlayedPositionForTmdbItem(key: ItemKey.Tmdb): Flow<LastPlayedPosition.Tmdb?> {
         return when (key) {
             is TvShowKey.Tmdb -> playingHistoryDao.getLastPlayingPositionTvShowTmdb(key.id)
                 .map { it?.fromDb() }
@@ -54,7 +54,7 @@ class AndroidUserDataDataSource @Inject constructor(
         }
     }
 
-    override fun getLastPlayedPositionHosted(key: ItemKey.Hosted): Flow<LastPlayedPosition.Hosted?> {
+    override fun getLastPlayedPositionForHostedItem(key: ItemKey.Hosted): Flow<LastPlayedPosition.Hosted?> {
         return when (key) {
             is TvShowKey.Hosted -> playingHistoryDao.getLastPlayingPositionHosted(key.streamingService, key.id)
                 .map { it?.fromDb() }

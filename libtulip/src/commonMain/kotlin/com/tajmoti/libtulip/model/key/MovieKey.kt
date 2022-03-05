@@ -8,10 +8,16 @@ sealed interface MovieKey : StreamableKey, ItemKey {
     data class Hosted(
         override val streamingService: StreamingService,
         override val id: String
-    ) : MovieKey, StreamableKey.Hosted, ItemKey.Hosted
+    ) : MovieKey, StreamableKey.Hosted, ItemKey.Hosted {
+        override val itemKey: ItemKey.Hosted
+            get() = this
+    }
 
     @Serializable
     data class Tmdb(
         override val id: Long
-    ) : MovieKey, StreamableKey.Tmdb, ItemKey.Tmdb
+    ) : MovieKey, StreamableKey.Tmdb, ItemKey.Tmdb {
+        override val itemKey: ItemKey.Tmdb
+            get() = this
+    }
 }

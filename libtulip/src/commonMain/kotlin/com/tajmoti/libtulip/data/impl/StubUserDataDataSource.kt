@@ -24,7 +24,7 @@ class StubUserDataDataSource : UserDataDataSource {
 
     }
 
-    override fun getLastPlayedPositionTmdb(key: ItemKey.Tmdb): Flow<LastPlayedPosition.Tmdb?> {
+    override fun getLastPlayedPositionForTmdbItem(key: ItemKey.Tmdb): Flow<LastPlayedPosition.Tmdb?> {
         return flowOf(null)
     }
 
@@ -32,7 +32,7 @@ class StubUserDataDataSource : UserDataDataSource {
         return flowOf(null)
     }
 
-    override fun getLastPlayedPositionHosted(key: ItemKey.Hosted): Flow<LastPlayedPosition.Hosted?> {
+    override fun getLastPlayedPositionForHostedItem(key: ItemKey.Hosted): Flow<LastPlayedPosition.Hosted?> {
         return flowOf(null)
     }
 
