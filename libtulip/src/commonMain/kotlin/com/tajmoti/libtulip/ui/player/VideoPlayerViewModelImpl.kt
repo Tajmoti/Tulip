@@ -560,7 +560,7 @@ class VideoPlayerViewModelImpl constructor(
         /**
          * Playing position will be stored this often.
          */
-        private const val PLAY_POSITION_SAMPLE_PERIOD_MS = 5000L
+        private const val PLAY_POSITION_SAMPLE_PERIOD_MS = 1000L
 
         /**
          * How much will be skipped when skipping backward or forward.
