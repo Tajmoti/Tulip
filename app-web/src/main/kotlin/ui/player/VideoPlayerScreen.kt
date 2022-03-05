@@ -4,9 +4,11 @@ import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import react.Props
 import react.fc
-import ui.useViewModel
+import react.useEffectOnce
+import react.useState
 import ui.shared.LoadingSpinner
 import ui.shared.SpinnerColor
+import ui.useViewModel
 
 external interface VideoPlayerScreenProps : Props {
     var streamableKey: StreamableKey
@@ -14,6 +16,11 @@ external interface VideoPlayerScreenProps : Props {
 
 val VideoPlayerScreen = fc<VideoPlayerScreenProps> { (key) ->
     val (vm, state) = useViewModel<VideoPlayerViewModel, VideoPlayerViewModel.State>("", key)
+    val (playerState, _) = useState(HtmlVideoPlayerState())
+    useEffectOnce {
+        vm.onMediaAttached(playerState)
+        cleanup { vm.onMediaDetached() }
+    }
 
     val link = state.selectedLinkState.videoLinkToPlay
     val linkError = state.selectedLinkState.linkLoadingError
@@ -23,7 +30,10 @@ val VideoPlayerScreen = fc<VideoPlayerScreenProps> { (key) ->
     } else if (state.selectedLinkState.loadingStreamOrDirectLink) {
         LoadingSpinner { attrs.color = SpinnerColor.Primary }
     } else if (link != null) {
-        HtmlVideoPlayer { attrs.link = link }
+        HtmlVideoPlayer {
+            attrs.link = link
+            attrs.onStateChanged = { playerState.updateState(it) }
+        }
     } else if (linkError != null) {
         IframeVideoPlayer { attrs.link = linkError.stream }
     } else if (nonDirectLink != null) {
