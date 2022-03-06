@@ -10,6 +10,7 @@ class HtmlVideoPlayerState : VideoPlayer {
     override val videoUrl = ""
     override val state = _state
     override val length = 0L
+
     /**
      * Progress to set to the video player on first playback.
      */

@@ -6,9 +6,9 @@ import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import react.Props
 import react.fc
-import ui.useViewModel
 import ui.shared.LoadingSpinner
 import ui.shared.SpinnerColor
+import ui.useViewModel
 
 external interface TvShowScreenProps : Props {
     var tvShowKey: TvShowKey

@@ -4,10 +4,10 @@ import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.ui.search.SearchViewModel
 import react.Props
 import react.fc
-import ui.useViewModel
 import ui.shared.ErrorMessage
 import ui.shared.LoadingSpinner
 import ui.shared.SpinnerColor
+import ui.useViewModel
 
 internal external interface SearchProps : Props {
     var query: String
