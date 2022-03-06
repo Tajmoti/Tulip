@@ -4,7 +4,6 @@ plugins {
 
 dependencies {
     implementation(project(":libtulip"))
-    implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.3")
     implementation("org.jetbrains.kotlin-wrappers:kotlin-react-legacy:17.0.2-pre.302-kotlin-1.6.10")
     implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom-legacy:17.0.2-pre.302-kotlin-1.6.10")
     implementation("org.jetbrains.kotlin-wrappers:kotlin-react-router-dom:6.2.1-pre.302-kotlin-1.6.10")
