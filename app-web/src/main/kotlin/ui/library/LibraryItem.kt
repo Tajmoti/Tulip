@@ -7,7 +7,7 @@ import com.tajmoti.libtulip.ui.library.LibraryItem
 import react.Props
 import react.dom.div
 import react.dom.img
-import react.dom.span
+import react.dom.p
 import react.fc
 import react.router.dom.Link
 import ui.getUrlForItem
@@ -23,24 +23,18 @@ internal val LibraryItem = fc<LibraryItemProps> { props ->
     div("m-2 bg-dark") {
         Link {
             attrs.to = getUrlForItem(item.key)
-            div("row") {
-                img(classes = "col", src = item.posterPath ?: "") {
-                    attrs.width = "150em"
-                    attrs.height = "225em"
-                }
+            img(src = item.posterPath ?: "") {
+                attrs.width = "150em"
+                attrs.height = "225em"
             }
         }
         if (resume) {
             Link {
                 attrs.to = getUrlForStreamable(item.lastPlayedPosition!!.key)
-                div("row p-2") {
-                    span("col") { +label }
-                }
+                p("m-0 p-2") { +label }
             }
         } else {
-            div("row p-2") {
-                span("col") { +label }
-            }
+            p("m-0 p-2") { +label }
         }
     }
 }
