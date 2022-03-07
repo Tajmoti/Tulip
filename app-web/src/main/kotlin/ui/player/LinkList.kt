@@ -6,17 +6,17 @@ import react.Props
 import react.dom.div
 import react.fc
 
-internal external interface LinkListProps : Props {
+internal external interface VideoLinkListProps : Props {
     var links: List<UnloadedVideoStreamRef>
     var current: VideoStreamRef?
     var onLinkClicked: (UnloadedVideoStreamRef) -> Unit
 }
 
-internal val LinkList = fc<LinkListProps> { (links, current, onLinkClicked) ->
+internal val VideoLinkList = fc<VideoLinkListProps> { (links, current, onLinkClicked) ->
     div("list-group") {
         for (ref in links) {
             val active = current?.getInitiallySelectedLink() == ref.info
-            Link {
+            VideoLink {
                 attrs.link = ref
                 attrs.active = active
                 attrs.onLinkClicked = onLinkClicked
@@ -33,6 +33,6 @@ private fun VideoStreamRef.getInitiallySelectedLink(): VideoStreamRef {
 }
 
 
-private operator fun LinkListProps.component1() = links
-private operator fun LinkListProps.component2() = current
-private operator fun LinkListProps.component3() = onLinkClicked
+private operator fun VideoLinkListProps.component1() = links
+private operator fun VideoLinkListProps.component2() = current
+private operator fun VideoLinkListProps.component3() = onLinkClicked

@@ -40,7 +40,7 @@ val VideoPlayerScreen = fc<VideoPlayerScreenProps> { (key) ->
     } else if (nonDirectLink != null) {
         IframeVideoPlayer { attrs.link = nonDirectLink.stream }
     }
-    LinkList {
+    VideoLinkList {
         attrs.links = vm.linksResult.value ?: emptyList()
         attrs.current = vm.videoLinkPreparingOrPlaying.value
         attrs.onLinkClicked = { vm.onStreamClicked(it, false) }
