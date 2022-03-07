@@ -119,11 +119,10 @@ class VideoPlayerViewModelImpl constructor(
 
 
     /**
-     * If a TV show episode is playing, this is the following episode in the same season.
-     * Null if the currently playing episode is the last one in the season or a movie is being played.
+     * If a TV show episode is playing, this is its info.
      */
-    private val nextEpisode = combine(episodeList, streamableKeyImpl) { a, b -> a to b }
-        .map { (episodes, key) -> episodes?.let { selectNextEpisode(it, key) } }
+    private val tvShowData = combine(episodeList, streamableKeyImpl) { a, b -> a to b }
+        .map { (episodes, key) -> episodes?.let { selectTvShowData(it, key) } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /**
@@ -220,7 +219,7 @@ class VideoPlayerViewModelImpl constructor(
     }
 
     override fun goToNextEpisode() {
-        nextEpisode.value?.let { changeStreamable(it) }
+        tvShowData.value?.nextEpisode?.let { changeStreamable(it) }
     }
 
     override fun changeStreamable(key: StreamableKey) {
@@ -345,17 +344,24 @@ class VideoPlayerViewModelImpl constructor(
         else -> flowOf(null)
     }
 
-    private fun selectNextEpisode(
+    private fun selectTvShowData(
         episodes: List<TulipEpisodeInfo>,
         key: StreamableKey,
-    ): EpisodeKey? {
-        val currentEpisodeIndex = episodes
+    ): VideoPlayerViewModel.TvShowData {
+        val currentEpisodeIndex = currentEpisodeIndex(episodes, key)
+        val previous = currentEpisodeIndex
+            ?.takeUnless { it == 0 }
+            ?.let { episodes[it - 1].key }
+        val next = currentEpisodeIndex
+            ?.takeUnless { it == episodes.size - 1 }
+            ?.let { episodes[it + 1].key }
+        return VideoPlayerViewModel.TvShowData(previous, next)
+    }
+
+    private fun currentEpisodeIndex(episodes: List<TulipEpisodeInfo>, key: StreamableKey): Int? {
+        return episodes
             .indexOfFirst { episode -> episode.key == key }
             .takeIf { it != -1 }
-            ?: return null
-        if (currentEpisodeIndex == episodes.size - 1)
-            return null
-        return episodes[currentEpisodeIndex + 1].key
     }
 
     override fun onStreamClicked(stream: UnloadedVideoStreamRef, download: Boolean) {
@@ -545,13 +551,13 @@ class VideoPlayerViewModelImpl constructor(
     private val internalState = com.tajmoti.commonutils.combine(
         streamableKeyImpl,
         internalStreamableInfo,
+        tvShowData,
         linkListLoadingState,
         linkLoadingState,
         loadingSubtitlesState,
         subtitleDownloadState,
         mediaPlayerStateImpl,
-        subSyncState,
-        nextEpisode
+        subSyncState
     ) { a, b, c, d, e, f, g, h, i ->
         InternalState(a, b, c, d, e, f, g, h, i)
     }.stateIn(viewModelScope, SharingStarted.Lazily, InternalState())
@@ -578,6 +584,10 @@ class VideoPlayerViewModelImpl constructor(
          */
         val streamableInfo: StreamableInfo? = null,
         /**
+         * If this is a TV show, this is its information.
+         */
+        val tvShowData: VideoPlayerViewModel.TvShowData? = null,
+        /**
          * Status of video link list loading.
          */
         val linkListLoadingState: LinkListLoadingState = LinkListLoadingState.Loading,
@@ -601,17 +611,12 @@ class VideoPlayerViewModelImpl constructor(
          * Subtitle synchronization state.
          */
         val subSyncState: SubtitleSyncState? = null,
-        /**
-         * If a TV show is playing, this is the next episode.
-         */
-        val nextEpisode: EpisodeKey? = null
     )
 
     override val state = internalState.mapWith(viewModelScope) {
         val streamLoadingFinalSuccessState = (linkListLoadingState as? LinkListLoadingState.Success)?.takeIf { success -> success.final }
         VideoPlayerViewModel.State(
-            isTvShow = streamableKey is EpisodeKey,
-            hasNextEpisode = nextEpisode != null,
+            tvShowData = tvShowData,
             streamableKey = streamableKey,
             streamableInfo = streamableInfo,
             linkListState = VideoPlayerViewModel.LinkListState(

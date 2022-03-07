@@ -2,10 +2,7 @@ package ui.player
 
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
-import react.Props
-import react.fc
-import react.useEffectOnce
-import react.useState
+import react.*
 import ui.shared.LoadingSpinner
 import ui.shared.SpinnerColor
 import ui.useViewModel
@@ -20,6 +17,14 @@ val VideoPlayerScreen = fc<VideoPlayerScreenProps> { (key) ->
     useEffectOnce {
         vm.onMediaAttached(playerState)
         cleanup { vm.onMediaDetached() }
+    }
+    useEffect { vm.changeStreamable(key) }
+
+    state.streamableInfo?.let { info ->
+        VideoPlayerHeader {
+            attrs.name = info
+            attrs.data = state.tvShowData
+        }
     }
 
     val link = state.selectedLinkState.videoLinkToPlay

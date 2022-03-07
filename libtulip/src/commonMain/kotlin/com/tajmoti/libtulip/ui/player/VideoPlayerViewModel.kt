@@ -2,6 +2,7 @@ package com.tajmoti.libtulip.ui.player
 
 import com.tajmoti.commonutils.map
 import com.tajmoti.libtulip.model.info.StreamableInfo
+import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
@@ -92,9 +93,9 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
 
     data class State(
         /**
-         * True if the currently playing streamable is a TV show, false if it is a movie.
+         * If this is a TV show, this is its information.
          */
-        val isTvShow: Boolean,
+        val tvShowData: TvShowData? = null,
         /**
          * Key of the streamable that is currently being loaded or played.
          */
@@ -103,10 +104,6 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
          * Streamable info of [streamableKey] or null if not yet available.
          */
         val streamableInfo: StreamableInfo?,
-        /**
-         * Whether a TV show episode is currently playing, and it's not the last one in the season.
-         */
-        val hasNextEpisode: Boolean,
 
         /**
          * State of link list loading.
@@ -242,11 +239,16 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
         val subtitleFile: String?,
     )
 
+    data class TvShowData(
+        val previousEpisode: EpisodeKey? = null,
+        val nextEpisode: EpisodeKey? = null,
+    )
+
     /**
      * True if the currently playing streamable is a TV show, false if it is a movie.
      */
     val isTvShow: StateFlow<Boolean>
-        get() = state.map(viewModelScope, State::isTvShow)
+        get() = state.map(viewModelScope) { it.tvShowData != null }
 
     /**
      * Whether stream links are being loaded right now and there are no loaded links yet.
@@ -416,5 +418,5 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
      * Whether a TV show episode is currently playing, and it's not the last one in the season.
      */
     val hasNextEpisode: StateFlow<Boolean>
-        get() = state.map(viewModelScope, State::hasNextEpisode)
+        get() = state.map(viewModelScope) { it.tvShowData?.nextEpisode != null }
 }
