@@ -9,13 +9,13 @@ jobs:
       - run:
           name: "Build production JS"
           command: |
-            ./gradlew app-web:browserProductionWebpack
+            ./gradlew app-web-kt:browserProductionWebpack
       - store_artifacts:
-          path: ./app-web/build/distributions
+          path: ./app-web-kt/build/distributions
       - persist_to_workspace:
           root: .
           paths:
-            - app-web/build/distributions/*
+            - app-web-kt/build/distributions/*
   deploy:
     docker:
       - image: cimg/base:2022.02
@@ -30,7 +30,7 @@ jobs:
           name: "Deploy to GitHub Pages"
           command: |
             git clone "${GIT_DEPLOY_REPO_URL}"
-            cp -r ./app-web/build/distributions/* "${GIT_DEPLOY_REPO_NAME}/"
+            cp -r ./app-web-kt/build/distributions/* "${GIT_DEPLOY_REPO_NAME}/"
             cd "${GIT_DEPLOY_REPO_NAME}/"
             git add .
             git config user.email "${GIT_DEPLOY_EMAIL}"
