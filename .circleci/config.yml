@@ -1,5 +1,27 @@
 version: 2.1
 
+commands:
+  deploy-to-github-pages:
+    description: "Deploy files to GitHub pages"
+    parameters:
+      src:
+        type: string
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "bb:7a:94:bc:1c:cb:d3:3b:58:9d:a8:1a:fa:e9:e9:4d"
+      - run:
+          name: "Deploy to GitHub Pages"
+          command: |
+            cd
+            git clone "${GIT_DEPLOY_REPO_URL}"
+            cp -r <<parameters.src>> "${GIT_DEPLOY_REPO_NAME}/"
+            cd "${GIT_DEPLOY_REPO_NAME}/"
+            git add .
+            git config user.email "${GIT_DEPLOY_EMAIL}"
+            git config user.name "${GIT_DEPLOY_NAME}"
+            git commit -m "${CIRCLE_SHA1}" && git push || true
+
 jobs:
   web-build:
     docker:
@@ -23,19 +45,8 @@ jobs:
       - checkout
       - attach_workspace:
           at: ./
-      - add_ssh_keys:
-          fingerprints:
-            - "bb:7a:94:bc:1c:cb:d3:3b:58:9d:a8:1a:fa:e9:e9:4d"
-      - run:
-          name: "Deploy to GitHub Pages"
-          command: |
-            git clone "${GIT_DEPLOY_REPO_URL}"
-            cp -r ./app-web-kt/build/distributions/* "${GIT_DEPLOY_REPO_NAME}/"
-            cd "${GIT_DEPLOY_REPO_NAME}/"
-            git add .
-            git config user.email "${GIT_DEPLOY_EMAIL}"
-            git config user.name "${GIT_DEPLOY_NAME}"
-            git commit -m "${CIRCLE_SHA1}" && git push || true
+      - deploy-to-github-pages:
+          src: "~/project/app-web-kt/build/distributions/*"
   android-build:
     docker:
       - image: cimg/android:2022.03.1
