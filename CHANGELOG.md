@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Changed
+- Fixed lag when entering TV show screen, which was re-introduced in 0.13.0
 
 ## [0.13.0] - 2022-03-10
 ### Added
