@@ -118,17 +118,22 @@ jobs:
 workflows:
   web-build-deploy:
     jobs:
-      - web-build
-      - web-deploy:
-          requires:
-            - web-build
+      - web-build:
           filters:
             branches:
               only:
                 - main
+      - web-deploy:
+          requires:
+            - web-build
   android-build-deploy-fdroid:
     jobs:
-      - android-build
+      - android-build:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
       - android-deploy-fdroid:
           requires:
             - android-build
