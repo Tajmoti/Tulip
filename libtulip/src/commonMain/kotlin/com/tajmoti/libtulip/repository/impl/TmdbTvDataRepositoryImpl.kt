@@ -1,9 +1,7 @@
 package com.tajmoti.libtulip.repository.impl
 
 import arrow.core.Option
-import com.tajmoti.commonutils.allOrNone
-import com.tajmoti.commonutils.combineNonEmpty
-import com.tajmoti.commonutils.logger
+import com.tajmoti.commonutils.*
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtmdb.model.movie.Movie
 import com.tajmoti.libtmdb.model.search.SearchMovieResponse
@@ -22,7 +20,10 @@ import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.multiplatform.store.TStoreFactory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalTime::class)
@@ -66,13 +67,13 @@ class TmdbTvDataRepositoryImpl(
     override fun findTvShowKey(name: String, firstAirYear: Int?): Flow<NetworkResult<TvShowKey.Tmdb?>> {
         logger.debug { "Looking up TMDB ID for TV show $name ($firstAirYear)" }
         return tmdbTvIdStore.stream(TitleQuery(name, firstAirYear))
-            .map { it.convert { opt -> opt.orNull() } }
+            .mapWithContext(LibraryDispatchers.libraryContext) { it.convert { opt -> opt.orNull() } }
     }
 
     override fun findMovieKey(name: String, firstAirYear: Int?): Flow<NetworkResult<MovieKey.Tmdb?>> {
         logger.debug { "Looking up TMDB ID for movie $name ($firstAirYear)" }
         return tmdbMovieIdStore.stream(TitleQuery(name, firstAirYear))
-            .map { it.convert { opt -> opt.orNull() } }
+            .mapWithContext(LibraryDispatchers.libraryContext) { it.convert { opt -> opt.orNull() } }
     }
 
     private suspend fun fetchSearchResultTv(query: TitleQuery): Result<TvShowKey.Tmdb?> {
@@ -122,7 +123,7 @@ class TmdbTvDataRepositoryImpl(
         return tv.seasons
             .map { season -> getSeasonAsFlow(tv, season, key) }
             .combineNonEmpty()
-            .map { it.allOrNone().map(tv::fromNetwork) }
+            .mapWithContext(LibraryDispatchers.libraryContext) { it.allOrNone().map(tv::fromNetwork) }
     }
 
     private fun getSeasonAsFlow(tv: Tv, slim: SlimSeason, key: TvShowKey.Tmdb): Flow<Result<TulipSeasonInfo.Tmdb>> {

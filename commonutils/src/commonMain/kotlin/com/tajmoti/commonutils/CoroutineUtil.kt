@@ -80,6 +80,20 @@ inline fun <T> Flow<T?>.onEachNull(crossinline action: suspend () -> Unit): Flow
     return onEach { if (it == null) action() }
 }
 
+/**
+ * Maps the items on the provided dispatcher.
+ */
+inline fun <T, R> Flow<T>.mapWithContext(
+    dispatcher: CoroutineDispatcher,
+    crossinline transform: suspend (value: T) -> R
+): Flow<R> {
+    return map {
+        withContext(dispatcher) {
+            transform(it)
+        }
+    }
+}
+
 
 /**
  * Maps not-null values, nulls are passed on.

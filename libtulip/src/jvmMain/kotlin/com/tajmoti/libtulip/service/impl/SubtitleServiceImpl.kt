@@ -37,7 +37,7 @@ class SubtitleServiceImpl(
     private suspend fun openSubtitleStream(info: SubtitleInfo): Result<InputStream> {
 //        val request = DownloadSubtitlesRequestBody(info.fileId)
 //        return runCatching { openSubtitlesService.downloadSubtitles(request) }
-//            .map { it.byteStream() }
+//            .mapWithContext(LibraryDispatchers.libraryContext) { it.byteStream() }
         logger.debug { "Downloading subtitles by $info" }
         return runCatching { openSubtitlesFallbackService.downloadSubtitlesFallback(info.legacyId) }
             .map { ZipInputStream(it.toInputStream()) }

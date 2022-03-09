@@ -1,12 +1,13 @@
 package com.tajmoti.libtulip.data.impl
 
+import com.tajmoti.commonutils.LibraryDispatchers
+import com.tajmoti.commonutils.mapWithContext
 import com.tajmoti.libtulip.data.HostedInfoDataSource
 import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.TulipTvShowInfo
 import com.tajmoti.libtulip.model.key.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.map
 
 class InMemoryHostedInfoDataSource : HostedInfoDataSource {
     private val tvShows = MutableStateFlow(setOf<TulipTvShowInfo.Hosted>())
@@ -15,7 +16,7 @@ class InMemoryHostedInfoDataSource : HostedInfoDataSource {
     private val tmdbMovieMappings = MutableStateFlow(mapOf<MovieKey.Tmdb, Set<MovieKey.Hosted>>())
 
     override fun getTvShowByKey(key: TvShowKey.Hosted): Flow<TulipTvShowInfo.Hosted?> {
-        return tvShows.map { tvShows -> tvShows.firstOrNull { tvShow -> tvShow.key == key } }
+        return tvShows.mapWithContext(LibraryDispatchers.libraryContext) { tvShows -> tvShows.firstOrNull { tvShow -> tvShow.key == key } }
     }
 
     override suspend fun insertTvShow(show: TulipTvShowInfo.Hosted) {
@@ -23,7 +24,7 @@ class InMemoryHostedInfoDataSource : HostedInfoDataSource {
     }
 
     override fun getMovieByKey(key: MovieKey.Hosted): Flow<TulipMovie.Hosted?> {
-        return movies.map { movies -> movies.firstOrNull { movie -> movie.key == key } }
+        return movies.mapWithContext(LibraryDispatchers.libraryContext) { movies -> movies.firstOrNull { movie -> movie.key == key } }
     }
 
     override suspend fun insertMovie(movie: TulipMovie.Hosted) {
@@ -45,7 +46,7 @@ class InMemoryHostedInfoDataSource : HostedInfoDataSource {
     }
 
     override fun getTmdbMappingForTvShow(tmdb: TvShowKey.Tmdb): Flow<Set<TvShowKey.Hosted>> {
-        return tmdbTvShowMappings.map { keyMap ->
+        return tmdbTvShowMappings.mapWithContext(LibraryDispatchers.libraryContext) { keyMap ->
             keyMap.filterKeys { tmdbKey -> tmdbKey == tmdb }
                 .flatMap { (_, hostedKeys) -> hostedKeys }
                 .toSet()
@@ -53,7 +54,7 @@ class InMemoryHostedInfoDataSource : HostedInfoDataSource {
     }
 
     override fun getTmdbMappingForMovie(tmdb: MovieKey.Tmdb): Flow<Set<MovieKey.Hosted>> {
-        return tmdbMovieMappings.map { keyMap ->
+        return tmdbMovieMappings.mapWithContext(LibraryDispatchers.libraryContext) { keyMap ->
             keyMap.filterKeys { tmdbKey -> tmdbKey == tmdb }
                 .flatMap { (_, hostedKeys) -> hostedKeys }
                 .toSet()
