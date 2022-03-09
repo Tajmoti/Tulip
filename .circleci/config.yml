@@ -121,7 +121,7 @@ workflows:
             branches:
               only:
                 - main
-  android-build:
+  android-build-deploy-fdroid:
     jobs:
       - android-build
       - android-deploy-fdroid:
