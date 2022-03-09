@@ -57,6 +57,11 @@ jobs:
     steps:
       - checkout
       - run:
+          name: "Prepare API keys"
+          command: |
+            echo "tmdbApiKey=${TMDB_API_KEY}" >> secrets.properties
+            echo "openSubtitlesApiKey=${OPENSUBTITLES_API_KEY}" >> secrets.properties
+      - run:
           name: "Prepare keystore"
           command: |
             echo "${SIGNING_KEYSTORE}" | base64 -d > "${SIGNING_KEYSTORE_NAME}"
