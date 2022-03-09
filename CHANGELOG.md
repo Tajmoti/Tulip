@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [0.13.0] - 2022-03-10
 ### Added
 - `southparkstudios.com` data source
 ### Changed
@@ -107,6 +109,7 @@
 - Support for primewire.ag
 
 [Unreleased]: https://github.com/Tajmoti/Tulip/tree/main
+[0.13.0]: https://github.com/Tajmoti/Tulip/tree/v0.13.0
 [0.12.0]: https://github.com/Tajmoti/Tulip/tree/v0.12.0
 [0.11.0]: https://github.com/Tajmoti/Tulip/tree/v0.11.0
 [0.10.1]: https://github.com/Tajmoti/Tulip/tree/v0.10.1
