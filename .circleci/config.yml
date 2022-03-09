@@ -6,6 +6,9 @@ commands:
     parameters:
       src:
         type: string
+      subdir:
+        default: ""
+        type: string
     steps:
       - add_ssh_keys:
           fingerprints:
@@ -15,7 +18,8 @@ commands:
           command: |
             cd
             git clone "${GIT_DEPLOY_REPO_URL}"
-            cp -r <<parameters.src>> "${GIT_DEPLOY_REPO_NAME}/"
+            mkdir -p "${GIT_DEPLOY_REPO_NAME}/<<parameters.subdir>>"
+            cp -r <<parameters.src>> "${GIT_DEPLOY_REPO_NAME}/<<parameters.subdir>>"
             cd "${GIT_DEPLOY_REPO_NAME}/"
             git add .
             git config user.email "${GIT_DEPLOY_EMAIL}"
@@ -66,6 +70,44 @@ jobs:
             ./gradlew app:assembleRelease
       - store_artifacts:
           path: ./app/build/outputs/apk/release
+      - persist_to_workspace:
+          root: .
+          paths:
+            - app/build/outputs/apk/release/*
+  android-deploy-fdroid:
+    docker:
+      - image: cimg/base:2022.02
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ./
+      - run:
+          name: "Install F-Droid server"
+          command: |
+            sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EC4632C79C5E0151
+            sudo add-apt-repository ppa:fdroid/fdroidserver -y
+            sudo apt-get update
+            sudo apt-get install fdroidserver
+      - run:
+          name: "Prepare F-Droid template"
+          command: |
+            cd app/fdroid/
+            mkdir repo/
+            cp ~/project/app/build/outputs/apk/release/*.apk repo/
+            echo "${SIGNING_KEYSTORE}" | base64 -d > "${SIGNING_KEYSTORE_NAME}"
+            echo "keystore: ${SIGNING_KEYSTORE_NAME}" >> config.yml
+            echo "keystorepass: ${SIGNING_KEYSTORE_PASSWORD}" >> config.yml
+            echo "repo_keyalias: ${SIGNING_KEYSTORE_KEY_ALIAS}" >> config.yml
+            echo "keypass: ${SIGNING_KEYSTORE_KEY_PASSWORD}" >> config.yml
+            echo "repo_url: ${DEPLOY_PAGE_URL}/fdroid/repo" >> config.yml
+      - run:
+          name: "Update F-Droid repository"
+          command: |
+            cd ~/project/app/fdroid/
+            fdroid update
+      - deploy-to-github-pages:
+          src: "~/project/app/fdroid/metadata ~/project/app/fdroid/repo"
+          subdir: "fdroid"
 
 
 workflows:
@@ -81,7 +123,10 @@ workflows:
                 - main
   android-build:
     jobs:
-      - android-build:
+      - android-build
+      - android-deploy-fdroid:
+          requires:
+            - android-build
           filters:
             tags:
               only: /^v.*/

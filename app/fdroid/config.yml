@@ -1,0 +1,9 @@
+---
+apksigner: /usr/bin/apksigner
+sdk_path: /usr/lib/android-sdk
+
+repo_name: Tulip
+repo_description: >-
+  Repository for the Tulip application, whatever its purpose might be.
+
+archive_older: 0
