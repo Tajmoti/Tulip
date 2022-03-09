@@ -129,5 +129,6 @@ workflows:
             - android-build
           filters:
             branches:
-              only:
-                - main
+              ignore: /.*/
+            tags:
+              only: /^v.*/
