@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [0.13.1] - 2022-03-10
 ### Changed
 - Fixed lag when entering TV show screen, which was re-introduced in 0.13.0
 
@@ -111,6 +113,7 @@
 - Support for primewire.ag
 
 [Unreleased]: https://github.com/Tajmoti/Tulip/tree/main
+[0.13.1]: https://github.com/Tajmoti/Tulip/tree/v0.13.1
 [0.13.0]: https://github.com/Tajmoti/Tulip/tree/v0.13.0
 [0.12.0]: https://github.com/Tajmoti/Tulip/tree/v0.12.0
 [0.11.0]: https://github.com/Tajmoti/Tulip/tree/v0.11.0

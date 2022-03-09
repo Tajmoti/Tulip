@@ -20,8 +20,8 @@ android {
         applicationId = "com.tajmoti.tulip"
         minSdk = 21
         targetSdk = 31
-        versionCode = 15
-        versionName = "0.13.0"
+        versionCode = 16
+        versionName = "0.13.1"
     }
 
     signingConfigs {
