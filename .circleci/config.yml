@@ -1,7 +1,7 @@
 version: 2.1
 
 jobs:
-  build:
+  web-build:
     docker:
       - image: cimg/openjdk:16.0.2
     steps:
@@ -16,7 +16,7 @@ jobs:
           root: .
           paths:
             - app-web-kt/build/distributions/*
-  deploy:
+  web-deploy:
     docker:
       - image: cimg/base:2022.02
     steps:
@@ -36,15 +36,41 @@ jobs:
             git config user.email "${GIT_DEPLOY_EMAIL}"
             git config user.name "${GIT_DEPLOY_NAME}"
             git commit -m "${CIRCLE_SHA1}" && git push || true
+  android-build:
+    docker:
+      - image: cimg/android:2022.03.1
+    steps:
+      - checkout
+      - run:
+          name: "Prepare keystore"
+          command: |
+            echo "${SIGNING_KEYSTORE}" | base64 -d > "${SIGNING_KEYSTORE_NAME}"
+            echo "signing.store.file=${SIGNING_KEYSTORE_NAME}" >> signing.properties
+            echo "signing.store.password=${SIGNING_KEYSTORE_PASSWORD}" >> signing.properties
+            echo "signing.key.alias=${SIGNING_KEYSTORE_KEY_ALIAS}" >> signing.properties
+            echo "signing.key.password=${SIGNING_KEYSTORE_KEY_PASSWORD}" >> signing.properties
+      - run:
+          name: "Build signed release"
+          command: |
+            ./gradlew app:assembleRelease
+      - store_artifacts:
+          path: ./app/build/outputs/apk/release
+
 
 workflows:
-  build-deploy:
+  web-build-deploy:
     jobs:
-      - build
-      - deploy:
+      - web-build
+      - web-deploy:
           requires:
-            - build
+            - web-build
           filters:
             branches:
               only:
                 - main
+  android-build:
+    jobs:
+      - android-build:
+          filters:
+            tags:
+              only: /^v.*/
