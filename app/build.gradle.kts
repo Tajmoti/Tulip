@@ -24,11 +24,23 @@ android {
         versionName = "0.12.0"
     }
 
+    signingConfigs {
+        rootProject.loadPropsIfExists("signing.properties")?.let { signingProps ->
+            create("release") {
+                storeFile = rootProject.file(signingProps.getProperty("signing.store.file")!!)
+                storePassword = signingProps.getProperty("signing.store.password")!!
+                keyAlias = signingProps.getProperty("signing.key.alias")!!
+                keyPassword = signingProps.getProperty("signing.key.password")!!
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             buildConfigField("boolean", "HTTP_DEBUG", "false")
+            signingConfig = signingConfigs.findByName("release")
         }
         debug {
             buildConfigField("boolean", "HTTP_DEBUG", "$HTTP_DEBUG")
