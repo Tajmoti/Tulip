@@ -37,12 +37,14 @@ android {
 
     buildTypes {
         release {
+            isDebuggable = false
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             buildConfigField("boolean", "HTTP_DEBUG", "false")
             signingConfig = signingConfigs.findByName("release")
         }
         debug {
+            isDebuggable = true
             buildConfigField("boolean", "HTTP_DEBUG", "$HTTP_DEBUG")
         }
         forEach { buildType ->
