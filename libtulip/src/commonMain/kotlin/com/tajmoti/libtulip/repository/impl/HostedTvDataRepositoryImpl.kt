@@ -1,9 +1,7 @@
 package com.tajmoti.libtulip.repository.impl
 
-import com.tajmoti.commonutils.LibraryDispatchers
 import com.tajmoti.commonutils.flatMap
 import com.tajmoti.commonutils.logger
-import com.tajmoti.commonutils.mapWithContext
 import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.HostedInfoDataSource
 import com.tajmoti.libtulip.misc.job.NetFlow
@@ -76,7 +74,7 @@ class HostedTvDataRepositoryImpl(
         key: TvShowKey.Hosted
     ): Flow<Result<TulipTvShowInfo.Hosted>> {
         return tmdbRepo.findTvShowKey(tvShowInfo.info.name, tvShowInfo.info.firstAirDateYear)
-            .mapWithContext(LibraryDispatchers.libraryContext) { mapTmdbOrRecover(it.toResult(), tvShowInfo, key) }
+            .map { mapTmdbOrRecover(it.toResult(), tvShowInfo, key) }
     }
 
     private fun mapTmdbOrRecover(
@@ -104,7 +102,7 @@ class HostedTvDataRepositoryImpl(
 
     private fun getHostedMovieInfo(tvShowInfo: TvItem.Movie, key: MovieKey.Hosted) =
         tmdbRepo.findMovieKey(tvShowInfo.info.name, tvShowInfo.info.firstAirDateYear)
-            .mapWithContext(LibraryDispatchers.libraryContext) {
+            .map {
                 it.toResult().flatMap { tmdbKey -> Result.success(tvShowInfo.fromNetwork(key, tmdbKey)) }
             }
 
