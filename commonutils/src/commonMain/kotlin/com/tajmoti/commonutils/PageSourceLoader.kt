@@ -18,7 +18,7 @@ interface PageSourceLoader {
      * [filter] decides whether the provided URL should be loaded or not.
      * Used purely as an optimization to reduce useless network traffic and latency during link extraction.
      */
-    suspend fun loadWithBrowser(url: String, filter: (String) -> Boolean): Result<String>
+    suspend fun loadWithBrowser(url: String, filter: (String) -> Boolean = { true }): Result<String>
 
     /**
      * A raw HTTP GET request is performed to retrieve the HTML source for [url].

@@ -5,14 +5,7 @@ import com.tajmoti.libtvprovider.model.EpisodeInfo
 import com.tajmoti.libtvprovider.model.Season
 
 internal fun parseSearchResultPageBlockingSeason(page: KElement): Result<List<Season>> {
-    return try {
-        val items = page
-            .getElementsByClass("show_season")
-            .map { elemToSeason(it) }
-        Result.success(items)
-    } catch (e: Throwable) {
-        Result.failure(e)
-    }
+    return runCatching { page.getElementsByClass("show_season").map { elemToSeason(it) } }
 }
 
 private fun elemToSeason(element: KElement): Season {

@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Changed
+- Updated Primewire URL `primewire.tf`
 
 ## [0.13.1] - 2022-03-10
 ### Changed

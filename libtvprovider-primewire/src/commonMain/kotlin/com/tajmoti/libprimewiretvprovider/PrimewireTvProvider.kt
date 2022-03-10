@@ -17,31 +17,31 @@ class PrimewireTvProvider(
     /**
      * Base URL of the primewire domain, in case it changes.
      */
-    private val baseUrl: String = "https://www.primewire.li",
+    private val baseUrl: String = "https://www.primewire.tf",
     private val dispatcher: CoroutineContext = LibraryDispatchers.libraryContext,
 ) : TvProvider {
 
     override suspend fun search(query: String): Result<List<SearchResult>> {
         return withContext(dispatcher) {
-            loader.loadWithGet(queryToSearchUrl(query))
-                .flatMap { parseSearchResultPageBlocking(it) }
+            loader.loadWithBrowser(queryToSearchUrl(query))
+                .mapCatching { parseSearchResultPageBlocking(it) }
         }
     }
 
     private fun queryToSearchUrl(query: String): String {
         val encoded = UrlEncoder.encode(query)
-        return "$baseUrl?s=$encoded&t=y&m=m&w=q"
+        return "$baseUrl/filter?s=$encoded&t=y"
     }
 
     override suspend fun getTvShow(id: String): Result<TvItem.TvShow> {
         return withContext(dispatcher) {
-            loader.loadWithGet(baseUrl + id)
+            loader.loadWithBrowser(baseUrl + id)
                 .flatMap { source ->
                     val document = KSoup.parse(source)
                     parseSearchResultPageBlockingSeason(document)
                         .map { seasons -> document to seasons }
                 }
-                .map { (document, seasons) ->
+                .mapCatching { (document, seasons) ->
                     val tvItemInfo = parseTvItemInfo(id, document)
                     TvItem.TvShow(tvItemInfo, seasons)
                 }
@@ -51,7 +51,7 @@ class PrimewireTvProvider(
     override suspend fun getMovie(id: String): Result<TvItem.Movie> {
         return withContext(dispatcher) {
             loader.loadWithGet(baseUrl + id)
-                .map { source ->
+                .mapCatching { source ->
                     val tvItemInfo = parseTvItemInfo(id, KSoup.parse(source))
                     TvItem.Movie(tvItemInfo)
                 }
