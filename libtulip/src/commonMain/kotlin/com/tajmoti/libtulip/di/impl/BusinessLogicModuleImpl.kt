@@ -64,9 +64,9 @@ object BusinessLogicModuleImpl : IBusinessLogicModule {
         val kinox = KinoxTvProvider(loader)
         val southPark = SouthParkTvProvider(loader)
         val impls = mapOf(
-            StreamingService.PRIMEWIRE to primewire,
-            StreamingService.KINOX to kinox,
-            StreamingService.SOUTH_PARK to southPark
+            "PRIMEWIRE" to primewire,
+            "KINOX" to kinox,
+            "SOUTH_PARK" to southPark
         )
         return MultiTvProvider(
             impls.filterKeys { !blacklist.contains(it) },

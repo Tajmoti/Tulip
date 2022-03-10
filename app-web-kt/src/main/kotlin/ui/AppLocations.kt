@@ -1,6 +1,5 @@
 package ui
 
-import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.model.key.*
 import react.Props
 import react.fc
@@ -19,7 +18,7 @@ val UrlTmdbTvShow = fc<Props> {
 
 val UrlHostedTvShow = fc<Props> {
     val params = useParams()
-    val service = StreamingService.valueOf(params["streamingService"]!!)
+    val service = params["streamingService"]!!
     val key = params["key"]!!
     TvShowScreen { attrs.tvShowKey = TvShowKey.Hosted(service, key) }
 }
@@ -54,7 +53,7 @@ val UrlTmdbMoviePlayer = fc<Props> {
 
 val UrlHostedTvPlayer = fc<Props> {
     val params = useParams()
-    val streamingService = StreamingService.valueOf(params["streamingService"]!!)
+    val streamingService = params["streamingService"]!!
     val tvShowId = params[":tvShowId"]!!
     val seasonNumber = params["seasonNumber"]!!.toInt()
     val episodeId = params["episodeId"]!!
@@ -66,7 +65,7 @@ val UrlHostedTvPlayer = fc<Props> {
 
 val UrlHostedMoviePlayer = fc<Props> {
     val params = useParams()
-    val streamingService = StreamingService.valueOf(params["streamingService"]!!)
+    val streamingService = params["streamingService"]!!
     val movieId = params[":movieId"]!!
     val key = MovieKey.Hosted(streamingService, movieId)
     VideoPlayerScreen {

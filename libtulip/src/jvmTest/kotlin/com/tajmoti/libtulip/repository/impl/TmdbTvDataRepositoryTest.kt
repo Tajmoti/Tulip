@@ -103,8 +103,8 @@ class TmdbTvDataRepositoryTest {
         cache: TulipConfiguration.CacheParameters = zeroCacheParams,
         tmdbService: TmdbService = mock(),
         localDataSource: LocalTvDataSource = mock()
-    ): TmdbTvDataRepositoryImpl {
-        return TmdbTvDataRepositoryImpl(tmdbService, localDataSource, cache)
+    ): CachingTvDataRepository {
+        return CachingTvDataRepository(tmdbService, localDataSource, cache)
     }
 
     private fun createTmdbServiceForTvSearch(): TmdbService = mock {

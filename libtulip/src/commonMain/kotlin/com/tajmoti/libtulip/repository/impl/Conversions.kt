@@ -4,8 +4,7 @@ package com.tajmoti.libtulip.repository.impl
 
 import com.tajmoti.libopensubtitles.model.search.SubtitleAttributes
 import com.tajmoti.libopensubtitles.model.search.SubtitlesResponseData
-import com.tajmoti.libtmdb.model.tv.Episode
-import com.tajmoti.libtmdb.model.tv.Tv
+import com.tajmoti.libtulip.model.hosted.TvItemInfo
 import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.MovieKey
@@ -37,7 +36,7 @@ inline fun TvItem.Movie.fromNetwork(
     key: MovieKey.Hosted,
     tmdbId: MovieKey.Tmdb?
 ): TulipMovie.Hosted {
-    return TulipMovie.Hosted(key, info, tmdbId)
+    return TulipMovie.Hosted(key, TvItemInfo(info.name, info.language, info.firstAirDateYear), tmdbId)
 }
 
 inline fun EpisodeInfo.fromNetwork(seasonKey: SeasonKey.Hosted): TulipEpisodeInfo.Hosted {
@@ -49,26 +48,4 @@ inline fun Season.fromNetwork(tvShowKey: TvShowKey.Hosted): TulipSeasonInfo.Host
     val key = SeasonKey.Hosted(tvShowKey, number)
     val episodes = episodes.map { it.fromNetwork(key) }
     return TulipSeasonInfo.Hosted(key, episodes)
-}
-
-fun Tv.fromNetwork(seasons: List<TulipSeasonInfo.Tmdb>): TulipTvShowInfo.Tmdb {
-    val key = TvShowKey.Tmdb(id)
-    val baseImageUrl = "https://image.tmdb.org/t/p/original"
-    return TulipTvShowInfo.Tmdb(key, name, null, baseImageUrl + posterPath, baseImageUrl + backdropPath, seasons)
-}
-
-fun com.tajmoti.libtmdb.model.tv.Season.fromNetwork(tvShowKey: TvShowKey.Tmdb): TulipSeasonInfo.Tmdb {
-    val key = SeasonKey.Tmdb(tvShowKey, seasonNumber)
-    val episodes = episodes.map { it.fromNetwork(key) }
-    return TulipSeasonInfo.Tmdb(key, name, overview, episodes)
-}
-
-fun Episode.fromNetwork(seasonKey: SeasonKey.Tmdb): TulipEpisodeInfo.Tmdb {
-    val key = EpisodeKey.Tmdb(seasonKey, episodeNumber)
-    return TulipEpisodeInfo.Tmdb(
-        key,
-        name,
-        overview,
-        "https://image.tmdb.org/t/p/original$stillPath",
-        voteAverage.takeUnless { it == 0.0f })
 }

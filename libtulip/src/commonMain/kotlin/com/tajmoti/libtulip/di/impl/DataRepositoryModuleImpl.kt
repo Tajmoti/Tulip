@@ -2,6 +2,7 @@ package com.tajmoti.libtulip.di.impl
 
 import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libopensubtitles.OpenSubtitlesService
+import com.tajmoti.libtmdb.LibTmdbRepository
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.HostedInfoDataSource
@@ -46,7 +47,7 @@ object DataRepositoryModuleImpl : IDataRepositoryModule {
         db: LocalTvDataSource,
         config: TulipConfiguration
     ): TmdbTvDataRepository {
-        return TmdbTvDataRepositoryImpl(service, db, config.tmdbCacheParams)
+        return CachingTvDataRepository(LibTmdbRepository(service), db, config.tmdbCacheParams)
     }
 
     override fun provideFavoritesRepository(repo: UserDataDataSource): FavoritesRepository {

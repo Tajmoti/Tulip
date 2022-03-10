@@ -3,9 +3,9 @@
 package com.tajmoti.tulip.datasource
 
 import com.tajmoti.libtulip.model.history.LastPlayedPosition
+import com.tajmoti.libtulip.model.hosted.TvItemInfo
 import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.libtulip.model.key.*
-import com.tajmoti.libtvprovider.model.TvItemInfo
 import com.tajmoti.tulip.db.entity.hosted.DbEpisode
 import com.tajmoti.tulip.db.entity.hosted.DbMovie
 import com.tajmoti.tulip.db.entity.hosted.DbSeason

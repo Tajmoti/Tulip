@@ -55,6 +55,7 @@ fun KotlinDependencyHandler.mainDeps() {
     implementation(project(":libtvprovider-primewire"))
     implementation(project(":libtvprovider-southpark"))
     implementation(project(":libtvvideoextractor"))
+    api(project(":libtulip-api"))
     implementation(project(":libwebdriver"))
     implementation(project(":rektor"))
     implementation(project(":commonutils"))
