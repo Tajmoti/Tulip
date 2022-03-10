@@ -84,15 +84,12 @@ inline fun <T> Flow<T?>.onEachNull(crossinline action: suspend () -> Unit): Flow
 /**
  * Maps not-null values, nulls are passed on.
  */
-inline fun <T, S> Flow<T?>.mapNotNullsWithContext(
-    dispatcher: CoroutineDispatcher,
+inline fun <T, S> Flow<T?>.mapNotNulls(
     crossinline transform: suspend (T) -> S
 ): Flow<S?> {
     return map {
         if (it != null) {
-            withContext(dispatcher) {
-                transform(it)
-            }
+            transform(it)
         } else {
             null
         }

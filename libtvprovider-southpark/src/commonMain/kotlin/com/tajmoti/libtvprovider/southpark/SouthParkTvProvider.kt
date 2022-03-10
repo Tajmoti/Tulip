@@ -1,21 +1,15 @@
 package com.tajmoti.libtvprovider.southpark
 
-import com.tajmoti.commonutils.LibraryDispatchers
 import com.tajmoti.commonutils.PageSourceLoader
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtvprovider.TvProvider
 import com.tajmoti.libtvprovider.model.*
 import com.tajmoti.libtvprovider.southpark.model.Item
 import com.tajmoti.libtvprovider.southpark.model.SouthParkEpisodeResponse
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import kotlin.coroutines.CoroutineContext
 
-class SouthParkTvProvider(
-    private val loader: PageSourceLoader,
-    private val dispatcher: CoroutineContext = LibraryDispatchers.libraryContext,
-) : TvProvider {
+class SouthParkTvProvider(private val loader: PageSourceLoader) : TvProvider {
     private val deserializer = Json { ignoreUnknownKeys = true }
     private val baseUrl = "https://www.southparkstudios.com"
     private val info = TvItemInfo("South Park", "en", 1997)
@@ -35,7 +29,7 @@ class SouthParkTvProvider(
     override suspend fun getTvShow(id: String): Result<TvItem.TvShow> {
         if (id != item.key)
             return Result.failure(IllegalArgumentException("South Park provider can only provide South Park"))
-        return withContext(dispatcher) { getShowInfo() }
+        return getShowInfo()
     }
 
     private suspend fun getShowInfo(): Result<TvItem.TvShow> {

@@ -72,7 +72,7 @@ class TvShowViewModelImpl constructor(
 
     private fun loadTmdbSeasons(key: TvShowKey.Tmdb): Flow<LoadingState> {
         return tmdbRepo.getTvShow(key)
-            .map { result -> withContext(Dispatchers.Default) { resultToState(result) } }
+            .map { result -> resultToState(result) }
     }
 
     private fun loadHostedSeasons(key: TvShowKey.Hosted): Flow<LoadingState> {

@@ -24,7 +24,7 @@ class MappingSearchServiceImpl(
     override fun searchAndCreateMappings(query: String): Flow<Result<List<MappedSearchResult>>> {
         return hostedRepository.search(query)
             .map { resMap -> resMap.takeUnless { it.all { (_, v) -> v.isFailure } } }
-            .mapNotNullsWithContext(LibraryDispatchers.libraryContext, this::mapWithTmdbIds)
+            .mapNotNulls(this::mapWithTmdbIds)
             .onEachNotNull(this::persistTmdbMappings)
             .onEachNull { logger.warn { "No successful results!" } }
             .mapFold({ Result.success(it) }, { Result.failure(NoSuccessfulResultsException) })

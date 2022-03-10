@@ -2,10 +2,8 @@ package com.tajmoti.libtvvideoextractor
 
 import arrow.core.Either
 import arrow.core.left
-import com.tajmoti.commonutils.LibraryDispatchers
 import com.tajmoti.commonutils.PageSourceLoader
 import com.tajmoti.commonutils.logger
-import kotlinx.coroutines.withContext
 
 /**
  * Extracts a direct video URL from a streaming service video page.
@@ -23,12 +21,10 @@ class VideoLinkExtractor(
         val handler = getFirstUsableHandler(url)
             ?: serviceName?.let { getFirstUsableHandlerByName(serviceName) }
             ?: return ExtractionError.NoHandler.left()
-        return withContext(LibraryDispatchers.libraryContext) {
-            runCatching { handler.extractVideoUrl(url, loader) }
-                .onSuccess { handler.doBeforePlayback(url, loader) }
-                .onFailure { logger.warn { "Unable to extract $url" } }
-                .fold({ it }, { ExtractionError.Exception(it).left() })
-        }
+        return runCatching { handler.extractVideoUrl(url, loader) }
+            .onSuccess { handler.doBeforePlayback(url, loader) }
+            .onFailure { logger.warn { "Unable to extract $url" } }
+            .fold({ it }, { ExtractionError.Exception(it).left() })
     }
 
     /**
