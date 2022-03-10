@@ -25,16 +25,16 @@ class TvShowViewModelImpl constructor(
     private val manuallySelectedSeason = MutableSharedFlow<SeasonKey?>(1)
     private val stateImpl = itemKey
         .flatMapLatest(::loadSeasons)
-        .stateIn(viewModelScope, SharingStarted.Eagerly, LoadingState.Loading)
+        .stateInOffload(LoadingState.Loading)
     private val nameImpl = itemKey
         .flatMapLatest(::loadName)
     private val lastPlayedEpisode = itemKey
         .flatMapLatest { historyRepository.getLastPlayedPosition(it) }
         .map { (it?.key as? EpisodeKey) }
     private val selectedSeasonImpl = merge(manuallySelectedSeason, lastPlayedEpisode.map { it?.seasonKey })
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+        .stateInOffload(null)
     private val isFavoriteImpl = favoritesRepository.isFavorite(initialItemKey)
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+        .stateInOffload(false)
 
     init {
         retryFetchTvShowData()
@@ -116,7 +116,7 @@ class TvShowViewModelImpl constructor(
         isFavoriteImpl,
         lastPlayedEpisode
     ) { a, b, c, d, e -> InternalState(a, b, c, d, e) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, InternalState())
+        .stateInOffload(InternalState())
 
     sealed interface LoadingState {
         object Loading : LoadingState

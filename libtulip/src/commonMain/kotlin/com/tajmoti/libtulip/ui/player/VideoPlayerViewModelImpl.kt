@@ -52,7 +52,7 @@ class VideoPlayerViewModelImpl constructor(
     private val episodeList = streamableKeyImpl
         .flatMapLatest { getSeasonByKey(it) }
         .map { it?.data?.episodes }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+        .stateInOffload(null)
 
 
     /**
@@ -64,7 +64,7 @@ class VideoPlayerViewModelImpl constructor(
                 .map(::mapStreamsResult)
                 .map { key to it }
         }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+        .stateInOffload(null)
 
     /**
      * Loading state of the list of available streams.
@@ -72,7 +72,7 @@ class VideoPlayerViewModelImpl constructor(
     private val linkListLoadingState = keyWithLinkListLoadingState
         .filterNotNull()
         .map { (_, state) -> state }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, LinkListLoadingState.Loading)
+        .stateInOffload(LinkListLoadingState.Loading)
 
     /**
      * Manually selected stream to play.
@@ -88,7 +88,7 @@ class VideoPlayerViewModelImpl constructor(
         .filter { (_, streams) -> anyGoodStreams(streams) }
         .distinctUntilChangedBy { (key, _) -> key }
         .map { (_, streams) -> firstGoodStream(streams) to false }
-        .stateIn(viewModelScope, SharingStarted.Lazily, null)
+        .stateInOffload(null)
 
     private fun firstGoodStream(it: List<UnloadedVideoStreamRef>) =
         it.first { video -> video.linkExtractionSupported }
@@ -100,7 +100,7 @@ class VideoPlayerViewModelImpl constructor(
      * The stream that should actually be played.
      */
     private val streamToPlay = merge(manualStream, autoStream)
-        .stateIn(viewModelScope, SharingStarted.Lazily, null)
+        .stateInOffload(null)
 
     /**
      * Loading state of a selected streaming service video
@@ -110,12 +110,12 @@ class VideoPlayerViewModelImpl constructor(
             it?.let { fetchStreams(it.first, it.second) }
                 ?: flowOf(LinkLoadingState.Idle)
         }
-        .stateIn(viewModelScope, SharingStarted.Lazily, LinkLoadingState.Idle)
+        .stateInOffload(LinkLoadingState.Idle)
 
     private val internalStreamableInfo = streamableKeyImpl
         .flatMapLatest { getStreamableInfo(it) }
         .map { it.getOrNull() }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+        .stateInOffload(null)
 
 
     /**
@@ -123,14 +123,14 @@ class VideoPlayerViewModelImpl constructor(
      */
     private val tvShowData = combine(episodeList, streamableKeyImpl) { a, b -> a to b }
         .map { (episodes, key) -> episodes?.let { selectTvShowData(it, key) } }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+        .stateInOffload(null)
 
     /**
      * State of subtitle list loading.
      */
     private val loadingSubtitlesState = streamableKeyImpl
         .flatMapLatest { loadSubtitleList(it) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, SubtitleListLoadingState.Loading)
+        .stateInOffload(SubtitleListLoadingState.Loading)
 
     /**
      * Subtitles that should be downloaded and applied.
@@ -142,7 +142,7 @@ class VideoPlayerViewModelImpl constructor(
      */
     private val subtitleDownloadState = subtitlesToDownload
         .flatMapLatest { if (it != null) downloadSubtitles(it) else flowOf(SubtitleDownloadingState.Idle) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, SubtitleDownloadingState.Idle)
+        .stateInOffload(SubtitleDownloadingState.Idle)
 
     /**
      * Currently attached media player.
@@ -154,7 +154,7 @@ class VideoPlayerViewModelImpl constructor(
      */
     private val mediaPlayerStateImpl = attachedMediaPlayer
         .flatMapLatest { it?.state ?: flowOf(MediaPlayerState.Idle) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, MediaPlayerState.Idle)
+        .stateInOffload(MediaPlayerState.Idle)
 
     private val positionImpl = mediaPlayerStateImpl
         .map(viewModelScope) { state -> state.validPositionOrNull }
@@ -560,7 +560,7 @@ class VideoPlayerViewModelImpl constructor(
         subSyncState
     ) { a, b, c, d, e, f, g, h, i ->
         InternalState(a, b, c, d, e, f, g, h, i)
-    }.stateIn(viewModelScope, SharingStarted.Lazily, InternalState())
+    }.stateInOffload(InternalState())
 
     companion object {
         /**

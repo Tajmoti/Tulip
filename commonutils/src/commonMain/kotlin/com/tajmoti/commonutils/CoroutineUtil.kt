@@ -23,7 +23,7 @@ inline fun <T, R> StateFlow<T>.map(
         val transformed = transform(value)
         return@transform emit(transformed)
     }
-    return flow.stateIn(scope, SharingStarted.Eagerly, initial)
+    return flow.stateIn(scope, SharingStarted.Lazily, initial)
 }
 
 inline fun <T, R> StateFlow<T>.mapWith(

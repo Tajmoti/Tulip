@@ -26,7 +26,7 @@ class SearchViewModelImpl(
     private val loadingState = searchQuery
         .debounce { if (it.isNullOrBlank()) 0L else DEBOUNCE_INTERVAL_MS }
         .flatMapLatest { it?.let { searchQuery(it) } ?: flowOf(LoadingState.Idle) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, LoadingState.Idle)
+        .stateInOffload(LoadingState.Idle)
 
     /**
      * Submit a new query to be searched
