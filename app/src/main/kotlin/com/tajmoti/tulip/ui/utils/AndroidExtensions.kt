@@ -7,15 +7,15 @@ import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.*
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
+import com.tajmoti.commonutils.LibraryDispatchers
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 
 fun RecyclerView.setupWithAdapterAndDivider(adapter: RecyclerView.Adapter<*>) {
     this.adapter = adapter
@@ -57,3 +57,6 @@ fun <T> LifecycleOwner.consume(flow: Flow<T>, collector: FlowCollector<T>) {
         }
     }
 }
+
+val ViewModel.delegatingViewModelScope: CoroutineScope
+    get() = viewModelScope + LibraryDispatchers.libraryContext

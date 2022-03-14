@@ -2,7 +2,6 @@ package com.tajmoti.tulip.ui.player
 
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.viewModelScope
 import com.tajmoti.libtulip.repository.HostedTvDataRepository
 import com.tajmoti.libtulip.repository.PlayingHistoryRepository
 import com.tajmoti.libtulip.repository.SubtitleRepository
@@ -14,6 +13,7 @@ import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModelImpl
 import com.tajmoti.tulip.ui.utils.DelegatingViewModel
+import com.tajmoti.tulip.ui.utils.delegatingViewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -44,7 +44,7 @@ class AndroidVideoPlayerViewModel @Inject constructor(
             streamService,
             subtitleService,
             context.getExternalFilesDir(null)!!.absolutePath,
-            viewModelScope,
+            delegatingViewModelScope,
             args.streamableKey
         )
     }
