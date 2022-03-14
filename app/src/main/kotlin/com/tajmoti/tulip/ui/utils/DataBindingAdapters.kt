@@ -44,6 +44,12 @@ object DataBindingAdapters {
     }
 
     @JvmStatic
+    @BindingAdapter("android:visibility")
+    fun setVisibility(view: View, value: Boolean) {
+        view.isVisible = value
+    }
+
+    @JvmStatic
     @BindingAdapter("progressFraction")
     fun setProgressFraction(view: SeekBar, progress: Float?) {
         if (progress == null) return

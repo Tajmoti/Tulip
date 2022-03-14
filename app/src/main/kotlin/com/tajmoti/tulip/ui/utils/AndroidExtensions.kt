@@ -50,6 +50,10 @@ fun <T> Fragment.consume(flow: Flow<T>, collector: FlowCollector<T>) {
     viewLifecycleOwner.consume(flow, collector)
 }
 
+fun <T : Any> Fragment.consumeNotNull(flow: Flow<T?>, collector: FlowCollector<T>) {
+    viewLifecycleOwner.consume(flow) { it?.let { collector.emit(it) } }
+}
+
 fun <T> LifecycleOwner.consume(flow: Flow<T>, collector: FlowCollector<T>) {
     lifecycleScope.launch {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
