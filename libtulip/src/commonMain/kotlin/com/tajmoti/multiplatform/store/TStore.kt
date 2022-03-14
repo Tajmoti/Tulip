@@ -5,5 +5,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface TStore<Key : Any, Output : Any> {
 
-    fun stream(key: Key): Flow<NetworkResult<Output>>
+    fun stream(key: Key, refresh: Boolean = false): Flow<NetworkResult<Output>>
 }

@@ -13,7 +13,7 @@ actual object TStoreFactory {
         writer: (suspend (Key, Output) -> Unit)?
     ): TStore<Key, Output> {
         return object : TStore<Key, Output> {
-            override fun stream(key: Key): Flow<NetworkResult<Output>> {
+            override fun stream(key: Key, refresh: Boolean): Flow<NetworkResult<Output>> {
                 val fromMemory = reader
                     ?.invoke(key)
                     ?.map(::wrapNullable)
