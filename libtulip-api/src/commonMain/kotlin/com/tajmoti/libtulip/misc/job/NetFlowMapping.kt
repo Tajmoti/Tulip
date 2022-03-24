@@ -40,8 +40,9 @@ sealed class NetworkResult<T> {
      */
     fun toResult(): Result<T> {
         return when (this) {
-            is Error<T> -> Result.failure<T>(Throwable("Unsuccessful NetworkResult $error"))
-            else -> Result.success(data!!)
+            is Error<T> -> Result.failure(Throwable("Unsuccessful NetworkResult $error"))
+            is Success<T> -> Result.success(data)
+            is Cached -> Result.success(data)
         }
     }
 
