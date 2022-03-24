@@ -4,6 +4,7 @@ import com.dropbox.android.external.store4.*
 import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.misc.job.NetworkResult
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlin.time.Duration.Companion.milliseconds
@@ -21,7 +22,9 @@ class JvmTStore<Key : Any, Output : Any>(
         .build()
 
     override fun stream(key: Key, refresh: Boolean): Flow<NetworkResult<Output>> {
-        return impl.stream(StoreRequest.cached(key, refresh)).toNetFlow()
+        return impl.stream(StoreRequest.cached(key, refresh))
+            .distinctUntilChanged()
+            .toNetFlow()
     }
 
     private fun <K : Any, V : Any> createCache(params: TulipConfiguration.CacheParameters): MemoryPolicy<K, V> {
