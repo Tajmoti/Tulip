@@ -1,6 +1,5 @@
 package com.tajmoti.multiplatform
 
-import com.tajmoti.commonutils.UrlEncoder
 import com.tajmoti.libtulip.di.ProxyType
 import com.tajmoti.libtulip.misc.webdriver.UrlRewriter
 import com.tajmoti.libtulip.setupTulipKtor
@@ -20,8 +19,4 @@ fun getAppHttpClient(proxy: Boolean): HttpClient {
         setupTulipKtor(this)
         if (proxy) install(UrlRewriter) { wrapper = ::wrapUrlInCorsProxy }
     }
-}
-
-private fun wrapUrlInCorsProxy(url: String): String {
-    return "https://api.allorigins.win/raw?url=${UrlEncoder.encode(url)}"
 }

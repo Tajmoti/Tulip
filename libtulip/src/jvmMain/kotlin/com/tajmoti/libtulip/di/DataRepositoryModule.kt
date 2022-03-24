@@ -8,6 +8,7 @@ import com.tajmoti.libtulip.data.HostedInfoDataSource
 import com.tajmoti.libtulip.data.LocalTvDataSource
 import com.tajmoti.libtulip.data.UserDataDataSource
 import com.tajmoti.libtulip.di.impl.DataRepositoryModuleImpl
+import com.tajmoti.libtulip.di.qualifier.RawHttpClient
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.repository.*
 import com.tajmoti.libtulip.service.StreamExtractionService
@@ -44,6 +45,7 @@ object DataRepositoryModule : IDataRepositoryModule {
     @Singleton
     override fun provideStreamsRepository(
         linkExtractor: VideoLinkExtractor,
+        @RawHttpClient
         httpClient: HttpClient
     ): StreamExtractionService {
         return DataRepositoryModuleImpl.provideStreamsRepository(linkExtractor, httpClient)

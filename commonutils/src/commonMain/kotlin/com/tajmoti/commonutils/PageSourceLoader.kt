@@ -24,7 +24,7 @@ interface PageSourceLoader {
      * A raw HTTP GET request is performed to retrieve the HTML source for [url].
      * A proxy might be used, for example to get around CORS.
      */
-    suspend fun loadWithGet(url: String): Result<String>
+    suspend fun loadWithGet(url: String, forceProxy: Boolean = false): Result<String>
 
     /**
      * A raw HTTP GET request is performed to retrieve the HTML source for [url].

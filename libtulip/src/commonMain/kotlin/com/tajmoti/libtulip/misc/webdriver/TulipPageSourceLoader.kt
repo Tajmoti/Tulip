@@ -32,7 +32,7 @@ class TulipPageSourceLoader(
         return driver.getPageHtml(url, params)
     }
 
-    override suspend fun loadWithGet(url: String): Result<String> {
+    override suspend fun loadWithGet(url: String, forceProxy: Boolean): Result<String> {
         return loadWithKtor(proxy, url)
     }
 
