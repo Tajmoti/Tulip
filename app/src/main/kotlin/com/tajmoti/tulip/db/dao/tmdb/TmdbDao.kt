@@ -4,17 +4,16 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.tajmoti.tulip.db.entity.tmdb.DbTmdbEpisode
-import com.tajmoti.tulip.db.entity.tmdb.DbTmdbMovie
-import com.tajmoti.tulip.db.entity.tmdb.DbTmdbSeason
-import com.tajmoti.tulip.db.entity.tmdb.DbTmdbTv
+import androidx.room.Transaction
+import com.tajmoti.tulip.db.entity.tmdb.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TmdbDao {
 
+    @Transaction
     @Query("SELECT * FROM DbTmdbTv WHERE id == :tvId LIMIT 1")
-    fun getTv(tvId: Long): Flow<DbTmdbTv?>
+    fun getTv(tvId: Long): Flow<DbTmdbTvWithSeasons?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTv(tv: DbTmdbTv)

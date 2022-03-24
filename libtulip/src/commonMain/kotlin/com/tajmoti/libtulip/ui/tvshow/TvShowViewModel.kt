@@ -1,7 +1,8 @@
 package com.tajmoti.libtulip.ui.tvshow
 
 import com.tajmoti.commonutils.map
-import com.tajmoti.libtulip.model.info.TulipSeasonInfo
+import com.tajmoti.libtulip.model.info.Season
+import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.ui.StateViewModel
@@ -22,11 +23,11 @@ interface TvShowViewModel : StateViewModel<TvShowViewModel.State> {
          * Seasons belonging to this TV show.
          * The list is sorted - specials come after all real seasons.
          */
-        val seasons: List<TulipSeasonInfo>?,
+        val seasons: List<Season>?,
         /**
          * Season to display episodes from.
          */
-        val selectedSeason: SeasonKey?,
+        val selectedSeason: SeasonWithEpisodes?,
         /**
          * Episode that isn't finished playing or null if none.
          */
@@ -57,13 +58,13 @@ interface TvShowViewModel : StateViewModel<TvShowViewModel.State> {
      * Seasons belonging to this TV show.
      * The list is sorted - specials come after all real seasons.
      */
-    val seasons: StateFlow<List<TulipSeasonInfo>?>
+    val seasons: StateFlow<List<Season>?>
         get() = state.map(viewModelScope, State::seasons)
 
     /**
      * Season to display episodes from.
      */
-    val selectedSeason: StateFlow<SeasonKey?>
+    val selectedSeason: StateFlow<SeasonWithEpisodes?>
         get() = state.map(viewModelScope, State::selectedSeason)
 
     /**
@@ -77,11 +78,6 @@ interface TvShowViewModel : StateViewModel<TvShowViewModel.State> {
      */
     val isFavorite: StateFlow<Boolean>
         get() = state.map(viewModelScope, State::isFavorite)
-
-    /**
-     * Retries the last fetching request
-     */
-    fun retryFetchTvShowData()
 
     /**
      * Adds or removes this show from favorites

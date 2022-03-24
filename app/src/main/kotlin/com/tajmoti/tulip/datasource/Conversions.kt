@@ -10,33 +10,36 @@ import com.tajmoti.tulip.db.entity.hosted.DbEpisode
 import com.tajmoti.tulip.db.entity.hosted.DbMovie
 import com.tajmoti.tulip.db.entity.hosted.DbSeason
 import com.tajmoti.tulip.db.entity.hosted.DbTvShow
-import com.tajmoti.tulip.db.entity.tmdb.DbTmdbEpisode
-import com.tajmoti.tulip.db.entity.tmdb.DbTmdbMovie
-import com.tajmoti.tulip.db.entity.tmdb.DbTmdbSeason
-import com.tajmoti.tulip.db.entity.tmdb.DbTmdbTv
+import com.tajmoti.tulip.db.entity.tmdb.*
 import com.tajmoti.tulip.db.entity.userdata.*
 
-internal inline fun DbTmdbTv.fromDb(
-    key: TvShowKey.Tmdb,
-    seasons: List<TulipSeasonInfo.Tmdb>
-): TulipTvShowInfo.Tmdb {
-    return TulipTvShowInfo.Tmdb(key, name, null, posterPath, backdropPath, seasons)
+internal inline fun DbTmdbTvWithSeasons.fromDb(
+    key: TvShowKey.Tmdb
+): TvShow.Tmdb {
+    val seasons = seasons.map { it.fromDb(key) }
+    return TvShow.Tmdb(key, tvShow.name, null, tvShow.posterPath, tvShow.backdropPath, seasons)
 }
 
-internal inline fun DbTmdbSeason.fromDb(
+internal inline fun DbTmdbSeason.fromDbWithEpisodes(
     key: SeasonKey.Tmdb,
-    episodes: List<TulipEpisodeInfo.Tmdb>
-): TulipSeasonInfo.Tmdb {
-    return TulipSeasonInfo.Tmdb(key, name, overview, episodes)
+    episodes: List<Episode.Tmdb>
+): SeasonWithEpisodes.Tmdb {
+    val season = Season.Tmdb(key, name, seasonNumber, overview)
+    return SeasonWithEpisodes.Tmdb(season, episodes)
 }
 
-internal inline fun DbTmdbEpisode.fromDb(seasonKey: SeasonKey.Tmdb): TulipEpisodeInfo.Tmdb {
+internal inline fun DbTmdbSeason.fromDb(tvShowKey: TvShowKey.Tmdb): Season.Tmdb {
+    val key = SeasonKey.Tmdb(TvShowKey.Tmdb(tvShowKey.id), seasonNumber)
+    return Season.Tmdb(key, name, seasonNumber, overview)
+}
+
+internal inline fun DbTmdbEpisode.fromDb(seasonKey: SeasonKey.Tmdb): Episode.Tmdb {
     val key = EpisodeKey.Tmdb(seasonKey, episodeNumber)
-    return TulipEpisodeInfo.Tmdb(key, name, overview, stillPath, voteAverage)
+    return Episode.Tmdb(key, name, overview, stillPath, voteAverage)
 }
 
-internal inline fun DbTmdbEpisode.fromDb(key: EpisodeKey.Tmdb): TulipEpisodeInfo.Tmdb {
-    return TulipEpisodeInfo.Tmdb(key, name, overview, stillPath, voteAverage)
+internal inline fun DbTmdbEpisode.fromDb(key: EpisodeKey.Tmdb): Episode.Tmdb {
+    return Episode.Tmdb(key, name, overview, stillPath, voteAverage)
 }
 
 internal inline fun DbTmdbMovie.fromDb(): TulipMovie.Tmdb {
@@ -49,15 +52,15 @@ internal inline fun DbTmdbMovie.fromDb(): TulipMovie.Tmdb {
     )
 }
 
-internal inline fun TulipTvShowInfo.Tmdb.toDb(): DbTmdbTv {
+internal inline fun TvShow.Tmdb.toDb(): DbTmdbTv {
     return DbTmdbTv(key.id, name, posterUrl, backdropUrl)
 }
 
-internal inline fun TulipSeasonInfo.Tmdb.toDb(tvId: Long): DbTmdbSeason {
-    return DbTmdbSeason(tvId, name, overview, key.seasonNumber)
+internal inline fun Season.Tmdb.toDb(): DbTmdbSeason {
+    return DbTmdbSeason(key.tvShowKey.id, name, overview, key.seasonNumber)
 }
 
-internal inline fun TulipEpisodeInfo.Tmdb.toDb(tvId: Long): DbTmdbEpisode {
+internal inline fun Episode.Tmdb.toDb(tvId: Long): DbTmdbEpisode {
     return DbTmdbEpisode(tvId, key.seasonNumber, key.episodeNumber, name, overview, stillPath, voteAverage)
 }
 
@@ -102,29 +105,36 @@ internal inline fun ItemKey.Hosted.toDb(): DbFavoriteHostedItem {
 internal inline fun DbTvShow.fromDb(
     tvShowKey: TvShowKey.Hosted,
     tmdbId: Long?,
-    seasons: List<TulipSeasonInfo.Hosted>
-): TulipTvShowInfo.Hosted {
-    val info = TvItemInfo(name, language, firstAirDateYear)
-    return TulipTvShowInfo.Hosted(tvShowKey, info.name, LanguageCode(info.language), info.firstAirDateYear, tmdbId?.let { TvShowKey.Tmdb(it) }, seasons)
+    seasons: List<Season.Hosted>
+): TvShow.Hosted {
+    return TvShow.Hosted(tvShowKey, name, LanguageCode(language), firstAirDateYear, tmdbId?.let { TvShowKey.Tmdb(it) }, seasons)
+}
+
+internal inline fun DbSeason.fromDbWithEpisodes(
+    tvShowKey: TvShowKey.Hosted,
+    episodes: List<Episode.Hosted>
+): SeasonWithEpisodes.Hosted {
+    val key = SeasonKey.Hosted(tvShowKey, number)
+    val season = Season.Hosted(key, number)
+    return SeasonWithEpisodes.Hosted(season, episodes)
 }
 
 internal inline fun DbSeason.fromDb(
-    tvShowKey: TvShowKey.Hosted,
-    episodes: List<TulipEpisodeInfo.Hosted>
-): TulipSeasonInfo.Hosted {
+    tvShowKey: TvShowKey.Hosted
+): Season.Hosted {
     val key = SeasonKey.Hosted(tvShowKey, number)
-    return TulipSeasonInfo.Hosted(key, episodes)
+    return Season.Hosted(key, number)
 }
 
-internal inline fun DbEpisode.fromDb(): TulipEpisodeInfo.Hosted {
+internal inline fun DbEpisode.fromDb(): Episode.Hosted {
     val tvShowKey = TvShowKey.Hosted(service, tvShowKey)
     val seasonKey = SeasonKey.Hosted(tvShowKey, seasonNumber)
     return fromDb(seasonKey)
 }
 
-internal inline fun DbEpisode.fromDb(seasonKey: SeasonKey.Hosted): TulipEpisodeInfo.Hosted {
+internal inline fun DbEpisode.fromDb(seasonKey: SeasonKey.Hosted): Episode.Hosted {
     val key = EpisodeKey.Hosted(seasonKey, key)
-    return TulipEpisodeInfo.Hosted(key, number, name, overview, stillPath)
+    return Episode.Hosted(key, number, name, overview, stillPath)
 }
 
 internal inline fun DbMovie.fromDb(tmdbId: Long?): TulipMovie.Hosted {
@@ -137,7 +147,7 @@ internal inline fun DbMovie.fromDb(movieKey: MovieKey.Hosted, tmdbId: Long?): Tu
     return TulipMovie.Hosted(movieKey, info, tmdbId?.let { MovieKey.Tmdb(it) })
 }
 
-internal inline fun TulipTvShowInfo.Hosted.toDb(info: TulipTvShowInfo.Hosted): DbTvShow {
+internal inline fun TvShow.Hosted.toDb(info: TvShow.Hosted): DbTvShow {
     return DbTvShow(
         key.streamingService,
         key.id,
@@ -147,15 +157,15 @@ internal inline fun TulipTvShowInfo.Hosted.toDb(info: TulipTvShowInfo.Hosted): D
     )
 }
 
-internal inline fun TulipSeasonInfo.Hosted.toDb(): DbSeason {
+internal inline fun Season.Hosted.toDb(): DbSeason {
     return DbSeason(key.streamingService, key.tvShowKey.id, key.seasonNumber)
 }
 
-internal inline fun TulipEpisodeInfo.Hosted.toDb(): DbEpisode {
+internal inline fun Episode.Hosted.toDb(): DbEpisode {
     return DbEpisode(
         key.streamingService,
         key.tvShowKey.id,
-        key.seasonNumber,
+        key.seasonKey.seasonNumber,
         key.id,
         episodeNumber,
         name,
@@ -211,7 +221,7 @@ internal inline fun EpisodeKey.Hosted.toLastPositionDb(progress: Float): DbLastP
     return DbLastPlayedPositionTvShowHosted(
         tvShowKey.streamingService,
         tvShowKey.id,
-        seasonNumber,
+        seasonKey.seasonNumber,
         id,
         progress
     )

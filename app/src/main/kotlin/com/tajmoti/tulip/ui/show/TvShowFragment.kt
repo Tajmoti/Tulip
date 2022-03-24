@@ -9,7 +9,8 @@ import android.widget.ArrayAdapter
 import android.widget.Spinner
 import androidx.appcompat.widget.Toolbar
 import androidx.navigation.fragment.findNavController
-import com.tajmoti.libtulip.model.info.TulipSeasonInfo
+import com.tajmoti.libtulip.model.info.Season
+import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
@@ -90,11 +91,11 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
         (requireActivity() as MainActivity).swapActionBar(null)
     }
 
-    private fun onSeasonsChanged(seasons: List<TulipSeasonInfo>) {
+    private fun onSeasonsChanged(seasons: List<Season>) {
         val seasonKey = viewModel.selectedSeason.value
         seasonsAdapter.clear()
         seasonsAdapter.addAll(seasons.map { getSeasonTitle(requireContext(), it) })
-        updateSpinnerSelection(binding.header.spinnerSelectSeason, seasons, seasonKey)
+        updateSpinnerSelection(binding.header.spinnerSelectSeason, seasons, seasonKey?.season?.key)
     }
 
     private fun onSeasonClicked(index: Int) {
@@ -102,17 +103,14 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
         viewModel.onSeasonSelected(item.key)
     }
 
-    private fun onSelectedSeasonChanged(season: SeasonKey?) {
-        val seasons = viewModel.seasons.value
-        episodesAdapter.items = seasons
-            ?.firstOrNull { it.key == season }
-            ?.episodes
-            ?: return
+    private fun onSelectedSeasonChanged(season: SeasonWithEpisodes?) {
+        val seasons = viewModel.seasons.value ?: return
+        episodesAdapter.items = season?.episodes ?: return
         val spinner = binding.header.spinnerSelectSeason
-        updateSpinnerSelection(spinner, seasons, season)
+        updateSpinnerSelection(spinner, seasons, season.season.key)
     }
 
-    private fun updateSpinnerSelection(spinner: Spinner, seasons: List<TulipSeasonInfo>, seasonKey: SeasonKey?) {
+    private fun updateSpinnerSelection(spinner: Spinner, seasons: List<Season>, seasonKey: SeasonKey?) {
         val oldPos = seasons
             .indexOfFirst { it.key == seasonKey }
             .takeIf { it != -1 }

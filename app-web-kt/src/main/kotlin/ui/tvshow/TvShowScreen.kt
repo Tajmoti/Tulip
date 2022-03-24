@@ -1,7 +1,5 @@
 package ui.tvshow
 
-import com.tajmoti.libtulip.model.info.TulipSeasonInfo
-import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import react.Props
@@ -27,8 +25,8 @@ val TvShowScreen = fc<TvShowScreenProps> { props ->
     }
 
     val seasons = vmState.seasons
-    if (seasons != null) {
-        val currentSeason = getCurrentSeason(seasons, vmState.selectedSeason)
+    val currentSeason = vmState.selectedSeason
+    if (seasons != null && currentSeason != null) {
         TvShow {
             attrs.seasons = seasons
             attrs.currentSeason = currentSeason
@@ -40,9 +38,4 @@ val TvShowScreen = fc<TvShowScreenProps> { props ->
     } else {
         LoadingSpinner { attrs.color = SpinnerColor.Default }
     }
-}
-
-private fun getCurrentSeason(seasons: List<TulipSeasonInfo>, preselected: SeasonKey?): TulipSeasonInfo {
-    val currentSeasonKey = preselected ?: seasons.first().key
-    return seasons.first { it.key == currentSeasonKey }
 }

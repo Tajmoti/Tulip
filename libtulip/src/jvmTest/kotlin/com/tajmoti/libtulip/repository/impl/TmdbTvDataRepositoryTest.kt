@@ -1,5 +1,6 @@
 package com.tajmoti.libtulip.repository.impl
 
+import com.tajmoti.libtmdb.LibTmdbRepository
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtmdb.model.movie.Movie
 import com.tajmoti.libtmdb.model.search.SearchMovieResponse
@@ -104,7 +105,7 @@ class TmdbTvDataRepositoryTest {
         tmdbService: TmdbService = mock(),
         localDataSource: LocalTvDataSource = mock()
     ): CachingTvDataRepository {
-        return CachingTvDataRepository(tmdbService, localDataSource, cache)
+        return CachingTvDataRepository(LibTmdbRepository(tmdbService), localDataSource, cache)
     }
 
     private fun createTmdbServiceForTvSearch(): TmdbService = mock {

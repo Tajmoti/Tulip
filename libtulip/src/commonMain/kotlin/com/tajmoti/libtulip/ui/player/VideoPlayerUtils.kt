@@ -17,14 +17,14 @@ object VideoPlayerUtils {
     }
 
     @JvmStatic
-    fun episodeToLabel(episodeInfo: TulipEpisodeInfo): String {
+    fun episodeToLabel(episodeInfo: Episode): String {
         val name = episodeInfo.name ?: ""
         return "${episodeInfo.episodeNumber}. $name"
     }
 
     @JvmStatic
     fun showToDisplayName(item: TulipCompleteEpisodeInfo): String {
-        val showSeasonEpNum = "${item.tvShow.name} S${item.seasonNumber}:E${item.episodeNumber}"
+        val showSeasonEpNum = "${item.tvShow.name} S${item.season.seasonNumber}:E${item.episodeNumber}"
         val episodeName = item.name?.let { " '$it'" } ?: ""
         return showSeasonEpNum + episodeName
     }

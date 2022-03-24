@@ -5,7 +5,7 @@ import com.tajmoti.commonutils.mapWith
 import com.tajmoti.libtulip.PREFERRED_LANGUAGE
 import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtulip.model.info.StreamableInfo
-import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
+import com.tajmoti.libtulip.model.info.Episode
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.StreamableKey
@@ -339,13 +339,13 @@ class VideoPlayerViewModelImpl constructor(
 
 
     private fun getSeasonByKey(key: StreamableKey) = when (key) {
-        is EpisodeKey.Tmdb -> tmdbTvDataRepository.getSeason(key.seasonKey)
-        is EpisodeKey.Hosted -> hostedTvDataRepository.getSeason(key.seasonKey)
+        is EpisodeKey.Tmdb -> tmdbTvDataRepository.getSeasonWithEpisodes(key.seasonKey)
+        is EpisodeKey.Hosted -> hostedTvDataRepository.getSeasonWithEpisodes(key.seasonKey)
         else -> flowOf(null)
     }
 
     private fun selectTvShowData(
-        episodes: List<TulipEpisodeInfo>,
+        episodes: List<Episode>,
         key: StreamableKey,
     ): VideoPlayerViewModel.TvShowData {
         val currentEpisodeIndex = currentEpisodeIndex(episodes, key)
@@ -358,7 +358,7 @@ class VideoPlayerViewModelImpl constructor(
         return VideoPlayerViewModel.TvShowData(previous, next)
     }
 
-    private fun currentEpisodeIndex(episodes: List<TulipEpisodeInfo>, key: StreamableKey): Int? {
+    private fun currentEpisodeIndex(episodes: List<Episode>, key: StreamableKey): Int? {
         return episodes
             .indexOfFirst { episode -> episode.key == key }
             .takeIf { it != -1 }

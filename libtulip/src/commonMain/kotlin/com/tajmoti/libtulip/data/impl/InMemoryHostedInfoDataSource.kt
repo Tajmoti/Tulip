@@ -1,25 +1,25 @@
 package com.tajmoti.libtulip.data.impl
 
 import com.tajmoti.libtulip.data.HostedInfoDataSource
-import com.tajmoti.libtulip.model.info.TulipMovie
-import com.tajmoti.libtulip.model.info.TulipTvShowInfo
+import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.libtulip.model.key.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
 class InMemoryHostedInfoDataSource : HostedInfoDataSource {
-    private val tvShows = MutableStateFlow(setOf<TulipTvShowInfo.Hosted>())
+    private val tvShows = MutableStateFlow(setOf<TvShow.Hosted>())
+    private val seasons = MutableStateFlow(setOf<SeasonWithEpisodes.Hosted>())
     private val movies = MutableStateFlow(setOf<TulipMovie.Hosted>())
     private val tmdbTvShowMappings = MutableStateFlow(mapOf<TvShowKey.Tmdb, Set<TvShowKey.Hosted>>())
     private val tmdbMovieMappings = MutableStateFlow(mapOf<MovieKey.Tmdb, Set<MovieKey.Hosted>>())
 
-    override fun getTvShowByKey(key: TvShowKey.Hosted): Flow<TulipTvShowInfo.Hosted?> {
+    override fun getTvShowByKey(key: TvShowKey.Hosted): Flow<TvShow.Hosted?> {
         return tvShows.map { tvShows -> tvShows.firstOrNull { tvShow -> tvShow.key == key } }
     }
 
-    override suspend fun insertTvShow(show: TulipTvShowInfo.Hosted) {
-        tvShows.value = tvShows.value.plus(show)
+    override fun getSeasonByKey(key: SeasonKey.Hosted): Flow<SeasonWithEpisodes.Hosted?> {
+        return seasons.map { seasons -> seasons.firstOrNull { season -> season.season.key == key } }
     }
 
     override fun getMovieByKey(key: MovieKey.Hosted): Flow<TulipMovie.Hosted?> {
@@ -28,6 +28,14 @@ class InMemoryHostedInfoDataSource : HostedInfoDataSource {
 
     override suspend fun insertMovie(movie: TulipMovie.Hosted) {
         movies.value = movies.value.plus(movie)
+    }
+
+    override suspend fun insertTvShow(show: TvShow.Hosted) {
+        tvShows.value = tvShows.value.plus(show)
+    }
+
+    override suspend fun insertSeasons(seasonss: List<SeasonWithEpisodes.Hosted>) {
+        seasons.value = (seasons.value + seasonss)
     }
 
     override suspend fun createTmdbTvMapping(hosted: TvShowKey.Hosted, tmdb: TvShowKey.Tmdb) {

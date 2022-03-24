@@ -1,13 +1,12 @@
 package ui.tvshow
 
-import com.tajmoti.libtulip.model.info.TulipSeasonInfo
-import com.tajmoti.libtulip.model.info.seasonNumber
+import com.tajmoti.libtulip.model.info.Season
 import react.Props
 import react.dom.option
 import react.fc
 
 internal external interface SeasonDropdownItemProps : Props {
-    var season: TulipSeasonInfo
+    var season: Season
 }
 
 internal val SeasonDropdownItem = fc<SeasonDropdownItemProps> { props ->

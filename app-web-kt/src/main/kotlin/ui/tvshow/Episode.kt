@@ -1,6 +1,6 @@
 package ui.tvshow
 
-import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
+import com.tajmoti.libtulip.model.info.Episode
 import react.Props
 import react.dom.*
 import react.fc
@@ -9,7 +9,7 @@ import ui.getUrlForStreamable
 import ui.shared.ListButton
 
 internal external interface EpisodeProps : Props {
-    var episode: TulipEpisodeInfo
+    var episode: Episode
     var hasSavedProgress: Boolean?
 }
 

@@ -44,7 +44,7 @@ class DownloadManagerVideoDownloadService @Inject constructor(
 
     private fun showToDownloadName(item: TulipCompleteEpisodeInfo): String {
         val episode = item.episodeNumber
-        val prefix = "${item.showName} S${pad(item.seasonNumber)}"
+        val prefix = "${item.showName} S${pad(item.season.seasonNumber)}"
         val name = "E${pad(episode)}"
         return prefix + name
     }
@@ -59,7 +59,7 @@ class DownloadManagerVideoDownloadService @Inject constructor(
 
     private fun showToSavePath(item: TulipCompleteEpisodeInfo): String {
         val sep = File.separator
-        val ss = pad(item.seasonNumber)
+        val ss = pad(item.season.seasonNumber)
         val ep = item.episodeNumber
         val prefix = "${normalize(item.showName)}$sep$SEASON_DIRECTORY_NAME $ss$sep"
         var fileName = pad(ep)

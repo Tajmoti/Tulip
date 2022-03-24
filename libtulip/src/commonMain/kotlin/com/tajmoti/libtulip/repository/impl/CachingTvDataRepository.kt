@@ -5,15 +5,19 @@ import arrow.core.toOption
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.LocalTvDataSource
+import com.tajmoti.libtulip.misc.job.NetFlow
 import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.info.TulipMovie
-import com.tajmoti.libtulip.model.info.TulipTvShowInfo
+import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
+import com.tajmoti.libtulip.model.info.TvShow
 import com.tajmoti.libtulip.model.key.MovieKey
+import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import com.tajmoti.multiplatform.store.TStoreFactory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 
 class CachingTvDataRepository(
     private val net: TmdbTvDataRepository,
@@ -25,6 +29,12 @@ class CachingTvDataRepository(
         source = { key -> net.getTvShow(key).map { it.toResult() } },
         reader = db::getTvShow,
         writer = { _, it -> db.insertTvShow(it) }
+    )
+    private val seasonStore = TStoreFactory.createStore(
+        cache = config,
+        source = { key -> net.getSeasonWithEpisodes(key).map { it.toResult() } },
+        reader = db::getSeason,
+        writer = { _, it -> db.insertSeason(it) }
     )
     private val movieStore = TStoreFactory.createStore(
         cache = config,
@@ -53,9 +63,14 @@ class CachingTvDataRepository(
             .map { it.convert { opt -> opt.orNull() } }
     }
 
-    override fun getTvShow(key: TvShowKey.Tmdb): Flow<NetworkResult<TulipTvShowInfo.Tmdb>> {
+    override fun getTvShow(key: TvShowKey.Tmdb): Flow<NetworkResult<TvShow.Tmdb>> {
         logger.debug { "Retrieving $key" }
         return tvStore.stream(key)
+    }
+
+    override fun getSeasonWithEpisodes(key: SeasonKey.Tmdb): NetFlow<SeasonWithEpisodes.Tmdb> {
+        logger.debug { "Retrieving $key" }
+        return seasonStore.stream(key)
     }
 
     override fun getMovie(key: MovieKey.Tmdb): Flow<NetworkResult<TulipMovie.Tmdb>> {

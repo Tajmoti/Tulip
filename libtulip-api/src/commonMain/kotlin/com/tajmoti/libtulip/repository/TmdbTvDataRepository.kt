@@ -1,12 +1,12 @@
 package com.tajmoti.libtulip.repository
 
 import com.tajmoti.libtulip.misc.job.NetFlow
-import com.tajmoti.libtulip.model.info.TulipItem
-import com.tajmoti.libtulip.model.info.TulipMovie
-import com.tajmoti.libtulip.model.info.TulipTvShowInfo
-import com.tajmoti.libtulip.model.key.ItemKey
-import com.tajmoti.libtulip.model.key.MovieKey
-import com.tajmoti.libtulip.model.key.TvShowKey
+import com.tajmoti.libtulip.misc.job.NetworkResult
+import com.tajmoti.libtulip.model.info.*
+import com.tajmoti.libtulip.model.key.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 
 /**
  * Repository of complete TV show and movie information.
@@ -26,10 +26,41 @@ interface TmdbTvDataRepository {
     fun findMovieKey(name: String, firstAirYear: Int?): NetFlow<MovieKey.Tmdb?>
 
     /**
-     * Returns complete info about a TV show by its [key].
+     * Returns info about a TV show by its [key].
      * The returned flow may never complete, and it may emit an updated value at any time!
      */
-    fun getTvShow(key: TvShowKey.Tmdb): NetFlow<TulipTvShowInfo.Tmdb>
+    fun getTvShow(key: TvShowKey.Tmdb): NetFlow<TvShow.Tmdb>
+
+    /**
+     * Retrieves information about a TV show episode on a specific streaming site by its [key].
+     * The returned flow may never complete, and it may emit an updated value at any time!
+     */
+    fun getEpisode(key: EpisodeKey.Tmdb): Flow<NetworkResult<Episode.Tmdb>> {
+        return getSeasonWithEpisodes(key.seasonKey)
+            .map { result -> result.convert { season -> season.episodes.firstOrNull { episode -> episode.key == key } } }
+    }
+
+    /**
+     * Returns info about a TV show season by its [key].
+     * The returned flow may never complete, and it may emit an updated value at any time!
+     */
+    fun getSeasonWithEpisodes(key: SeasonKey.Tmdb): NetFlow<SeasonWithEpisodes.Tmdb>
+
+    /**
+     * Retrieves complete information about a TV show episode by its [key].
+     * The returned flow may never complete, and it may emit an updated value at any time!
+     */
+    fun getFullEpisodeData(key: EpisodeKey.Tmdb): Flow<Result<TulipCompleteEpisodeInfo.Tmdb>> {
+        return combine(getTvShow(key.tvShowKey), getEpisode(key)) { tv, episode ->
+            episode.convert { ep ->
+                tv.convert { tv ->
+                    tv.seasons
+                        .firstOrNull { it.key == ep.key.seasonKey }
+                        ?.let { TulipCompleteEpisodeInfo.Tmdb(tv, it, ep) }
+                }.data
+            }.toResult()
+        }
+    }
 
     /**
      * Returns complete info about a movie by its [key].

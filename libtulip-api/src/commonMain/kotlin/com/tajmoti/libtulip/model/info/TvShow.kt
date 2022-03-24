@@ -3,8 +3,8 @@ package com.tajmoti.libtulip.model.info
 import com.tajmoti.libtulip.model.key.TvShowKey
 import kotlinx.serialization.Serializable
 
-interface TulipTvShowInfo : TulipItem {
-    val seasons: List<TulipSeasonInfo>
+interface TvShow : TulipItem {
+    val seasons: List<Season>
 
     @Serializable
     data class Tmdb(
@@ -13,8 +13,8 @@ interface TulipTvShowInfo : TulipItem {
         override val overview: String?,
         override val posterUrl: String?,
         override val backdropUrl: String?,
-        override val seasons: List<TulipSeasonInfo.Tmdb>
-    ) : TulipTvShowInfo, TulipItem.Tmdb
+        override val seasons: List<Season.Tmdb>
+    ) : TvShow, TulipItem.Tmdb
 
     @Serializable
     data class Hosted(
@@ -23,6 +23,6 @@ interface TulipTvShowInfo : TulipItem {
         override val language: LanguageCode,
         val firstAirDateYear: Int?,
         override val tmdbId: TvShowKey.Tmdb?,
-        override val seasons: List<TulipSeasonInfo.Hosted>
-    ) : TulipTvShowInfo, TulipItem.Hosted
+        override val seasons: List<Season.Hosted>
+    ) : TvShow, TulipItem.Hosted
 }

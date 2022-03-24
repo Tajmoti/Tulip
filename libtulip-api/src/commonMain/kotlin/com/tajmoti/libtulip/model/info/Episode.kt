@@ -4,7 +4,7 @@ import com.tajmoti.libtulip.model.IdentityItem
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import kotlinx.serialization.Serializable
 
-sealed interface TulipEpisodeInfo : IdentityItem<EpisodeKey> {
+sealed interface Episode : IdentityItem<EpisodeKey> {
     override val key: EpisodeKey
     val episodeNumber: Int
     val name: String?
@@ -18,7 +18,7 @@ sealed interface TulipEpisodeInfo : IdentityItem<EpisodeKey> {
         override val name: String?,
         override val overview: String?,
         override val stillPath: String?,
-    ) : TulipEpisodeInfo
+    ) : Episode
 
     @Serializable
     data class Tmdb(
@@ -27,7 +27,7 @@ sealed interface TulipEpisodeInfo : IdentityItem<EpisodeKey> {
         override val overview: String?,
         override val stillPath: String?,
         val voteAverage: Float?
-    ) : TulipEpisodeInfo {
+    ) : Episode {
         override val episodeNumber = key.episodeNumber
     }
 }

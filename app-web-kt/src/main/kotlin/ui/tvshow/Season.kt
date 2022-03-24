@@ -1,12 +1,12 @@
 package ui.tvshow
 
-import com.tajmoti.libtulip.model.info.TulipSeasonInfo
+import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import react.Props
 import react.fc
 
 internal external interface EpisodeListProps : Props {
-    var season: TulipSeasonInfo
+    var season: SeasonWithEpisodes
     var lastPlayedEpisode: EpisodeKey?
 }
 

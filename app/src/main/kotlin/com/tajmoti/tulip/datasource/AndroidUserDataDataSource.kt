@@ -80,7 +80,7 @@ class AndroidUserDataDataSource @Inject constructor(
             is EpisodeKey.Hosted -> playingHistoryDao.getLastPlayingPositionEpisodeHosted(
                 key.streamingService,
                 key.tvShowKey.id,
-                key.seasonNumber,
+                key.seasonKey.seasonNumber,
                 key.id
             ).map { it?.fromDb() }
             is MovieKey.Hosted -> playingHistoryDao.getLastPlayingPositionMovieHosted(key.streamingService, key.id)
@@ -106,7 +106,7 @@ class AndroidUserDataDataSource @Inject constructor(
             is EpisodeKey.Tmdb ->
                 playingHistoryDao.deleteLastPlayingPositionEpisodeTmdb(key.tvShowKey.id, key.seasonNumber, key.episodeNumber)
             is EpisodeKey.Hosted ->
-                playingHistoryDao.deleteLastPlayingPositionEpisodeHosted(key.streamingService, key.tvShowKey.id, key.seasonNumber, key.id)
+                playingHistoryDao.deleteLastPlayingPositionEpisodeHosted(key.streamingService, key.tvShowKey.id, key.seasonKey.seasonNumber, key.id)
             is MovieKey.Hosted ->
                 playingHistoryDao.deleteLastPlayingPositionMovieHosted(key.streamingService, key.id)
             is MovieKey.Tmdb ->

@@ -2,16 +2,15 @@
 
 package com.tajmoti.libtulip.repository
 
+import com.tajmoti.commonutils.combine
 import com.tajmoti.commonutils.combineNonEmpty
-import com.tajmoti.commonutils.flatMap
+import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.MissingEntityException
 import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.libtulip.model.key.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 
 /**
  * Retrieves information about either a movie, or a TV show on a specific streaming site by its [key].
@@ -32,25 +31,11 @@ fun HostedTvDataRepository.getStreamableInfo(key: StreamableKey.Hosted) = when (
 }
 
 /**
- * Retrieves a season by its [key].
- * The returned flow may never complete, and it may emit an updated value at any time!
- */
-fun HostedTvDataRepository.getSeason(key: SeasonKey.Hosted) = getTvShow(key.tvShowKey)
-    .map { it.convert { showInfo -> showInfo.findSeasonOrNull(key) } }
-
-/**
  * Retrieves all seasons of a TV show by the TV show [key].
  * The returned flow may never complete, and it may emit an updated value at any time!
  */
 fun HostedTvDataRepository.getSeasons(key: TvShowKey.Hosted) = getTvShow(key)
     .map { it.map { tvShow -> tvShow.seasons } }
-
-/**
- * Retrieves an episode by its [key].
- * The returned flow may never complete, and it may emit an updated value at any time!
- */
-fun HostedTvDataRepository.getEpisodeInfo(key: EpisodeKey.Hosted) = getTvShow(key.tvShowKey)
-    .map { netResult -> netResult.toResult().flatMap { tvShow -> tvShow.findCompleteEpisodeInfoAsResult(key) } }
 
 
 /**
@@ -61,7 +46,7 @@ fun HostedTvDataRepository.getEpisodeInfo(key: EpisodeKey.Hosted) = getTvShow(ke
 fun HostedTvDataRepository.getStreamableInfoByTmdbKey(
     mappingRepository: ItemMappingRepository,
     key: StreamableKey.Tmdb
-) = when (key) {
+): Flow<List<Result<StreamableInfo.Hosted>>> = when (key) {
     is MovieKey.Tmdb -> getMoviesByTmdbKey(mappingRepository, key)
     is EpisodeKey.Tmdb -> getEpisodesByTmdbKey(mappingRepository, key)
 }
@@ -87,12 +72,44 @@ fun HostedTvDataRepository.getTvShowsByTmdbKey(mappingRepository: ItemMappingRep
 fun HostedTvDataRepository.getEpisodesByTmdbKey(
     mappingRepository: ItemMappingRepository,
     key: EpisodeKey.Tmdb
-) = getTvShowsByTmdbKey(mappingRepository, key.tvShowKey)
-    .map { tvListResult ->
-        tvListResult.map { tvList ->
-            tvList.flatMap { tv -> tv.findCompleteEpisodeFromTvAsResult(key) }
+): Flow<List<Result<TulipCompleteEpisodeInfo.Hosted>>> {
+    return getTvShowsByTmdbKey(mappingRepository, key.tvShowKey)
+        .map { tvListResult ->
+            tvListResult.map { tvResult ->
+                tvResult.map { selectEpisodeForTv(it, key)  }.getOrNull()
+                    ?: flowOf(null)
+            }.combine()
         }
-    }
+        .flatMapLatest { it }
+        .map { it.map { it -> it?.let { Result.success(it) } ?: Result.failure(MissingEntityException) } }
+}
+
+private fun HostedTvDataRepository.selectEpisodeForTv(
+    tv: TvShow.Hosted,
+    key: EpisodeKey.Tmdb
+): Flow<TulipCompleteEpisodeInfo.Hosted?> {
+    return tv.seasons.firstOrNull { it.seasonNumber == key.seasonNumber }
+        ?.let { selectEpisodeForSeason(key, it, tv) } ?: flowOf(null)
+}
+
+private fun HostedTvDataRepository.selectEpisodeForSeason(
+    query: EpisodeKey.Tmdb,
+    season: Season.Hosted,
+    tvShow: TvShow.Hosted
+): Flow<TulipCompleteEpisodeInfo.Hosted?> {
+    return getSeasonWithEpisodes(season.key)
+        .map { seasonResult -> seasonResult.map { season -> selectEpisodeForSeason(season, tvShow, query) }.data }
+}
+
+private fun selectEpisodeForSeason(
+    season: SeasonWithEpisodes.Hosted,
+    tvShow: TvShow.Hosted,
+    query: EpisodeKey.Tmdb
+): TulipCompleteEpisodeInfo.Hosted? {
+    return season.episodes
+        .firstOrNull { it.episodeNumber == query.episodeNumber }
+        ?.let { TulipCompleteEpisodeInfo.Hosted(tvShow, season.season, it) }
+}
 
 /**
  * Retrieves information about a movie on a specific streaming site
@@ -110,18 +127,6 @@ fun HostedTvDataRepository.getMoviesByTmdbKey(mappingRepository: ItemMappingRepo
 private fun <T> T?.toResultIfMissing(): Result<T> {
     return this?.let { notNull -> Result.success(notNull) } ?: Result.failure(MissingEntityException)
 }
-
-private fun TulipTvShowInfo.Hosted.findEpisodeAsResult(
-    key: EpisodeKey.Tmdb
-) = findEpisodeOrNull(key).toResultIfMissing()
-
-private fun TulipTvShowInfo.Hosted.findCompleteEpisodeInfoAsResult(
-    key: EpisodeKey.Hosted
-) = findCompleteEpisodeInfo(key).toResultIfMissing()
-
-private fun TulipTvShowInfo.Hosted.findCompleteEpisodeFromTvAsResult(
-    key: EpisodeKey.Tmdb
-) = findEpisodeAsResult(key).map { episode -> TulipCompleteEpisodeInfo.Hosted(this, episode) }
 
 private fun <T> Flow<List<NetworkResult<T>>>.mapNetworkResultToResultInListFlow(): Flow<List<Result<T>>> {
     return map { it.map { networkResult -> networkResult.toResult() } }

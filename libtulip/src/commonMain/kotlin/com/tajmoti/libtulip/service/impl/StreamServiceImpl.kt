@@ -25,7 +25,7 @@ class StreamServiceImpl(
 ) : StreamService {
 
     override fun getStreamsByKey(key: StreamableKey.Hosted): Flow<StreamsResult> {
-        logger.debug { "Retrieving $key" }
+        logger.debug { "Retrieving streams by $key" }
         return hostedTvDataRepository.getStreamableInfo(key)
             .flatMapLatest { result -> result.fold(this::fetchStreamsForInfo) { flowOf(StreamsResult.Error) } }
     }
@@ -45,7 +45,7 @@ class StreamServiceImpl(
     }
 
     override fun getStreamsByKey(key: StreamableKey.Tmdb): Flow<StreamsResult> {
-        logger.debug { "Retrieving $key" }
+        logger.debug { "Retrieving streams by $key" }
         return hostedTvDataRepository
             .getStreamableInfoByTmdbKey(hostedToTmdbMappingRepository, key)
             .flatMapLatest(::fetchStreamsForInfoResults)

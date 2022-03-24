@@ -27,9 +27,10 @@ inline fun SubtitleAttributes.fromApi(): SubtitleInfo? {
 inline fun TvItem.TvShow.fromNetwork(
     key: TvShowKey.Hosted,
     tmdbId: TvShowKey.Tmdb?
-): TulipTvShowInfo.Hosted {
+): HostedTvDataRepositoryImpl.CompleteTvShowInfo {
     val seasons = seasons.map { it.fromNetwork(key) }
-    return TulipTvShowInfo.Hosted(key, info.name, LanguageCode(info.language), info.firstAirDateYear, tmdbId, seasons)
+    val tv = TvShow.Hosted(key, info.name, LanguageCode(info.language), info.firstAirDateYear, tmdbId, seasons.map { it.season })
+    return HostedTvDataRepositoryImpl.CompleteTvShowInfo(tv, seasons)
 }
 
 inline fun TvItem.Movie.fromNetwork(
@@ -39,13 +40,14 @@ inline fun TvItem.Movie.fromNetwork(
     return TulipMovie.Hosted(key, TvItemInfo(info.name, info.language, info.firstAirDateYear), tmdbId)
 }
 
-inline fun EpisodeInfo.fromNetwork(seasonKey: SeasonKey.Hosted): TulipEpisodeInfo.Hosted {
+inline fun EpisodeInfo.fromNetwork(seasonKey: SeasonKey.Hosted): Episode.Hosted {
     val key = EpisodeKey.Hosted(seasonKey, key)
-    return TulipEpisodeInfo.Hosted(key, number, name, overview, stillPath)
+    return Episode.Hosted(key, number, name, overview, stillPath)
 }
 
-inline fun Season.fromNetwork(tvShowKey: TvShowKey.Hosted): TulipSeasonInfo.Hosted {
+inline fun Season.fromNetwork(tvShowKey: TvShowKey.Hosted): SeasonWithEpisodes.Hosted {
     val key = SeasonKey.Hosted(tvShowKey, number)
+    val season = com.tajmoti.libtulip.model.info.Season.Hosted(key, number)
     val episodes = episodes.map { it.fromNetwork(key) }
-    return TulipSeasonInfo.Hosted(key, episodes)
+    return SeasonWithEpisodes.Hosted(season, episodes)
 }

@@ -1,28 +1,28 @@
 package com.tajmoti.libtmdb
 
-import com.tajmoti.commonutils.allOrNone
-import com.tajmoti.commonutils.combineNonEmpty
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtmdb.model.movie.Movie
 import com.tajmoti.libtmdb.model.search.SearchMovieResponse
 import com.tajmoti.libtmdb.model.search.SearchResponse
 import com.tajmoti.libtmdb.model.search.SearchTvResponse
-import com.tajmoti.libtmdb.model.tv.Episode
 import com.tajmoti.libtmdb.model.tv.Season
 import com.tajmoti.libtmdb.model.tv.SlimSeason
 import com.tajmoti.libtmdb.model.tv.Tv
+import com.tajmoti.libtulip.misc.job.NetFlow
 import com.tajmoti.libtulip.misc.job.NetworkResult
-import com.tajmoti.libtulip.model.info.TulipEpisodeInfo
+import com.tajmoti.libtulip.model.info.Episode
 import com.tajmoti.libtulip.model.info.TulipMovie
-import com.tajmoti.libtulip.model.info.TulipSeasonInfo
-import com.tajmoti.libtulip.model.info.TulipTvShowInfo
+import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
+import com.tajmoti.libtulip.model.info.TvShow
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.repository.TmdbTvDataRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LibTmdbRepository(private val service: TmdbService) : TmdbTvDataRepository {
@@ -65,27 +65,24 @@ class LibTmdbRepository(private val service: TmdbService) : TmdbTvDataRepository
     }
 
 
-    override fun getTvShow(key: TvShowKey.Tmdb): Flow<NetworkResult<TulipTvShowInfo.Tmdb>> {
-        return getTvAsFlow(key)
-            .flatMapLatest { it.fold({ tv -> pairTvWithSeasons(tv, key) }, { th -> flowOf(Result.failure(th)) }) }
-            .map { it.toLibResult() }
+    override fun getTvShow(key: TvShowKey.Tmdb): Flow<NetworkResult<TvShow.Tmdb>> {
+        return flow { emit(getTvShowLib(key)) }
     }
 
-    private fun getTvAsFlow(key: TvShowKey.Tmdb): Flow<Result<Tv>> {
-        return flow { emit(runCatching { service.getTv(key.id) }) }
+    private suspend fun getTvShowLib(key: TvShowKey.Tmdb): NetworkResult<TvShow.Tmdb> {
+        return runCatching { service.getTv(key.id).fromNetwork() }
+            .toLibResult()
     }
 
-    private fun pairTvWithSeasons(tv: Tv, key: TvShowKey.Tmdb): Flow<Result<TulipTvShowInfo.Tmdb>> {
-        return tv.seasons
-            .map { season -> getSeasonAsFlow(tv, season, key) }
-            .combineNonEmpty()
-            .map { it.allOrNone().map { tv.fromNetwork(it) } }
+
+    override fun getSeasonWithEpisodes(key: SeasonKey.Tmdb): NetFlow<SeasonWithEpisodes.Tmdb> {
+        return flow { emit(getSeasonLib(key)) }
     }
 
-    private fun getSeasonAsFlow(tv: Tv, slim: SlimSeason, key: TvShowKey.Tmdb): Flow<Result<TulipSeasonInfo.Tmdb>> {
-        return flow { emit(runCatching { service.getSeason(tv.id, slim.seasonNumber).fromNetwork(key) }) }
+    private suspend fun getSeasonLib(key: SeasonKey.Tmdb): NetworkResult<SeasonWithEpisodes.Tmdb> {
+        return runCatching { service.getSeason(key.tvShowKey.id, key.seasonNumber).fromNetwork(key.tvShowKey) }
+            .toLibResult()
     }
-
 
     override fun getMovie(key: MovieKey.Tmdb): Flow<NetworkResult<TulipMovie.Tmdb>> {
         return fetchMovieInfo(key).map { it.toLibResult() }
@@ -109,21 +106,28 @@ class LibTmdbRepository(private val service: TmdbService) : TmdbTvDataRepository
         return TulipMovie.Tmdb(key, name, overview, posterPath, backdropPath)
     }
 
-    private fun Tv.fromNetwork(seasons: List<TulipSeasonInfo.Tmdb>): TulipTvShowInfo.Tmdb {
+    private fun Tv.fromNetwork(): TvShow.Tmdb {
         val key = TvShowKey.Tmdb(id)
         val baseImageUrl = "https://image.tmdb.org/t/p/original"
-        return TulipTvShowInfo.Tmdb(key, name, null, baseImageUrl + posterPath, baseImageUrl + backdropPath, seasons)
+        val seasons = seasons.map { it.fromNetwork(key) }
+        return TvShow.Tmdb(key, name, null, baseImageUrl + posterPath, baseImageUrl + backdropPath, seasons)
     }
 
-    private fun Season.fromNetwork(tvShowKey: TvShowKey.Tmdb): TulipSeasonInfo.Tmdb {
+    private fun SlimSeason.fromNetwork(tvShowKey: TvShowKey.Tmdb): com.tajmoti.libtulip.model.info.Season.Tmdb {
         val key = SeasonKey.Tmdb(tvShowKey, seasonNumber)
-        val episodes = episodes.map { it.fromNetwork(key) }
-        return TulipSeasonInfo.Tmdb(key, name, overview, episodes)
+        return com.tajmoti.libtulip.model.info.Season.Tmdb(key, name, seasonNumber, overview)
     }
 
-    private fun Episode.fromNetwork(seasonKey: SeasonKey.Tmdb): TulipEpisodeInfo.Tmdb {
+    private fun Season.fromNetwork(tvShowKey: TvShowKey.Tmdb): SeasonWithEpisodes.Tmdb {
+        val key = SeasonKey.Tmdb(tvShowKey, seasonNumber)
+        val season = com.tajmoti.libtulip.model.info.Season.Tmdb(key, name, seasonNumber, overview)
+        val episodes = episodes.map { it.fromNetwork(key) }
+        return SeasonWithEpisodes.Tmdb(season, episodes)
+    }
+
+    private fun com.tajmoti.libtmdb.model.tv.Episode.fromNetwork(seasonKey: SeasonKey.Tmdb): Episode.Tmdb {
         val key = EpisodeKey.Tmdb(seasonKey, episodeNumber)
-        return TulipEpisodeInfo.Tmdb(
+        return Episode.Tmdb(
             key,
             name,
             overview,
