@@ -20,7 +20,7 @@ class KinoxTvProvider(
 ) : TvProvider {
 
     override suspend fun search(query: String): Result<List<SearchResult>> {
-        return loader.loadWithGet(queryToSearchUrl(query))
+        return loader.loadWithBrowser(queryToSearchUrl(query))
             .flatMap { parseSearchResultPageBlocking(it, throwAwayItemsWithNoYear) }
     }
 
@@ -30,7 +30,7 @@ class KinoxTvProvider(
     }
 
     override suspend fun getTvShow(id: String): Result<TvItem.TvShow> {
-        return loader.loadWithGet(baseUrl + id)
+        return loader.loadWithBrowser(baseUrl + id)
             .flatMap {
                 val document = KSoup.parse(it)
                 parseSeasonsBlocking(document)
@@ -39,7 +39,7 @@ class KinoxTvProvider(
     }
 
     override suspend fun getMovie(id: String): Result<TvItem.Movie> {
-        return loader.loadWithGet(baseUrl + id)
+        return loader.loadWithBrowser(baseUrl + id)
             .map {
                 val document = KSoup.parse(it)
                 TvItem.Movie(parseTvItemInfo(id, document))
@@ -47,7 +47,7 @@ class KinoxTvProvider(
     }
 
     override suspend fun getStreamableLinks(episodeOrMovieId: String): Result<List<VideoStreamRef>> {
-        return loader.loadWithGet(baseUrl + episodeOrMovieId)
+        return loader.loadWithBrowser(baseUrl + episodeOrMovieId)
             .flatMap { fetchSources(baseUrl, it, loader) }
     }
 }

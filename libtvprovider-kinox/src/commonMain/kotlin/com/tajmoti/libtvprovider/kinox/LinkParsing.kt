@@ -36,7 +36,7 @@ private suspend fun elementToStream(
 ): VideoStreamRef? {
     val hoster = li.attr("rel")
     val url = "$baseUrl/aGET/Mirror/$hoster"
-    return httpLoader.loadWithGet(url)
+    return httpLoader.loadWithGet(url, true)
         .map(::scrapeStreamRef)
         .getOrNull()
 }
