@@ -1,6 +1,6 @@
 object Versions {
     private const val arrow = "1.0.1"
-    private const val ktor = "2.0.0-beta-1"
+    private const val ktor = "2.0.0"
     private const val kt = "1.6.10"
     private const val store = "4.0.4-KT15"
     private const val junitJupiter = "5.8.2"
