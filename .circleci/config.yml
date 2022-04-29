@@ -35,7 +35,7 @@ jobs:
       - run:
           name: "Build production JS"
           command: |
-            ./gradlew app-web-kt:browserProductionWebpack
+            ./gradlew --parallel app-web-kt:browserProductionWebpack
       - store_artifacts:
           path: ./app-web-kt/build/distributions
       - persist_to_workspace:
@@ -72,7 +72,7 @@ jobs:
       - run:
           name: "Build signed release"
           command: |
-            ./gradlew app:assembleRelease
+            ./gradlew --parallel app:assembleRelease
       - store_artifacts:
           path: ./app/build/outputs/apk/release
       - persist_to_workspace:
