@@ -2,7 +2,7 @@ package com.tajmoti.libtulip.di.impl
 
 import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libopensubtitles.OpenSubtitlesService
-import com.tajmoti.libtmdb.LibTmdbRepository
+import com.tajmoti.libtulip.service.impl.LibTmdbRepository
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.data.HostedInfoDataSource

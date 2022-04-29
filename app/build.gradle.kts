@@ -88,15 +88,18 @@ repositories {
 }
 
 dependencies {
+    implementation(project(":commonutils"))
+
     implementation(project(":libtulip"))
-    implementation(project(":libtvprovider"))
-    implementation(project(":libtvprovider-kinox"))
-    implementation(project(":libtvprovider-primewire"))
-    implementation(project(":libwebdriver-android"))
-    implementation(project(":libwebdriver"))
-    implementation(project(":libtvvideoextractor"))
-    implementation(project(":libtmdb"))
+    implementation(project(":libtulip-ui"))
+
+    implementation(project(":libtulip-api"))
+    implementation(project(":libtulip-persistence-api"))
+    implementation(project(":libtulip-ui-api"))
+
     implementation(project(":libopensubtitles"))
+    implementation(project(":libwebdriver"))
+    implementation(project(":libwebdriver-android"))
 
     with(Versions.Kotlin) {
         implementation(coroutinesCore)

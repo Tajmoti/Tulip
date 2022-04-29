@@ -33,15 +33,11 @@ kotlin {
 
 fun KotlinDependencyHandler.mainDeps() {
     implementation(project(":commonutils"))
-
-    implementation(project(":libtvprovider"))
-    implementation(project(":libtvvideoextractor"))
-
+    api(project(":libtulip-api"))
+    api(project(":libtvprovider"))
+    api(project(":libtvvideoextractor"))
     implementation(Versions.Kotlin.serializationJson)
     with(Versions.Kotlin) {
         implementation(coroutinesCore)
-    }
-    with(Versions.Arrow) {
-        implementation(core)
     }
 }

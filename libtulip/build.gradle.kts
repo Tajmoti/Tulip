@@ -33,7 +33,6 @@ kotlin {
         sourceSets["commonMain"].dependencies { mainDeps() }
         sourceSets["jvmMain"].dependencies { jvmDeps() }
         sourceSets["jsMain"].dependencies { jsDeps() }
-        sourceSets["jvmTest"].dependencies { jvmTestDeps() }
     }
 }
 
@@ -48,21 +47,25 @@ buildkonfig {
 }
 
 fun KotlinDependencyHandler.mainDeps() {
+    implementation(project(":commonutils"))
+
+    implementation(project(":libtulip-api"))
+    implementation(project(":libtulip-ui-api"))
+    implementation(project(":libtulip-persistence-api"))
+
+    implementation(project(":libtulip-ui"))
+    implementation(project(":libtulip-service"))
+
     implementation(project(":libopensubtitles"))
-    implementation(project(":libtmdb"))
     implementation(project(":libtvprovider"))
     implementation(project(":libtvprovider-kinox"))
     implementation(project(":libtvprovider-primewire"))
     implementation(project(":libtvprovider-southpark"))
     implementation(project(":libtvvideoextractor"))
-    api(project(":libtulip-api"))
+    implementation(project(":libtmdb"))
     implementation(project(":libwebdriver"))
     implementation(project(":rektor"))
-    implementation(project(":commonutils"))
 
-    with(Versions.Arrow) {
-        implementation(core)
-    }
     with(Versions.Kotlin) {
         implementation(coroutinesCore)
     }
@@ -92,17 +95,6 @@ fun KotlinDependencyHandler.jvmDeps() {
         implementation(inject)
         implementation(daggerCore)
         configurations["kapt"].dependencies.add(project.dependencies.create(daggerCompiler))
-    }
-}
-
-fun KotlinDependencyHandler.jvmTestDeps() {
-    with(Versions.JvmTest) {
-        implementation(jupiterApi)
-        implementation(junitSuite)
-        implementation(mockitoCore)
-        implementation(mockitoKt)
-        implementation(slf4j)
-        implementation(jupiterEngine)
     }
 }
 

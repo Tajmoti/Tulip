@@ -26,8 +26,6 @@ kotlin {
 
 fun KotlinDependencyHandler.mainDeps() {
     implementation(project(":rektor"))
-    implementation(project(":libtulip-api"))
-    implementation(project(":commonutils"))
 
     with(Versions.Kotlin) {
         implementation(coroutinesCore)
