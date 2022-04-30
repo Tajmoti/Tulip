@@ -1,7 +1,7 @@
 package com.tajmoti.libtulip.data
 
-import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
+import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.TvShow
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.SeasonKey
@@ -28,9 +28,9 @@ class BrowserHostedInfoDataSource : HostedInfoDataSource {
         return seasons.get(key)
     }
 
-    override suspend fun insertSeasons(seasonss: List<SeasonWithEpisodes.Hosted>) {
-        for (season in seasonss) {
-            seasons.put(season.season.key, season)
+    override suspend fun insertSeasons(seasons: List<SeasonWithEpisodes.Hosted>) {
+        for (season in seasons) {
+            this.seasons.put(season.season.key, season)
         }
     }
 

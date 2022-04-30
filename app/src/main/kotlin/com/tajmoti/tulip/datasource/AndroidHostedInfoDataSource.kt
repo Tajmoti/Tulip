@@ -8,14 +8,12 @@ import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.model.key.streamingService
 import com.tajmoti.tulip.db.dao.hosted.*
 import com.tajmoti.tulip.db.entity.hosted.DbTmdbMapping
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class AndroidHostedInfoDataSource @Inject constructor(
     private val tvShowDao: TvShowDao,
     private val seasonDao: SeasonDao,

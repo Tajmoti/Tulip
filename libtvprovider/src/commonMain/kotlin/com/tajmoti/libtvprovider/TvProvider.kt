@@ -1,5 +1,6 @@
 package com.tajmoti.libtvprovider
 
+import com.tajmoti.libtvprovider.model.EpisodeInfo
 import com.tajmoti.libtvprovider.model.SearchResult
 import com.tajmoti.libtvprovider.model.TvItem
 import com.tajmoti.libtvprovider.model.VideoStreamRef

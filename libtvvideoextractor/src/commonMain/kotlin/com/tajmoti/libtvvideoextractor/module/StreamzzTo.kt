@@ -4,7 +4,9 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tajmoti.commonutils.PageSourceLoader
-import com.tajmoti.libtvvideoextractor.*
+import com.tajmoti.libtvvideoextractor.CaptchaInfo
+import com.tajmoti.libtvvideoextractor.ExtractionError
+import com.tajmoti.libtvvideoextractor.ExtractorModule
 
 class StreamzzTo : ExtractorModule {
     override val supportedUrls = listOf("streamzz.to")

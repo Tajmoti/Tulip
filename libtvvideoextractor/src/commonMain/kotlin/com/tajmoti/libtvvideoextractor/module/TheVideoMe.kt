@@ -5,7 +5,8 @@ import arrow.core.left
 import arrow.core.right
 import com.tajmoti.commonutils.PageSourceLoader
 import com.tajmoti.commonutils.substringBetween
-import com.tajmoti.libtvvideoextractor.*
+import com.tajmoti.libtvvideoextractor.ExtractionError
+import com.tajmoti.libtvvideoextractor.ExtractorModule
 
 class TheVideoMe : ExtractorModule {
     override val supportedUrls = listOf("thevideome.com")

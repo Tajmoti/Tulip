@@ -1,7 +1,7 @@
 package com.tajmoti.libtvprovider
 
-import com.tajmoti.commonutils.flatMap
 import com.tajmoti.commonutils.combineRunningFold
+import com.tajmoti.commonutils.flatMap
 import com.tajmoti.libtvprovider.model.SearchResult
 import com.tajmoti.libtvprovider.model.TvItem
 import com.tajmoti.libtvprovider.model.VideoStreamRef

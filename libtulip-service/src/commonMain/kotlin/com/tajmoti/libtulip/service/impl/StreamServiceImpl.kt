@@ -14,10 +14,9 @@ import com.tajmoti.libtulip.service.StreamExtractionService
 import com.tajmoti.libtulip.service.StreamService
 import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 
-@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 class StreamServiceImpl(
     private val hostedTvDataRepository: HostedTvDataRepository,
     private val streamsRepo: StreamExtractionService,

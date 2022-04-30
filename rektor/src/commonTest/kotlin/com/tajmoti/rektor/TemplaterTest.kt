@@ -18,12 +18,12 @@ internal class TemplaterTest {
     }
 
     @Test
-    fun `buildUrl_throws_on_empty_placeholder`() {
+    fun buildUrl_throws_on_empty_placeholder() {
         assertFailsWith(IllegalArgumentException::class) { builder.buildUrl("{}", emptyMap()) }
     }
 
     @Test
-    fun `buildUrl_fails_on_missing_value`() {
+    fun buildUrl_fails_on_missing_value() {
         assertFailsWith(IllegalArgumentException::class) { builder.buildUrl("{caw}", emptyMap()) }
     }
 }

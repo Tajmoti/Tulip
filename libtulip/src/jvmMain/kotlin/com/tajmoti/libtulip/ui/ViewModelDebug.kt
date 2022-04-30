@@ -2,7 +2,6 @@ package com.tajmoti.libtulip.ui
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import mu.KLogger
 import kotlin.reflect.KProperty0

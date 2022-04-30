@@ -10,12 +10,12 @@ import com.tajmoti.libtulip.ui.player.VideoPlayerUtils.showToDisplayName
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.tulip.databinding.FragmentStreamsBinding
 import com.tajmoti.tulip.ui.base.BaseFragment
-import com.tajmoti.tulip.ui.utils.consume
 import com.tajmoti.tulip.ui.player.AndroidVideoPlayerViewModel
 import com.tajmoti.tulip.ui.player.VideoPlayerActivity
+import com.tajmoti.tulip.ui.utils.activityViewModelsDelegated
+import com.tajmoti.tulip.ui.utils.consume
 import com.tajmoti.tulip.ui.utils.setupWithAdapterAndDivider
 import com.tajmoti.tulip.ui.utils.slideToBottomDismiss
-import com.tajmoti.tulip.ui.utils.activityViewModelsDelegated
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

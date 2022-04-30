@@ -9,7 +9,10 @@ import com.tajmoti.libtulip.model.MissingEntityException
 import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.libtulip.model.key.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 
 /**
  * Retrieves information about either a movie, or a TV show on a specific streaming site by its [key].
@@ -73,14 +76,19 @@ fun HostedTvDataRepository.getEpisodesByTmdbKey(
     key: EpisodeKey.Tmdb
 ): Flow<List<Result<TulipCompleteEpisodeInfo.Hosted>>> {
     return getTvShowsByTmdbKey(mappingRepository, key.tvShowKey)
-        .map { tvListResult ->
+        .flatMapLatest { tvListResult ->
             tvListResult.map { tvResult ->
-                tvResult.map { selectEpisodeForTv(it, key)  }.getOrNull()
+                tvResult.map { selectEpisodeForTv(it, key) }.getOrNull()
                     ?: flowOf(null)
             }.combine()
         }
-        .flatMapLatest { it }
-        .map { it.map { it -> it?.let { Result.success(it) } ?: Result.failure(MissingEntityException) } }
+        .map { episodes ->
+            episodes.map { episode ->
+                episode?.let { Result.success(it) } ?: Result.failure(
+                    MissingEntityException
+                )
+            }
+        }
 }
 
 private fun HostedTvDataRepository.selectEpisodeForTv(
@@ -122,10 +130,6 @@ fun HostedTvDataRepository.getMoviesByTmdbKey(mappingRepository: ItemMappingRepo
                 .combineNonEmpty()
                 .mapNetworkResultToResultInListFlow()
         }
-
-private fun <T> T?.toResultIfMissing(): Result<T> {
-    return this?.let { notNull -> Result.success(notNull) } ?: Result.failure(MissingEntityException)
-}
 
 private fun <T> Flow<List<NetworkResult<T>>>.mapNetworkResultToResultInListFlow(): Flow<List<Result<T>>> {
     return map { it.map { networkResult -> networkResult.toResult() } }

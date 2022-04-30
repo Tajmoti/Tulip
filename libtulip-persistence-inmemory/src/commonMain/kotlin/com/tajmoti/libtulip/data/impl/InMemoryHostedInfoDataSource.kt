@@ -1,8 +1,12 @@
 package com.tajmoti.libtulip.data.impl
 
 import com.tajmoti.libtulip.data.HostedInfoDataSource
-import com.tajmoti.libtulip.model.info.*
-import com.tajmoti.libtulip.model.key.*
+import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
+import com.tajmoti.libtulip.model.info.TulipMovie
+import com.tajmoti.libtulip.model.info.TvShow
+import com.tajmoti.libtulip.model.key.MovieKey
+import com.tajmoti.libtulip.model.key.SeasonKey
+import com.tajmoti.libtulip.model.key.TvShowKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -34,8 +38,8 @@ class InMemoryHostedInfoDataSource : HostedInfoDataSource {
         tvShows.value = tvShows.value.plus(show)
     }
 
-    override suspend fun insertSeasons(seasonss: List<SeasonWithEpisodes.Hosted>) {
-        seasons.value = (seasons.value + seasonss)
+    override suspend fun insertSeasons(seasons: List<SeasonWithEpisodes.Hosted>) {
+        this.seasons.value = (this.seasons.value + seasons)
     }
 
     override suspend fun createTmdbTvMapping(hosted: TvShowKey.Hosted, tmdb: TvShowKey.Tmdb) {

@@ -1,7 +1,7 @@
 package com.tajmoti.libtulip.data
 
-import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
+import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.TvShow
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.SeasonKey

@@ -15,7 +15,7 @@ interface Rektor {
         headers: Map<String, String> = emptyMap(),
         requestBody: Any? = null
     ): T {
-        return execute(Request<T>(template, queryParams, placeholders, headers, requestBody))
+        return execute(Request(template, queryParams, placeholders, headers, requestBody))
     }
 
     /**
