@@ -19,6 +19,9 @@ class BrowserHostedEpisodeRepository : HostedEpisodeRepository {
 
     override fun findBySeason(seasonKey: SeasonKey.Hosted): Flow<List<Episode.Hosted>> {
         return episodeStorage.getAll()
-            .map { it.filter { episode -> episode.key.seasonKey == seasonKey } }
+            .map {
+                it.filter { episode -> episode.key.seasonKey == seasonKey }
+                    .sortedBy { episode -> episode.episodeNumber }
+            }
     }
 }
