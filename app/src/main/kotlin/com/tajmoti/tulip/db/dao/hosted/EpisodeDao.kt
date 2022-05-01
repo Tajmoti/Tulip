@@ -35,4 +35,7 @@ interface EpisodeDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(episodes: List<DbEpisode>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(episode: DbEpisode)
 }

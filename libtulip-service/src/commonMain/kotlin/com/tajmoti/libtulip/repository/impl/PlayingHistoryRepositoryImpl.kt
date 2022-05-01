@@ -1,6 +1,6 @@
 package com.tajmoti.libtulip.repository.impl
 
-import com.tajmoti.libtulip.data.UserDataDataSource
+import com.tajmoti.libtulip.data.UserLastPlayedPositionRepository
 import com.tajmoti.libtulip.model.history.LastPlayedPosition
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.key.StreamableKey
@@ -8,7 +8,7 @@ import com.tajmoti.libtulip.repository.PlayingHistoryRepository
 import kotlinx.coroutines.flow.Flow
 
 class PlayingHistoryRepositoryImpl(
-    private val dataSource: UserDataDataSource
+    private val dataSource: UserLastPlayedPositionRepository
 ) : PlayingHistoryRepository {
 
     override fun getLastPlayedPosition(item: StreamableKey): Flow<LastPlayedPosition?> {

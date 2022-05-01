@@ -24,5 +24,8 @@ interface SeasonDao {
     ): Flow<DbSeason?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(season: DbSeason)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(seasons: List<DbSeason>)
 }

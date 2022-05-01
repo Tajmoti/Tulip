@@ -4,9 +4,7 @@ import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libopensubtitles.OpenSubtitlesService
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtulip.TulipConfiguration
-import com.tajmoti.libtulip.data.HostedInfoDataSource
-import com.tajmoti.libtulip.data.LocalTvDataSource
-import com.tajmoti.libtulip.data.UserDataDataSource
+import com.tajmoti.libtulip.data.*
 import com.tajmoti.libtulip.di.impl.DataRepositoryModuleImpl
 import com.tajmoti.libtulip.di.qualifier.RawHttpClient
 import com.tajmoti.libtulip.model.hosted.StreamingService
@@ -25,20 +23,30 @@ object DataRepositoryModule : IDataRepositoryModule {
     @Provides
     @Singleton
     override fun bindHostedTvDataRepository(
-        hostedTvDataRepo: HostedInfoDataSource,
+        tvRepository: HostedTvShowRepository,
+        seasonRepository: HostedSeasonRepository,
+        movieRepository: HostedMovieRepository,
         tvProvider: MultiTvProvider<StreamingService>,
         tmdbRepo: TmdbTvDataRepository,
         config: TulipConfiguration
     ): HostedTvDataRepository {
-        return DataRepositoryModuleImpl.bindHostedTvDataRepository(hostedTvDataRepo, tvProvider, tmdbRepo, config)
+        return DataRepositoryModuleImpl.bindHostedTvDataRepository(
+            tvRepository,
+            seasonRepository,
+            movieRepository,
+            tvProvider,
+            tmdbRepo,
+            config
+        )
     }
 
     @Provides
     @Singleton
     override fun provideItemMappingRepository(
-        hostedTvDataRepo: HostedInfoDataSource
+        hostedTvDataRepo: TvShowMappingRepository,
+        movieMappingRepository: MovieMappingRepository,
     ): ItemMappingRepository {
-        return DataRepositoryModuleImpl.provideItemMappingRepository(hostedTvDataRepo)
+        return DataRepositoryModuleImpl.provideItemMappingRepository(hostedTvDataRepo, movieMappingRepository)
     }
 
     @Provides
@@ -55,15 +63,23 @@ object DataRepositoryModule : IDataRepositoryModule {
     @Singleton
     override fun provideTmdbTvDataRepository(
         service: TmdbService,
-        db: LocalTvDataSource,
+        tvRepository: TmdbTvShowRepository,
+        seasonRepository: TmdbSeasonRepository,
+        movieRepository: TmdbMovieRepository,
         config: TulipConfiguration
     ): TmdbTvDataRepository {
-        return DataRepositoryModuleImpl.provideTmdbTvDataRepository(service, db, config)
+        return DataRepositoryModuleImpl.provideTmdbTvDataRepository(
+            service,
+            tvRepository,
+            seasonRepository,
+            movieRepository,
+            config
+        )
     }
 
     @Provides
     @Singleton
-    override fun provideFavoritesRepository(repo: UserDataDataSource): FavoritesRepository {
+    override fun provideFavoritesRepository(repo: UserFavoriteRepository): FavoritesRepository {
         return DataRepositoryModuleImpl.provideFavoritesRepository(repo)
     }
 
@@ -78,7 +94,7 @@ object DataRepositoryModule : IDataRepositoryModule {
 
     @Provides
     @Singleton
-    override fun providePlayingHistoryRepository(dataSource: UserDataDataSource): PlayingHistoryRepository {
+    override fun providePlayingHistoryRepository(dataSource: UserLastPlayedPositionRepository): PlayingHistoryRepository {
         return DataRepositoryModuleImpl.providePlayingHistoryRepository(dataSource)
     }
 }

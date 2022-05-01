@@ -4,7 +4,9 @@ import arrow.core.Option
 import arrow.core.toOption
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.TulipConfiguration
-import com.tajmoti.libtulip.data.LocalTvDataSource
+import com.tajmoti.libtulip.data.TmdbMovieRepository
+import com.tajmoti.libtulip.data.TmdbSeasonRepository
+import com.tajmoti.libtulip.data.TmdbTvShowRepository
 import com.tajmoti.libtulip.misc.job.NetFlow
 import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
@@ -20,26 +22,28 @@ import kotlinx.coroutines.flow.map
 
 class CachingTvDataRepository(
     private val net: TmdbTvDataRepository,
-    private val db: LocalTvDataSource,
+    private val tvRepository: TmdbTvShowRepository,
+    private val seasonRepository: TmdbSeasonRepository,
+    private val movieRepository: TmdbMovieRepository,
     config: TulipConfiguration.CacheParameters
 ) : TmdbTvDataRepository {
     private val tvStore = TStoreFactory.createStore(
         cache = config,
         source = { key -> net.getTvShow(key).map { it.toResult() } },
-        reader = db::getTvShow,
-        writer = { _, it -> db.insertTvShow(it) }
+        reader = tvRepository::findByKey,
+        writer = { _, it -> tvRepository.insert(it) }
     )
     private val seasonStore = TStoreFactory.createStore(
         cache = config,
         source = { key -> net.getSeasonWithEpisodes(key).map { it.toResult() } },
-        reader = db::getSeason,
-        writer = { _, it -> db.insertSeason(it) }
+        reader = seasonRepository::findSeasonWithEpisodesByKey,
+        writer = { _, it -> seasonRepository.insertSeasonWithEpisodes(it.season, it.episodes) }
     )
     private val movieStore = TStoreFactory.createStore(
         cache = config,
         source = { key -> net.getMovie(key).map { it.toResult() } },
-        reader = db::getMovie,
-        writer = { _, it -> db.insertMovie(it) },
+        reader = movieRepository::findByKey,
+        writer = { _, it -> movieRepository.insert(it) },
     )
     private val tmdbTvIdStore = TStoreFactory.createStore<TitleQuery, Option<TvShowKey.Tmdb>>(
         cache = config,

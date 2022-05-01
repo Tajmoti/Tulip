@@ -4,9 +4,7 @@ import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libopensubtitles.OpenSubtitlesService
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtulip.TulipConfiguration
-import com.tajmoti.libtulip.data.HostedInfoDataSource
-import com.tajmoti.libtulip.data.LocalTvDataSource
-import com.tajmoti.libtulip.data.UserDataDataSource
+import com.tajmoti.libtulip.data.*
 import com.tajmoti.libtulip.di.IDataRepositoryModule
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.repository.*
@@ -21,18 +19,21 @@ import io.ktor.client.*
 object DataRepositoryModuleImpl : IDataRepositoryModule {
 
     override fun bindHostedTvDataRepository(
-        hostedTvDataRepo: HostedInfoDataSource,
+        tvRepository: HostedTvShowRepository,
+        seasonRepository: HostedSeasonRepository,
+        movieRepository: HostedMovieRepository,
         tvProvider: MultiTvProvider<StreamingService>,
         tmdbRepo: TmdbTvDataRepository,
         config: TulipConfiguration
     ): HostedTvDataRepository {
-        return HostedTvDataRepositoryImpl(hostedTvDataRepo, tvProvider, tmdbRepo, config)
+        return HostedTvDataRepositoryImpl(tvRepository, seasonRepository, movieRepository, tvProvider, tmdbRepo, config)
     }
 
     override fun provideItemMappingRepository(
-        hostedTvDataRepo: HostedInfoDataSource
+        hostedTvDataRepo: TvShowMappingRepository,
+        movieMappingRepository: MovieMappingRepository,
     ): ItemMappingRepository {
-        return ItemMappingRepositoryImpl(hostedTvDataRepo)
+        return ItemMappingRepositoryImpl(hostedTvDataRepo, movieMappingRepository)
     }
 
     override fun provideStreamsRepository(
@@ -44,13 +45,21 @@ object DataRepositoryModuleImpl : IDataRepositoryModule {
 
     override fun provideTmdbTvDataRepository(
         service: TmdbService,
-        db: LocalTvDataSource,
+        tvRepository: TmdbTvShowRepository,
+        seasonRepository: TmdbSeasonRepository,
+        movieRepository: TmdbMovieRepository,
         config: TulipConfiguration
     ): TmdbTvDataRepository {
-        return CachingTvDataRepository(LibTmdbRepository(service), db, config.tmdbCacheParams)
+        return CachingTvDataRepository(
+            LibTmdbRepository(service),
+            tvRepository,
+            seasonRepository,
+            movieRepository,
+            config.tmdbCacheParams
+        )
     }
 
-    override fun provideFavoritesRepository(repo: UserDataDataSource): FavoritesRepository {
+    override fun provideFavoritesRepository(repo: UserFavoriteRepository): FavoritesRepository {
         return FavoriteRepositoryImpl(repo)
     }
 
@@ -61,7 +70,7 @@ object DataRepositoryModuleImpl : IDataRepositoryModule {
         return SubtitleRepositoryImpl(openSubtitlesService, openSubtitlesFallbackService)
     }
 
-    override fun providePlayingHistoryRepository(dataSource: UserDataDataSource): PlayingHistoryRepository {
+    override fun providePlayingHistoryRepository(dataSource: UserLastPlayedPositionRepository): PlayingHistoryRepository {
         return PlayingHistoryRepositoryImpl(dataSource)
     }
 }

@@ -4,9 +4,7 @@ import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libopensubtitles.OpenSubtitlesService
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtulip.TulipConfiguration
-import com.tajmoti.libtulip.data.HostedInfoDataSource
-import com.tajmoti.libtulip.data.LocalTvDataSource
-import com.tajmoti.libtulip.data.UserDataDataSource
+import com.tajmoti.libtulip.data.*
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.repository.*
 import com.tajmoti.libtulip.service.StreamExtractionService
@@ -16,14 +14,17 @@ import io.ktor.client.*
 
 interface IDataRepositoryModule {
     fun bindHostedTvDataRepository(
-        hostedTvDataRepo: HostedInfoDataSource,
+        tvRepository: HostedTvShowRepository,
+        seasonRepository: HostedSeasonRepository,
+        movieRepository: HostedMovieRepository,
         tvProvider: MultiTvProvider<StreamingService>,
         tmdbRepo: TmdbTvDataRepository,
         config: TulipConfiguration
     ): HostedTvDataRepository
 
     fun provideItemMappingRepository(
-        hostedTvDataRepo: HostedInfoDataSource
+        hostedTvDataRepo: TvShowMappingRepository,
+        movieMappingRepository: MovieMappingRepository,
     ): ItemMappingRepository
 
     fun provideStreamsRepository(
@@ -33,16 +34,18 @@ interface IDataRepositoryModule {
 
     fun provideTmdbTvDataRepository(
         service: TmdbService,
-        db: LocalTvDataSource,
+        tvRepository: TmdbTvShowRepository,
+        seasonRepository: TmdbSeasonRepository,
+        movieRepository: TmdbMovieRepository,
         config: TulipConfiguration
     ): TmdbTvDataRepository
 
-    fun provideFavoritesRepository(repo: UserDataDataSource): FavoritesRepository
+    fun provideFavoritesRepository(repo: UserFavoriteRepository): FavoritesRepository
 
     fun provideSubtitleRepository(
         openSubtitlesService: OpenSubtitlesService,
         openSubtitlesFallbackService: OpenSubtitlesFallbackService,
     ): SubtitleRepository
 
-    fun providePlayingHistoryRepository(dataSource: UserDataDataSource): PlayingHistoryRepository
+    fun providePlayingHistoryRepository(dataSource: UserLastPlayedPositionRepository): PlayingHistoryRepository
 }

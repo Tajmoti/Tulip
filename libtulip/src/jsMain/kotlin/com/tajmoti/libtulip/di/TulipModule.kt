@@ -37,10 +37,10 @@ private val apiServiceModule = module {
 }
 
 private val dataRepositoryModule = module {
-    single { DataRepositoryModuleImpl.bindHostedTvDataRepository(get(), get(), get(), get()) }
-    single { DataRepositoryModuleImpl.provideItemMappingRepository(get()) }
+    single { DataRepositoryModuleImpl.bindHostedTvDataRepository(get(), get(), get(), get(), get(), get()) }
+    single { DataRepositoryModuleImpl.provideItemMappingRepository(get(), get()) }
     single { DataRepositoryModuleImpl.provideStreamsRepository(get(), get()) }
-    single { DataRepositoryModuleImpl.provideTmdbTvDataRepository(get(), get(), get()) }
+    single { DataRepositoryModuleImpl.provideTmdbTvDataRepository(get(), get(), get(), get(), get()) }
     single { DataRepositoryModuleImpl.provideFavoritesRepository(get()) }
     single { DataRepositoryModuleImpl.provideSubtitleRepository(get(), get()) }
     single { DataRepositoryModuleImpl.providePlayingHistoryRepository(get()) }
@@ -55,9 +55,18 @@ private val businessLogicModule = module {
 }
 
 private val dataSourceModule = module {
-    single<LocalTvDataSource> { BrowserTvDataSource() }
-    single<HostedInfoDataSource> { BrowserHostedInfoDataSource() }
-    single<UserDataDataSource> { BrowserUserInfoDataSource() }
+    single<HostedEpisodeRepository> { BrowserHostedEpisodeRepository() }
+    single<HostedMovieRepository> { BrowserHostedMovieRepository() }
+    single<HostedSeasonRepository> { BrowserHostedSeasonRepository(get()) }
+    single<HostedTvShowRepository> { BrowserHostedTvShowRepository() }
+    single<TmdbEpisodeRepository> { BrowserTmdbEpisodeRepository() }
+    single<TvShowMappingRepository> { BrowserTvShowMappingRepository() }
+    single<MovieMappingRepository> { BrowserMovieMappingRepository() }
+    single<TmdbMovieRepository> { BrowserTmdbMovieRepository() }
+    single<TmdbSeasonRepository> { BrowserTmdbSeasonRepository(get()) }
+    single<TmdbTvShowRepository> { BrowserTmdbTvShowRepository() }
+    single<UserFavoriteRepository> { BrowserUserFavoriteRepository() }
+    single<UserLastPlayedPositionRepository> { BrowserUserLastPlayedPositionRepository() }
     single<VideoDownloadService> { StubVideoDownloadService() }
 }
 

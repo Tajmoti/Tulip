@@ -17,5 +17,8 @@ interface MovieDao {
     fun getByTmdbId(tmdbId: Long): Flow<List<DbMovie>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(episode: DbMovie)
+    suspend fun insert(movie: DbMovie)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(movies: List<DbMovie>)
 }

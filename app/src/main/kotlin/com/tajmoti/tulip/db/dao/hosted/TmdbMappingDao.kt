@@ -19,4 +19,7 @@ interface TmdbMappingDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(episode: DbTmdbMapping)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(episodes: List<DbTmdbMapping>)
 }

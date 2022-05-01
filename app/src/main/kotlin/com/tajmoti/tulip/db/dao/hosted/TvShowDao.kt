@@ -19,4 +19,7 @@ interface TvShowDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(episode: DbTvShow)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(episode: List<DbTvShow>)
 }

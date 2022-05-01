@@ -1,11 +1,7 @@
 package com.tajmoti.tulip.di
 
-import com.tajmoti.libtulip.data.HostedInfoDataSource
-import com.tajmoti.libtulip.data.LocalTvDataSource
-import com.tajmoti.libtulip.data.UserDataDataSource
-import com.tajmoti.tulip.datasource.AndroidHostedInfoDataSource
-import com.tajmoti.tulip.datasource.AndroidTvDataSource
-import com.tajmoti.tulip.datasource.AndroidUserDataDataSource
+import com.tajmoti.libtulip.data.*
+import com.tajmoti.tulip.repository.*
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.migration.DisableInstallInCheck
@@ -17,13 +13,49 @@ interface AndroidDataStoreModule {
 
     @Binds
     @Singleton
-    fun provideAndroidTvShowRepository(s: AndroidHostedInfoDataSource): HostedInfoDataSource
+    fun provideAndroidHostedTvShowRepository(s: AndroidHostedTvShowRepository): HostedTvShowRepository
 
     @Binds
     @Singleton
-    fun provideLocalTvDataSource(s: AndroidTvDataSource): LocalTvDataSource
+    fun provideAndroidHostedSeasonRepository(s: AndroidHostedSeasonRepository): HostedSeasonRepository
 
     @Binds
     @Singleton
-    fun provideUserFavoriteDataRepository(s: AndroidUserDataDataSource): UserDataDataSource
+    fun provideAndroidHostedEpisodeRepository(s: AndroidHostedEpisodeRepository): HostedEpisodeRepository
+
+    @Binds
+    @Singleton
+    fun provideAndroidHostedMovieRepository(s: AndroidHostedMovieRepository): HostedMovieRepository
+
+    @Binds
+    @Singleton
+    fun provideTmdbTvShowRepository(s: AndroidTmdbTvShowRepository): TmdbTvShowRepository
+
+    @Binds
+    @Singleton
+    fun provideTmdbSeasonRepository(s: AndroidTmdbSeasonRepository): TmdbSeasonRepository
+
+    @Binds
+    @Singleton
+    fun provideTmdbEpisodeRepository(s: AndroidTmdbEpisodeRepository): TmdbEpisodeRepository
+
+    @Binds
+    @Singleton
+    fun provideTmdbMovieRepository(s: AndroidTmdbMovieRepository): TmdbMovieRepository
+
+    @Binds
+    @Singleton
+    fun provideUserFavoriteDataRepository(s: AndroidUserFavoriteRepository): UserFavoriteRepository
+
+    @Binds
+    @Singleton
+    fun provideUserLastPlayedPositionRepository(s: AndroidUserLastPlayedPositionRepository): UserLastPlayedPositionRepository
+
+    @Binds
+    @Singleton
+    fun provideTvShowMappingRepository(s: AndroidTvShowMappingRepository): TvShowMappingRepository
+
+    @Binds
+    @Singleton
+    fun provideMovieMappingRepository(s: AndroidMovieMappingRepository): MovieMappingRepository
 }

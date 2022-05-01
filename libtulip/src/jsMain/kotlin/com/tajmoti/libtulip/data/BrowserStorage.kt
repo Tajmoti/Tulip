@@ -41,14 +41,30 @@ class BrowserStorage<K, V : Any>(
         } else {
             localStorage.removeItem(keyString)
         }
-        window.dispatchEvent(Event(makeKeyString(key)))
+        notifyAdded(key)
     }
 
     fun get(key: K): Flow<V?> {
+        val eventKey = makeKeyString(key)
+        val getter: () -> V? = { forceGet(key) }
+        return getByEvent(getter, eventKey)
+    }
+
+    fun getAll(): Flow<List<V>> {
+        val eventKey = prefix
+        val getter: () -> List<V> = { forceGetAll() }
+        return getByEvent(getter, eventKey)
+    }
+
+    private fun notifyAdded(key: K) {
+        window.dispatchEvent(Event(makeKeyString(key)))
+        window.dispatchEvent(Event(prefix))
+    }
+
+    private fun <T> getByEvent(getter: () -> T, eventKey: String): Flow<T> {
         return channelFlow {
-            send(forceGet(key))
-            val eventKey = makeKeyString(key)
-            val listener: (Event) -> Unit = { launch { send(forceGet(key)) } }
+            send(getter())
+            val listener: (Event) -> Unit = { launch { send(getter()) } }
             window.addEventListener(eventKey, listener)
             awaitClose { window.removeEventListener(eventKey, listener) }
         }.distinctUntilChanged()
@@ -59,8 +75,25 @@ class BrowserStorage<K, V : Any>(
     }
 
     private fun forceGet(key: K): V? {
-        return localStorage.getItem(makeKeyString(key))
+        val keyString = makeKeyString(key)
+        return forceGetByKeyString(keyString)
+    }
+
+    private fun forceGetAll(): List<V> {
+        return getAllKeys()
+            .mapNotNull { key -> forceGetByKeyString(key) }
+    }
+
+    private fun forceGetByKeyString(keyString: String): V? {
+        return localStorage.getItem(keyString)
             ?.let { deserializer(it) }
+    }
+
+    private fun getAllKeys(): Set<String> {
+        return (0 until localStorage.length)
+            .mapNotNull { index -> localStorage.key(index) }
+            .filter { key -> key.startsWith(prefix) }
+            .toSet()
     }
 
     private fun makeKeyString(key: K): String {
@@ -71,4 +104,9 @@ class BrowserStorage<K, V : Any>(
 @Suppress("FunctionName")
 inline fun <K, reified V : Any> BrowserStorage(prefix: String): BrowserStorage<K, V> {
     return BrowserStorage(prefix, { Json.encodeToString(it) }, { Json.decodeFromString(it) })
+}
+
+@Suppress("FunctionName")
+inline fun <K, reified V : Any> Any.BrowserStorage(index: Int = 0): BrowserStorage<K, V> {
+    return BrowserStorage("${this::class.simpleName!!}_${V::class.simpleName}_${index}")
 }

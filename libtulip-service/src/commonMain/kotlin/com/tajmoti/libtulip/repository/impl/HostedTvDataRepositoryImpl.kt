@@ -3,7 +3,9 @@ package com.tajmoti.libtulip.repository.impl
 import com.tajmoti.commonutils.flatMap
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.TulipConfiguration
-import com.tajmoti.libtulip.data.HostedInfoDataSource
+import com.tajmoti.libtulip.data.HostedMovieRepository
+import com.tajmoti.libtulip.data.HostedSeasonRepository
+import com.tajmoti.libtulip.data.HostedTvShowRepository
 import com.tajmoti.libtulip.misc.job.NetFlow
 import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.hosted.StreamingService
@@ -26,7 +28,9 @@ import kotlinx.coroutines.flow.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HostedTvDataRepositoryImpl(
-    private val hostedTvDataRepo: HostedInfoDataSource,
+    private val tvRepository: HostedTvShowRepository,
+    private val seasonRepository: HostedSeasonRepository,
+    private val movieRepository: HostedMovieRepository,
     private val tvProvider: MultiTvProvider<StreamingService>,
     private val tmdbRepo: TmdbTvDataRepository,
     config: TulipConfiguration
@@ -38,8 +42,8 @@ class HostedTvDataRepositoryImpl(
     private val tvShowStore = TStoreFactory.createStore(
         cache = config.hostedItemCacheParams,
         source = { key -> tvRequestStore.stream(key).map { it.map { info -> info.data }.toResult() } },
-        reader = hostedTvDataRepo::getTvShowByKey,
-        writer = { _, it -> hostedTvDataRepo.insertTvShow(it) }
+        reader = tvRepository::findByKey,
+        writer = { _, it -> tvRepository.insert(it) }
     )
     private val seasonStore = TStoreFactory.createStore(
         cache = config.hostedItemCacheParams,
@@ -47,14 +51,14 @@ class HostedTvDataRepositoryImpl(
             tvRequestStore.stream(key.tvShowKey)
                 .map { it.map { info -> info.seasons.first { it.season.key == key } }.toResult() }
         },
-        reader = hostedTvDataRepo::getSeasonByKey,
-        writer = { _, it -> hostedTvDataRepo.insertSeasons(listOf(it)) }
+        reader = seasonRepository::findSeasonWithEpisodesByKey,
+        writer = { _, it -> seasonRepository.insertSeasonWithEpisodes(it.season, it.episodes) }
     )
     private val movieStore = TStoreFactory.createStore(
         cache = config.hostedItemCacheParams,
         source = ::fetchMovie,
-        reader = hostedTvDataRepo::getMovieByKey,
-        writer = { _, it -> hostedTvDataRepo.insertMovie(it) }
+        reader = movieRepository::findByKey,
+        writer = { _, it -> movieRepository.insert(it) }
     )
     private val streamsStore = TStoreFactory.createStore(
         cache = config.hostedItemCacheParams,

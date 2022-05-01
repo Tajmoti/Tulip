@@ -14,6 +14,9 @@ interface TmdbDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTv(tv: DbTmdbTv)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTv(tvs: List<DbTmdbTv>)
+
     @Query("SELECT * FROM DbTmdbSeason WHERE tvId == :tvId AND seasonNumber == :seasonNumber LIMIT 1")
     fun getSeason(tvId: Long, seasonNumber: Int): Flow<DbTmdbSeason?>
 
@@ -43,4 +46,7 @@ interface TmdbDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMovie(movie: DbTmdbMovie)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMovies(movies: List<DbTmdbMovie>)
 }
