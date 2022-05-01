@@ -23,8 +23,8 @@ class JvmTStore<Key : Any, Output : Any>(
 
     override fun stream(key: Key, refresh: Boolean): Flow<NetworkResult<Output>> {
         return impl.stream(StoreRequest.cached(key, refresh))
-            .distinctUntilChanged()
             .toNetFlow()
+            .distinctUntilChanged()
     }
 
     private fun <K : Any, V : Any> createCache(params: TulipConfiguration.CacheParameters): MemoryPolicy<K, V> {
