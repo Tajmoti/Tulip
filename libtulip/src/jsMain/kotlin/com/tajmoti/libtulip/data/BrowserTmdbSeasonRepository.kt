@@ -6,6 +6,7 @@ import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
 import com.tajmoti.libtulip.model.key.SeasonKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 
 class BrowserTmdbSeasonRepository(private val episodeRepository: TmdbEpisodeRepository) : TmdbSeasonRepository {
     private val seasonStorage = BrowserStorage<SeasonKey.Tmdb, Season.Tmdb>()
@@ -23,12 +24,14 @@ class BrowserTmdbSeasonRepository(private val episodeRepository: TmdbEpisodeRepo
         val tvShowFlow = findByKey(key)
         val seasonsFlow = getEpisodesBySeason(key)
         return combine(tvShowFlow, seasonsFlow) { item, episodes ->
-            item?.let { SeasonWithEpisodes.Tmdb(item, episodes) }
+            if (item == null || episodes == null) return@combine null
+            SeasonWithEpisodes.Tmdb(item, episodes)
         }
     }
 
-    private fun getEpisodesBySeason(key: SeasonKey.Tmdb): Flow<List<Episode.Tmdb>> {
+    private fun getEpisodesBySeason(key: SeasonKey.Tmdb): Flow<List<Episode.Tmdb>?> {
         return episodeRepository.findBySeason(key)
+            .map { it.takeUnless { it.isEmpty() } }
     }
 
     override suspend fun insertSeasonWithEpisodes(season: Season.Tmdb, episodes: List<Episode.Tmdb>) {

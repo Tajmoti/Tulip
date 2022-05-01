@@ -6,6 +6,7 @@ import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
 import com.tajmoti.libtulip.model.key.SeasonKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 
 class BrowserHostedSeasonRepository(private val episodeRepository: HostedEpisodeRepository) : HostedSeasonRepository {
     private val seasonStorage = BrowserStorage<SeasonKey.Hosted, Season.Hosted>()
@@ -23,12 +24,14 @@ class BrowserHostedSeasonRepository(private val episodeRepository: HostedEpisode
         val tvShowFlow = findByKey(key)
         val seasonsFlow = getEpisodesBySeason(key)
         return combine(tvShowFlow, seasonsFlow) { item, episodes ->
-            item?.let { SeasonWithEpisodes.Hosted(item, episodes) }
+            if (item == null || episodes == null) return@combine null
+            SeasonWithEpisodes.Hosted(item, episodes)
         }
     }
 
-    private fun getEpisodesBySeason(key: SeasonKey.Hosted): Flow<List<Episode.Hosted>> {
+    private fun getEpisodesBySeason(key: SeasonKey.Hosted): Flow<List<Episode.Hosted>?> {
         return episodeRepository.findBySeason(key)
+            .map { it.takeUnless { it.isEmpty() } }
     }
 
     override suspend fun insertSeasonWithEpisodes(season: Season.Hosted, episodes: List<Episode.Hosted>) {

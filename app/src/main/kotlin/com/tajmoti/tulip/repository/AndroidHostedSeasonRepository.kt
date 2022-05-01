@@ -37,13 +37,15 @@ class AndroidHostedSeasonRepository @Inject constructor(
         val tvShowFlow = dao.getBySeasonNumber(streamingService, tvShowKey.id, seasonNumber)
         val seasonsFlow = getEpisodesBySeason(key)
         return combine(tvShowFlow, seasonsFlow) { item, episodes ->
-            item?.let { seasonWithEpisodeMapper.fromDb(it, episodes) }
+            if (item == null || episodes == null) return@combine null
+            seasonWithEpisodeMapper.fromDb(item, episodes)
         }
     }
 
-    private fun getEpisodesBySeason(key: SeasonKey.Hosted): Flow<List<Episode.Hosted>> {
+    private fun getEpisodesBySeason(key: SeasonKey.Hosted): Flow<List<Episode.Hosted>?> {
         return episodeAdapter.findBySeasonKeyFromDb(episodeDao, key)
             .map { seasons -> seasons.map { season -> episodeMapper.fromDb(season) } }
+            .map { it.takeUnless { it.isEmpty() } }
     }
 
     override suspend fun insertSeasonWithEpisodes(season: Season.Hosted, episodes: List<Episode.Hosted>) {

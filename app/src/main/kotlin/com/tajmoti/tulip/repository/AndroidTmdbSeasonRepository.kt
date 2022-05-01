@@ -34,13 +34,15 @@ class AndroidTmdbSeasonRepository @Inject constructor(
         val tvShowFlow = dao.getSeason(tvShowKey.id, seasonNumber)
         val seasonsFlow = getEpisodesBySeason(key)
         return combine(tvShowFlow, seasonsFlow) { item, episodes ->
-            item?.let { seasonWithEpisodeMapper.fromDb(it, episodes) }
+            if (item == null || episodes == null) return@combine null
+            seasonWithEpisodeMapper.fromDb(item, episodes)
         }
     }
 
-    private fun getEpisodesBySeason(key: SeasonKey.Tmdb): Flow<List<Episode.Tmdb>> {
+    private fun getEpisodesBySeason(key: SeasonKey.Tmdb): Flow<List<Episode.Tmdb>?> {
         return episodeAdapter.findBySeasonKeyFromDb(dao, key)
             .map { seasons -> seasons.map { season -> episodeMapper.fromDb(season) } }
+            .map { it.takeUnless { it.isEmpty() } }
     }
 
     override suspend fun insertSeasonWithEpisodes(season: Season.Tmdb, episodes: List<Episode.Tmdb>) {
