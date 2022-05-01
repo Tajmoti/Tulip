@@ -1,6 +1,7 @@
-## [Unreleased]
+## [0.14.0] - 2022-05-02
 ### Changed
 - Updated Primewire URL `primewire.tf`
+- Improved performance
 
 ## [0.13.1] - 2022-03-10
 ### Changed
@@ -115,6 +116,7 @@
 - Support for primewire.ag
 
 [Unreleased]: https://github.com/Tajmoti/Tulip/tree/main
+[0.14.0]: https://github.com/Tajmoti/Tulip/tree/v0.14.0
 [0.13.1]: https://github.com/Tajmoti/Tulip/tree/v0.13.1
 [0.13.0]: https://github.com/Tajmoti/Tulip/tree/v0.13.0
 [0.12.0]: https://github.com/Tajmoti/Tulip/tree/v0.12.0
