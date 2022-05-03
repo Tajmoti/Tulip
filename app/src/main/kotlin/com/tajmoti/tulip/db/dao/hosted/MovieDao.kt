@@ -13,9 +13,6 @@ interface MovieDao {
     @Query("SELECT * FROM DbMovie WHERE service == :service AND `key` == :key LIMIT 1")
     fun getByKey(service: StreamingService, key: String): Flow<DbMovie?>
 
-    @Query("SELECT * FROM DbMovie INNER JOIN DbTmdbMapping mapping ON mapping.`key` == DbMovie.`key` WHERE tmdbId == :tmdbId")
-    fun getByTmdbId(tmdbId: Long): Flow<List<DbMovie>>
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(movie: DbMovie)
 
