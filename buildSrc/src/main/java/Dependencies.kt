@@ -1,22 +1,21 @@
 object Versions {
-    private const val arrow = "1.0.1"
-    private const val ktor = "2.0.0"
-    private const val kt = "1.6.10"
-    private const val store = "4.0.4-KT15"
+    private const val arrow = "1.1.2"
+    private const val ktor = "2.0.1"
+    private const val store = "4.0.5"
     private const val junitJupiter = "5.8.2"
     private const val junitSuiteVer = "1.8.2"
-    private const val mockito = "4.2.0"
+    private const val mockito = "4.5.1"
     private const val mockitoKotlin = "4.0.0"
-    private const val slf4jSimple = "1.7.32"
+    private const val slf4jSimple = "1.7.36"
     private const val okHttpLogger = "4.9.3"
-    private const val dagger = "2.40.5"
-    private const val coroutinesVer = "1.6.0"
+    private const val dagger = "2.41"
+    private const val coroutinesVer = "1.6.1"
     private const val kotlinLoggingVer = "2.1.21"
     private const val kotlinSerialization = "1.3.2"
-    private const val kotlin = "1.6.20-M1"
+    private const val kotlin = "1.6.21"
     private const val javaxInject = "1"
     private const val jsoup = "1.14.3"
-    private const val koin = "3.1.5"
+    private const val koin = "3.1.6"
     private const val buildKonfig = "0.11.0"
 
 
@@ -55,8 +54,8 @@ object Versions {
     }
 
     object KotlinTestJUnit {
-        const val testJunit = "org.jetbrains.kotlin:kotlin-test-junit:$kt"
-        const val testJs = "org.jetbrains.kotlin:kotlin-test-js:$kt"
+        const val testJunit = "org.jetbrains.kotlin:kotlin-test-junit:$kotlin"
+        const val testJs = "org.jetbrains.kotlin:kotlin-test-js:$kotlin"
     }
 
     object Store {
@@ -91,15 +90,15 @@ object Versions {
     }
 
     object Android {
-        private const val nav = "2.4.0"
-        private const val hilt = "2.40.5"
+        private const val nav = "2.4.2"
+        private const val hilt = "2.41"
         private const val hiltNavigationFragmentVer = "1.0.0"
-        private const val gradleSecrets = "2.0.0"
-        private const val room = "2.4.1"
+        private const val gradleSecrets = "2.0.1"
+        private const val room = "2.4.2"
         private const val legacySupportVer = "1.0.0"
         private const val groupieVer = "2.9.0"
         private const val constraintLayout = "2.1.3"
-        private const val lifecycle = "2.4.0"
+        private const val lifecycle = "2.4.1"
         private const val androidxCore = "1.7.0"
         private const val appCompatVer = "1.4.1"
         private const val materialCoreVer = "1.5.0"
