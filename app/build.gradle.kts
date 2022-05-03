@@ -65,7 +65,7 @@ android {
     kotlinOptions {
         jvmTarget = "11"
         @Suppress("SuspiciousCollectionReassignment")
-        freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+        freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
     }
     buildFeatures {
         viewBinding = true
