@@ -1,6 +1,6 @@
 package com.tajmoti.tulip.repository
 
-import com.tajmoti.libtulip.data.HostedTvShowRepository
+import com.tajmoti.libtulip.repository.HostedTvShowRepository
 import com.tajmoti.libtulip.model.info.Season
 import com.tajmoti.libtulip.model.info.TvShow
 import com.tajmoti.libtulip.model.key.TvShowKey

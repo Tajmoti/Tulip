@@ -1,7 +1,7 @@
 package com.tajmoti.tulip.repository
 
 import com.tajmoti.commonutils.mapNotNulls
-import com.tajmoti.libtulip.data.RwRepository
+import com.tajmoti.libtulip.repository.RwRepository
 import com.tajmoti.tulip.db.adapter.DbAdapter
 import com.tajmoti.tulip.mapper.Mapper
 import kotlinx.coroutines.flow.Flow

@@ -1,6 +1,6 @@
 package com.tajmoti.libtulip.di
 
-import com.tajmoti.libtulip.data.*
+import com.tajmoti.libtulip.repository.*
 import com.tajmoti.libtulip.di.impl.ApiServiceModuleImpl
 import com.tajmoti.libtulip.di.impl.BusinessLogicModuleImpl
 import com.tajmoti.libtulip.di.impl.DataRepositoryModuleImpl

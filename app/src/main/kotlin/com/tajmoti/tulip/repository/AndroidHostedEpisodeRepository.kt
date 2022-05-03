@@ -1,7 +1,7 @@
 package com.tajmoti.tulip.repository
 
-import com.tajmoti.libtulip.data.HostedEpisodeRepository
-import com.tajmoti.libtulip.data.RwRepository
+import com.tajmoti.libtulip.repository.HostedEpisodeRepository
+import com.tajmoti.libtulip.repository.RwRepository
 import com.tajmoti.libtulip.model.info.Episode
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.SeasonKey

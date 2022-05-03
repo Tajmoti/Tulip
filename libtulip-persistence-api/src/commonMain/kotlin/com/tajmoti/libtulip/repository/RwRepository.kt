@@ -1,4 +1,4 @@
-package com.tajmoti.libtulip.data
+package com.tajmoti.libtulip.repository
 
 import kotlinx.coroutines.flow.Flow
 

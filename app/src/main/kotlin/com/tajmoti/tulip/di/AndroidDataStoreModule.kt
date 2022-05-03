@@ -1,6 +1,6 @@
 package com.tajmoti.tulip.di
 
-import com.tajmoti.libtulip.data.*
+import com.tajmoti.libtulip.repository.*
 import com.tajmoti.tulip.repository.*
 import dagger.Binds
 import dagger.Module

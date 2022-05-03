@@ -1,4 +1,4 @@
-package com.tajmoti.libtulip.data
+package com.tajmoti.libtulip.repository
 
 import com.tajmoti.libtulip.model.info.TvShow
 import com.tajmoti.libtulip.model.key.TvShowKey

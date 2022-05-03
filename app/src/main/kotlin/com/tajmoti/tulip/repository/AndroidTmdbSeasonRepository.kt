@@ -1,7 +1,7 @@
 package com.tajmoti.tulip.repository
 
-import com.tajmoti.libtulip.data.RwRepository
-import com.tajmoti.libtulip.data.TmdbSeasonRepository
+import com.tajmoti.libtulip.repository.RwRepository
+import com.tajmoti.libtulip.repository.TmdbSeasonRepository
 import com.tajmoti.libtulip.model.info.Episode
 import com.tajmoti.libtulip.model.info.Season
 import com.tajmoti.libtulip.model.info.SeasonWithEpisodes

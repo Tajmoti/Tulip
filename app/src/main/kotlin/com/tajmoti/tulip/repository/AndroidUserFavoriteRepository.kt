@@ -1,6 +1,6 @@
 package com.tajmoti.tulip.repository
 
-import com.tajmoti.libtulip.data.UserFavoriteRepository
+import com.tajmoti.libtulip.repository.UserFavoriteRepository
 import com.tajmoti.libtulip.model.info.ItemType
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.key.MovieKey

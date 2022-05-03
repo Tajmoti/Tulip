@@ -3,9 +3,9 @@ package com.tajmoti.libtulip.repository.impl
 import com.tajmoti.commonutils.flatMap
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.TulipConfiguration
-import com.tajmoti.libtulip.data.HostedMovieRepository
-import com.tajmoti.libtulip.data.HostedSeasonRepository
-import com.tajmoti.libtulip.data.HostedTvShowRepository
+import com.tajmoti.libtulip.repository.HostedMovieRepository
+import com.tajmoti.libtulip.repository.HostedSeasonRepository
+import com.tajmoti.libtulip.repository.HostedTvShowRepository
 import com.tajmoti.libtulip.misc.job.NetFlow
 import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.hosted.StreamingService

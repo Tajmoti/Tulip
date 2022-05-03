@@ -1,6 +1,6 @@
 package com.tajmoti.libtulip.repository.impl
 
-import com.tajmoti.libtulip.data.UserFavoriteRepository
+import com.tajmoti.libtulip.repository.UserFavoriteRepository
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.repository.FavoritesRepository
 import kotlinx.coroutines.flow.Flow

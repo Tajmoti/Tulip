@@ -1,6 +1,6 @@
 package com.tajmoti.tulip.repository
 
-import com.tajmoti.libtulip.data.MovieMappingRepository
+import com.tajmoti.libtulip.repository.MovieMappingRepository
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.tulip.db.adapter.MovieMappingDbAdapter
 import com.tajmoti.tulip.db.dao.hosted.TmdbMappingDao

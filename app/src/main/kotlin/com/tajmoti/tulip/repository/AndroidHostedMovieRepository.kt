@@ -1,6 +1,6 @@
 package com.tajmoti.tulip.repository
 
-import com.tajmoti.libtulip.data.HostedMovieRepository
+import com.tajmoti.libtulip.repository.HostedMovieRepository
 import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.tulip.db.adapter.HostedMovieDbAdapter

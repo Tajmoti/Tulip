@@ -1,8 +1,8 @@
 package com.tajmoti.libtulip.repository.impl
 
 import com.tajmoti.commonutils.logger
-import com.tajmoti.libtulip.data.MovieMappingRepository
-import com.tajmoti.libtulip.data.TvShowMappingRepository
+import com.tajmoti.libtulip.repository.MovieMappingRepository
+import com.tajmoti.libtulip.repository.TvShowMappingRepository
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.repository.ItemMappingRepository

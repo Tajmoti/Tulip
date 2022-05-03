@@ -1,4 +1,4 @@
-package com.tajmoti.libtulip.data
+package com.tajmoti.libtulip.repository
 
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.model.HostedEpisodeProgress

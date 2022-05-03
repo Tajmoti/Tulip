@@ -1,6 +1,6 @@
 package com.tajmoti.tulip.repository
 
-import com.tajmoti.libtulip.data.UserLastPlayedPositionRepository
+import com.tajmoti.libtulip.repository.UserLastPlayedPositionRepository
 import com.tajmoti.libtulip.model.history.LastPlayedPosition
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.tulip.db.dao.userdata.PlayingHistoryDao

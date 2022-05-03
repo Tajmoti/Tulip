@@ -4,9 +4,9 @@ import arrow.core.Option
 import arrow.core.toOption
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.TulipConfiguration
-import com.tajmoti.libtulip.data.TmdbMovieRepository
-import com.tajmoti.libtulip.data.TmdbSeasonRepository
-import com.tajmoti.libtulip.data.TmdbTvShowRepository
+import com.tajmoti.libtulip.repository.TmdbMovieRepository
+import com.tajmoti.libtulip.repository.TmdbSeasonRepository
+import com.tajmoti.libtulip.repository.TmdbTvShowRepository
 import com.tajmoti.libtulip.misc.job.NetFlow
 import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.info.SeasonWithEpisodes

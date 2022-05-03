@@ -4,10 +4,9 @@ import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libopensubtitles.OpenSubtitlesService
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtulip.TulipConfiguration
-import com.tajmoti.libtulip.data.*
+import com.tajmoti.libtulip.repository.*
 import com.tajmoti.libtulip.di.IDataRepositoryModule
 import com.tajmoti.libtulip.model.hosted.StreamingService
-import com.tajmoti.libtulip.repository.*
 import com.tajmoti.libtulip.repository.impl.*
 import com.tajmoti.libtulip.service.StreamExtractionService
 import com.tajmoti.libtulip.service.impl.LibTmdbRepository
