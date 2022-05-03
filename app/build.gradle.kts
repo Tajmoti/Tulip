@@ -12,6 +12,7 @@ plugins {
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
+@Suppress("UnstableApiUsage")
 android {
     compileSdk = 31
     buildToolsVersion = "31.0.0"
@@ -70,6 +71,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+        @Suppress("SuspiciousCollectionReassignment")
         freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
     }
     buildFeatures {

@@ -3,6 +3,7 @@ plugins {
     kotlin("android")
 }
 
+@Suppress("UnstableApiUsage")
 android {
     compileSdk = 31
     buildToolsVersion = "31.0.0"
