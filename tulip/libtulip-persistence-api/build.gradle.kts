@@ -2,6 +2,8 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler
 
 plugins {
     kotlin("multiplatform")
+    kotlin("kapt")
+    kotlin("plugin.serialization")
 }
 
 java {
@@ -30,10 +32,8 @@ kotlin {
 }
 
 fun KotlinDependencyHandler.mainDeps() {
-    implementation(project(":libtvprovider"))
-    implementation(project(":commonutils"))
-    implementation(project(":ksoup"))
-
-    implementation(Versions.Kotlin.coroutinesCore)
+    implementation(project(":tulip:libtulip-api"))
+    with(Versions.Kotlin) {
+        implementation(coroutinesCore)
+    }
 }
-

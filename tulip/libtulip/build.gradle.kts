@@ -49,21 +49,21 @@ buildkonfig {
 fun KotlinDependencyHandler.mainDeps() {
     implementation(project(":commonutils"))
 
-    implementation(project(":libtulip-api"))
-    implementation(project(":libtulip-ui-api"))
-    implementation(project(":libtulip-persistence-api"))
+    implementation(project(":tulip:libtulip-api"))
+    implementation(project(":tulip:libtulip-ui-api"))
+    implementation(project(":tulip:libtulip-persistence-api"))
 
-    implementation(project(":libtulip-ui"))
-    implementation(project(":libtulip-service"))
+    implementation(project(":tulip:libtulip-ui"))
+    implementation(project(":tulip:libtulip-service"))
 
     implementation(project(":libopensubtitles"))
-    implementation(project(":libtvprovider"))
-    implementation(project(":libtvprovider-kinox"))
-    implementation(project(":libtvprovider-primewire"))
-    implementation(project(":libtvprovider-southpark"))
+    implementation(project(":tvprovider:libtvprovider"))
+    implementation(project(":tvprovider:libtvprovider-kinox"))
+    implementation(project(":tvprovider:libtvprovider-primewire"))
+    implementation(project(":tvprovider:libtvprovider-southpark"))
     implementation(project(":libtvvideoextractor"))
     implementation(project(":libtmdb"))
-    implementation(project(":libwebdriver"))
+    implementation(project(":webdriver:libwebdriver"))
     implementation(project(":rektor"))
 
     with(Versions.Kotlin) {
@@ -80,7 +80,7 @@ fun KotlinDependencyHandler.mainDeps() {
 }
 
 fun KotlinDependencyHandler.jvmDeps() {
-    implementation(project(":libtvprovider-kinox"))
+    implementation(project(":tvprovider:libtvprovider-kinox"))
 
     with(Versions.Ktor) {
         implementation(clientJvm)

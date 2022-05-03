@@ -92,16 +92,16 @@ repositories {
 dependencies {
     implementation(project(":commonutils"))
 
-    implementation(project(":libtulip"))
-    implementation(project(":libtulip-ui"))
+    implementation(project(":tulip:libtulip"))
+    implementation(project(":tulip:libtulip-ui"))
 
-    implementation(project(":libtulip-api"))
-    implementation(project(":libtulip-persistence-api"))
-    implementation(project(":libtulip-ui-api"))
+    implementation(project(":tulip:libtulip-api"))
+    implementation(project(":tulip:libtulip-persistence-api"))
+    implementation(project(":tulip:libtulip-ui-api"))
 
     implementation(project(":libopensubtitles"))
-    implementation(project(":libwebdriver"))
-    implementation(project(":libwebdriver-android"))
+    implementation(project(":webdriver:libwebdriver"))
+    implementation(project(":webdriver:libwebdriver-android"))
 
     with(Versions.Kotlin) {
         implementation(coroutinesCore)

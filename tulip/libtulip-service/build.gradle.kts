@@ -28,16 +28,35 @@ kotlin {
     sourceSets {
         all { languageSettings.optIn("kotlin.RequiresOptIn") }
         sourceSets["commonMain"].dependencies { mainDeps() }
+        sourceSets["jvmMain"].dependencies { jvmDeps() }
     }
 }
 
 fun KotlinDependencyHandler.mainDeps() {
     implementation(project(":commonutils"))
-    api(project(":libtulip-api"))
-    api(project(":libtvprovider"))
-    api(project(":libtvvideoextractor"))
+
+    implementation(project(":tulip:libtulip-api"))
+    implementation(project(":tulip:libtulip-persistence-api"))
+
+    implementation(project(":libopensubtitles"))
+    implementation(project(":libtmdb"))
+    implementation(project(":tvprovider:libtvprovider"))
+    implementation(project(":libtvvideoextractor"))
+
     implementation(Versions.Kotlin.serializationJson)
     with(Versions.Kotlin) {
         implementation(coroutinesCore)
+    }
+    with(Versions.Arrow) {
+        implementation(core)
+    }
+    with(Versions.Ktor) {
+        implementation(core)
+    }
+}
+
+fun KotlinDependencyHandler.jvmDeps() {
+    with(Versions.Store) {
+        implementation(storeJvm)
     }
 }

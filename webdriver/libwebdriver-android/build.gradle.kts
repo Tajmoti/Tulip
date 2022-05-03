@@ -31,7 +31,7 @@ android {
 }
 
 dependencies {
-    api(project(":libwebdriver"))
+    api(project(":webdriver:libwebdriver"))
     implementation(project(":commonutils"))
 
     implementation(Versions.Kotlin.coroutinesCore)
