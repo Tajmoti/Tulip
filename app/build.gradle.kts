@@ -48,13 +48,6 @@ android {
             isDebuggable = true
             buildConfigField("boolean", "HTTP_DEBUG", "$HTTP_DEBUG")
         }
-        forEach { buildType ->
-            buildType.javaCompileOptions {
-                annotationProcessorOptions {
-                    argument("room.schemaLocation", "$projectDir/schemas")
-                }
-            }
-        }
     }
 
     splits {
@@ -97,6 +90,7 @@ dependencies {
 
     implementation(project(":tulip:libtulip-api"))
     implementation(project(":tulip:libtulip-persistence-api"))
+    implementation(project(":tulip:libtulip-persistence-android"))
     implementation(project(":tulip:libtulip-ui-api"))
 
     implementation(project(":libopensubtitles"))

@@ -14,6 +14,7 @@ object Versions {
     private const val kotlinLoggingVer = "2.1.21"
     private const val kotlinSerialization = "1.3.2"
     private const val kotlin = "1.6.20-M1"
+    private const val javaxInject = "1"
     private const val jsoup = "1.14.3"
     private const val koin = "3.1.5"
     private const val buildKonfig = "0.11.0"
@@ -60,6 +61,10 @@ object Versions {
 
     object Store {
         const val storeJvm = "com.dropbox.mobile.store:store4:$store"
+    }
+
+    object JavaX {
+        const val inject = "javax.inject:javax.inject:$javaxInject"
     }
 
     object JvmTest {
