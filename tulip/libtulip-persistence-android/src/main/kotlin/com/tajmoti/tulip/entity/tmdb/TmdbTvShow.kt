@@ -1,0 +1,13 @@
+package com.tajmoti.tulip.entity.tmdb
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity
+data class TmdbTvShow(
+    @PrimaryKey
+    val id: Long,
+    val name: String,
+    val posterPath: String?,
+    val backdropPath: String?
+)

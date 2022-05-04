@@ -2,13 +2,18 @@ package com.tajmoti.tulip.di
 
 import android.content.Context
 import androidx.room.Room
-import com.tajmoti.tulip.db.AppDatabase
-import com.tajmoti.tulip.db.TmdbDatabase
-import com.tajmoti.tulip.db.UserDataDatabase
-import com.tajmoti.tulip.db.dao.hosted.*
-import com.tajmoti.tulip.db.dao.tmdb.TmdbDao
-import com.tajmoti.tulip.db.dao.userdata.FavoritesDao
-import com.tajmoti.tulip.db.dao.userdata.PlayingHistoryDao
+import com.tajmoti.tulip.TulipDatabase
+import com.tajmoti.tulip.dao.ItemMappingDao
+import com.tajmoti.tulip.dao.hosted.HostedEpisodeDao
+import com.tajmoti.tulip.dao.hosted.HostedMovieDao
+import com.tajmoti.tulip.dao.hosted.HostedSeasonDao
+import com.tajmoti.tulip.dao.hosted.HostedTvShowDao
+import com.tajmoti.tulip.dao.tmdb.TmdbEpisodeDao
+import com.tajmoti.tulip.dao.tmdb.TmdbMovieDao
+import com.tajmoti.tulip.dao.tmdb.TmdbSeasonDao
+import com.tajmoti.tulip.dao.tmdb.TmdbTvShowDao
+import com.tajmoti.tulip.dao.user.FavoriteDao
+import com.tajmoti.tulip.dao.user.PlayingProgressDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -18,69 +23,78 @@ import javax.inject.Singleton
 @Module
 @DisableInstallInCheck
 object AndroidDataStoreProviderModule {
+
     @Provides
     @Singleton
-    fun provideHostedDb(@ApplicationContext app: Context): AppDatabase {
-        return Room.databaseBuilder(app, AppDatabase::class.java, "hosted.db").build()
+    fun provideTulipDatabase(@ApplicationContext app: Context): TulipDatabase {
+        return Room.databaseBuilder(app, TulipDatabase::class.java, "tulip.db")
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
     @Singleton
-    fun provideTmdbDb(@ApplicationContext app: Context): TmdbDatabase {
-        return Room.databaseBuilder(app, TmdbDatabase::class.java, "tmdb.db").build()
+    fun provideTvShowDao(db: TulipDatabase): HostedTvShowDao {
+        return db.hostedTvShowDao()
     }
 
     @Provides
     @Singleton
-    fun provideUserDataDb(@ApplicationContext app: Context): UserDataDatabase {
-        return Room.databaseBuilder(app, UserDataDatabase::class.java, "userdata.db").build()
+    fun provideSeasonDao(db: TulipDatabase): HostedSeasonDao {
+        return db.hostedSeasonDao()
     }
 
     @Provides
     @Singleton
-    fun provideTvShowDao(db: AppDatabase): TvShowDao {
-        return db.tvShowDao()
+    fun provideEpisodeDao(db: TulipDatabase): HostedEpisodeDao {
+        return db.hostedEpisodeDao()
     }
 
     @Provides
     @Singleton
-    fun provideSeasonDao(db: AppDatabase): SeasonDao {
-        return db.seasonDao()
+    fun provideMovieDao(db: TulipDatabase): HostedMovieDao {
+        return db.hostedMovieDao()
     }
 
     @Provides
     @Singleton
-    fun provideEpisodeDao(db: AppDatabase): EpisodeDao {
-        return db.episodeDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideMovieDao(db: AppDatabase): MovieDao {
-        return db.movieDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideTmdbMappingDao(db: AppDatabase): TmdbMappingDao {
+    fun provideTmdbMappingDao(db: TulipDatabase): ItemMappingDao {
         return db.tmdbMappingDao()
     }
 
     @Provides
     @Singleton
-    fun provideTmdbDao(db: TmdbDatabase): TmdbDao {
-        return db.tmdbDao()
+    fun provideTmdbTvShowDao(db: TulipDatabase): TmdbTvShowDao {
+        return db.tmdbTvShowDao()
     }
 
     @Provides
     @Singleton
-    fun provideFavoritesDao(db: UserDataDatabase): FavoritesDao {
+    fun provideTmdbSeasonDao(db: TulipDatabase): TmdbSeasonDao {
+        return db.tmdbSeasonDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTmdbEpisodeDao(db: TulipDatabase): TmdbEpisodeDao {
+        return db.tmdbEpisodeDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTmdbMovieDao(db: TulipDatabase): TmdbMovieDao {
+        return db.tmdbMovieDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideFavoritesDao(db: TulipDatabase): FavoriteDao {
         return db.favoriteDao()
     }
 
     @Provides
     @Singleton
-    fun providePlayingHistoryDao(db: UserDataDatabase): PlayingHistoryDao {
-        return db.playingHistoryDao()
+    fun providePlayingProgressDao(db: TulipDatabase): PlayingProgressDao {
+        return db.playingProgressDao()
     }
 }

@@ -2,22 +2,22 @@ package com.tajmoti.tulip.repository
 
 import com.tajmoti.libtulip.repository.MovieMappingRepository
 import com.tajmoti.libtulip.model.key.MovieKey
-import com.tajmoti.tulip.db.adapter.MovieMappingDbAdapter
-import com.tajmoti.tulip.db.dao.hosted.TmdbMappingDao
-import com.tajmoti.tulip.db.entity.hosted.DbTmdbMapping
-import com.tajmoti.tulip.mapper.AndroidMovieMappingMapper
+import com.tajmoti.tulip.adapter.MovieMappingDbAdapter
+import com.tajmoti.tulip.dao.ItemMappingDao
+import com.tajmoti.tulip.entity.ItemMapping
+import com.tajmoti.tulip.mapper.MovieMappingMapper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class AndroidMovieMappingRepository @Inject constructor(
-    private val dao: TmdbMappingDao
+    private val dao: ItemMappingDao
 ) : MovieMappingRepository {
     private val adapter = MovieMappingDbAdapter()
-    private val mapper = AndroidMovieMappingMapper()
+    private val mapper = MovieMappingMapper()
 
     override suspend fun createTmdbMovieMapping(hosted: MovieKey.Hosted, tmdb: MovieKey.Tmdb) {
-        adapter.insertToDb(dao, DbTmdbMapping(hosted.streamingService, hosted.id, tmdb.id))
+        adapter.insertToDb(dao, ItemMapping(hosted.streamingService, hosted.id, tmdb.id))
     }
 
     override fun getTmdbMappingForMovie(tmdb: MovieKey.Tmdb): Flow<Set<MovieKey.Hosted>> {

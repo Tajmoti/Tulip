@@ -1,7 +1,18 @@
 package com.tajmoti.tulip.di
 
 import com.tajmoti.libtulip.repository.*
-import com.tajmoti.tulip.repository.*
+import com.tajmoti.tulip.repository.AndroidMovieMappingRepository
+import com.tajmoti.tulip.repository.AndroidTvShowMappingRepository
+import com.tajmoti.tulip.repository.hosted.AndroidHostedEpisodeRepository
+import com.tajmoti.tulip.repository.hosted.AndroidHostedMovieRepository
+import com.tajmoti.tulip.repository.hosted.AndroidHostedSeasonRepository
+import com.tajmoti.tulip.repository.hosted.AndroidHostedTvShowRepository
+import com.tajmoti.tulip.repository.tmdb.AndroidTmdbEpisodeRepository
+import com.tajmoti.tulip.repository.tmdb.AndroidTmdbMovieRepository
+import com.tajmoti.tulip.repository.tmdb.AndroidTmdbSeasonRepository
+import com.tajmoti.tulip.repository.tmdb.AndroidTmdbTvShowRepository
+import com.tajmoti.tulip.repository.user.AndroidUserFavoriteRepository
+import com.tajmoti.tulip.repository.user.AndroidUserLastPlayedPositionRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.migration.DisableInstallInCheck

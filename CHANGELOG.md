@@ -1,3 +1,6 @@
+## [Unreleased]
+- Use a single database instead of multiple
+
 ## [0.14.1] - 2022-05-04
 ### Changed
 - Upgraded dependencies
