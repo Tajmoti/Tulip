@@ -8,7 +8,7 @@ import com.tajmoti.commonutils.PageSourceLoader
 import com.tajmoti.libtulip.createAppOkHttpClient
 import com.tajmoti.libtulip.di.impl.NetworkingModuleImpl
 import com.tajmoti.libtulip.di.qualifier.ProxyHttpClient
-import com.tajmoti.libtulip.di.qualifier.RawHttpClient
+import com.tajmoti.libtulip.di.qualifier.RawHttpClientWithoutRedirects
 import com.tajmoti.libwebdriver.TulipWebDriver
 import com.tajmoti.libwebdriver.WebViewWebDriver
 import com.tajmoti.tulip.BuildConfig
@@ -37,7 +37,7 @@ object AndroidNetworkModule {
 
     @Provides
     @Singleton
-    fun makeHttpGetter(driver: TulipWebDriver, @RawHttpClient client: HttpClient, @ProxyHttpClient proxyClient: HttpClient): PageSourceLoader {
+    fun makeHttpGetter(driver: TulipWebDriver, @RawHttpClientWithoutRedirects client: HttpClient, @ProxyHttpClient proxyClient: HttpClient): PageSourceLoader {
         return NetworkingModuleImpl.makeHttpGetter(driver, proxyClient, client)
     }
 

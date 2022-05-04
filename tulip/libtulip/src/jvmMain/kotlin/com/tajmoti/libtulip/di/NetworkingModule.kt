@@ -1,6 +1,7 @@
 package com.tajmoti.libtulip.di
 
 import com.tajmoti.libtulip.di.qualifier.ProxyHttpClient
+import com.tajmoti.libtulip.di.qualifier.RawHttpClientWithoutRedirects
 import com.tajmoti.libtulip.di.qualifier.RawHttpClient
 import com.tajmoti.libtulip.misc.webdriver.UrlRewriter
 import com.tajmoti.libtulip.setupTulipKtor
@@ -14,13 +15,23 @@ import javax.inject.Singleton
 
 @Module
 object NetworkingModule {
-    @RawHttpClient
+    @RawHttpClientWithoutRedirects
     @Provides
     @Singleton
     fun provideHttpClient(okHttpClient: OkHttpClient): HttpClient {
         return HttpClient(OkHttp) {
             engine { preconfigured = okHttpClient }
             setupTulipKtor(this)
+        }
+    }
+
+    @RawHttpClient
+    @Provides
+    @Singleton
+    fun provideHttpClientWithRedirects(okHttpClient: OkHttpClient): HttpClient {
+        return HttpClient(OkHttp) {
+            engine { preconfigured = okHttpClient }
+            setupTulipKtor(this, followRedirects = true)
         }
     }
 

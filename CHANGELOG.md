@@ -1,5 +1,7 @@
 ## [Unreleased]
+### Changed
 - Use a single database instead of multiple
+- Fixed subtitle loading
 
 ## [0.14.1] - 2022-05-04
 ### Changed

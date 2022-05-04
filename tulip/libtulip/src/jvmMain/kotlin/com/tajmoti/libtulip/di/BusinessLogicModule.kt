@@ -4,7 +4,7 @@ import com.tajmoti.commonutils.PageSourceLoader
 import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libopensubtitles.OpenSubtitlesService
 import com.tajmoti.libtulip.di.impl.BusinessLogicModuleImpl
-import com.tajmoti.libtulip.di.qualifier.RawHttpClient
+import com.tajmoti.libtulip.di.qualifier.RawHttpClientWithoutRedirects
 import com.tajmoti.libtulip.facade.*
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.repository.UserFavoriteRepository
@@ -103,7 +103,7 @@ object BusinessLogicModule : IBusinessLogicModule {
         hostedTvDataRepository: HostedTvDataRepository,
         hostedToTmdbMappingRepository: ItemMappingRepository,
         linkExtractor: VideoLinkExtractor,
-        @RawHttpClient
+        @RawHttpClientWithoutRedirects
         httpClient: HttpClient
     ): StreamFacade {
         return BusinessLogicModuleImpl.provideStreamFacade(

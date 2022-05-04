@@ -16,19 +16,28 @@ object ApiServiceModule : IApiServiceModule {
 
     @Provides
     @Singleton
-    override fun provideTmdbService(config: TulipConfiguration, @RawHttpClient ktor: HttpClient): TmdbService {
+    override fun provideTmdbService(
+        config: TulipConfiguration,
+        @RawHttpClient ktor: HttpClient
+    ): TmdbService {
         return ApiServiceModuleImpl.provideTmdbService(config, ktor)
     }
 
     @Provides
     @Singleton
-    override fun provideOpenSubtitlesService(config: TulipConfiguration, @RawHttpClient ktor: HttpClient): OpenSubtitlesService {
+    override fun provideOpenSubtitlesService(
+        config: TulipConfiguration,
+        @RawHttpClient ktor: HttpClient
+    ): OpenSubtitlesService {
         return ApiServiceModuleImpl.provideOpenSubtitlesService(config, ktor)
     }
 
     @Provides
     @Singleton
-    override fun provideOpenSubtitlesFallbackService(config: TulipConfiguration, @RawHttpClient ktor: HttpClient): OpenSubtitlesFallbackService {
+    override fun provideOpenSubtitlesFallbackService(
+        config: TulipConfiguration,
+        @RawHttpClient ktor: HttpClient
+    ): OpenSubtitlesFallbackService {
         return ApiServiceModuleImpl.provideOpenSubtitlesFallbackService(config, ktor)
     }
 }
