@@ -1,7 +1,7 @@
 package ui.search
 
 import com.tajmoti.libtulip.model.key.ItemKey
-import com.tajmoti.libtulip.model.search.GroupedSearchResult
+import com.tajmoti.libtulip.dto.SearchResultDto
 import com.tajmoti.libtulip.ui.search.SearchUi
 import react.Props
 import react.dom.onClick
@@ -11,7 +11,7 @@ import ui.shared.LanguageBadge
 import ui.shared.ListButton
 
 internal external interface SearchResultProps : Props {
-    var group: GroupedSearchResult
+    var group: SearchResultDto
     var onResultClicked: (ItemKey) -> Unit
 }
 

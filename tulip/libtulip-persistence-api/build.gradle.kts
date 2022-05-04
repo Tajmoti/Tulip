@@ -33,6 +33,8 @@ kotlin {
 
 fun KotlinDependencyHandler.mainDeps() {
     implementation(project(":tulip:libtulip-api"))
+
+    implementation(Versions.Kotlin.serializationJson)
     with(Versions.Kotlin) {
         implementation(coroutinesCore)
     }

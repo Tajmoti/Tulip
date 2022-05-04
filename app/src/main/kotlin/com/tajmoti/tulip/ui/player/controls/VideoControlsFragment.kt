@@ -10,8 +10,9 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.tajmoti.libtulip.dto.SubtitleDto
 import com.tajmoti.libtulip.model.key.EpisodeKey
-import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
+import com.tajmoti.libtulip.model.key.SubtitleKey
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentVideoControlsBinding
@@ -79,7 +80,7 @@ class VideoControlsFragment : BaseFragment<FragmentVideoControlsBinding>(
 
     private fun showSubtitleSelectionDialog() {
         var dialog: Dialog? = null
-        val callback: (SubtitleInfo?) -> Unit = {
+        val callback: (SubtitleKey?) -> Unit = {
             dialog?.dismiss()
             viewModel.onSubtitlesSelected(it)
         }
@@ -110,8 +111,8 @@ class VideoControlsFragment : BaseFragment<FragmentVideoControlsBinding>(
     }
 
     private fun createSubtitleGroups(
-        state: List<SubtitleInfo>,
-        callback: (SubtitleInfo?) -> Unit,
+        state: List<SubtitleDto>,
+        callback: (SubtitleKey?) -> Unit,
     ): List<Group> {
         val groupedByLanguage = state
             .map { Locale.forLanguageTag(it.language) to it }
@@ -126,8 +127,8 @@ class VideoControlsFragment : BaseFragment<FragmentVideoControlsBinding>(
 
     private fun createSubtitleGroup(
         locale: Locale,
-        season: List<SubtitleInfo>,
-        callback: (SubtitleInfo?) -> Unit,
+        season: List<SubtitleDto>,
+        callback: (SubtitleKey?) -> Unit,
     ): ExpandableGroup {
         val header = SubtitleLanguageHeaderItem(locale)
         val group = ExpandableGroup(header)

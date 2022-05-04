@@ -1,10 +1,9 @@
 package com.tajmoti.tulip.ui.show
 
 import androidx.lifecycle.SavedStateHandle
-import com.tajmoti.libtulip.repository.FavoritesRepository
-import com.tajmoti.libtulip.repository.HostedTvDataRepository
-import com.tajmoti.libtulip.repository.PlayingHistoryRepository
-import com.tajmoti.libtulip.repository.TmdbTvDataRepository
+import com.tajmoti.libtulip.facade.PlayingProgressFacade
+import com.tajmoti.libtulip.facade.TvShowInfoFacade
+import com.tajmoti.libtulip.facade.UserFavoriteFacade
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModelImpl
 import com.tajmoti.tulip.ui.utils.DelegatingViewModel
@@ -15,16 +14,14 @@ import javax.inject.Inject
 @HiltViewModel
 class AndroidTvShowViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    hostedTvDataRepository: HostedTvDataRepository,
-    tmdbRepo: TmdbTvDataRepository,
-    favoritesRepository: FavoritesRepository,
-    historyRepository: PlayingHistoryRepository
+    tvShowInfoFacade: TvShowInfoFacade,
+    playingProgressFacade: PlayingProgressFacade,
+    favoriteFacade: UserFavoriteFacade,
 ) : DelegatingViewModel<TvShowViewModel>() {
     override val impl = TvShowViewModelImpl(
-        hostedTvDataRepository,
-        tmdbRepo,
-        favoritesRepository,
-        historyRepository,
+        tvShowInfoFacade,
+        playingProgressFacade,
+        favoriteFacade,
         delegatingViewModelScope,
         TvShowFragmentArgs.fromSavedStateHandle(savedStateHandle).itemKey
     )

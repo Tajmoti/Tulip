@@ -2,7 +2,7 @@ package com.tajmoti.multiplatform.store
 
 import com.dropbox.android.external.store4.*
 import com.tajmoti.libtulip.TulipConfiguration
-import com.tajmoti.libtulip.misc.job.NetworkResult
+import com.tajmoti.libtulip.model.result.NetworkResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map

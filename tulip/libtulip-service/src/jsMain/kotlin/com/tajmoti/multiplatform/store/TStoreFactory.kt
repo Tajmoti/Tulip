@@ -1,7 +1,7 @@
 package com.tajmoti.multiplatform.store
 
 import com.tajmoti.libtulip.TulipConfiguration
-import com.tajmoti.libtulip.misc.job.NetworkResult
+import com.tajmoti.libtulip.model.result.NetworkResult
 import kotlinx.coroutines.flow.*
 
 actual object TStoreFactory {

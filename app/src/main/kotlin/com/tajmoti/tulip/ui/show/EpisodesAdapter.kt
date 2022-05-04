@@ -1,7 +1,7 @@
 package com.tajmoti.tulip.ui.show
 
 import android.content.Context
-import com.tajmoti.libtulip.model.info.Episode
+import com.tajmoti.libtulip.dto.SeasonEpisodeDto
 import com.tajmoti.libtulip.ui.player.VideoPlayerUtils.episodeToLabel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ItemEpisodeBinding
@@ -9,14 +9,14 @@ import com.tajmoti.tulip.ui.base.BaseAdapter
 import com.tajmoti.tulip.ui.utils.loadImageAsBackground
 
 class EpisodesAdapter(
-    val onPlayClickedListener: ((Episode) -> Unit),
-    onDetailsClickedListener: ((Episode) -> Unit)
-) : BaseAdapter<Episode, ItemEpisodeBinding>(
+    val onPlayClickedListener: ((SeasonEpisodeDto) -> Unit),
+    onDetailsClickedListener: ((SeasonEpisodeDto) -> Unit)
+) : BaseAdapter<SeasonEpisodeDto, ItemEpisodeBinding>(
     ItemEpisodeBinding::inflate,
     onDetailsClickedListener
 ) {
 
-    override fun onBindViewHolder(context: Context, index: Int, binding: ItemEpisodeBinding, item: Episode) {
+    override fun onBindViewHolder(context: Context, index: Int, binding: ItemEpisodeBinding, item: SeasonEpisodeDto) {
         binding.episodeNumberAndTitle = episodeToLabel(item)
         binding.episodeRatingStr = getRating(context, item)
         binding.episodeDescription = item.overview
@@ -29,10 +29,8 @@ class EpisodesAdapter(
         }
     }
 
-    private fun getRating(context: Context, item: Episode): String {
-        val tmdbItem =
-            item as? Episode.Tmdb ?: return context.getString(R.string.no_rating)
-        val ratingFraction = tmdbItem.voteAverage ?: return context.getString(R.string.no_rating)
+    private fun getRating(context: Context, item: SeasonEpisodeDto): String {
+        val ratingFraction = item.voteAverage ?: return context.getString(R.string.no_rating)
         return context.getString(R.string.rating_format, ratingFraction)
     }
 }

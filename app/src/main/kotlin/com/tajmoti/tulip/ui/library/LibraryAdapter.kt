@@ -6,21 +6,21 @@ import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import com.tajmoti.libtulip.model.key.*
-import com.tajmoti.libtulip.ui.library.LibraryItem
+import com.tajmoti.libtulip.dto.LibraryItemDto
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ItemLibraryBinding
 import com.tajmoti.tulip.ui.base.BaseIdentityAdapter
 import com.tajmoti.tulip.ui.utils.loadImage
 
 class LibraryAdapter(
-    onImageClickListener: (LibraryItem) -> Unit,
+    onImageClickListener: (LibraryItemDto) -> Unit,
     private val onDetailsClickListener: (ItemKey) -> Unit
-) : BaseIdentityAdapter<LibraryItem, ItemLibraryBinding>(
+) : BaseIdentityAdapter<LibraryItemDto, ItemLibraryBinding>(
     ItemLibraryBinding::inflate,
     onImageClickListener
 ) {
 
-    override fun onBindViewHolder(context: Context, index: Int, binding: ItemLibraryBinding, item: LibraryItem) {
+    override fun onBindViewHolder(context: Context, index: Int, binding: ItemLibraryBinding, item: LibraryItemDto) {
         // Item name if not image is available
         binding.imageLibraryPoster.scaleType = ImageView.ScaleType.CENTER
         binding.textLibraryName.isVisible = true
@@ -43,7 +43,7 @@ class LibraryAdapter(
         // Details button
         binding.buttonDetails.setOnClickListener { onDetailsClickListener(item.key) }
         // Playing progress indicator
-        val progress = item.lastPlayedPosition?.progress
+        val progress = item.playingProgress?.progress
         val indicator = binding.progressIndicatorLibrary
         indicator.isVisible = progress != null
         if (progress != null) {
@@ -53,8 +53,8 @@ class LibraryAdapter(
         }
     }
 
-    private fun getEpisodeNumberLabelOrNull(context: Context, item: LibraryItem): Pair<Boolean, String>? {
-        val text = when (val key = item.lastPlayedPosition?.key) {
+    private fun getEpisodeNumberLabelOrNull(context: Context, item: LibraryItemDto): Pair<Boolean, String>? {
+        val text = when (val key = item.playingProgress?.key) {
             is EpisodeKey.Hosted -> null
             is EpisodeKey.Tmdb -> true to "S${key.seasonNumber}:E${key.episodeNumber}"
             is MovieKey.Hosted -> null
@@ -64,7 +64,7 @@ class LibraryAdapter(
         return text
     }
 
-    private fun getPlaceholderForItem(item: LibraryItem): Int {
+    private fun getPlaceholderForItem(item: LibraryItemDto): Int {
         val placeholder = if (item.key is TvShowKey) {
             R.drawable.ic_baseline_live_tv_128
         } else {

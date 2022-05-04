@@ -12,7 +12,7 @@ import com.tajmoti.tulip.repository.tmdb.AndroidTmdbMovieRepository
 import com.tajmoti.tulip.repository.tmdb.AndroidTmdbSeasonRepository
 import com.tajmoti.tulip.repository.tmdb.AndroidTmdbTvShowRepository
 import com.tajmoti.tulip.repository.user.AndroidUserFavoriteRepository
-import com.tajmoti.tulip.repository.user.AndroidUserLastPlayedPositionRepository
+import com.tajmoti.tulip.repository.user.AndroidUserPlayingProgressRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.migration.DisableInstallInCheck
@@ -60,7 +60,7 @@ interface AndroidDataStoreModule {
 
     @Binds
     @Singleton
-    fun provideUserLastPlayedPositionRepository(s: AndroidUserLastPlayedPositionRepository): UserLastPlayedPositionRepository
+    fun provideUserLastPlayedPositionRepository(s: AndroidUserPlayingProgressRepository): UserPlayingProgressRepository
 
     @Binds
     @Singleton

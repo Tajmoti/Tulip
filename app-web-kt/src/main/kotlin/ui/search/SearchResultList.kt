@@ -1,13 +1,13 @@
 package ui.search
 
 import com.tajmoti.libtulip.model.key.ItemKey
-import com.tajmoti.libtulip.model.search.GroupedSearchResult
+import com.tajmoti.libtulip.dto.SearchResultDto
 import react.Props
 import react.dom.div
 import react.fc
 
 internal external interface SearchResultListProps : Props {
-    var groups: List<GroupedSearchResult>
+    var groups: List<SearchResultDto>
     var onResultClicked: (ItemKey) -> Unit
 }
 

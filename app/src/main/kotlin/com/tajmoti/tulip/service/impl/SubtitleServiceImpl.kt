@@ -3,20 +3,21 @@ package com.tajmoti.tulip.service.impl
 import com.tajmoti.commonutils.flatMap
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
-import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
+import com.tajmoti.libtulip.model.key.SubtitleKey
 import com.tajmoti.libtulip.service.SubtitleService
 import io.ktor.utils.io.jvm.javaio.*
 import java.io.File
 import java.io.InputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
+import javax.inject.Inject
 
-class SubtitleServiceImpl(
+class SubtitleServiceImpl @Inject constructor(
     private val openSubtitlesFallbackService: OpenSubtitlesFallbackService
 ) : SubtitleService {
 
-    override suspend fun downloadSubtitleToFile(info: SubtitleInfo, directory: String): Result<String> {
-        return openSubtitleStream(info)
+    override suspend fun downloadSubtitleToFile(key: SubtitleKey, directory: String): Result<String> {
+        return openSubtitleStream(key)
             .flatMap { subtitleStream ->
                 val subtitleFile = File(directory, "sub.srt")
                 writeStreamToFile(subtitleFile, subtitleStream).map { subtitleFile.absolutePath }
@@ -34,7 +35,7 @@ class SubtitleServiceImpl(
         }
     }
 
-    private suspend fun openSubtitleStream(info: SubtitleInfo): Result<InputStream> {
+    private suspend fun openSubtitleStream(info: SubtitleKey): Result<InputStream> {
 //        val request = DownloadSubtitlesRequestBody(info.fileId)
 //        return runCatching { openSubtitlesService.downloadSubtitles(request) }
 //            .map { it.byteStream() }

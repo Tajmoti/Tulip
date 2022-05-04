@@ -9,10 +9,11 @@ import android.widget.ArrayAdapter
 import android.widget.Spinner
 import androidx.appcompat.widget.Toolbar
 import androidx.navigation.fragment.findNavController
-import com.tajmoti.libtulip.model.info.Season
-import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
+import com.tajmoti.libtulip.dto.SeasonDto
+import com.tajmoti.libtulip.dto.TvShowSeasonDto
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.SeasonKey
+import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import com.tajmoti.tulip.databinding.ActivityTabbedTvShowBinding
 import com.tajmoti.tulip.ui.MainActivity
@@ -91,11 +92,11 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
         (requireActivity() as MainActivity).swapActionBar(null)
     }
 
-    private fun onSeasonsChanged(seasons: List<Season>) {
+    private fun onSeasonsChanged(seasons: List<TvShowSeasonDto>) {
         val seasonKey = viewModel.selectedSeason.value
         seasonsAdapter.clear()
         seasonsAdapter.addAll(seasons.map { getSeasonTitle(requireContext(), it) })
-        updateSpinnerSelection(binding.header.spinnerSelectSeason, seasons, seasonKey?.season?.key)
+        updateSpinnerSelection(binding.header.spinnerSelectSeason, seasons, seasonKey?.key)
     }
 
     private fun onSeasonClicked(index: Int) {
@@ -103,14 +104,14 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
         viewModel.onSeasonSelected(item.key)
     }
 
-    private fun onSelectedSeasonChanged(season: SeasonWithEpisodes?) {
+    private fun onSelectedSeasonChanged(season: SeasonDto?) {
         val seasons = viewModel.seasons.value ?: return
         episodesAdapter.items = season?.episodes ?: return
         val spinner = binding.header.spinnerSelectSeason
-        updateSpinnerSelection(spinner, seasons, season.season.key)
+        updateSpinnerSelection(spinner, seasons, season.key)
     }
 
-    private fun updateSpinnerSelection(spinner: Spinner, seasons: List<Season>, seasonKey: SeasonKey?) {
+    private fun updateSpinnerSelection(spinner: Spinner, seasons: List<TvShowSeasonDto>, seasonKey: SeasonKey?) {
         val oldPos = seasons
             .indexOfFirst { it.key == seasonKey }
             .takeIf { it != -1 }
@@ -120,7 +121,7 @@ class TvShowFragment : BaseFragment<ActivityTabbedTvShowBinding>(
     }
 
     private fun goToStreamsScreen(episodeKey: EpisodeKey) {
-        TvShowFragmentDirections.actionNavigationTvShowToVideoPlayerActivity(episodeKey)
+        TvShowFragmentDirections.actionNavigationTvShowToVideoPlayerActivity(episodeKey as StreamableKey)
             .let { findNavController().navigate(it) }
     }
 }

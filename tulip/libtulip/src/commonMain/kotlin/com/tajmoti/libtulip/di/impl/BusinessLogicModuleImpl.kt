@@ -2,58 +2,39 @@ package com.tajmoti.libtulip.di.impl
 
 import com.tajmoti.commonutils.PageSourceLoader
 import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
+import com.tajmoti.libopensubtitles.OpenSubtitlesService
 import com.tajmoti.libprimewiretvprovider.PrimewireTvProvider
 import com.tajmoti.libtulip.di.IBusinessLogicModule
+import com.tajmoti.libtulip.facade.*
 import com.tajmoti.libtulip.model.hosted.StreamingService
-import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
-import com.tajmoti.libtulip.repository.HostedTvDataRepository
-import com.tajmoti.libtulip.repository.ItemMappingRepository
-import com.tajmoti.libtulip.repository.TmdbTvDataRepository
-import com.tajmoti.libtulip.service.MappingSearchService
-import com.tajmoti.libtulip.service.StreamExtractionService
-import com.tajmoti.libtulip.service.StreamService
-import com.tajmoti.libtulip.service.SubtitleService
-import com.tajmoti.libtulip.service.impl.MappingSearchServiceImpl
-import com.tajmoti.libtulip.service.impl.StreamServiceImpl
+import com.tajmoti.libtulip.model.key.SubtitleKey
+import com.tajmoti.libtulip.repository.UserFavoriteRepository
+import com.tajmoti.libtulip.repository.UserPlayingProgressRepository
+import com.tajmoti.libtulip.repository.impl.SubtitleFacadeImpl
+import com.tajmoti.libtulip.service.*
 import com.tajmoti.libtvprovider.MultiTvProvider
 import com.tajmoti.libtvprovider.kinox.KinoxTvProvider
 import com.tajmoti.libtvprovider.southpark.SouthParkTvProvider
 import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
+import io.ktor.client.*
 
 object BusinessLogicModuleImpl : IBusinessLogicModule {
-
-    override fun provideStreamService(
-        hostedTvDataRepository: HostedTvDataRepository,
-        extractionService: StreamExtractionService,
-        hostedToTmdbMappingRepository: ItemMappingRepository
-    ): StreamService {
-        return StreamServiceImpl(
-            hostedTvDataRepository,
-            extractionService,
-            hostedToTmdbMappingRepository
-        )
-    }
 
     override fun provideSubtitleService(
         openSubtitlesFallbackService: OpenSubtitlesFallbackService
     ): SubtitleService {
         return object : SubtitleService {
-            override suspend fun downloadSubtitleToFile(info: SubtitleInfo, directory: String): Result<String> {
+            override suspend fun downloadSubtitleToFile(key: SubtitleKey, directory: String): Result<String> {
                 return runCatching { TODO("provideSubtitleService") }
             }
         }
     }
 
-    override fun provideMappingSearchService(
-        hostedRepository: HostedTvDataRepository,
-        tmdbRepository: TmdbTvDataRepository,
-        hostedToTmdbMappingRepository: ItemMappingRepository,
-    ): MappingSearchService {
-        return MappingSearchServiceImpl(
-            hostedRepository,
-            tmdbRepository,
-            hostedToTmdbMappingRepository,
-        )
+    override fun provideSubtitleFacade(
+        openSubtitlesService: OpenSubtitlesService,
+        openSubtitlesFallbackService: OpenSubtitlesFallbackService,
+    ): SubtitleFacade {
+        return SubtitleFacadeImpl(openSubtitlesService, openSubtitlesFallbackService)
     }
 
     override fun provideMultiTvProvider(
@@ -76,5 +57,43 @@ object BusinessLogicModuleImpl : IBusinessLogicModule {
 
     override fun provideLinkExtractor(loader: PageSourceLoader): VideoLinkExtractor {
         return VideoLinkExtractor(loader)
+    }
+
+    override fun provideMappingSearchService(
+        tvProvider: MultiTvProvider<StreamingService>,
+        tmdbRepository: TmdbTvDataRepository,
+        itemMappingRepository: ItemMappingRepository
+    ): SearchFacade {
+        return SearchFacadeImpl(tvProvider, tmdbRepository, itemMappingRepository)
+    }
+
+    override fun provideUserFavoriteFacade(
+        favoritesRepository: UserFavoriteRepository,
+        tmdbRepo: TmdbTvDataRepository,
+        hostedTvDataRepository: HostedTvDataRepository,
+        historyRepository: PlayingHistoryRepository
+    ): UserFavoriteFacade {
+        return UserFavoriteFacadeImpl(favoritesRepository, tmdbRepo, hostedTvDataRepository, historyRepository)
+    }
+
+    override fun provideTvShowInfoFacade(
+        hostedTvDataRepository: HostedTvDataRepository,
+        tmdbRepo: TmdbTvDataRepository,
+        favoritesRepository: UserFavoriteRepository
+    ): TvShowInfoFacade {
+        return TvShowInfoFacadeImpl(hostedTvDataRepository, tmdbRepo, favoritesRepository)
+    }
+
+    override fun providePlayingProgressFacade(repository: UserPlayingProgressRepository): PlayingProgressFacade {
+        return PlayingProgressFacadeImpl(repository)
+    }
+
+    override fun provideStreamFacade(
+        hostedTvDataRepository: HostedTvDataRepository,
+        hostedToTmdbMappingRepository: ItemMappingRepository,
+        linkExtractor: VideoLinkExtractor,
+        httpClient: HttpClient
+    ): StreamFacade {
+        return StreamFacadeImpl(hostedTvDataRepository, hostedToTmdbMappingRepository, linkExtractor, httpClient)
     }
 }

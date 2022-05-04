@@ -2,9 +2,9 @@ package com.tajmoti.tulip.ui
 
 import android.content.Context
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.tajmoti.libtulip.model.info.Episode
+import com.tajmoti.libtulip.dto.SeasonEpisodeDto
+import com.tajmoti.libtulip.dto.TvShowSeasonDto
 import com.tajmoti.libtulip.model.info.LanguageCode
-import com.tajmoti.libtulip.model.info.Season
 import com.tajmoti.libtulip.ui.player.VideoPlayerUtils
 import com.tajmoti.tulip.R
 
@@ -16,7 +16,7 @@ fun languageToIcon(language: LanguageCode): Int? {
     }
 }
 
-fun getSeasonTitle(ctx: Context, season: Season): String {
+fun getSeasonTitle(ctx: Context, season: TvShowSeasonDto): String {
     val seasonTitle = if (season.seasonNumber == 0) {
         ctx.getString(R.string.season_specials)
     } else {
@@ -25,7 +25,7 @@ fun getSeasonTitle(ctx: Context, season: Season): String {
     return seasonTitle
 }
 
-fun showEpisodeDetailsDialog(ctx: Context, episodeInfo: Episode) {
+fun showEpisodeDetailsDialog(ctx: Context, episodeInfo: SeasonEpisodeDto) {
     MaterialAlertDialogBuilder(ctx)
         .setIcon(R.drawable.ic_baseline_live_tv_24)
         .setTitle(VideoPlayerUtils.episodeToLabel(episodeInfo))

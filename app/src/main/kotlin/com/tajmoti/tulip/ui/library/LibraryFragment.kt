@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtulip.ui.library.LibraryItem
+import com.tajmoti.libtulip.dto.LibraryItemDto
 import com.tajmoti.libtulip.ui.library.LibraryViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentLibraryBinding
@@ -49,8 +49,8 @@ class LibraryFragment : BaseFragment<FragmentLibraryBinding>(
         }
     }
 
-    private fun onItemImageClick(item: LibraryItem) {
-        val pos = item.lastPlayedPosition
+    private fun onItemImageClick(item: LibraryItemDto) {
+        val pos = item.playingProgress
         if (pos == null) {
             onDetailsClicked(item.key)
             return

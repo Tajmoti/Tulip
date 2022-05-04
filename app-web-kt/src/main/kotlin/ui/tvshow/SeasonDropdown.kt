@@ -1,8 +1,7 @@
 package ui.tvshow
 
-import com.tajmoti.libtulip.model.info.Season
-import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
-import com.tajmoti.libtulip.model.info.seasonNumber
+import com.tajmoti.libtulip.dto.SeasonDto
+import com.tajmoti.libtulip.dto.TvShowSeasonDto
 import com.tajmoti.libtulip.model.key.SeasonKey
 import org.w3c.dom.HTMLSelectElement
 import react.Props
@@ -11,8 +10,8 @@ import react.dom.select
 import react.fc
 
 internal external interface SeasonDropdownProps : Props {
-    var seasons: List<Season>
-    var season: SeasonWithEpisodes
+    var seasons: List<TvShowSeasonDto>
+    var season: SeasonDto
     var onSelected: (SeasonKey) -> Unit
 }
 

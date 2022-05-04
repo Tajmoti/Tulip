@@ -4,18 +4,20 @@ import arrow.core.Option
 import arrow.core.toOption
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.TulipConfiguration
-import com.tajmoti.libtulip.repository.TmdbMovieRepository
-import com.tajmoti.libtulip.repository.TmdbSeasonRepository
-import com.tajmoti.libtulip.repository.TmdbTvShowRepository
-import com.tajmoti.libtulip.misc.job.NetFlow
-import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
 import com.tajmoti.libtulip.model.info.TulipMovie
 import com.tajmoti.libtulip.model.info.TvShow
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtulip.repository.TmdbTvDataRepository
+import com.tajmoti.libtulip.model.result.NetFlow
+import com.tajmoti.libtulip.model.result.NetworkResult
+import com.tajmoti.libtulip.model.result.convert
+import com.tajmoti.libtulip.model.result.toResult
+import com.tajmoti.libtulip.repository.TmdbMovieRepository
+import com.tajmoti.libtulip.repository.TmdbSeasonRepository
+import com.tajmoti.libtulip.repository.TmdbTvShowRepository
+import com.tajmoti.libtulip.service.TmdbTvDataRepository
 import com.tajmoti.multiplatform.store.TStoreFactory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -47,11 +49,15 @@ class CachingTvDataRepository(
     )
     private val tmdbTvIdStore = TStoreFactory.createStore<TitleQuery, Option<TvShowKey.Tmdb>>(
         cache = config,
-        source = { net.findTvShowKey(it.name, it.firstAirDate).map { net -> net.toResult().map { key -> key.toOption() } } },
+        source = {
+            net.findTvShowKey(it.name, it.firstAirDate).map { net -> net.toResult().map { key -> key.toOption() } }
+        },
     )
     private val tmdbMovieIdStore = TStoreFactory.createStore<TitleQuery, Option<MovieKey.Tmdb>>(
         cache = config,
-        source = { net.findMovieKey(it.name, it.firstAirDate).map { net -> net.toResult().map { key -> key.toOption() } } },
+        source = {
+            net.findMovieKey(it.name, it.firstAirDate).map { net -> net.toResult().map { key -> key.toOption() } }
+        },
     )
 
     override fun findTvShowKey(name: String, firstAirYear: Int?): Flow<NetworkResult<TvShowKey.Tmdb?>> {

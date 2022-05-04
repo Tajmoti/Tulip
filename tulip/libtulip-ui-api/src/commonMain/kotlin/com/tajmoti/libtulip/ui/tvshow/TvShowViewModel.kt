@@ -1,8 +1,8 @@
 package com.tajmoti.libtulip.ui.tvshow
 
 import com.tajmoti.commonutils.map
-import com.tajmoti.libtulip.model.info.Season
-import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
+import com.tajmoti.libtulip.dto.SeasonDto
+import com.tajmoti.libtulip.dto.TvShowSeasonDto
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.ui.StateViewModel
@@ -23,11 +23,11 @@ interface TvShowViewModel : StateViewModel<TvShowViewModel.State> {
          * Seasons belonging to this TV show.
          * The list is sorted - specials come after all real seasons.
          */
-        val seasons: List<Season>?,
+        val seasons: List<TvShowSeasonDto>?,
         /**
          * Season to display episodes from.
          */
-        val selectedSeason: SeasonWithEpisodes?,
+        val selectedSeason: SeasonDto?,
         /**
          * Episode that isn't finished playing or null if none.
          */
@@ -58,13 +58,13 @@ interface TvShowViewModel : StateViewModel<TvShowViewModel.State> {
      * Seasons belonging to this TV show.
      * The list is sorted - specials come after all real seasons.
      */
-    val seasons: StateFlow<List<Season>?>
+    val seasons: StateFlow<List<TvShowSeasonDto>?>
         get() = state.map(viewModelScope, State::seasons)
 
     /**
      * Season to display episodes from.
      */
-    val selectedSeason: StateFlow<SeasonWithEpisodes?>
+    val selectedSeason: StateFlow<SeasonDto?>
         get() = state.map(viewModelScope, State::selectedSeason)
 
     /**

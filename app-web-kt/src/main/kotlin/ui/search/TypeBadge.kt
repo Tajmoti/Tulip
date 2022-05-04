@@ -1,6 +1,6 @@
 package ui.search
 
-import com.tajmoti.libtulip.model.search.GroupedSearchResult
+import com.tajmoti.libtulip.dto.SearchResultDto
 import kotlinx.html.SPAN
 import react.Props
 import react.RBuilder
@@ -9,18 +9,18 @@ import react.dom.span
 import react.fc
 
 internal external interface TypeBadgeProps : Props {
-    var group: GroupedSearchResult
+    var group: SearchResultDto
 }
 
 internal val TypeBadge = fc<TypeBadgeProps> { (group) ->
     when (group) {
-        is GroupedSearchResult.Movie ->
+        is SearchResultDto.Movie ->
             badge { +"Movie" }
-        is GroupedSearchResult.TvShow ->
+        is SearchResultDto.TvShow ->
             badge { +"TV" }
-        is GroupedSearchResult.UnrecognizedMovie ->
+        is SearchResultDto.UnrecognizedMovie ->
             badge { +"Other Movies" }
-        is GroupedSearchResult.UnrecognizedTvShow ->
+        is SearchResultDto.UnrecognizedTvShow ->
             badge { +"Other TV" }
     }
 }

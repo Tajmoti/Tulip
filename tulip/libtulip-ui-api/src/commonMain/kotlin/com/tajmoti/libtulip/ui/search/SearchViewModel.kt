@@ -1,7 +1,7 @@
 package com.tajmoti.libtulip.ui.search
 
 import com.tajmoti.commonutils.map
-import com.tajmoti.libtulip.model.search.GroupedSearchResult
+import com.tajmoti.libtulip.dto.SearchResultDto
 import com.tajmoti.libtulip.ui.StateViewModel
 import kotlinx.coroutines.flow.StateFlow
 
@@ -23,7 +23,7 @@ interface SearchViewModel : StateViewModel<SearchViewModel.State> {
      * All search results for the entered query.
      * Unrecognized results are moved to the end of the list.
      */
-    val results: StateFlow<List<GroupedSearchResult>>
+    val results: StateFlow<List<SearchResultDto>>
         get() = state.map(viewModelScope, State::results)
 
     /**
@@ -57,7 +57,7 @@ interface SearchViewModel : StateViewModel<SearchViewModel.State> {
          * All search results for the entered query.
          * Unrecognized results are moved to the end of the list.
          */
-        val results: List<GroupedSearchResult>,
+        val results: List<SearchResultDto>,
 
         /**
          * Special UI state or null if search successful

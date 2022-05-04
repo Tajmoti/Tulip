@@ -2,14 +2,16 @@ package com.tajmoti.libtulip.ui.tvshow
 
 import com.tajmoti.commonutils.mapNotNulls
 import com.tajmoti.commonutils.mapWith
-import com.tajmoti.libtulip.misc.job.NetworkResult
-import com.tajmoti.libtulip.model.info.Season
-import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
-import com.tajmoti.libtulip.model.info.TvShow
+import com.tajmoti.libtulip.dto.SeasonDto
+import com.tajmoti.libtulip.dto.TvShowDto
+import com.tajmoti.libtulip.dto.TvShowSeasonDto
+import com.tajmoti.libtulip.facade.PlayingProgressFacade
+import com.tajmoti.libtulip.facade.TvShowInfoFacade
+import com.tajmoti.libtulip.facade.UserFavoriteFacade
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtulip.repository.*
+import com.tajmoti.libtulip.model.result.NetworkResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -17,48 +19,44 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TvShowViewModelImpl constructor(
-    private val hostedTvDataRepository: HostedTvDataRepository,
-    private val tmdbRepo: TmdbTvDataRepository,
-    private val favoritesRepository: FavoritesRepository,
-    private val historyRepository: PlayingHistoryRepository,
+    private val tvShowInfoFacade: TvShowInfoFacade,
+    private val playingProgressFacade: PlayingProgressFacade,
+    private val favoriteFacade: UserFavoriteFacade,
     override val viewModelScope: CoroutineScope,
     private val initialItemKey: TvShowKey,
 ) : TvShowViewModel {
     private val itemKey = MutableStateFlow(initialItemKey)
     private val manuallySelectedSeason = MutableSharedFlow<SeasonKey?>(1)
     private val stateImpl = itemKey
-        .flatMapLatest(::loadSeasons)
+        .flatMapLatest(::tvShowInfoToResult)
         .stateInOffload(LoadingState.Loading)
-    private val nameImpl = itemKey
-        .flatMapLatest(::loadName)
+
     private val lastPlayedEpisode = itemKey
-        .flatMapLatest { historyRepository.getLastPlayedPosition(it) }
-        .map { (it?.key as? EpisodeKey) }
+        .flatMapLatest { playingProgressFacade.getPlayingProgressForTvShow(it) }
+        .map { it?.item }
     private val selectedSeasonImpl = merge(manuallySelectedSeason, lastPlayedEpisode.map { it?.seasonKey })
-        .flatMapLatest { it?.let(::getSeasonWithEpisodes) ?: selectInitialSeason() }
+        .flatMapLatest { it?.let { tvShowInfoFacade.getSeason(it) } ?: selectInitialSeason() }
         .mapNotNulls { it.data }
         .stateInOffload(null)
 
-    private fun selectInitialSeason(): Flow<NetworkResult<out SeasonWithEpisodes>?> {
+    private fun selectInitialSeason(): Flow<NetworkResult<out SeasonDto>?> {
         return stateImpl.flatMapLatest { loadingStateToInitialSeason(it) ?: flowOf(null) }
     }
 
-    private fun loadingStateToInitialSeason(it: LoadingState): Flow<NetworkResult<out SeasonWithEpisodes>>? {
+    private fun loadingStateToInitialSeason(it: LoadingState): Flow<NetworkResult<out SeasonDto>>? {
         return (it as? LoadingState.Success)
+            ?.dto
             ?.seasons
             ?.firstOrNull { it.seasonNumber == 1 }
-            ?.let { getSeasonWithEpisodes(it.key) }
+            ?.let { tvShowInfoFacade.getSeason(it.key) }
     }
-
-    private val isFavoriteImpl = favoritesRepository.isFavorite(initialItemKey)
-        .stateInOffload(false)
 
     override fun toggleFavorites() {
         viewModelScope.launch {
             if (isFavorite.value) {
-                favoritesRepository.deleteUserFavorite(initialItemKey)
+                favoriteFacade.removeItemFromFavorites(initialItemKey)
             } else {
-                favoritesRepository.addUserFavorite(initialItemKey)
+                favoriteFacade.addItemToFavorites(initialItemKey)
             }
         }
     }
@@ -67,72 +65,24 @@ class TvShowViewModelImpl constructor(
         viewModelScope.launch { manuallySelectedSeason.emit(season) }
     }
 
-    private fun loadSeasons(key: TvShowKey): Flow<LoadingState> {
-        return when (key) {
-            is TvShowKey.Hosted -> loadHostedSeasons(key)
-            is TvShowKey.Tmdb -> loadTmdbSeasons(key)
+    private fun tvShowInfoToResult(it: TvShowKey): Flow<LoadingState> {
+        return tvShowInfoFacade.getTvShowInfo(it)
+            .map { it.data?.let { tvShowDto -> LoadingState.Success(tvShowDto) } ?: LoadingState.Error }
+    }
+
+    private val internalState = combine(stateImpl, selectedSeasonImpl, lastPlayedEpisode) { a, b, c ->
+        when (a) {
+            LoadingState.Error -> InternalState() // TODO Error handling
+            LoadingState.Loading -> InternalState()
+            is LoadingState.Success -> InternalState(a, a.dto.name, b, a.dto.isFavorite, c)
         }
-    }
-
-    private fun loadTmdbSeasons(key: TvShowKey.Tmdb): Flow<LoadingState> {
-        return tmdbRepo.getTvShow(key)
-            .map { result -> resultToState(result) }
-    }
-
-    private fun loadHostedSeasons(key: TvShowKey.Hosted): Flow<LoadingState> {
-        return hostedTvDataRepository.getSeasons(key)
-            .map(::toState)
-    }
-
-    private fun loadName(key: TvShowKey) = when (key) {
-        is TvShowKey.Hosted -> hostedTvDataRepository.getTvShow(key)
-            .map { (it as? NetworkResult.Success)?.data?.name }
-        is TvShowKey.Tmdb -> tmdbRepo.getTvShow(key)
-            .map { result -> result.data?.name }
-    }
-
-    private fun getSeasonWithEpisodes(it: SeasonKey) = when (it) {
-        is SeasonKey.Hosted -> hostedTvDataRepository.getSeasonWithEpisodes(it)
-        is SeasonKey.Tmdb -> tmdbRepo.getSeasonWithEpisodes(it)
-    }
-
-    private fun toState(result: NetworkResult<List<Season.Hosted>>): LoadingState {
-        return when (result) {
-            is NetworkResult.Success -> LoadingState.Success(null, result.data)
-            else -> LoadingState.Error
-        }
-    }
-
-    private fun resultToState(result: NetworkResult<out TvShow.Tmdb>): LoadingState {
-        return when (result) {
-            is NetworkResult.Success<out TvShow.Tmdb> ->
-                tvToStateFlow(result.data)
-            is NetworkResult.Error ->
-                LoadingState.Error
-            is NetworkResult.Cached ->
-                tvToStateFlow(result.data) // TODO
-        }
-    }
-
-    private fun tvToStateFlow(show: TvShow.Tmdb): LoadingState {
-        return LoadingState.Success(show.backdropUrl, show.seasons)
-    }
-
-    private val internalState = combine(
-        stateImpl,
-        nameImpl,
-        selectedSeasonImpl,
-        isFavoriteImpl,
-        lastPlayedEpisode
-    ) { a, b, c, d, e -> InternalState(a, b, c, d, e) }
-        .stateInOffload(InternalState())
+    }.stateInOffload(InternalState())
 
     sealed interface LoadingState {
         object Loading : LoadingState
 
         data class Success(
-            val backdropPath: String?,
-            val seasons: List<Season>,
+            val dto: TvShowDto
         ) : LoadingState
 
         object Error : LoadingState
@@ -147,7 +97,7 @@ class TvShowViewModelImpl constructor(
         /**
          * Season to display episodes from.
          */
-        val selectedSeason: SeasonWithEpisodes? = null,
+        val selectedSeason: SeasonDto? = null,
         /**
          * Whether this item is saved in the user's favorites
          */
@@ -161,8 +111,8 @@ class TvShowViewModelImpl constructor(
     override val state = internalState.mapWith(viewModelScope) {
         TvShowViewModel.State(
             name = name,
-            backdropPath = (state as? LoadingState.Success)?.backdropPath,
-            seasons = (state as? LoadingState.Success)?.seasons?.let { s -> sortSpecialsLast(s) },
+            backdropPath = (state as? LoadingState.Success)?.dto?.backdropPath,
+            seasons = (state as? LoadingState.Success)?.dto?.seasons?.let { s -> sortSpecialsLast(s) },
             selectedSeason = selectedSeason,
             lastPlayedEpisode = lastPlayedEpisode,
             error = (state is LoadingState.Error),
@@ -170,7 +120,7 @@ class TvShowViewModelImpl constructor(
         )
     }
 
-    private fun sortSpecialsLast(seasons: List<Season>): List<Season> {
+    private fun sortSpecialsLast(seasons: List<TvShowSeasonDto>): List<TvShowSeasonDto> {
         return seasons.sortedWith { a, b ->
             val ax = a.seasonNumber.takeUnless { it == 0 } ?: Int.MAX_VALUE
             val bx = b.seasonNumber.takeUnless { it == 0 } ?: Int.MAX_VALUE

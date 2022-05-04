@@ -1,14 +1,14 @@
 package com.tajmoti.libtulip.di
 
-import com.tajmoti.libtulip.repository.*
 import com.tajmoti.libtulip.di.impl.ApiServiceModuleImpl
 import com.tajmoti.libtulip.di.impl.BusinessLogicModuleImpl
 import com.tajmoti.libtulip.di.impl.DataRepositoryModuleImpl
 import com.tajmoti.libtulip.di.impl.NetworkingModuleImpl
+import com.tajmoti.libtulip.facade.VideoDownloadFacade
 import com.tajmoti.libtulip.misc.HardcodedConfigStore
 import com.tajmoti.libtulip.misc.webdriver.KtorWebDriver
-import com.tajmoti.libtulip.service.VideoDownloadService
-import com.tajmoti.libtulip.service.impl.StubVideoDownloadService
+import com.tajmoti.libtulip.repository.*
+import com.tajmoti.libtulip.facade.StubVideoDownloadFacade
 import com.tajmoti.libtulip.ui.library.LibraryViewModel
 import com.tajmoti.libtulip.ui.library.LibraryViewModelImpl
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
@@ -39,19 +39,21 @@ private val apiServiceModule = module {
 private val dataRepositoryModule = module {
     single { DataRepositoryModuleImpl.bindHostedTvDataRepository(get(), get(), get(), get(), get(), get()) }
     single { DataRepositoryModuleImpl.provideItemMappingRepository(get(), get()) }
-    single { DataRepositoryModuleImpl.provideStreamsRepository(get(), get()) }
     single { DataRepositoryModuleImpl.provideTmdbTvDataRepository(get(), get(), get(), get(), get()) }
-    single { DataRepositoryModuleImpl.provideFavoritesRepository(get()) }
-    single { DataRepositoryModuleImpl.provideSubtitleRepository(get(), get()) }
     single { DataRepositoryModuleImpl.providePlayingHistoryRepository(get()) }
 }
 
 private val businessLogicModule = module {
-    single { BusinessLogicModuleImpl.provideStreamService(get(), get(), get()) }
     single { BusinessLogicModuleImpl.provideSubtitleService(get()) }
     single { BusinessLogicModuleImpl.provideMappingSearchService(get(), get(), get()) }
     single { BusinessLogicModuleImpl.provideMultiTvProvider(get(), setOf("PRIMEWIRE")) }
     single { BusinessLogicModuleImpl.provideLinkExtractor(get()) }
+    single { BusinessLogicModuleImpl.provideTvShowInfoFacade(get(), get(), get()) }
+    single { BusinessLogicModuleImpl.provideUserFavoriteFacade(get(), get(), get(), get()) }
+    single { BusinessLogicModuleImpl.providePlayingProgressFacade(get()) }
+    single { BusinessLogicModuleImpl.provideStreamFacade(get(), get(), get(), get()) }
+    single { BusinessLogicModuleImpl.provideSubtitleFacade(get(), get()) }
+    single<VideoDownloadFacade> { StubVideoDownloadFacade() }
 }
 
 private val dataSourceModule = module {
@@ -66,15 +68,14 @@ private val dataSourceModule = module {
     single<TmdbSeasonRepository> { BrowserTmdbSeasonRepository(get()) }
     single<TmdbTvShowRepository> { BrowserTmdbTvShowRepository() }
     single<UserFavoriteRepository> { BrowserUserFavoriteRepository() }
-    single<UserLastPlayedPositionRepository> { BrowserUserLastPlayedPositionRepository() }
-    single<VideoDownloadService> { StubVideoDownloadService() }
+    single<UserPlayingProgressRepository> { BrowserUserPlayingProgressRepository() }
 }
 
 private val screenModule = module {
-    factory<TvShowViewModel> { p -> TvShowViewModelImpl(get(), get(), get(), get(), p.get(), p.get()) }
-    factory<LibraryViewModel> { p -> LibraryViewModelImpl(get(), get(), get(), get(), p.get()) }
+    factory<TvShowViewModel> { p -> TvShowViewModelImpl(get(), get(), get(), p.get(), p.get()) }
+    factory<LibraryViewModel> { p -> LibraryViewModelImpl(get(), p.get()) }
     factory<SearchViewModel> { p -> SearchViewModelImpl(get(), p.get()) }
-    factory<VideoPlayerViewModel> { p -> VideoPlayerViewModelImpl(get(), get(),get(), get(),get(), get(),get(), get(), p.get(), p.get(), p.get()) }
+    factory<VideoPlayerViewModel> { p -> VideoPlayerViewModelImpl(get(), get(),get(), get(), get(), get(), get(), p.get(), p.get()) }
 }
 
 val tulipModule = listOf(

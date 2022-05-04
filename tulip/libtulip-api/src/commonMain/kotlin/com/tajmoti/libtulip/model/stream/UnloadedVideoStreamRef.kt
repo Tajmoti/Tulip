@@ -8,6 +8,6 @@ data class UnloadedVideoStreamRef(
     val info: VideoStreamRef,
     val linkExtractionSupported: Boolean,
     val language: LanguageCode
-): IdentityItem<VideoStreamRef> {
+) : IdentityItem<VideoStreamRef> {
     override val key = info
 }

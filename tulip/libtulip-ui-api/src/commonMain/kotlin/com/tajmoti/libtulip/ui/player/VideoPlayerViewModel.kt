@@ -1,11 +1,12 @@
 package com.tajmoti.libtulip.ui.player
 
 import com.tajmoti.commonutils.map
+import com.tajmoti.libtulip.dto.SubtitleDto
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.StreamableKey
+import com.tajmoti.libtulip.model.key.SubtitleKey
 import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
-import com.tajmoti.libtulip.model.subtitle.SubtitleInfo
 import com.tajmoti.libtulip.ui.StateViewModel
 import com.tajmoti.libtulip.ui.streams.FailedLink
 import com.tajmoti.libtulip.ui.streams.LoadedLink
@@ -52,7 +53,7 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
      * The user has selected which subtitles they wish to use.
      * The subtitles need to be downloaded before the video is played.
      */
-    fun onSubtitlesSelected(subtitleInfo: SubtitleInfo?)
+    fun onSubtitlesSelected(key: SubtitleKey?)
 
     /**
      * The user heard a word that they want to match to some text.
@@ -211,7 +212,7 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
         /**
          * Successful result of subtitle loading.
          */
-        val subtitleList: List<SubtitleInfo>,
+        val subtitleList: List<SubtitleDto>,
 
         /**
          * Whether the list of available subtitles is being loaded right now.
@@ -330,7 +331,7 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
     /**
      * Successful result of subtitle loading.
      */
-    val subtitleList: StateFlow<List<SubtitleInfo>>
+    val subtitleList: StateFlow<List<SubtitleDto>>
         get() = state.map(viewModelScope) { it.subtitleState.subtitleList }
 
     /**

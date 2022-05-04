@@ -1,9 +1,8 @@
 package com.tajmoti.libtulip.ui.search
 
 import com.tajmoti.commonutils.mapWith
-import com.tajmoti.libtulip.model.hosted.MappedSearchResult
-import com.tajmoti.libtulip.model.search.GroupedSearchResult
-import com.tajmoti.libtulip.service.MappingSearchService
+import com.tajmoti.libtulip.dto.SearchResultDto
+import com.tajmoti.libtulip.facade.SearchFacade
 import com.tajmoti.libtulip.ui.search.SearchViewModel.Companion.DEBOUNCE_INTERVAL_MS
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -12,7 +11,7 @@ import kotlinx.coroutines.flow.*
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class SearchViewModelImpl(
-    private val mappingSearchService: MappingSearchService,
+    private val mappingSearchService: SearchFacade,
     override val viewModelScope: CoroutineScope,
 ) : SearchViewModel {
     /**
@@ -46,57 +45,20 @@ class SearchViewModelImpl(
 
     private fun searchQuery(query: String) = flow {
         emit(LoadingState.Searching)
-        val flowOfStates = mappingSearchService.searchAndCreateMappings(query)
+        val flowOfStates = mappingSearchService.search(query)
             .map { result ->
                 result.fold(
-                    { LoadingState.Success(groupAndSortMappedResults(it)) },
-                    { LoadingState.Error })
+                    { LoadingState.Success(it) },
+                    { LoadingState.Error }
+                )
             }
         emitAll(flowOfStates)
     }
 
-    private fun groupAndSortMappedResults(it: List<MappedSearchResult>): List<GroupedSearchResult> {
-        return groupSearchResults(it).sortedWith(groupComparator)
-    }
-
-    private fun groupSearchResults(it: List<MappedSearchResult>): List<GroupedSearchResult> {
-        val tvShows = it.mapNotNull { it as? MappedSearchResult.TvShow }
-        val movies = it.mapNotNull { it as? MappedSearchResult.Movie }
-        return groupItemsByTmdbIds(tvShows) + groupItemsByTmdbIdsMovie(movies)
-    }
-
-    private val groupComparator = Comparator<GroupedSearchResult> { a, b ->
-        val typeA = getItemType(a)
-        val typeB = getItemType(b)
-        typeA.compareTo(typeB)
-    }
-
-    private fun getItemType(a: GroupedSearchResult?) = when (a) {
-        is GroupedSearchResult.TvShow, is GroupedSearchResult.Movie -> 0
-        else -> 1
-    }
-
-    private fun groupItemsByTmdbIds(items: List<MappedSearchResult.TvShow>): List<GroupedSearchResult> {
-        return items
-            .groupBy { it.tmdbId }
-            .mapNotNull { (key, value) ->
-                key?.let { GroupedSearchResult.TvShow(key, value) } ?: GroupedSearchResult.UnrecognizedTvShow(value)
-            }
-    }
-
-    private fun groupItemsByTmdbIdsMovie(items: List<MappedSearchResult.Movie>): List<GroupedSearchResult> {
-        return items
-            .groupBy { it.tmdbId }
-            .mapNotNull { (key, value) ->
-                key?.let { GroupedSearchResult.Movie(key, value) } ?: GroupedSearchResult.UnrecognizedMovie(value)
-            }
-    }
-
-
     sealed interface LoadingState {
         object Idle : LoadingState
         object Searching : LoadingState
-        data class Success(val results: List<GroupedSearchResult>) : LoadingState
+        data class Success(val results: List<SearchResultDto>) : LoadingState
         object Error : LoadingState
     }
 

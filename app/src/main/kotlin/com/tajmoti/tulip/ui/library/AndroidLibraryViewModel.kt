@@ -1,9 +1,6 @@
 package com.tajmoti.tulip.ui.library
 
-import com.tajmoti.libtulip.repository.FavoritesRepository
-import com.tajmoti.libtulip.repository.HostedTvDataRepository
-import com.tajmoti.libtulip.repository.PlayingHistoryRepository
-import com.tajmoti.libtulip.repository.TmdbTvDataRepository
+import com.tajmoti.libtulip.facade.UserFavoriteFacade
 import com.tajmoti.libtulip.ui.library.LibraryViewModel
 import com.tajmoti.libtulip.ui.library.LibraryViewModelImpl
 import com.tajmoti.tulip.ui.utils.DelegatingViewModel
@@ -13,16 +10,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AndroidLibraryViewModel @Inject constructor(
-    favoritesRepo: FavoritesRepository,
-    historyRepository: PlayingHistoryRepository,
-    hostedRepo: HostedTvDataRepository,
-    tmdbRepo: TmdbTvDataRepository,
+    userFavoriteFacade: UserFavoriteFacade,
 ) : DelegatingViewModel<LibraryViewModel>() {
     override val impl = LibraryViewModelImpl(
-        favoritesRepo,
-        historyRepository,
-        hostedRepo,
-        tmdbRepo,
+        userFavoriteFacade,
         delegatingViewModelScope
     )
 }

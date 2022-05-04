@@ -148,3 +148,7 @@ fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, R> combine(
         args[8] as T9
     )
 }
+
+inline fun <T, S> Flow<List<T>>.mapEach(crossinline transform: suspend (T) -> S): Flow<List<S>> {
+    return map { list -> list.map { item -> transform(item) } }
+}

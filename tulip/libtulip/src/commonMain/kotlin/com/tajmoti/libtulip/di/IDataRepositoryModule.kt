@@ -1,15 +1,14 @@
 package com.tajmoti.libtulip.di
 
-import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
-import com.tajmoti.libopensubtitles.OpenSubtitlesService
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtulip.TulipConfiguration
-import com.tajmoti.libtulip.repository.*
 import com.tajmoti.libtulip.model.hosted.StreamingService
-import com.tajmoti.libtulip.service.StreamExtractionService
+import com.tajmoti.libtulip.repository.*
+import com.tajmoti.libtulip.service.HostedTvDataRepository
+import com.tajmoti.libtulip.service.ItemMappingRepository
+import com.tajmoti.libtulip.service.PlayingHistoryRepository
+import com.tajmoti.libtulip.service.TmdbTvDataRepository
 import com.tajmoti.libtvprovider.MultiTvProvider
-import com.tajmoti.libtvvideoextractor.VideoLinkExtractor
-import io.ktor.client.*
 
 interface IDataRepositoryModule {
     fun bindHostedTvDataRepository(
@@ -26,11 +25,6 @@ interface IDataRepositoryModule {
         movieMappingRepository: MovieMappingRepository,
     ): ItemMappingRepository
 
-    fun provideStreamsRepository(
-        linkExtractor: VideoLinkExtractor,
-        httpClient: HttpClient
-    ): StreamExtractionService
-
     fun provideTmdbTvDataRepository(
         service: TmdbService,
         tvRepository: TmdbTvShowRepository,
@@ -39,12 +33,5 @@ interface IDataRepositoryModule {
         config: TulipConfiguration
     ): TmdbTvDataRepository
 
-    fun provideFavoritesRepository(repo: UserFavoriteRepository): FavoritesRepository
-
-    fun provideSubtitleRepository(
-        openSubtitlesService: OpenSubtitlesService,
-        openSubtitlesFallbackService: OpenSubtitlesFallbackService,
-    ): SubtitleRepository
-
-    fun providePlayingHistoryRepository(dataSource: UserLastPlayedPositionRepository): PlayingHistoryRepository
+    fun providePlayingHistoryRepository(dataSource: UserPlayingProgressRepository): PlayingHistoryRepository
 }

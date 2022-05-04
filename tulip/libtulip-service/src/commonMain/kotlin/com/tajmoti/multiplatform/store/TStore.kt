@@ -1,6 +1,6 @@
 package com.tajmoti.multiplatform.store
 
-import com.tajmoti.libtulip.misc.job.NetworkResult
+import com.tajmoti.libtulip.model.result.NetworkResult
 import kotlinx.coroutines.flow.Flow
 
 interface TStore<Key : Any, Output : Any> {

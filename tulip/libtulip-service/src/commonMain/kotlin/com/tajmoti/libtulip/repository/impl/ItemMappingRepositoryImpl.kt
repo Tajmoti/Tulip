@@ -1,11 +1,11 @@
 package com.tajmoti.libtulip.repository.impl
 
 import com.tajmoti.commonutils.logger
-import com.tajmoti.libtulip.repository.MovieMappingRepository
-import com.tajmoti.libtulip.repository.TvShowMappingRepository
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtulip.repository.ItemMappingRepository
+import com.tajmoti.libtulip.repository.MovieMappingRepository
+import com.tajmoti.libtulip.repository.TvShowMappingRepository
+import com.tajmoti.libtulip.service.ItemMappingRepository
 import kotlinx.coroutines.flow.Flow
 
 class ItemMappingRepositoryImpl(

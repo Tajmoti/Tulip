@@ -9,11 +9,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.tajmoti.libtulip.model.hosted.MappedSearchResult
+import com.tajmoti.libtulip.dto.SearchResultGroupDto
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtulip.model.search.GroupedSearchResult
+import com.tajmoti.libtulip.dto.SearchResultDto
 import com.tajmoti.libtulip.ui.search.SearchViewModel
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.FragmentSearchBinding
@@ -69,7 +69,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
         (requireActivity() as MainActivity).swapActionBar(null)
     }
 
-    private fun onSearchResultClicked(result: GroupedSearchResult) {
+    private fun onSearchResultClicked(result: SearchResultDto) {
         val id = result.tmdbId
         val results = result.results
         if (id != null) {
@@ -79,7 +79,7 @@ class SearchFragment : BaseFragment<FragmentSearchBinding>(
         }
     }
 
-    private fun onUnidentifiedResultClicked(variants: List<MappedSearchResult>) {
+    private fun onUnidentifiedResultClicked(variants: List<SearchResultGroupDto>) {
         val labels = variants
             .map { "[${it.info.language.uppercase()}][${it.key.streamingService}] ${it.info.name}" }
             .toTypedArray()

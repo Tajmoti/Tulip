@@ -2,14 +2,8 @@ package com.tajmoti.tulip.ui.player
 
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
-import com.tajmoti.libtulip.repository.HostedTvDataRepository
-import com.tajmoti.libtulip.repository.PlayingHistoryRepository
-import com.tajmoti.libtulip.repository.SubtitleRepository
-import com.tajmoti.libtulip.repository.TmdbTvDataRepository
-import com.tajmoti.libtulip.service.StreamExtractionService
-import com.tajmoti.libtulip.service.StreamService
+import com.tajmoti.libtulip.facade.*
 import com.tajmoti.libtulip.service.SubtitleService
-import com.tajmoti.libtulip.service.VideoDownloadService
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModelImpl
 import com.tajmoti.tulip.ui.utils.DelegatingViewModel
@@ -21,13 +15,11 @@ import javax.inject.Inject
 @HiltViewModel
 class AndroidVideoPlayerViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    subtitleRepository: SubtitleRepository,
-    playingHistoryRepository: PlayingHistoryRepository,
-    tmdbTvDataRepository: TmdbTvDataRepository,
-    hostedTvDataRepository: HostedTvDataRepository,
-    downloadService: VideoDownloadService,
-    extractionService: StreamExtractionService,
-    streamService: StreamService,
+    tvShowInfoFacade: TvShowInfoFacade,
+    streamService: StreamFacade,
+    playingHistoryRepository: PlayingProgressFacade,
+    downloadService: VideoDownloadFacade,
+    subtitleRepository: SubtitleFacade,
     subtitleService: SubtitleService,
     @ApplicationContext
     context: Context
@@ -35,13 +27,11 @@ class AndroidVideoPlayerViewModel @Inject constructor(
     override val impl = run {
         val args = VideoPlayerActivityArgs.fromSavedStateHandle(savedStateHandle)
         VideoPlayerViewModelImpl(
-            subtitleRepository,
-            playingHistoryRepository,
-            tmdbTvDataRepository,
-            hostedTvDataRepository,
-            downloadService,
-            extractionService,
+            tvShowInfoFacade,
             streamService,
+            playingHistoryRepository,
+            downloadService,
+            subtitleRepository,
             subtitleService,
             context.getExternalFilesDir(null)!!.absolutePath,
             delegatingViewModelScope,

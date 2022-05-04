@@ -36,6 +36,7 @@ fun KotlinDependencyHandler.mainDeps() {
 
     implementation(project(":tvprovider:libtvprovider"))
     implementation(project(":libtvvideoextractor"))
+    implementation(project(":tvprovider:libtvprovider"))
 
     implementation(Versions.Kotlin.serializationJson)
     with(Versions.Kotlin) {

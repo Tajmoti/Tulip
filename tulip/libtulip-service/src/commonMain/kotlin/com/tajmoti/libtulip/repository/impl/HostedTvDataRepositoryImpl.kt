@@ -3,11 +3,6 @@ package com.tajmoti.libtulip.repository.impl
 import com.tajmoti.commonutils.flatMap
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.TulipConfiguration
-import com.tajmoti.libtulip.repository.HostedMovieRepository
-import com.tajmoti.libtulip.repository.HostedSeasonRepository
-import com.tajmoti.libtulip.repository.HostedTvShowRepository
-import com.tajmoti.libtulip.misc.job.NetFlow
-import com.tajmoti.libtulip.misc.job.NetworkResult
 import com.tajmoti.libtulip.model.hosted.StreamingService
 import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
 import com.tajmoti.libtulip.model.info.TulipMovie
@@ -16,10 +11,16 @@ import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.key.TvShowKey
-import com.tajmoti.libtulip.repository.HostedTvDataRepository
-import com.tajmoti.libtulip.repository.TmdbTvDataRepository
+import com.tajmoti.libtulip.model.result.NetFlow
+import com.tajmoti.libtulip.model.result.NetworkResult
+import com.tajmoti.libtulip.model.result.map
+import com.tajmoti.libtulip.model.result.toResult
+import com.tajmoti.libtulip.repository.HostedMovieRepository
+import com.tajmoti.libtulip.repository.HostedSeasonRepository
+import com.tajmoti.libtulip.repository.HostedTvShowRepository
+import com.tajmoti.libtulip.service.HostedTvDataRepository
+import com.tajmoti.libtulip.service.TmdbTvDataRepository
 import com.tajmoti.libtvprovider.MultiTvProvider
-import com.tajmoti.libtvprovider.model.SearchResult
 import com.tajmoti.libtvprovider.model.TvItem
 import com.tajmoti.libtvprovider.model.VideoStreamRef
 import com.tajmoti.multiplatform.store.TStoreFactory
@@ -64,13 +65,6 @@ class HostedTvDataRepositoryImpl(
         cache = config.hostedItemCacheParams,
         source = ::getStreamableLinksAsFlow
     )
-
-
-    override fun search(query: String): Flow<Map<StreamingService, Result<List<SearchResult>>>> {
-        logger.debug { "Searching '$query'" }
-        return tvProvider.search(query)
-            .onEach { it.onEach { (service, listResult) -> logExceptions(service, listResult) } }
-    }
 
     override fun getTvShow(key: TvShowKey.Hosted): NetFlow<TvShow.Hosted> {
         logger.debug { "Retrieving $key" }
@@ -125,11 +119,6 @@ class HostedTvDataRepositoryImpl(
     private fun getHostedMovieInfo(tvShowInfo: TvItem.Movie, key: MovieKey.Hosted): Flow<Result<TulipMovie.Hosted>> {
         return tmdbRepo.findMovieKey(tvShowInfo.info.name, tvShowInfo.info.firstAirDateYear)
             .map { it.toResult().flatMap { tmdbKey -> Result.success(tvShowInfo.fromNetwork(key, tmdbKey)) } }
-    }
-
-    private fun logExceptions(service: StreamingService, result: Result<List<SearchResult>>) {
-        val exception = result.exceptionOrNull() ?: return
-        logger.warn(exception) { "$service failed" }
     }
 
     override fun fetchStreams(key: StreamableKey.Hosted): NetFlow<List<VideoStreamRef>> {
