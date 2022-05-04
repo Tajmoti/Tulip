@@ -7,7 +7,10 @@ import kotlinx.serialization.json.Json
 
 fun setupTulipKtor(c: HttpClientConfig<*>, followRedirects: Boolean = false) = with(c) {
     install(ContentNegotiation) {
-        json(Json { ignoreUnknownKeys = true })
+        json(Json {
+            coerceInputValues = true
+            ignoreUnknownKeys = true
+        })
     }
     this.followRedirects = followRedirects
     expectSuccess = false
