@@ -9,7 +9,8 @@ import io.ktor.util.reflect.*
 class KtorRektor(
     val client: HttpClient,
     private val baseUrl: String,
-    private val extraQueryParams: Map<String, String> = emptyMap()
+    private val queryParams: Map<String, String> = emptyMap(),
+    private val headers: Map<String, String> = emptyMap(),
 ) : Rektor {
 
     override suspend fun <T : Any> execute(request: Request<T>): T {
@@ -23,7 +24,8 @@ class KtorRektor(
         val (_, queryParams, _, headers, body) = request
         return client.get(url) {
             queryParams.forEach { (key, value) -> this.url.parameters[key] = value }
-            extraQueryParams.forEach { (key, value) -> this.url.parameters[key] = value }
+            this@KtorRektor.queryParams.forEach { (key, value) -> this.url.parameters[key] = value }
+            this@KtorRektor.headers.forEach { (key, value) -> this.headers[key] = value }
             headers.forEach { (key, value) -> this.headers[key] = value }
             body?.let { setBody(body) }
         }

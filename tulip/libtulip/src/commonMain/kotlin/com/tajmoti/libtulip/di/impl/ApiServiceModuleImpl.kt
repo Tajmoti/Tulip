@@ -15,19 +15,19 @@ import io.ktor.client.*
 object ApiServiceModuleImpl : IApiServiceModule {
     override fun provideTmdbService(config: TulipConfiguration, ktor: HttpClient): TmdbService {
         val queryParams = mapOf("api_key" to config.tmdbApiKey)
-        val rektor = KtorRektor(ktor, "https://api.themoviedb.org/", queryParams)
+        val rektor = KtorRektor(ktor, "https://api.themoviedb.org/", queryParams = queryParams)
         return RektorTmdbService(LoggingRektor(rektor))
     }
 
     override fun provideOpenSubtitlesService(config: TulipConfiguration, ktor: HttpClient): OpenSubtitlesService {
-        val queryParams = mapOf("Api-Key" to config.openSubtitlesApiKey)
-        val rektor = KtorRektor(ktor, "https://api.opensubtitles.com/", queryParams)
+        val headers = mapOf("Api-Key" to config.openSubtitlesApiKey)
+        val rektor = KtorRektor(ktor, "https://api.opensubtitles.com/", headers = headers)
         return RektorOpenSubtitlesService(LoggingRektor(rektor))
     }
 
     override fun provideOpenSubtitlesFallbackService(config: TulipConfiguration, ktor: HttpClient): OpenSubtitlesFallbackService {
-        val queryParams = mapOf("Api-Key" to config.openSubtitlesApiKey)
-        val rektor = KtorRektor(ktor, "https://www.opensubtitles.org/", queryParams)
+        val headers = mapOf("Api-Key" to config.openSubtitlesApiKey)
+        val rektor = KtorRektor(ktor, "https://www.opensubtitles.org/", headers = headers)
         return RektorOpenSubtitlesFallbackService(LoggingRektor(rektor))
     }
 }
