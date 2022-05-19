@@ -1,8 +1,8 @@
 package com.tajmoti.tulip.mapper.hosted
 
-import com.tajmoti.libtulip.model.info.LanguageCode
-import com.tajmoti.libtulip.model.info.Season
-import com.tajmoti.libtulip.model.info.TvShow
+import com.tajmoti.libtulip.model.LanguageCode
+import com.tajmoti.libtulip.model.Season
+import com.tajmoti.libtulip.model.TvShow
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.tulip.entity.hosted.HostedTvShow
 

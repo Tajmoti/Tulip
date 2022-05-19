@@ -1,8 +1,8 @@
 package com.tajmoti.libtulip.repository
 
-import com.tajmoti.libtulip.model.info.Episode
-import com.tajmoti.libtulip.model.info.Season
-import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
+import com.tajmoti.libtulip.model.Episode
+import com.tajmoti.libtulip.model.Season
+import com.tajmoti.libtulip.model.SeasonWithEpisodes
 import com.tajmoti.libtulip.model.key.SeasonKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine

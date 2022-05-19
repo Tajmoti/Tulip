@@ -2,7 +2,7 @@ package com.tajmoti.tulip.entity.hosted
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import com.tajmoti.libtulip.model.hosted.StreamingService
+import com.tajmoti.libtulip.model.key.StreamingService
 
 @Entity(
     primaryKeys = ["service", "tvShowKey", "seasonNumber", "key"],

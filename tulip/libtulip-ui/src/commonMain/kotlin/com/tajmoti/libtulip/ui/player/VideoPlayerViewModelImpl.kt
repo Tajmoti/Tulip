@@ -5,8 +5,6 @@ import com.tajmoti.commonutils.mapWith
 import com.tajmoti.libtulip.PREFERRED_LANGUAGE
 import com.tajmoti.libtulip.dto.*
 import com.tajmoti.libtulip.facade.*
-import com.tajmoti.libtulip.model.info.LanguageCode
-import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.key.SubtitleKey
@@ -493,7 +491,7 @@ class VideoPlayerViewModelImpl constructor(
 
         data class Error(
             override val stream: StreamingSiteLinkDto,
-            val languageCode: LanguageCode,
+            val languageCode: LanguageCodeDto,
             override val download: Boolean,
             val captcha: CaptchaInfoDto?,
         ) : LinkLoadingState
@@ -534,7 +532,7 @@ class VideoPlayerViewModelImpl constructor(
         /**
          * Streamable info of [InternalState.streamableKey] or null if not yet available.
          */
-        val streamableInfo: StreamableInfo? = null,
+        val streamableInfo: StreamableInfoDto? = null,
         /**
          * If this is a TV show, this is its information.
          */

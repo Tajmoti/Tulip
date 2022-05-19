@@ -1,6 +1,6 @@
 package com.tajmoti.libtulip.repository
 
-import com.tajmoti.libtulip.model.info.TvShow
+import com.tajmoti.libtulip.model.TvShow
 import com.tajmoti.libtulip.model.key.TvShowKey
 import kotlinx.coroutines.flow.Flow
 

@@ -1,6 +1,6 @@
 package com.tajmoti.tulip.mapper.tmdb
 
-import com.tajmoti.libtulip.model.info.Season
+import com.tajmoti.libtulip.model.Season
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.tulip.entity.tmdb.TmdbSeason

@@ -1,6 +1,5 @@
 package com.tajmoti.libtulip.model.key
 
-import com.tajmoti.libtulip.model.hosted.StreamingService
 
 inline val SeasonKey.Hosted.streamingService: StreamingService
     get() = tvShowKey.streamingService

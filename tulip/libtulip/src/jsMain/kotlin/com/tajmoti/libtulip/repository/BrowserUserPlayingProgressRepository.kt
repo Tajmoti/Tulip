@@ -3,7 +3,7 @@ package com.tajmoti.libtulip.repository
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.model.HostedEpisodeProgress
 import com.tajmoti.libtulip.model.TmdbEpisodeProgress
-import com.tajmoti.libtulip.model.history.LastPlayedPosition
+import com.tajmoti.libtulip.model.LastPlayedPosition
 import com.tajmoti.libtulip.model.key.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

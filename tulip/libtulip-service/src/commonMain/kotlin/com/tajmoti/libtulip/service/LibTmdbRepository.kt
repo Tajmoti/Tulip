@@ -6,13 +6,9 @@ import com.tajmoti.libtmdb.model.movie.Movie
 import com.tajmoti.libtmdb.model.search.SearchMovieResponse
 import com.tajmoti.libtmdb.model.search.SearchResponse
 import com.tajmoti.libtmdb.model.search.SearchTvResponse
-import com.tajmoti.libtmdb.model.tv.Season
 import com.tajmoti.libtmdb.model.tv.SlimSeason
 import com.tajmoti.libtmdb.model.tv.Tv
-import com.tajmoti.libtulip.model.info.Episode
-import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
-import com.tajmoti.libtulip.model.info.TulipMovie
-import com.tajmoti.libtulip.model.info.TvShow
+import com.tajmoti.libtulip.model.*
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.SeasonKey
@@ -111,14 +107,14 @@ class LibTmdbRepository(private val service: TmdbService) : TmdbTvDataRepository
         return TvShow.Tmdb(key, name, null, baseImageUrl + posterPath, baseImageUrl + backdropPath, seasons)
     }
 
-    private fun SlimSeason.fromNetwork(tvShowKey: TvShowKey.Tmdb): com.tajmoti.libtulip.model.info.Season.Tmdb {
+    private fun SlimSeason.fromNetwork(tvShowKey: TvShowKey.Tmdb): Season.Tmdb {
         val key = SeasonKey.Tmdb(tvShowKey, seasonNumber)
-        return com.tajmoti.libtulip.model.info.Season.Tmdb(key, name, seasonNumber, overview)
+        return Season.Tmdb(key, name, seasonNumber, overview)
     }
 
-    private fun Season.fromNetwork(tvShowKey: TvShowKey.Tmdb): SeasonWithEpisodes.Tmdb {
+    private fun com.tajmoti.libtmdb.model.tv.Season.fromNetwork(tvShowKey: TvShowKey.Tmdb): SeasonWithEpisodes.Tmdb {
         val key = SeasonKey.Tmdb(tvShowKey, seasonNumber)
-        val season = com.tajmoti.libtulip.model.info.Season.Tmdb(key, name, seasonNumber, overview)
+        val season = Season.Tmdb(key, name, seasonNumber, overview)
         val episodes = episodes.map { it.fromNetwork(key) }
         return SeasonWithEpisodes.Tmdb(season, episodes)
     }

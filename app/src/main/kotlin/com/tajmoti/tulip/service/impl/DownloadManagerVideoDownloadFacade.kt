@@ -5,8 +5,10 @@ import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import com.tajmoti.commonutils.logger
+import com.tajmoti.libtulip.dto.EpisodeInfoDto
+import com.tajmoti.libtulip.dto.StreamableInfoDto
+import com.tajmoti.libtulip.dto.TulipMovieDto
 import com.tajmoti.libtulip.facade.VideoDownloadFacade
-import com.tajmoti.libtulip.model.info.*
 import com.tajmoti.tulip.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -21,7 +23,7 @@ class DownloadManagerVideoDownloadFacade @Inject constructor(
         private const val FILE_EXTENSION = ".mp4"
     }
 
-    override fun downloadFileToFiles(videoUrl: String, info: StreamableInfo): Long {
+    override fun downloadFileToFiles(videoUrl: String, info: StreamableInfoDto): Long {
         val uri = Uri.parse(videoUrl)
         val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         val displayName = buildDisplayName(info)
@@ -35,33 +37,33 @@ class DownloadManagerVideoDownloadFacade @Inject constructor(
         return downloadManager.enqueue(request)
     }
 
-    private fun buildDisplayName(item: StreamableInfo): String {
+    private fun buildDisplayName(item: StreamableInfoDto): String {
         return when (item) {
-            is TulipCompleteEpisodeInfo -> showToDownloadName(item)
-            is TulipMovie -> item.name
+            is EpisodeInfoDto -> showToDownloadName(item)
+            is TulipMovieDto -> item.name
         }
     }
 
-    private fun showToDownloadName(item: TulipCompleteEpisodeInfo): String {
-        val episode = item.episode.episodeNumber
-        val prefix = "${item.tvShow.name} S${pad(item.season.seasonNumber)}"
+    private fun showToDownloadName(item: EpisodeInfoDto): String {
+        val episode = item.episodeNumber
+        val prefix = "${item.tvShowName} S${pad(item.seasonNumber)}"
         val name = "E${pad(episode)}"
         return prefix + name
     }
 
-    private fun getSavePath(item: StreamableInfo): String {
+    private fun getSavePath(item: StreamableInfoDto): String {
         val path = when (item) {
-            is TulipCompleteEpisodeInfo -> showToSavePath(item)
-            is TulipMovie -> normalize(item.name)
+            is EpisodeInfoDto -> showToSavePath(item)
+            is TulipMovieDto -> normalize(item.name)
         }
         return context.getString(R.string.app_name) + File.separator + path + FILE_EXTENSION
     }
 
-    private fun showToSavePath(item: TulipCompleteEpisodeInfo): String {
+    private fun showToSavePath(item: EpisodeInfoDto): String {
         val sep = File.separator
-        val ss = pad(item.season.seasonNumber)
-        val ep = item.episode.episodeNumber
-        val prefix = "${normalize(item.tvShow.name)}$sep$SEASON_DIRECTORY_NAME $ss$sep"
+        val ss = pad(item.seasonNumber)
+        val ep = item.episodeNumber
+        val prefix = "${normalize(item.tvShowName)}$sep$SEASON_DIRECTORY_NAME $ss$sep"
         var fileName = pad(ep)
         val epName = item.name
         if (epName != null)

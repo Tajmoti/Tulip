@@ -1,6 +1,6 @@
 package com.tajmoti.tulip.mapper.tmdb
 
-import com.tajmoti.libtulip.model.info.Episode
+import com.tajmoti.libtulip.model.Episode
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.tulip.entity.tmdb.TmdbEpisode
 import com.tajmoti.tulip.mapper.Mapper

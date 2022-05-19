@@ -1,7 +1,7 @@
 package com.tajmoti.tulip.mapper.hosted
 
-import com.tajmoti.libtulip.model.info.Episode
-import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
+import com.tajmoti.libtulip.model.Episode
+import com.tajmoti.libtulip.model.SeasonWithEpisodes
 import com.tajmoti.tulip.entity.hosted.HostedSeason
 
 class HostedSeasonWithEpisodesMapper {

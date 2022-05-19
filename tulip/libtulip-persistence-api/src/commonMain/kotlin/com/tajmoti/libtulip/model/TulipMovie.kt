@@ -1,6 +1,5 @@
-package com.tajmoti.libtulip.model.info
+package com.tajmoti.libtulip.model
 
-import com.tajmoti.libtulip.model.hosted.TvItemInfo
 import com.tajmoti.libtulip.model.key.MovieKey
 
 sealed interface TulipMovie : StreamableInfo {

@@ -1,7 +1,7 @@
 package com.tajmoti.tulip.entity.hosted
 
 import androidx.room.Entity
-import com.tajmoti.libtulip.model.hosted.StreamingService
+import com.tajmoti.libtulip.model.key.StreamingService
 
 @Entity(primaryKeys = ["service", "key"])
 data class HostedMovie(

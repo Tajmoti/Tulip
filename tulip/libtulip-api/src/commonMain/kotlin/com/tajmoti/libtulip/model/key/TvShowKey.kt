@@ -1,6 +1,5 @@
 package com.tajmoti.libtulip.model.key
 
-import com.tajmoti.libtulip.model.hosted.StreamingService
 import kotlinx.serialization.Serializable
 
 sealed interface TvShowKey : ItemKey {

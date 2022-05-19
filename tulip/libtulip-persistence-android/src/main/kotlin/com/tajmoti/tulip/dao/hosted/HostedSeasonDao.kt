@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.tajmoti.libtulip.model.hosted.StreamingService
+import com.tajmoti.libtulip.model.key.StreamingService
 import com.tajmoti.tulip.entity.hosted.HostedSeason
 import kotlinx.coroutines.flow.Flow
 

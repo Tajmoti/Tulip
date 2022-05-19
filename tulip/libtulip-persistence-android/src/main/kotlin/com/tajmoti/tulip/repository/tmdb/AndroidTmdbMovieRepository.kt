@@ -1,6 +1,6 @@
 package com.tajmoti.tulip.repository.tmdb
 
-import com.tajmoti.libtulip.model.info.TulipMovie
+import com.tajmoti.libtulip.model.TulipMovie
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.repository.RwRepository
 import com.tajmoti.libtulip.repository.TmdbMovieRepository

@@ -1,4 +1,4 @@
-package com.tajmoti.libtulip.model.info
+package com.tajmoti.libtulip.model
 
 import kotlinx.serialization.Serializable
 

@@ -1,7 +1,7 @@
 package com.tajmoti.tulip.mapper.hosted
 
-import com.tajmoti.libtulip.model.hosted.TvItemInfo
-import com.tajmoti.libtulip.model.info.TulipMovie
+import com.tajmoti.libtulip.model.TulipMovie
+import com.tajmoti.libtulip.model.TvItemInfo
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.tulip.entity.hosted.HostedMovie
 

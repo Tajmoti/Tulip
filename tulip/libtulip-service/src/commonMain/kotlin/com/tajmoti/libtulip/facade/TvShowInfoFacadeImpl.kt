@@ -1,13 +1,9 @@
 package com.tajmoti.libtulip.facade
 
-import com.tajmoti.libtulip.dto.SeasonDto
-import com.tajmoti.libtulip.dto.SeasonEpisodeDto
-import com.tajmoti.libtulip.dto.TvShowDto
-import com.tajmoti.libtulip.dto.TvShowSeasonDto
-import com.tajmoti.libtulip.model.info.Episode
-import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
-import com.tajmoti.libtulip.model.info.StreamableInfo
-import com.tajmoti.libtulip.model.info.TvShow
+import com.tajmoti.libtulip.dto.*
+import com.tajmoti.libtulip.model.Episode
+import com.tajmoti.libtulip.model.SeasonWithEpisodes
+import com.tajmoti.libtulip.model.TvShow
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.result.*
 import com.tajmoti.libtulip.repository.UserFavoriteRepository
@@ -41,12 +37,25 @@ class TvShowInfoFacadeImpl(
         }
     }
 
-    override fun getStreamableInfo(key: StreamableKey): Flow<Result<StreamableInfo>>  {
+    override fun getStreamableInfo(key: StreamableKey): Flow<Result<StreamableInfoDto>> {
         return when (key) {
             is EpisodeKey.Tmdb -> tmdbRepo.getFullEpisodeData(key)
-            is MovieKey.Tmdb -> tmdbRepo.getMovie(key).map { it.toResult() }
+            is MovieKey.Tmdb -> tmdbRepo.getMovie(key)
+                .map { it.toResult().map { movie -> TulipMovieDto.Tmdb(movie.key, movie.name) } }
             is EpisodeKey.Hosted -> hostedTvDataRepository.getEpisodeInfo(key)
-            is MovieKey.Hosted -> hostedTvDataRepository.getMovie(key).map { it.toResult() }
+            is MovieKey.Hosted -> hostedTvDataRepository.getMovie(key)
+                .map {
+                    it.toResult().map { movie ->
+                        TulipMovieDto.Hosted(
+                            movie.key,
+                            TvItemInfoDto(
+                                name = movie.info.name,
+                                language = movie.info.language,
+                                firstAirDateYear = movie.info.firstAirDateYear
+                            )
+                        )
+                    }
+                }
         }
     }
 

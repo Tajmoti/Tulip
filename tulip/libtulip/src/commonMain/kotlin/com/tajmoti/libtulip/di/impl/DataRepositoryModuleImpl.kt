@@ -3,7 +3,7 @@ package com.tajmoti.libtulip.di.impl
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtulip.TulipConfiguration
 import com.tajmoti.libtulip.di.IDataRepositoryModule
-import com.tajmoti.libtulip.model.hosted.StreamingService
+import com.tajmoti.libtulip.model.key.StreamingService
 import com.tajmoti.libtulip.repository.*
 import com.tajmoti.libtulip.repository.impl.CachingTvDataRepository
 import com.tajmoti.libtulip.repository.impl.HostedTvDataRepositoryImpl

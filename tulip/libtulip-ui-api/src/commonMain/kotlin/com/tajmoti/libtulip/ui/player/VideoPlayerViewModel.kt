@@ -1,9 +1,9 @@
 package com.tajmoti.libtulip.ui.player
 
 import com.tajmoti.commonutils.map
+import com.tajmoti.libtulip.dto.StreamableInfoDto
 import com.tajmoti.libtulip.dto.StreamingSiteLinkDto
 import com.tajmoti.libtulip.dto.SubtitleDto
-import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.key.SubtitleKey
@@ -103,7 +103,7 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
         /**
          * Streamable info of [streamableKey] or null if not yet available.
          */
-        val streamableInfo: StreamableInfo?,
+        val streamableInfo: StreamableInfoDto?,
 
         /**
          * State of link list loading.
@@ -265,7 +265,7 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
     /**
      * Streamable info of [streamableKey] or null if not yet available.
      */
-    val streamableInfo: StateFlow<StreamableInfo?>
+    val streamableInfo: StateFlow<StreamableInfoDto?>
         get() = state.map(viewModelScope, State::streamableInfo)
 
     /**

@@ -4,11 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import com.tajmoti.commonutils.combineNonEmpty
 import com.tajmoti.commonutils.logger
-import com.tajmoti.libtulip.dto.CaptchaInfoDto
-import com.tajmoti.libtulip.dto.ExtractionErrorDto
-import com.tajmoti.libtulip.dto.StreamListDto
-import com.tajmoti.libtulip.dto.StreamingSiteLinkDto
-import com.tajmoti.libtulip.model.info.StreamableInfo
+import com.tajmoti.libtulip.dto.*
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.result.toResult
 import com.tajmoti.libtulip.service.HostedTvDataRepository
@@ -39,7 +35,7 @@ class StreamFacadeImpl(
             .flatMapLatest { result -> result.fold(this::fetchStreamsForInfo) { flowOf(StreamListDto.Error) } }
     }
 
-    private fun fetchStreamsForInfo(result: StreamableInfo.Hosted): Flow<StreamListDto> {
+    private fun fetchStreamsForInfo(result: StreamableInfoDto.Hosted): Flow<StreamListDto> {
         return hostedTvDataRepository.fetchStreams(result.key)
             .map {
                 it.toResult()
@@ -49,7 +45,7 @@ class StreamFacadeImpl(
             }
     }
 
-    private fun addMiscInfo(stream: StreamingSiteLink, info: StreamableInfo.Hosted): StreamingSiteLinkDto {
+    private fun addMiscInfo(stream: StreamingSiteLink, info: StreamableInfoDto.Hosted): StreamingSiteLinkDto {
         return StreamingSiteLinkDto(stream.serviceName, stream.url, canExtractStream(stream), info.language)
     }
 
@@ -60,7 +56,7 @@ class StreamFacadeImpl(
             .flatMapLatest(::fetchStreamsForInfoResults)
     }
 
-    private fun fetchStreamsForInfoResults(infos: List<Result<StreamableInfo.Hosted>>): Flow<StreamListDto> {
+    private fun fetchStreamsForInfoResults(infos: List<Result<StreamableInfoDto.Hosted>>): Flow<StreamListDto> {
         return infos
             .map { result ->
                 result.fold({ info -> getStreamsByKey(info.key) }, { flowOf(StreamListDto.Error) })

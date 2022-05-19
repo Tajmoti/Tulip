@@ -1,6 +1,7 @@
 package com.tajmoti.libtulip.service
 
-import com.tajmoti.libtulip.model.info.*
+import com.tajmoti.libtulip.dto.EpisodeInfoDto
+import com.tajmoti.libtulip.model.*
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.result.NetFlow
 import com.tajmoti.libtulip.model.result.NetworkResult
@@ -52,13 +53,21 @@ interface TmdbTvDataRepository {
      * Retrieves complete information about a TV show episode by its [key].
      * The returned flow may never complete, and it may emit an updated value at any time!
      */
-    fun getFullEpisodeData(key: EpisodeKey.Tmdb): Flow<Result<TulipCompleteEpisodeInfo.Tmdb>> {
+    fun getFullEpisodeData(key: EpisodeKey.Tmdb): Flow<Result<EpisodeInfoDto.Tmdb>> {
         return combine(getTvShow(key.tvShowKey), getEpisode(key)) { tv, episode ->
             episode.convert { ep ->
                 tv.convert { tv ->
                     tv.seasons
                         .firstOrNull { it.key == ep.key.seasonKey }
-                        ?.let { TulipCompleteEpisodeInfo.Tmdb(tv, it, ep) }
+                        ?.let {
+                            EpisodeInfoDto.Tmdb(
+                                tvShowName = tv.name,
+                                seasonNumber = it.seasonNumber,
+                                episodeNumber = ep.episodeNumber,
+                                key = ep.key,
+                                episodeName = ep.name
+                            )
+                        }
                 }.data
             }.toResult()
         }

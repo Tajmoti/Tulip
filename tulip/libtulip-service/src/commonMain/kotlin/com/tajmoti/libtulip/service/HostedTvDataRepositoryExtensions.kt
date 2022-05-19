@@ -4,8 +4,11 @@ package com.tajmoti.libtulip.service
 
 import com.tajmoti.commonutils.combine
 import com.tajmoti.commonutils.combineNonEmpty
+import com.tajmoti.libtulip.dto.*
 import com.tajmoti.libtulip.model.MissingEntityException
-import com.tajmoti.libtulip.model.info.*
+import com.tajmoti.libtulip.model.Season
+import com.tajmoti.libtulip.model.SeasonWithEpisodes
+import com.tajmoti.libtulip.model.TvShow
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.result.NetworkResult
 import com.tajmoti.libtulip.model.result.map
@@ -31,7 +34,17 @@ fun HostedTvDataRepository.getItemByKey(key: ItemKey.Hosted) = when (key) {
  */
 fun HostedTvDataRepository.getStreamableInfo(key: StreamableKey.Hosted) = when (key) {
     is EpisodeKey.Hosted -> getEpisodeInfo(key)
-    is MovieKey.Hosted -> getMovie(key).map { it.toResult() }
+    is MovieKey.Hosted -> getMovie(key).map {
+        it.toResult().map {
+            TulipMovieDto.Hosted(
+                key = it.key, info = TvItemInfoDto(
+                    name = it.info.name,
+                    language = it.info.language,
+                    firstAirDateYear = it.info.firstAirDateYear
+                )
+            )
+        }
+    }
 }
 
 /**
@@ -50,7 +63,7 @@ fun HostedTvDataRepository.getSeasons(key: TvShowKey.Hosted) = getTvShow(key)
 fun HostedTvDataRepository.getStreamableInfoByTmdbKey(
     mappingRepository: ItemMappingRepository,
     key: StreamableKey.Tmdb
-): Flow<List<Result<StreamableInfo.Hosted>>> = when (key) {
+): Flow<List<Result<StreamableInfoDto.Hosted>>> = when (key) {
     is MovieKey.Tmdb -> getMoviesByTmdbKey(mappingRepository, key)
     is EpisodeKey.Tmdb -> getEpisodesByTmdbKey(mappingRepository, key)
 }
@@ -76,7 +89,7 @@ fun HostedTvDataRepository.getTvShowsByTmdbKey(mappingRepository: ItemMappingRep
 fun HostedTvDataRepository.getEpisodesByTmdbKey(
     mappingRepository: ItemMappingRepository,
     key: EpisodeKey.Tmdb
-): Flow<List<Result<TulipCompleteEpisodeInfo.Hosted>>> {
+): Flow<List<Result<EpisodeInfoDto.Hosted>>> {
     return getTvShowsByTmdbKey(mappingRepository, key.tvShowKey)
         .flatMapLatest { tvListResult ->
             tvListResult.map { tvResult ->
@@ -96,7 +109,7 @@ fun HostedTvDataRepository.getEpisodesByTmdbKey(
 private fun HostedTvDataRepository.selectEpisodeForTv(
     tv: TvShow.Hosted,
     key: EpisodeKey.Tmdb
-): Flow<TulipCompleteEpisodeInfo.Hosted?> {
+): Flow<EpisodeInfoDto.Hosted?> {
     return tv.seasons.firstOrNull { it.seasonNumber == key.seasonNumber }
         ?.let { selectEpisodeForSeason(key, it, tv) } ?: flowOf(null)
 }
@@ -105,7 +118,7 @@ private fun HostedTvDataRepository.selectEpisodeForSeason(
     query: EpisodeKey.Tmdb,
     season: Season.Hosted,
     tvShow: TvShow.Hosted
-): Flow<TulipCompleteEpisodeInfo.Hosted?> {
+): Flow<EpisodeInfoDto.Hosted?> {
     return getSeasonWithEpisodes(season.key)
         .map { seasonResult -> seasonResult.map { season -> selectEpisodeForSeason(season, tvShow, query) }.data }
 }
@@ -114,10 +127,19 @@ private fun selectEpisodeForSeason(
     season: SeasonWithEpisodes.Hosted,
     tvShow: TvShow.Hosted,
     query: EpisodeKey.Tmdb
-): TulipCompleteEpisodeInfo.Hosted? {
+): EpisodeInfoDto.Hosted? {
     return season.episodes
         .firstOrNull { it.episodeNumber == query.episodeNumber }
-        ?.let { TulipCompleteEpisodeInfo.Hosted(tvShow, season.season, it) }
+        ?.let {
+            EpisodeInfoDto.Hosted(
+                tvShowName = tvShow.name,
+                seasonNumber = season.season.seasonNumber,
+                episodeNumber = it.episodeNumber,
+                key = it.key,
+                episodeName = it.name,
+                language = LanguageCodeDto(tvShow.language.code)
+            )
+        }
 }
 
 /**
@@ -128,7 +150,16 @@ private fun selectEpisodeForSeason(
 fun HostedTvDataRepository.getMoviesByTmdbKey(mappingRepository: ItemMappingRepository, key: MovieKey.Tmdb) =
     mappingRepository.getHostedMovieKeysByTmdbKey(key)
         .flatMapLatest { movieKeyList ->
-            movieKeyList.map { getMovie(it) }
+            movieKeyList.map {
+                getMovie(it).map {
+                    it.map {
+                        TulipMovieDto.Hosted(
+                            it.key,
+                            TvItemInfoDto(it.name, it.info.language, it.info.firstAirDateYear)
+                        )
+                    }
+                }
+            }
                 .combineNonEmpty()
                 .mapNetworkResultToResultInListFlow()
         }

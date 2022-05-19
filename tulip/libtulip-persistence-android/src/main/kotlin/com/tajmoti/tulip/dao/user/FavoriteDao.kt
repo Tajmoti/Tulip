@@ -1,7 +1,7 @@
 package com.tajmoti.tulip.dao.user
 
 import androidx.room.*
-import com.tajmoti.libtulip.model.hosted.StreamingService
+import com.tajmoti.libtulip.model.key.StreamingService
 import com.tajmoti.tulip.entity.user.FavoriteHostedItem
 import com.tajmoti.tulip.entity.user.FavoriteTmdbItem
 import com.tajmoti.tulip.entity.user.ItemType

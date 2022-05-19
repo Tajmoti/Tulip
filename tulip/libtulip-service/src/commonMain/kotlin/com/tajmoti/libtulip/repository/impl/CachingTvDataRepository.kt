@@ -4,9 +4,9 @@ import arrow.core.Option
 import arrow.core.toOption
 import com.tajmoti.commonutils.logger
 import com.tajmoti.libtulip.TulipConfiguration
-import com.tajmoti.libtulip.model.info.SeasonWithEpisodes
-import com.tajmoti.libtulip.model.info.TulipMovie
-import com.tajmoti.libtulip.model.info.TvShow
+import com.tajmoti.libtulip.model.SeasonWithEpisodes
+import com.tajmoti.libtulip.model.TulipMovie
+import com.tajmoti.libtulip.model.TvShow
 import com.tajmoti.libtulip.model.key.MovieKey
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.model.key.TvShowKey

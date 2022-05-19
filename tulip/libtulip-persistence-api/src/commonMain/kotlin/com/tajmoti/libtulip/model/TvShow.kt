@@ -1,4 +1,4 @@
-package com.tajmoti.libtulip.model.info
+package com.tajmoti.libtulip.model
 
 import com.tajmoti.libtulip.model.key.TvShowKey
 import kotlinx.serialization.Serializable

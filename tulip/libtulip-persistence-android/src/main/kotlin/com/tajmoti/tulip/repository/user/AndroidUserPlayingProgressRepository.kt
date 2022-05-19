@@ -1,12 +1,12 @@
 package com.tajmoti.tulip.repository.user
 
-import com.tajmoti.libtulip.repository.UserPlayingProgressRepository
-import com.tajmoti.libtulip.model.history.LastPlayedPosition
+import com.tajmoti.libtulip.model.LastPlayedPosition
 import com.tajmoti.libtulip.model.key.*
+import com.tajmoti.libtulip.repository.UserPlayingProgressRepository
 import com.tajmoti.tulip.dao.user.PlayingProgressDao
 import com.tajmoti.tulip.entity.user.PlayingProgressHostedMovie
-import com.tajmoti.tulip.entity.user.PlayingProgressTmdbMovie
 import com.tajmoti.tulip.entity.user.PlayingProgressHostedTvShow
+import com.tajmoti.tulip.entity.user.PlayingProgressTmdbMovie
 import com.tajmoti.tulip.entity.user.PlayingProgressTmdbTvShow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

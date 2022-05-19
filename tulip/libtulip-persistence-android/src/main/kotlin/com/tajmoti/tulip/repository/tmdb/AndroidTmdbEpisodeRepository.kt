@@ -1,6 +1,6 @@
 package com.tajmoti.tulip.repository.tmdb
 
-import com.tajmoti.libtulip.model.info.Episode
+import com.tajmoti.libtulip.model.Episode
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.SeasonKey
 import com.tajmoti.libtulip.repository.RwRepository

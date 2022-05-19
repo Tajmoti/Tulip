@@ -1,4 +1,4 @@
-package com.tajmoti.libtulip.model.history
+package com.tajmoti.libtulip.model
 
 import com.tajmoti.libtulip.model.key.StreamableKey
 

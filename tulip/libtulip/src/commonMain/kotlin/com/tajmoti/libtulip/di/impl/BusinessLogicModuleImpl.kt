@@ -6,7 +6,7 @@ import com.tajmoti.libopensubtitles.OpenSubtitlesService
 import com.tajmoti.libprimewiretvprovider.PrimewireTvProvider
 import com.tajmoti.libtulip.di.IBusinessLogicModule
 import com.tajmoti.libtulip.facade.*
-import com.tajmoti.libtulip.model.hosted.StreamingService
+import com.tajmoti.libtulip.model.key.StreamingService
 import com.tajmoti.libtulip.model.key.SubtitleKey
 import com.tajmoti.libtulip.repository.UserFavoriteRepository
 import com.tajmoti.libtulip.repository.UserPlayingProgressRepository

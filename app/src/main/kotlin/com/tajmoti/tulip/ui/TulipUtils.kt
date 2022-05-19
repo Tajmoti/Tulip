@@ -2,13 +2,13 @@ package com.tajmoti.tulip.ui
 
 import android.content.Context
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.tajmoti.libtulip.dto.LanguageCodeDto
 import com.tajmoti.libtulip.dto.SeasonEpisodeDto
 import com.tajmoti.libtulip.dto.TvShowSeasonDto
-import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtulip.ui.player.VideoPlayerUtils
 import com.tajmoti.tulip.R
 
-fun languageToIcon(language: LanguageCode): Int? {
+fun languageToIcon(language: LanguageCodeDto): Int? {
     return when (language.code) {
         "en" -> R.drawable.ic_flag_uk
         "de" -> R.drawable.ic_flag_de

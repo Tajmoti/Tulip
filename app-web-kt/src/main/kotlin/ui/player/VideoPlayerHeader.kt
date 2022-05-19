@@ -1,6 +1,6 @@
 package ui.player
 
-import com.tajmoti.libtulip.model.info.StreamableInfo
+import com.tajmoti.libtulip.dto.StreamableInfoDto
 import com.tajmoti.libtulip.ui.player.VideoPlayerUtils
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import react.Props
@@ -9,7 +9,7 @@ import react.dom.span
 import react.fc
 
 internal external interface VideoPlayerHeaderProps : Props {
-    var name: StreamableInfo
+    var name: StreamableInfoDto
     var data: VideoPlayerViewModel.TvShowData?
 }
 

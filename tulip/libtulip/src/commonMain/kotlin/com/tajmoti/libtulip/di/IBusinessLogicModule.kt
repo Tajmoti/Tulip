@@ -4,7 +4,7 @@ import com.tajmoti.commonutils.PageSourceLoader
 import com.tajmoti.libopensubtitles.OpenSubtitlesFallbackService
 import com.tajmoti.libopensubtitles.OpenSubtitlesService
 import com.tajmoti.libtulip.facade.*
-import com.tajmoti.libtulip.model.hosted.StreamingService
+import com.tajmoti.libtulip.model.key.StreamingService
 import com.tajmoti.libtulip.repository.UserFavoriteRepository
 import com.tajmoti.libtulip.repository.UserPlayingProgressRepository
 import com.tajmoti.libtulip.service.*

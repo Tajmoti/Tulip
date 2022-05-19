@@ -1,11 +1,11 @@
 package com.tajmoti.tulip.repository.hosted
 
-import com.tajmoti.libtulip.repository.HostedMovieRepository
-import com.tajmoti.libtulip.model.info.TulipMovie
+import com.tajmoti.libtulip.model.TulipMovie
 import com.tajmoti.libtulip.model.key.MovieKey
+import com.tajmoti.libtulip.repository.HostedMovieRepository
 import com.tajmoti.tulip.adapter.hosted.HostedMovieDbAdapter
-import com.tajmoti.tulip.dao.hosted.HostedMovieDao
 import com.tajmoti.tulip.dao.ItemMappingDao
+import com.tajmoti.tulip.dao.hosted.HostedMovieDao
 import com.tajmoti.tulip.mapper.hosted.HostedMovieMapper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine

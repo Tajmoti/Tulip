@@ -1,12 +1,12 @@
 package ui.shared
 
-import com.tajmoti.libtulip.model.info.LanguageCode
+import com.tajmoti.libtulip.dto.LanguageCodeDto
 import react.Props
 import react.dom.span
 import react.fc
 
 external interface LanguageBadgeProps : Props {
-    var language: LanguageCode
+    var language: LanguageCodeDto
 }
 
 val LanguageBadge = fc<LanguageBadgeProps> { props ->
@@ -20,7 +20,7 @@ val LanguageBadge = fc<LanguageBadgeProps> { props ->
     }
 }
 
-private fun languageToFlag(language: LanguageCode): String? {
+private fun languageToFlag(language: LanguageCodeDto): String? {
     return when (language.code) {
         "en" -> "\uD83C\uDDEC\uD83C\uDDE7"
         "de" -> "\uD83C\uDDE9\uD83C\uDDEA"

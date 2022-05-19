@@ -1,10 +1,9 @@
 package com.tajmoti.libtulip.facade
 
-import com.tajmoti.libtulip.facade.VideoDownloadFacade
-import com.tajmoti.libtulip.model.info.StreamableInfo
+import com.tajmoti.libtulip.dto.StreamableInfoDto
 
 class StubVideoDownloadFacade : VideoDownloadFacade {
-    override fun downloadFileToFiles(videoUrl: String, info: StreamableInfo): Long {
+    override fun downloadFileToFiles(videoUrl: String, info: StreamableInfoDto): Long {
         return 0
     }
 }

@@ -4,8 +4,8 @@ import com.tajmoti.commonutils.combineNonEmpty
 import com.tajmoti.commonutils.mapBoth
 import com.tajmoti.libtulip.dto.LibraryItemDto
 import com.tajmoti.libtulip.dto.LibraryItemPlayingProgressDto
-import com.tajmoti.libtulip.model.history.LastPlayedPosition
-import com.tajmoti.libtulip.model.info.TulipItem
+import com.tajmoti.libtulip.model.LastPlayedPosition
+import com.tajmoti.libtulip.model.TulipItem
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.result.NetFlow
 import com.tajmoti.libtulip.model.result.NetworkResult

@@ -1,4 +1,4 @@
-package com.tajmoti.libtulip.model.hosted
+package com.tajmoti.libtulip.model
 
 data class TvItemInfo(
     /**

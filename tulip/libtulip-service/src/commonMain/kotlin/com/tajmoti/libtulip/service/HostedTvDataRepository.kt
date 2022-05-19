@@ -1,6 +1,11 @@
 package com.tajmoti.libtulip.service
 
-import com.tajmoti.libtulip.model.info.*
+import com.tajmoti.libtulip.dto.EpisodeInfoDto
+import com.tajmoti.libtulip.dto.LanguageCodeDto
+import com.tajmoti.libtulip.model.Episode
+import com.tajmoti.libtulip.model.SeasonWithEpisodes
+import com.tajmoti.libtulip.model.TulipMovie
+import com.tajmoti.libtulip.model.TvShow
 import com.tajmoti.libtulip.model.key.*
 import com.tajmoti.libtulip.model.result.NetFlow
 import com.tajmoti.libtulip.model.result.NetworkResult
@@ -42,13 +47,22 @@ interface HostedTvDataRepository {
      * Retrieves complete information about a TV show episode on a specific streaming site by its [key].
      * The returned flow may never complete, and it may emit an updated value at any time!
      */
-    fun getEpisodeInfo(key: EpisodeKey.Hosted): Flow<Result<TulipCompleteEpisodeInfo.Hosted>> {
+    fun getEpisodeInfo(key: EpisodeKey.Hosted): Flow<Result<EpisodeInfoDto.Hosted>> {
         return combine(getTvShow(key.tvShowKey), getEpisode(key)) { tv, episode ->
             episode.convert { ep ->
                 tv.convert { tv ->
                     tv.seasons
                         .firstOrNull { it.key == ep.key.seasonKey }
-                        ?.let { TulipCompleteEpisodeInfo.Hosted(tv, it, ep) }
+                        ?.let {
+                            EpisodeInfoDto.Hosted(
+                                tvShowName = tv.name,
+                                seasonNumber = it.seasonNumber,
+                                episodeNumber = ep.episodeNumber,
+                                key = ep.key,
+                                episodeName = ep.name,
+                                language = LanguageCodeDto(tv.language.code)
+                            )
+                        }
                 }.data
             }.toResult()
         }

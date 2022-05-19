@@ -2,7 +2,7 @@ package com.tajmoti.libtulip.di
 
 import com.tajmoti.libtmdb.TmdbService
 import com.tajmoti.libtulip.TulipConfiguration
-import com.tajmoti.libtulip.model.hosted.StreamingService
+import com.tajmoti.libtulip.model.key.StreamingService
 import com.tajmoti.libtulip.repository.*
 import com.tajmoti.libtulip.service.HostedTvDataRepository
 import com.tajmoti.libtulip.service.ItemMappingRepository

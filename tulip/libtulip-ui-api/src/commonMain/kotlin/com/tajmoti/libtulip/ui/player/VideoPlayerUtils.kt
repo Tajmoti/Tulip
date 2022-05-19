@@ -1,7 +1,9 @@
 package com.tajmoti.libtulip.ui.player
 
+import com.tajmoti.libtulip.dto.EpisodeInfoDto
 import com.tajmoti.libtulip.dto.SeasonEpisodeDto
-import com.tajmoti.libtulip.model.info.*
+import com.tajmoti.libtulip.dto.StreamableInfoDto
+import com.tajmoti.libtulip.dto.TulipMovieDto
 import kotlin.jvm.JvmStatic
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
@@ -9,11 +11,11 @@ import kotlin.time.Duration.Companion.minutes
 
 object VideoPlayerUtils {
     @JvmStatic
-    fun streamableToDisplayName(info: StreamableInfo?): String {
+    fun streamableToDisplayName(info: StreamableInfoDto?): String {
         return when (info) {
-            is TulipCompleteEpisodeInfo -> showToDisplayName(info)
-            is TulipMovie -> info.name
-            else -> ""
+            is EpisodeInfoDto -> showToDisplayName(info)
+            is TulipMovieDto -> info.name
+            null -> ""
         }
     }
 
@@ -24,8 +26,8 @@ object VideoPlayerUtils {
     }
 
     @JvmStatic
-    fun showToDisplayName(item: TulipCompleteEpisodeInfo): String {
-        val showSeasonEpNum = "${item.tvShow.name} S${item.season.seasonNumber}:E${item.episode.episodeNumber}"
+    fun showToDisplayName(item: EpisodeInfoDto): String {
+        val showSeasonEpNum = "${item.tvShowName} S${item.seasonNumber}:E${item.episodeNumber}"
         val episodeName = item.name?.let { " '$it'" } ?: ""
         return showSeasonEpNum + episodeName
     }

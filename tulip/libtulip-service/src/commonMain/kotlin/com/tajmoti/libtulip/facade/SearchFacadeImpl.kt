@@ -3,10 +3,10 @@ package com.tajmoti.libtulip.facade
 import com.tajmoti.commonutils.*
 import com.tajmoti.libtulip.dto.SearchResultDto
 import com.tajmoti.libtulip.dto.SearchResultGroupDto
+import com.tajmoti.libtulip.dto.TvItemInfoDto
 import com.tajmoti.libtulip.model.NoSuccessfulResultsException
-import com.tajmoti.libtulip.model.hosted.StreamingService
-import com.tajmoti.libtulip.model.hosted.TvItemInfo
 import com.tajmoti.libtulip.model.key.MovieKey
+import com.tajmoti.libtulip.model.key.StreamingService
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.model.result.firstValueOrNull
 import com.tajmoti.libtulip.service.ItemMappingRepository
@@ -134,13 +134,13 @@ class SearchFacadeImpl(
         val tmdbId = tmdbRepository.findTvShowKey(item.info.name, item.info.firstAirDateYear).firstValueOrNull()
         val key = TvShowKey.Hosted(service, item.key)
         val info = item.info
-        return SearchResultGroupDto.TvShow(key, TvItemInfo(info.name, info.language, info.firstAirDateYear), tmdbId)
+        return SearchResultGroupDto.TvShow(key, TvItemInfoDto(info.name, info.language, info.firstAirDateYear), tmdbId)
     }
 
     private suspend fun findMovieTmdbKey(item: SearchResult, service: StreamingService): SearchResultGroupDto.Movie {
         val tmdbId = tmdbRepository.findMovieKey(item.info.name, item.info.firstAirDateYear).firstValueOrNull()
         val key = MovieKey.Hosted(service, item.key)
         val info = item.info
-        return SearchResultGroupDto.Movie(key, TvItemInfo(info.name, info.language, info.firstAirDateYear), tmdbId)
+        return SearchResultGroupDto.Movie(key, TvItemInfoDto(info.name, info.language, info.firstAirDateYear), tmdbId)
     }
 }

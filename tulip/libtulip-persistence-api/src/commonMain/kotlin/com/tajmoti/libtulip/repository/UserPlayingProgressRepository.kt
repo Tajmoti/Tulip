@@ -1,6 +1,6 @@
 package com.tajmoti.libtulip.repository
 
-import com.tajmoti.libtulip.model.history.LastPlayedPosition
+import com.tajmoti.libtulip.model.LastPlayedPosition
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.key.MovieKey

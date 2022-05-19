@@ -2,10 +2,10 @@ package com.tajmoti.tulip.ui.player.streams
 
 import android.os.Bundle
 import android.view.View
+import com.tajmoti.libtulip.dto.EpisodeInfoDto
+import com.tajmoti.libtulip.dto.StreamableInfoDto
 import com.tajmoti.libtulip.dto.StreamingSiteLinkDto
-import com.tajmoti.libtulip.model.info.StreamableInfo
-import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
-import com.tajmoti.libtulip.model.info.TulipMovie
+import com.tajmoti.libtulip.dto.TulipMovieDto
 import com.tajmoti.libtulip.ui.player.VideoPlayerUtils.showToDisplayName
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.tulip.databinding.FragmentStreamsBinding
@@ -43,10 +43,10 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding>(FragmentStreamsBind
     /**
      * Info about the streamable is known, show its name in the UI.
      */
-    private fun onStreamableInfo(info: StreamableInfo?) {
+    private fun onStreamableInfo(info: StreamableInfoDto?) {
         val name = when (info) {
-            is TulipCompleteEpisodeInfo -> showToDisplayName(info)
-            is TulipMovie -> info.name
+            is EpisodeInfoDto -> showToDisplayName(info)
+            is TulipMovieDto -> info.name
             null -> ""
         }
         binding.titleStreamSelection.text = name

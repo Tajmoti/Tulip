@@ -1,6 +1,6 @@
 package com.tajmoti.libtulip.repository.impl
 
-import com.tajmoti.libtulip.model.history.LastPlayedPosition
+import com.tajmoti.libtulip.model.LastPlayedPosition
 import com.tajmoti.libtulip.model.key.ItemKey
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.repository.UserPlayingProgressRepository

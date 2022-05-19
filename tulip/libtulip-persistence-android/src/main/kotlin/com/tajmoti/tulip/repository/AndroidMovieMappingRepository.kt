@@ -1,7 +1,7 @@
 package com.tajmoti.tulip.repository
 
-import com.tajmoti.libtulip.repository.MovieMappingRepository
 import com.tajmoti.libtulip.model.key.MovieKey
+import com.tajmoti.libtulip.repository.MovieMappingRepository
 import com.tajmoti.tulip.adapter.MovieMappingDbAdapter
 import com.tajmoti.tulip.dao.ItemMappingDao
 import com.tajmoti.tulip.entity.ItemMapping

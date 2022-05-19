@@ -1,7 +1,7 @@
 package com.tajmoti.tulip.repository
 
-import com.tajmoti.libtulip.repository.TvShowMappingRepository
 import com.tajmoti.libtulip.model.key.TvShowKey
+import com.tajmoti.libtulip.repository.TvShowMappingRepository
 import com.tajmoti.tulip.adapter.TvShowMappingDbAdapter
 import com.tajmoti.tulip.dao.ItemMappingDao
 import com.tajmoti.tulip.entity.ItemMapping

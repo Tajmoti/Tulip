@@ -7,7 +7,7 @@ import android.widget.ArrayAdapter
 import com.tajmoti.libtulip.dto.SeasonDto
 import com.tajmoti.libtulip.dto.SeasonEpisodeDto
 import com.tajmoti.libtulip.dto.TvShowSeasonDto
-import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
+import com.tajmoti.libtulip.dto.EpisodeInfoDto
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.libtulip.ui.tvshow.TvShowViewModel
 import com.tajmoti.tulip.databinding.FragmentEpisodesBinding
@@ -69,9 +69,9 @@ class EpisodesFragment : BaseFragment<FragmentEpisodesBinding>(FragmentEpisodesB
     }
 
     private fun preselectPlayingSeason(seasons: List<TvShowSeasonDto>) {
-        val episodeInfo = playerViewModel.streamableInfo.value as? TulipCompleteEpisodeInfo
+        val episodeInfo = playerViewModel.streamableInfo.value as? EpisodeInfoDto
             ?: return
-        val playingSeason = episodeInfo.season.seasonNumber
+        val playingSeason = episodeInfo.seasonNumber
         val currentSeasonIndex = seasons.indexOfFirst { it.seasonNumber == playingSeason }
             .takeIf { it >= 0 }
             ?: return

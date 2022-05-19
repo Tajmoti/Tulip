@@ -1,6 +1,6 @@
 package com.tajmoti.tulip.repository.tmdb
 
-import com.tajmoti.libtulip.model.info.TvShow
+import com.tajmoti.libtulip.model.TvShow
 import com.tajmoti.libtulip.model.key.TvShowKey
 import com.tajmoti.libtulip.repository.TmdbTvShowRepository
 import com.tajmoti.tulip.adapter.tmdb.TmdbSeasonDbAdapter

@@ -1,10 +1,10 @@
 package com.tajmoti.tulip.repository.hosted
 
-import com.tajmoti.libtulip.repository.HostedEpisodeRepository
-import com.tajmoti.libtulip.repository.RwRepository
-import com.tajmoti.libtulip.model.info.Episode
+import com.tajmoti.libtulip.model.Episode
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.SeasonKey
+import com.tajmoti.libtulip.repository.HostedEpisodeRepository
+import com.tajmoti.libtulip.repository.RwRepository
 import com.tajmoti.tulip.adapter.hosted.HostedEpisodeDbAdapter
 import com.tajmoti.tulip.dao.hosted.HostedEpisodeDao
 import com.tajmoti.tulip.mapper.hosted.HostedEpisodeMapper
