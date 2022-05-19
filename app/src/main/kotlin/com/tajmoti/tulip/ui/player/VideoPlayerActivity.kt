@@ -20,7 +20,6 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.commit
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.ui.player.MediaPlayerState
 import com.tajmoti.libtulip.ui.player.VideoPlayer
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
@@ -352,8 +351,7 @@ class VideoPlayerActivity : BaseActivity<ActivityVideoPlayerBinding>(
             if (result.resultCode == RESULT_OK) {
                 toast(R.string.captcha_solved)
                 lastLink?.let { link ->
-                    val ref = UnloadedVideoStreamRef(link.stream, true, link.languageCode)
-                    playerViewModel.onStreamClicked(ref, link.download)
+                    playerViewModel.onStreamClicked(link.stream, link.download)
                 }
             } else {
                 toast(R.string.captcha_not_solved)

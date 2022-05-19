@@ -1,12 +1,12 @@
 package ui.player
 
-import com.tajmoti.libtvprovider.model.VideoStreamRef
+import com.tajmoti.libtulip.dto.StreamingSiteLinkDto
 import react.Props
 import react.dom.iframe
 import react.fc
 
 internal external interface IframeVideoPlayerProps : Props {
-    var link: VideoStreamRef
+    var link: StreamingSiteLinkDto
 }
 
 internal val IframeVideoPlayer = fc<IframeVideoPlayerProps> { (link) ->

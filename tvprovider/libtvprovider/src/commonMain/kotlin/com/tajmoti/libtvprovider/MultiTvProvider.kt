@@ -3,8 +3,8 @@ package com.tajmoti.libtvprovider
 import com.tajmoti.commonutils.combineRunningFold
 import com.tajmoti.commonutils.flatMap
 import com.tajmoti.libtvprovider.model.SearchResult
+import com.tajmoti.libtvprovider.model.StreamingSiteLink
 import com.tajmoti.libtvprovider.model.TvItem
-import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -49,7 +49,7 @@ class MultiTvProvider<S>(
         return getProvider(service).flatMap { it.getMovie(id) }
     }
 
-    suspend fun getStreamableLinks(service: S, episodeOrMovieKey: String): Result<List<VideoStreamRef>> {
+    suspend fun getStreamableLinks(service: S, episodeOrMovieKey: String): Result<List<StreamingSiteLink>> {
         return getProvider(service).flatMap { it.getStreamableLinks(episodeOrMovieKey) }
     }
 

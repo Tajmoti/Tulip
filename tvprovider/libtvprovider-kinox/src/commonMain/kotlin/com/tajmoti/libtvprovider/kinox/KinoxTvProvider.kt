@@ -7,7 +7,7 @@ import com.tajmoti.ksoup.KSoup
 import com.tajmoti.libtvprovider.TvProvider
 import com.tajmoti.libtvprovider.model.SearchResult
 import com.tajmoti.libtvprovider.model.TvItem
-import com.tajmoti.libtvprovider.model.VideoStreamRef
+import com.tajmoti.libtvprovider.model.StreamingSiteLink
 
 class KinoxTvProvider(
     private val loader: PageSourceLoader,
@@ -46,7 +46,7 @@ class KinoxTvProvider(
             }
     }
 
-    override suspend fun getStreamableLinks(episodeOrMovieId: String): Result<List<VideoStreamRef>> {
+    override suspend fun getStreamableLinks(episodeOrMovieId: String): Result<List<StreamingSiteLink>> {
         return loader.loadWithBrowser(baseUrl + episodeOrMovieId)
             .flatMap { fetchSources(baseUrl, it, loader) }
     }

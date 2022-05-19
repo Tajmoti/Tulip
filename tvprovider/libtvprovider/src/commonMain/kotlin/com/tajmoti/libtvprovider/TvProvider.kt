@@ -2,8 +2,8 @@ package com.tajmoti.libtvprovider
 
 import com.tajmoti.libtvprovider.model.EpisodeInfo
 import com.tajmoti.libtvprovider.model.SearchResult
+import com.tajmoti.libtvprovider.model.StreamingSiteLink
 import com.tajmoti.libtvprovider.model.TvItem
-import com.tajmoti.libtvprovider.model.VideoStreamRef
 
 interface TvProvider {
     /**
@@ -25,5 +25,5 @@ interface TvProvider {
     /**
      * Returns a list of links for the provided [TvItem.Movie] or [EpisodeInfo].
      */
-    suspend fun getStreamableLinks(episodeOrMovieId: String): Result<List<VideoStreamRef>>
+    suspend fun getStreamableLinks(episodeOrMovieId: String): Result<List<StreamingSiteLink>>
 }

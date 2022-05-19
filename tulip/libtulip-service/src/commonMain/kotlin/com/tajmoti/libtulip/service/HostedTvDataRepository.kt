@@ -6,7 +6,7 @@ import com.tajmoti.libtulip.model.result.NetFlow
 import com.tajmoti.libtulip.model.result.NetworkResult
 import com.tajmoti.libtulip.model.result.convert
 import com.tajmoti.libtulip.model.result.toResult
-import com.tajmoti.libtvprovider.model.VideoStreamRef
+import com.tajmoti.libtvprovider.model.StreamingSiteLink
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -65,5 +65,5 @@ interface HostedTvDataRepository {
      * Retrieves a list of video streams for the provided [key] (either [EpisodeKey.Hosted] or [MovieKey.Hosted]).
      * The flow will emit multiple values as more streams results are loaded in.
      */
-    fun fetchStreams(key: StreamableKey.Hosted): NetFlow<List<VideoStreamRef>>
+    fun fetchStreams(key: StreamableKey.Hosted): NetFlow<List<StreamingSiteLink>>
 }

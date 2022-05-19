@@ -1,8 +1,8 @@
 package com.tajmoti.libtulip.ui.streams
 
-import com.tajmoti.libtvprovider.model.VideoStreamRef
+import com.tajmoti.libtulip.dto.StreamingSiteLinkDto
 
 data class LoadedLink(
-    val stream: VideoStreamRef.Resolved,
+    val stream: StreamingSiteLinkDto,
     val directLink: String
 )

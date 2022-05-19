@@ -1,17 +1,16 @@
 package com.tajmoti.libtulip.ui.player
 
 import com.tajmoti.commonutils.map
+import com.tajmoti.libtulip.dto.StreamingSiteLinkDto
 import com.tajmoti.libtulip.dto.SubtitleDto
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.key.SubtitleKey
-import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.ui.StateViewModel
 import com.tajmoti.libtulip.ui.streams.FailedLink
 import com.tajmoti.libtulip.ui.streams.LoadedLink
 import com.tajmoti.libtulip.ui.streams.SelectedLink
-import com.tajmoti.libtvprovider.model.VideoStreamRef
 import kotlinx.coroutines.flow.*
 
 interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
@@ -34,7 +33,7 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
     /**
      * The user has clicked a link, it needs to be resolved and played.
      */
-    fun onStreamClicked(stream: UnloadedVideoStreamRef, download: Boolean)
+    fun onStreamClicked(stream: StreamingSiteLinkDto, download: Boolean)
 
 
     /**
@@ -133,7 +132,7 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
          * Loaded links of the currently selected [State.streamableKey] or null if not yet available.
          * This value is updated in real time as more links are loaded in.
          */
-        val linksResult: List<UnloadedVideoStreamRef>?,
+        val linksResult: List<StreamingSiteLinkDto>?,
         /**
          * Whether link list loading is finished and at least one stream was found.
          */
@@ -152,7 +151,7 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
         /**
          * Link that was selected for playback. It might be loading, be already loaded, or errored out.
          */
-        val videoLinkPreparingOrPlaying: VideoStreamRef?,
+        val videoLinkPreparingOrPlaying: StreamingSiteLinkDto?,
         /**
          * Selected item with direct link loaded.
          */
@@ -273,7 +272,7 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
      * Loaded links of the currently selected [streamableKey] or null if not yet available.
      * This value is updated in real time as more links are loaded in.
      */
-    val linksResult: StateFlow<List<UnloadedVideoStreamRef>?>
+    val linksResult: StateFlow<List<StreamingSiteLinkDto>?>
         get() = state.map(viewModelScope) { it.linkListState.linksResult }
 
     /**
@@ -305,7 +304,7 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
     /**
      * Link that was selected for playback. It might be loading, be already loaded, or errored out.
      */
-    val videoLinkPreparingOrPlaying: StateFlow<VideoStreamRef?>
+    val videoLinkPreparingOrPlaying: StateFlow<StreamingSiteLinkDto?>
         get() = state.map(viewModelScope) { it.selectedLinkState.videoLinkPreparingOrPlaying }
 
     /**

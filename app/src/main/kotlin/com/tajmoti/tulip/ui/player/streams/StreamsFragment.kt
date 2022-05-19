@@ -2,10 +2,10 @@ package com.tajmoti.tulip.ui.player.streams
 
 import android.os.Bundle
 import android.view.View
+import com.tajmoti.libtulip.dto.StreamingSiteLinkDto
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.info.TulipCompleteEpisodeInfo
 import com.tajmoti.libtulip.model.info.TulipMovie
-import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.ui.player.VideoPlayerUtils.showToDisplayName
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import com.tajmoti.tulip.databinding.FragmentStreamsBinding
@@ -56,7 +56,7 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding>(FragmentStreamsBind
     /**
      * A video link was clicked, load it and play it.
      */
-    private fun onStreamClickedPlay(stream: UnloadedVideoStreamRef) {
+    private fun onStreamClickedPlay(stream: StreamingSiteLinkDto) {
         slideToBottomDismiss()
         viewModel.onStreamClicked(stream, false)
     }
@@ -64,7 +64,7 @@ class StreamsFragment : BaseFragment<FragmentStreamsBinding>(FragmentStreamsBind
     /**
      * A video link was long-clicked which means download.
      */
-    private fun onStreamClickedDownload(stream: UnloadedVideoStreamRef) {
+    private fun onStreamClickedDownload(stream: StreamingSiteLinkDto) {
         viewModel.onStreamClicked(stream, true)
     }
 }

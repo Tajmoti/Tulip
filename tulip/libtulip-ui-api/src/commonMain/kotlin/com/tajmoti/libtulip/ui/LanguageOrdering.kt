@@ -1,10 +1,10 @@
 package com.tajmoti.libtulip.ui
 
 import com.tajmoti.libtulip.PREFERRED_LANGUAGE
+import com.tajmoti.libtulip.dto.StreamingSiteLinkDto
 import com.tajmoti.libtulip.model.info.LanguageCode
-import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 
-val videoComparator = Comparator<UnloadedVideoStreamRef> { a, b ->
+val videoComparator = Comparator<StreamingSiteLinkDto> { a, b ->
     languageComparator.compare(a.language, b.language)
 }
 

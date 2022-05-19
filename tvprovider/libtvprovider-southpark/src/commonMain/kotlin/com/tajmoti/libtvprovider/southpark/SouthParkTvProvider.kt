@@ -92,9 +92,9 @@ class SouthParkTvProvider(private val loader: PageSourceLoader) : TvProvider {
         return Result.failure(UnsupportedOperationException("Seriously?"))
     }
 
-    override suspend fun getStreamableLinks(episodeOrMovieId: String): Result<List<VideoStreamRef>> {
+    override suspend fun getStreamableLinks(episodeOrMovieId: String): Result<List<StreamingSiteLink>> {
         val url = baseUrl + episodeOrMovieId
-        return Result.success(listOf(VideoStreamRef.Resolved("South Park", url)))
+        return Result.success(listOf(StreamingSiteLink("South Park", url)))
     }
 
     private data class TmpEpisodeData(

@@ -2,9 +2,9 @@ package com.tajmoti.libprimewiretvprovider
 
 import com.tajmoti.ksoup.KElement
 import com.tajmoti.ksoup.KSoup
-import com.tajmoti.libtvprovider.model.VideoStreamRef
+import com.tajmoti.libtvprovider.model.StreamingSiteLink
 
-internal fun getVideoStreamsBlocking(html: String, baseUrl: String): Result<List<VideoStreamRef>> {
+internal fun getVideoStreamsBlocking(html: String, baseUrl: String): Result<List<StreamingSiteLink>> {
     return try {
         val streams = KSoup.parse(html)
             .getElementsByClass("movie_version")
@@ -16,7 +16,7 @@ internal fun getVideoStreamsBlocking(html: String, baseUrl: String): Result<List
     }
 }
 
-private fun itemToStreamRef(element: KElement, baseUrl: String): VideoStreamRef {
+private fun itemToStreamRef(element: KElement, baseUrl: String): StreamingSiteLink {
     val link = element
         .getElementsByClass("movie_version_link")
         .first()
@@ -28,7 +28,7 @@ private fun itemToStreamRef(element: KElement, baseUrl: String): VideoStreamRef 
         .first()
         .text()
     val redirectUrl = baseUrl + link
-    return VideoStreamRef.Unresolved(name, redirectUrl)
+    return StreamingSiteLink(name, redirectUrl)
 }
 
 private fun isAd(element: KElement): Boolean {

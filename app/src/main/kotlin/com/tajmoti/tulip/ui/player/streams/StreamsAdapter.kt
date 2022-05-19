@@ -1,16 +1,16 @@
 package com.tajmoti.tulip.ui.player.streams
 
 import android.content.Context
-import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
+import com.tajmoti.libtulip.dto.StreamingSiteLinkDto
 import com.tajmoti.tulip.R
 import com.tajmoti.tulip.databinding.ItemStreamBinding
 import com.tajmoti.tulip.ui.base.BaseIdentityAdapter
 import com.tajmoti.tulip.ui.languageToIcon
 
 class StreamsAdapter(
-    onPlayClickedListener: (UnloadedVideoStreamRef) -> Unit,
-    val onDownloadClickListener: (UnloadedVideoStreamRef) -> Unit
-) : BaseIdentityAdapter<UnloadedVideoStreamRef, ItemStreamBinding>(
+    onPlayClickedListener: (StreamingSiteLinkDto) -> Unit,
+    val onDownloadClickListener: (StreamingSiteLinkDto) -> Unit
+) : BaseIdentityAdapter<StreamingSiteLinkDto, ItemStreamBinding>(
     ItemStreamBinding::inflate,
     onPlayClickedListener
 ) {
@@ -19,9 +19,9 @@ class StreamsAdapter(
         context: Context,
         index: Int,
         binding: ItemStreamBinding,
-        item: UnloadedVideoStreamRef
+        item: StreamingSiteLinkDto
     ) {
-        val string = "#${index + 1}: ${item.info.serviceName}"
+        val string = "#${index + 1}: ${item.serviceName}"
         binding.root.text = string
         binding.root.setCompoundDrawablesRelativeWithIntrinsicBounds(
             getDrawable(item),
@@ -32,7 +32,7 @@ class StreamsAdapter(
         binding.root.setOnLongClickListener { onDownloadClickListener(item); true }
     }
 
-    private fun getDrawable(ref: UnloadedVideoStreamRef): Int {
+    private fun getDrawable(ref: StreamingSiteLinkDto): Int {
         return if (ref.linkExtractionSupported) {
             R.drawable.ic_baseline_ondemand_video_24
         } else {

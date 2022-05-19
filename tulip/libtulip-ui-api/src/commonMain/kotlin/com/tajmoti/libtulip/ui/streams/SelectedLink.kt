@@ -1,11 +1,11 @@
 package com.tajmoti.libtulip.ui.streams
 
-import com.tajmoti.libtvprovider.model.VideoStreamRef
+import com.tajmoti.libtulip.dto.StreamingSiteLinkDto
 
 /**
  * Direct link extraction is not supported for the clicked streaming site.
  */
 data class SelectedLink(
-    val stream: VideoStreamRef.Resolved,
+    val stream: StreamingSiteLinkDto,
     val download: Boolean
 )

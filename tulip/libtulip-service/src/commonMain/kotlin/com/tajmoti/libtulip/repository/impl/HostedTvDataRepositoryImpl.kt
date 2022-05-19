@@ -21,8 +21,8 @@ import com.tajmoti.libtulip.repository.HostedTvShowRepository
 import com.tajmoti.libtulip.service.HostedTvDataRepository
 import com.tajmoti.libtulip.service.TmdbTvDataRepository
 import com.tajmoti.libtvprovider.MultiTvProvider
+import com.tajmoti.libtvprovider.model.StreamingSiteLink
 import com.tajmoti.libtvprovider.model.TvItem
-import com.tajmoti.libtvprovider.model.VideoStreamRef
 import com.tajmoti.multiplatform.store.TStoreFactory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -121,12 +121,12 @@ class HostedTvDataRepositoryImpl(
             .map { it.toResult().flatMap { tmdbKey -> Result.success(tvShowInfo.fromNetwork(key, tmdbKey)) } }
     }
 
-    override fun fetchStreams(key: StreamableKey.Hosted): NetFlow<List<VideoStreamRef>> {
+    override fun fetchStreams(key: StreamableKey.Hosted): NetFlow<List<StreamingSiteLink>> {
         logger.debug { "Getting streams by $key" }
         return streamsStore.stream(key)
     }
 
-    private fun getStreamableLinksAsFlow(it: StreamableKey.Hosted): Flow<Result<List<VideoStreamRef>>> {
+    private fun getStreamableLinksAsFlow(it: StreamableKey.Hosted): Flow<Result<List<StreamingSiteLink>>> {
         logger.debug { "Getting streamable links by $it" }
         return flow { emit(tvProvider.getStreamableLinks(it.streamingService, it.id)) }
     }

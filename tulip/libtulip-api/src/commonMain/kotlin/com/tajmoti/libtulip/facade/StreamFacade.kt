@@ -1,10 +1,10 @@
 package com.tajmoti.libtulip.facade
 
 import arrow.core.Either
-import com.tajmoti.libtulip.model.key.StreamableKey
+import com.tajmoti.libtulip.dto.ExtractionErrorDto
 import com.tajmoti.libtulip.dto.StreamListDto
-import com.tajmoti.libtvprovider.model.VideoStreamRef
-import com.tajmoti.libtvvideoextractor.ExtractionError
+import com.tajmoti.libtulip.dto.StreamingSiteLinkDto
+import com.tajmoti.libtulip.model.key.StreamableKey
 import kotlinx.coroutines.flow.Flow
 
 interface StreamFacade {
@@ -20,10 +20,5 @@ interface StreamFacade {
         }
     }
 
-
-    fun canExtractStream(ref: VideoStreamRef): Boolean
-
-    suspend fun resolveStream(ref: VideoStreamRef.Unresolved): Result<VideoStreamRef.Resolved>
-
-    suspend fun extractVideoLink(info: VideoStreamRef.Resolved): Either<ExtractionError, String>
+    suspend fun extractVideoLink(ref: StreamingSiteLinkDto): Either<ExtractionErrorDto, String>
 }

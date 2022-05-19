@@ -3,24 +3,18 @@ package com.tajmoti.libtulip.ui.player
 import com.tajmoti.commonutils.map
 import com.tajmoti.commonutils.mapWith
 import com.tajmoti.libtulip.PREFERRED_LANGUAGE
-import com.tajmoti.libtulip.dto.SeasonEpisodeDto
-import com.tajmoti.libtulip.dto.StreamListDto
-import com.tajmoti.libtulip.dto.SubtitleDto
+import com.tajmoti.libtulip.dto.*
 import com.tajmoti.libtulip.facade.*
 import com.tajmoti.libtulip.model.info.LanguageCode
 import com.tajmoti.libtulip.model.info.StreamableInfo
 import com.tajmoti.libtulip.model.key.EpisodeKey
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.model.key.SubtitleKey
-import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
 import com.tajmoti.libtulip.service.SubtitleService
 import com.tajmoti.libtulip.ui.streams.FailedLink
 import com.tajmoti.libtulip.ui.streams.LoadedLink
 import com.tajmoti.libtulip.ui.streams.SelectedLink
 import com.tajmoti.libtulip.ui.videoComparator
-import com.tajmoti.libtvprovider.model.VideoStreamRef
-import com.tajmoti.libtvvideoextractor.CaptchaInfo
-import com.tajmoti.libtvvideoextractor.ExtractionError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -73,7 +67,7 @@ class VideoPlayerViewModelImpl constructor(
     /**
      * Manually selected stream to play.
      */
-    private val manualStream = MutableSharedFlow<Pair<UnloadedVideoStreamRef, Boolean>?>()
+    private val manualStream = MutableSharedFlow<Pair<StreamingSiteLinkDto, Boolean>?>()
 
     /**
      * Auto-selected stream to play.
@@ -86,10 +80,10 @@ class VideoPlayerViewModelImpl constructor(
         .map { (_, streams) -> firstGoodStream(streams) to false }
         .stateInOffload(null)
 
-    private fun firstGoodStream(it: List<UnloadedVideoStreamRef>) =
+    private fun firstGoodStream(it: List<StreamingSiteLinkDto>) =
         it.first { video -> video.linkExtractionSupported }
 
-    private fun anyGoodStreams(it: List<UnloadedVideoStreamRef>) =
+    private fun anyGoodStreams(it: List<StreamingSiteLinkDto>) =
         it.any { s -> s.linkExtractionSupported && s.language == PREFERRED_LANGUAGE }
 
     /**
@@ -353,42 +347,20 @@ class VideoPlayerViewModelImpl constructor(
             .takeIf { it != -1 }
     }
 
-    override fun onStreamClicked(stream: UnloadedVideoStreamRef, download: Boolean) {
+    override fun onStreamClicked(stream: StreamingSiteLinkDto, download: Boolean) {
         viewModelScope.launch { manualStream.emit(stream to download) }
     }
 
-    private fun fetchStreams(stream: UnloadedVideoStreamRef, download: Boolean) = flow {
+    private fun fetchStreams(stream: StreamingSiteLinkDto, download: Boolean) = flow {
         emit(LinkLoadingState.Idle)
-        val flow = when (val info = stream.info) {
-            is VideoStreamRef.Resolved ->
-                processResolvedLink(stream, info, download)
-            is VideoStreamRef.Unresolved ->
-                processUnresolvedLink(stream, info, download)
-        }
-        emitAll(flow)
-    }
-
-    /**
-     * Converts a redirect to a streaming page to the actual URL
-     * and passes it to [processResolvedLink].
-     */
-    private suspend fun processUnresolvedLink(
-        ref: UnloadedVideoStreamRef,
-        info: VideoStreamRef.Unresolved,
-        download: Boolean,
-    ) = flow {
-        emit(LinkLoadingState.Loading(info, download))
-        streamService.resolveStream(info)
-            .onSuccess { emitAll(processResolvedLink(ref, it, download)) }
-            .onFailure { emit(LinkLoadingState.Error(info, ref.language, download, null)) }
+        emitAll(processResolvedLink(stream, download))
     }
 
     private suspend fun processResolvedLink(
-        ref: UnloadedVideoStreamRef,
-        info: VideoStreamRef.Resolved,
+        info: StreamingSiteLinkDto,
         download: Boolean,
     ) = flow {
-        if (!ref.linkExtractionSupported) {
+        if (!info.linkExtractionSupported) {
             emit(LinkLoadingState.DirectLinkUnsupported(info, download))
             return@flow
         }
@@ -396,14 +368,14 @@ class VideoPlayerViewModelImpl constructor(
         val result = streamService.extractVideoLink(info)
             .map { result -> if (download) downloadVideo(result); result }
             .fold(
-                { LinkLoadingState.Error(info, ref.language, download, captchaOrNull(it)) },
+                { LinkLoadingState.Error(info, info.language, download, captchaOrNull(it)) },
                 { LinkLoadingState.LoadedDirect(info, download, it) },
             )
         emit(result)
     }
 
-    private fun captchaOrNull(it: ExtractionError) =
-        (it as? ExtractionError.Captcha)?.info
+    private fun captchaOrNull(it: ExtractionErrorDto) =
+        (it as? ExtractionErrorDto.Captcha)?.info
 
     private fun downloadVideo(link: String) {
         downloadService.downloadFileToFiles(link, internalStreamableInfo.value!!)
@@ -416,7 +388,7 @@ class VideoPlayerViewModelImpl constructor(
         }
     }
 
-    private fun sortStreams(result: StreamListDto.Success): List<UnloadedVideoStreamRef> {
+    private fun sortStreams(result: StreamListDto.Success): List<StreamingSiteLinkDto> {
         return result.streams.sortedWith(videoComparator)
     }
 
@@ -457,7 +429,7 @@ class VideoPlayerViewModelImpl constructor(
          * Streamable item loaded successfully.
          */
         data class Success(
-            val streams: List<UnloadedVideoStreamRef>,
+            val streams: List<StreamingSiteLinkDto>,
             /**
              * Whether this is the final value and no more will be loaded.
              */
@@ -474,7 +446,7 @@ class VideoPlayerViewModelImpl constructor(
         /**
          * The video stream that was selected.
          */
-        val stream: VideoStreamRef?
+        val stream: StreamingSiteLinkDto?
 
         /**
          * Whether the stream is to be downloaded (else played).
@@ -482,7 +454,7 @@ class VideoPlayerViewModelImpl constructor(
         val download: Boolean
 
         object Idle : LinkLoadingState {
-            override val stream: VideoStreamRef? = null
+            override val stream: StreamingSiteLinkDto? = null
             override val download = false
         }
 
@@ -490,7 +462,7 @@ class VideoPlayerViewModelImpl constructor(
          * The streaming page URL is being resolved.
          */
         data class Loading(
-            override val stream: VideoStreamRef.Unresolved,
+            override val stream: StreamingSiteLinkDto,
             override val download: Boolean,
         ) : LinkLoadingState
 
@@ -498,7 +470,7 @@ class VideoPlayerViewModelImpl constructor(
          * Direct link extraction is not supported for the clicked streaming site.
          */
         data class DirectLinkUnsupported(
-            override val stream: VideoStreamRef.Resolved,
+            override val stream: StreamingSiteLinkDto,
             override val download: Boolean,
         ) : LinkLoadingState
 
@@ -506,7 +478,7 @@ class VideoPlayerViewModelImpl constructor(
          * A direct video link is being extracted.
          */
         data class LoadingDirect(
-            override val stream: VideoStreamRef.Resolved,
+            override val stream: StreamingSiteLinkDto,
             override val download: Boolean,
         ) : LinkLoadingState
 
@@ -514,16 +486,16 @@ class VideoPlayerViewModelImpl constructor(
          * A direct video link was extracted successfully.
          */
         data class LoadedDirect(
-            override val stream: VideoStreamRef.Resolved,
+            override val stream: StreamingSiteLinkDto,
             override val download: Boolean,
             val directLink: String,
         ) : LinkLoadingState
 
         data class Error(
-            override val stream: VideoStreamRef,
+            override val stream: StreamingSiteLinkDto,
             val languageCode: LanguageCode,
             override val download: Boolean,
-            val captcha: CaptchaInfo?,
+            val captcha: CaptchaInfoDto?,
         ) : LinkLoadingState
     }
 

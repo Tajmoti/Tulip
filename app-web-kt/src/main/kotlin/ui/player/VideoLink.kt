@@ -1,15 +1,15 @@
 package ui.player
 
-import com.tajmoti.libtulip.model.stream.UnloadedVideoStreamRef
+import com.tajmoti.libtulip.dto.StreamingSiteLinkDto
 import react.Props
 import react.dom.onClick
 import react.fc
 import ui.shared.ListButton
 
 internal external interface VideoLinkProps : Props {
-    var link: UnloadedVideoStreamRef
+    var link: StreamingSiteLinkDto
     var active: Boolean?
-    var onLinkClicked: (UnloadedVideoStreamRef) -> Unit
+    var onLinkClicked: (StreamingSiteLinkDto) -> Unit
 }
 
 internal val VideoLink = fc<VideoLinkProps> { (link, active, onLinkClicked) ->

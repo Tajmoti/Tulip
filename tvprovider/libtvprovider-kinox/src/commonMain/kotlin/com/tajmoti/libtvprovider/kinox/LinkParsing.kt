@@ -6,7 +6,7 @@ import com.tajmoti.ksoup.KDocument
 import com.tajmoti.ksoup.KElement
 import com.tajmoti.ksoup.KSoup
 import com.tajmoti.libtvprovider.kinox.model.StreamReferenceObject
-import com.tajmoti.libtvprovider.model.VideoStreamRef
+import com.tajmoti.libtvprovider.model.StreamingSiteLink
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
@@ -14,7 +14,7 @@ internal suspend fun fetchSources(
     baseUrl: String,
     pageSource: String,
     pageSourceLoader: PageSourceLoader
-): Result<List<VideoStreamRef>> {
+): Result<List<StreamingSiteLink>> {
     return try {
         val links = KSoup.parse(pageSource)
             .select("#HosterList")
@@ -33,7 +33,7 @@ private suspend fun elementToStream(
     baseUrl: String,
     li: KElement,
     httpLoader: PageSourceLoader
-): VideoStreamRef? {
+): StreamingSiteLink? {
     val hoster = li.attr("rel")
     val url = "$baseUrl/aGET/Mirror/$hoster"
     return httpLoader.loadWithGet(url, true)
@@ -41,12 +41,12 @@ private suspend fun elementToStream(
         .getOrNull()
 }
 
-private fun scrapeStreamRef(pageSource: String): VideoStreamRef.Unresolved? {
+private fun scrapeStreamRef(pageSource: String): StreamingSiteLink? {
     val streamObject: StreamReferenceObject = Json { ignoreUnknownKeys = true }.decodeFromString(pageSource)
     val parsed = KSoup.parse(streamObject.stream)
     val name = streamObject.hosterName
     val videoUrl = extractVideoUrlFromResult(parsed) ?: return null
-    return VideoStreamRef.Unresolved(name, videoUrl)
+    return StreamingSiteLink(name, videoUrl)
 }
 
 private fun extractVideoUrlFromResult(parsed: KDocument): String? {
