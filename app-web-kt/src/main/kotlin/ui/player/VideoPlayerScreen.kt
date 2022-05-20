@@ -30,7 +30,7 @@ val VideoPlayerScreen = fc<VideoPlayerScreenProps> { (key) ->
     val link = state.selectedLinkState.videoLinkToPlay
     val linkError = state.selectedLinkState.linkLoadingError
     val nonDirectLink = state.selectedLinkState.directLoadingUnsupported
-    if (state.linkListState.linksLoading) {
+    if (state.linkListState.noLinksLoadedYet) {
         LoadingSpinner { attrs.color = SpinnerColor.Info }
     } else if (state.selectedLinkState.loadingStreamOrDirectLink) {
         LoadingSpinner { attrs.color = SpinnerColor.Primary }
@@ -49,6 +49,9 @@ val VideoPlayerScreen = fc<VideoPlayerScreenProps> { (key) ->
         attrs.links = vm.linksResult.value ?: emptyList()
         attrs.current = vm.videoLinkPreparingOrPlaying.value
         attrs.onLinkClicked = { vm.onStreamClicked(it, false) }
+    }
+    if (!state.linkListState.linkLoadingDone) {
+        LinkLoadingProgressBar {}
     }
 }
 

@@ -37,3 +37,7 @@
     .w-lg-25 { width: 25%!important; }
     .w-lg-50 { width: 50%!important; }
 }
+
+.progress-bar-done {
+    width: 100%
+}

@@ -127,7 +127,12 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
         /**
          * Whether stream links are being loaded right now and there are no loaded links yet.
          */
-        val linksLoading: Boolean,
+        val noLinksLoadedYet: Boolean,
+        /**
+         * Whether each stream link producer produced at least one result
+         * and the loaded list of links can be considered final.
+         */
+        val linkLoadingDone: Boolean,
         /**
          * Loaded links of the currently selected [State.streamableKey] or null if not yet available.
          * This value is updated in real time as more links are loaded in.
@@ -253,8 +258,8 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
     /**
      * Whether stream links are being loaded right now and there are no loaded links yet.
      */
-    val linksLoading: StateFlow<Boolean>
-        get() = state.map(viewModelScope) { it.linkListState.linksLoading }
+    val noLinksLoadedYet: StateFlow<Boolean>
+        get() = state.map(viewModelScope) { it.linkListState.noLinksLoadedYet }
 
     /**
      * Key of the streamable that is currently being loaded or played.

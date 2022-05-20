@@ -571,8 +571,9 @@ class VideoPlayerViewModelImpl constructor(
             streamableKey = streamableKey,
             streamableInfo = streamableInfo,
             linkListState = VideoPlayerViewModel.LinkListState(
-                linksLoading = linkListLoadingState is LinkListLoadingState.Loading || (linkListLoadingState is LinkListLoadingState.Success && linkListLoadingState.streams.isEmpty() && !(streamLoadingFinalSuccessState?.streams?.none()
+                noLinksLoadedYet = linkListLoadingState is LinkListLoadingState.Loading || (linkListLoadingState is LinkListLoadingState.Success && linkListLoadingState.streams.isEmpty() && !(streamLoadingFinalSuccessState?.streams?.none()
                     ?: false)),
+                linkLoadingDone = streamLoadingFinalSuccessState != null,
                 linksResult = (linkListLoadingState as? LinkListLoadingState.Success)?.streams,
                 linksAnyResult = (linkListLoadingState as? LinkListLoadingState.Success)?.streams?.any() ?: false,
                 linksNoResult = streamLoadingFinalSuccessState?.streams?.none() ?: false,
