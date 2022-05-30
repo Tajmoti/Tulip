@@ -564,64 +564,122 @@ class VideoPlayerViewModelImpl constructor(
     )
 
     override val state = internalState.mapWith(viewModelScope) {
-        val streamLoadingFinalSuccessState =
-            (linkListLoadingState as? LinkListLoadingState.Success)?.takeIf { success -> success.final }
         VideoPlayerViewModel.State(
             tvShowData = tvShowData,
             streamableKey = streamableKey,
             streamableInfo = streamableInfo,
-            linkListState = VideoPlayerViewModel.LinkListState(
-                showNoLinksYetLoadingProgress = linkListLoadingState is LinkListLoadingState.Loading || (linkListLoadingState is LinkListLoadingState.Success && linkListLoadingState.streams.isEmpty() && !(streamLoadingFinalSuccessState?.streams?.none()
-                    ?: false)),
-                showLinksStillLoadingProgress = streamLoadingFinalSuccessState == null,
-                linksResult = (linkListLoadingState as? LinkListLoadingState.Success)?.streams,
-                linksAnyResult = (linkListLoadingState as? LinkListLoadingState.Success)?.streams?.any() ?: false,
-                linksNoResult = streamLoadingFinalSuccessState?.streams?.none() ?: false,
-            ),
-            selectedLinkState = VideoPlayerViewModel.SelectedLinkState(
-                showSelectedLinkLoadingProgress = linkLoadingState is LinkLoadingState.Loading || linkLoadingState is LinkLoadingState.LoadingDirect,
-                videoLinkPreparingOrPlaying = linkLoadingState.stream.takeIf { !linkLoadingState.download },
-                videoLinkToPlay = (linkLoadingState as? LinkLoadingState.LoadedDirect)?.takeIf { !it.download }
-                    ?.let { LoadedLink(it.stream, it.directLink) },
-                videoLinkToDownload = (linkLoadingState as? LinkLoadingState.LoadedDirect)?.takeIf { it.download }
-                    ?.let { LoadedLink(it.stream, it.directLink) },
-                linkLoadingError = (linkLoadingState as? LinkLoadingState.Error)?.let {
-                    FailedLink(
-                        it.stream,
-                        it.languageCode,
-                        it.download,
-                        it.captcha
-                    )
-                },
-                directLoadingUnsupported = (linkLoadingState as? LinkLoadingState.DirectLinkUnsupported)?.let {
-                    SelectedLink(
-                        it.stream,
-                        it.download
-                    )
-                }
-            ),
-            playbackState = VideoPlayerViewModel.PlaybackState(
-                subtitleOffset = (subSyncState as? SubtitleSyncState.OffsetUsed)?.offsetMs ?: 0L,
-                showPlayButton = playerStateToPlayButtonState(playerState),
-                isPlaying = playerState is MediaPlayerState.Playing,
-                buffering = (playerState as? MediaPlayerState.Buffering)?.percent,
-                position = playerState.validPositionOrNull,
-                isDonePlaying = playerState is MediaPlayerState.Finished,
-                isError = playerState is MediaPlayerState.Error,
-                mediaPlayerState = playerState
-            ),
-            subtitleState = VideoPlayerViewModel.SubtitleState(
-                subtitleList = (loadingSubtitlesState as? SubtitleListLoadingState.Success)?.subtitles ?: emptyList(),
-                loadingSubtitleList = loadingSubtitlesState is SubtitleListLoadingState.Loading,
-                subtitlesReadyToSelect = loadingSubtitlesState is SubtitleListLoadingState.Success,
-                downloadingSubtitles = subtitleDownloadState is SubtitleDownloadingState.Loading,
-                subtitleDownloadError = subtitleDownloadState is SubtitleDownloadingState.Error,
-                subtitleFile = (subtitleDownloadState as? SubtitleDownloadingState.Success)?.subtitles,
-            )
+            linkListState = deriveLinkListState(linkListLoadingState),
+            selectedLinkState = deriveSelectedLinkState(linkLoadingState),
+            playbackState = derivePlaybackState(playerState, subSyncState),
+            subtitleState = deriveSubtitleState(loadingSubtitlesState, subtitleDownloadState)
         )
     }
 
-    private fun playerStateToPlayButtonState(state: MediaPlayerState) = when (state) {
+    private fun deriveSubtitleState(loading: SubtitleListLoadingState, download: SubtitleDownloadingState) =
+        VideoPlayerViewModel.SubtitleState(
+            subtitleList = (loading as? SubtitleListLoadingState.Success)?.subtitles ?: emptyList(),
+            loadingSubtitleList = loading is SubtitleListLoadingState.Loading,
+            subtitlesReadyToSelect = loading is SubtitleListLoadingState.Success,
+            downloadingSubtitles = download is SubtitleDownloadingState.Loading,
+            subtitleDownloadError = download is SubtitleDownloadingState.Error,
+            subtitleFile = (download as? SubtitleDownloadingState.Success)?.subtitles,
+        )
+
+    private fun derivePlaybackState(
+        playerState: MediaPlayerState,
+        subSyncState: SubtitleSyncState?
+    ): VideoPlayerViewModel.PlaybackState {
+        return VideoPlayerViewModel.PlaybackState(
+            subtitleOffset = (subSyncState as? SubtitleSyncState.OffsetUsed)?.offsetMs ?: 0L,
+            showPlayButton = derivePlayButtonVisibility(playerState),
+            isPlaying = playerState is MediaPlayerState.Playing,
+            buffering = (playerState as? MediaPlayerState.Buffering)?.percent,
+            position = playerState.validPositionOrNull,
+            isDonePlaying = playerState is MediaPlayerState.Finished,
+            isError = playerState is MediaPlayerState.Error,
+            mediaPlayerState = playerState
+        )
+    }
+
+    private fun deriveSelectedLinkState(state: LinkLoadingState): VideoPlayerViewModel.SelectedLinkState {
+        return VideoPlayerViewModel.SelectedLinkState(
+            showSelectedLinkLoadingProgress = deriveShowSelectedLinkLoadingProgress(state),
+            videoLinkPreparingOrPlaying = deriveVideoLinkPreparingOrPlaying(state),
+            videoLinkToPlay = deriveVideoLinkToPlay(state),
+            videoLinkToDownload = deriveVideoLinkToDownload(state),
+            linkLoadingError = deriveLinkLoadingError(state),
+            directLoadingUnsupported = deriveDirectLoadingUnsupported(state)
+        )
+    }
+
+    private fun deriveShowSelectedLinkLoadingProgress(state: LinkLoadingState): Boolean {
+        return state is LinkLoadingState.Loading || state is LinkLoadingState.LoadingDirect
+    }
+
+    private fun deriveVideoLinkPreparingOrPlaying(state: LinkLoadingState): StreamingSiteLinkDto? {
+        return state.stream.takeIf { !state.download }
+    }
+
+    private fun deriveVideoLinkToPlay(state: LinkLoadingState): LoadedLink? {
+        return (state as? LinkLoadingState.LoadedDirect)
+            ?.takeIf { !it.download }
+            ?.let { LoadedLink(it.stream, it.directLink) }
+    }
+
+    private fun deriveVideoLinkToDownload(state: LinkLoadingState): LoadedLink? {
+        return (state as? LinkLoadingState.LoadedDirect)
+            ?.takeIf { it.download }
+            ?.let { LoadedLink(it.stream, it.directLink) }
+    }
+
+    private fun deriveLinkLoadingError(state: LinkLoadingState): FailedLink? {
+        return (state as? LinkLoadingState.Error)
+            ?.let { FailedLink(it.stream, it.languageCode, it.download, it.captcha) }
+    }
+
+    private fun deriveDirectLoadingUnsupported(state: LinkLoadingState): SelectedLink? {
+        return (state as? LinkLoadingState.DirectLinkUnsupported)
+            ?.let { SelectedLink(it.stream, it.download) }
+    }
+
+    private fun deriveLinkListState(state: LinkListLoadingState): VideoPlayerViewModel.LinkListState {
+        return VideoPlayerViewModel.LinkListState(
+            showNoLinksYetLoadingProgress = deriveFirstLinkStillLoading(state, finalSuccessState),
+            showLinksStillLoadingProgress = deriveShowLinksStillLoadingProgress(state),
+            linksResult = deriveLinksResult(state),
+            linksAnyResult = deriveLinksAnyResult(state),
+            linksNoResult = deriveLinksNoResult(state),
+        )
+    }
+
+    private fun deriveFirstLinkStillLoading(
+        current: LinkListLoadingState,
+        final: LinkListLoadingState.Success?
+    ): Boolean {
+        if (current is LinkListLoadingState.Loading)
+            return true
+        if (current !is LinkListLoadingState.Success)
+            return false
+        return current.streams.isEmpty() && !(final?.streams?.none() ?: false)
+    }
+
+    private fun deriveShowLinksStillLoadingProgress(state: LinkListLoadingState): Boolean {
+        return state is LinkListLoadingState.Loading || (state is LinkListLoadingState.Success && !state.final)
+    }
+
+    private fun deriveLinksResult(state: LinkListLoadingState): List<StreamingSiteLinkDto>? {
+        return (state as? LinkListLoadingState.Success)?.streams
+    }
+
+    private fun deriveLinksAnyResult(state: LinkListLoadingState): Boolean {
+        return deriveLinksResult(state)?.any() ?: false
+    }
+
+    private fun deriveLinksNoResult(state: LinkListLoadingState): Boolean {
+        return state is LinkListLoadingState.Success && state.final && state.streams.isEmpty()
+    }
+
+    private fun derivePlayButtonVisibility(state: MediaPlayerState) = when (state) {
         is MediaPlayerState.Buffering -> VideoPlayerViewModel.PlayButtonState.HIDE
         is MediaPlayerState.Error -> VideoPlayerViewModel.PlayButtonState.HIDE
         is MediaPlayerState.Idle -> VideoPlayerViewModel.PlayButtonState.HIDE
