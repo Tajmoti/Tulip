@@ -52,7 +52,7 @@ val VideoPlayerScreen = fc<VideoPlayerScreenProps> { (key) ->
         attrs.onLinkClicked = { vm.onStreamClicked(it, false) }
     }
     if (state.linkListState.showLinksStillLoadingProgress) {
-        HorizontalProgressBar { attrs.title = "Links are being loaded" }
+        HorizontalProgressBar { attrs.title = "Loading links" }
     }
 }
 
