@@ -3,6 +3,7 @@
 - Use a single database instead of multiple
 - Fixed subtitle loading
 - Show a loading progress indicator until search is finished on the search screen
+- Show a loading progress indicator until link loading is finished
 
 ## [0.14.1] - 2022-05-04
 ### Changed
