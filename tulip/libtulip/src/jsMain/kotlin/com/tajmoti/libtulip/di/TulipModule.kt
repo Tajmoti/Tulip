@@ -31,9 +31,9 @@ private val networkModule = module {
 }
 
 private val apiServiceModule = module {
-    single { ApiServiceModuleImpl.provideTmdbService(get(), get()) }
-    single { ApiServiceModuleImpl.provideOpenSubtitlesService(get(), get()) }
-    single { ApiServiceModuleImpl.provideOpenSubtitlesFallbackService(get(), get()) }
+    single { ApiServiceModuleImpl.provideTmdbService(get(), get(qualifier(ProxyType.DIRECT))) }
+    single { ApiServiceModuleImpl.provideOpenSubtitlesService(get(), get(qualifier(ProxyType.DIRECT))) }
+    single { ApiServiceModuleImpl.provideOpenSubtitlesFallbackService(get(), get(qualifier(ProxyType.DIRECT))) }
 }
 
 private val dataRepositoryModule = module {
