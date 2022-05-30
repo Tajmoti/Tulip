@@ -127,12 +127,12 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
         /**
          * Whether stream links are being loaded right now and there are no loaded links yet.
          */
-        val noLinksLoadedYet: Boolean,
+        val showNoLinksYetLoadingProgress: Boolean,
         /**
          * Whether each stream link producer produced at least one result
          * and the loaded list of links can be considered final.
          */
-        val linkLoadingDone: Boolean,
+        val showLinksStillLoadingProgress: Boolean,
         /**
          * Loaded links of the currently selected [State.streamableKey] or null if not yet available.
          * This value is updated in real time as more links are loaded in.
@@ -152,7 +152,7 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
         /**
          * Whether a direct link is being loaded right now.
          */
-        val loadingStreamOrDirectLink: Boolean,
+        val showSelectedLinkLoadingProgress: Boolean,
         /**
          * Link that was selected for playback. It might be loading, be already loaded, or errored out.
          */
@@ -258,8 +258,8 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
     /**
      * Whether stream links are being loaded right now and there are no loaded links yet.
      */
-    val noLinksLoadedYet: StateFlow<Boolean>
-        get() = state.map(viewModelScope) { it.linkListState.noLinksLoadedYet }
+    val showNoLinksYetLoadingProgress: StateFlow<Boolean>
+        get() = state.map(viewModelScope) { it.linkListState.showNoLinksYetLoadingProgress }
 
     /**
      * Key of the streamable that is currently being loaded or played.
@@ -296,8 +296,8 @@ interface VideoPlayerViewModel : StateViewModel<VideoPlayerViewModel.State> {
     /**
      * Whether a direct link is being loaded right now.
      */
-    val loadingStreamOrDirectLink: StateFlow<Boolean>
-        get() = state.map(viewModelScope) { it.selectedLinkState.loadingStreamOrDirectLink }
+    val showSelectedLinkLoadingProgress: StateFlow<Boolean>
+        get() = state.map(viewModelScope) { it.selectedLinkState.showSelectedLinkLoadingProgress }
 
     /**
      * Selected item which has redirects resolved, but doesn't support direct link loading.

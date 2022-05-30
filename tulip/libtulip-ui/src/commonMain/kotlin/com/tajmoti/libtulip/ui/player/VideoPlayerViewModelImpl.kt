@@ -571,15 +571,15 @@ class VideoPlayerViewModelImpl constructor(
             streamableKey = streamableKey,
             streamableInfo = streamableInfo,
             linkListState = VideoPlayerViewModel.LinkListState(
-                noLinksLoadedYet = linkListLoadingState is LinkListLoadingState.Loading || (linkListLoadingState is LinkListLoadingState.Success && linkListLoadingState.streams.isEmpty() && !(streamLoadingFinalSuccessState?.streams?.none()
+                showNoLinksYetLoadingProgress = linkListLoadingState is LinkListLoadingState.Loading || (linkListLoadingState is LinkListLoadingState.Success && linkListLoadingState.streams.isEmpty() && !(streamLoadingFinalSuccessState?.streams?.none()
                     ?: false)),
-                linkLoadingDone = streamLoadingFinalSuccessState != null,
+                showLinksStillLoadingProgress = streamLoadingFinalSuccessState == null,
                 linksResult = (linkListLoadingState as? LinkListLoadingState.Success)?.streams,
                 linksAnyResult = (linkListLoadingState as? LinkListLoadingState.Success)?.streams?.any() ?: false,
                 linksNoResult = streamLoadingFinalSuccessState?.streams?.none() ?: false,
             ),
             selectedLinkState = VideoPlayerViewModel.SelectedLinkState(
-                loadingStreamOrDirectLink = linkLoadingState is LinkLoadingState.Loading || linkLoadingState is LinkLoadingState.LoadingDirect,
+                showSelectedLinkLoadingProgress = linkLoadingState is LinkLoadingState.Loading || linkLoadingState is LinkLoadingState.LoadingDirect,
                 videoLinkPreparingOrPlaying = linkLoadingState.stream.takeIf { !linkLoadingState.download },
                 videoLinkToPlay = (linkLoadingState as? LinkLoadingState.LoadedDirect)?.takeIf { !it.download }
                     ?.let { LoadedLink(it.stream, it.directLink) },
