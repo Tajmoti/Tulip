@@ -5,8 +5,7 @@ import com.tajmoti.libtulip.ui.search.SearchViewModel
 import react.Props
 import react.fc
 import ui.shared.ErrorMessage
-import ui.shared.LoadingSpinner
-import ui.shared.SpinnerColor
+import ui.shared.HorizontalProgressBar
 import ui.useViewModel
 
 internal external interface SearchProps : Props {
@@ -19,15 +18,21 @@ internal val SearchScreen = fc<SearchProps> { (query, onResultClicked) ->
     vm.submitNewText(query)
 
     if (vmState.loading) {
-        LoadingSpinner { attrs.color = SpinnerColor.Default }
-    } else if (vmState.status == SearchViewModel.Icon.NO_RESULTS) {
-        ErrorMessage { attrs.message = "No results" }
-    } else if (vmState.status == SearchViewModel.Icon.ERROR) {
-        ErrorMessage { attrs.message = "Shit, error :/" }
-    } else {
-        SearchResultList {
-            attrs.groups = vmState.results
-            attrs.onResultClicked = onResultClicked
+        HorizontalProgressBar { attrs.title = "Searching" }
+    }
+
+    when (vmState.status) {
+        SearchViewModel.Icon.NO_RESULTS -> {
+            ErrorMessage { attrs.message = "No results" }
+        }
+        SearchViewModel.Icon.ERROR -> {
+            ErrorMessage { attrs.message = "Shit, error :/" }
+        }
+        else -> {
+            SearchResultList {
+                attrs.groups = vmState.results
+                attrs.onResultClicked = onResultClicked
+            }
         }
     }
 }

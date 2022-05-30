@@ -1,6 +1,7 @@
 package com.tajmoti.libtulip.ui.search
 
 import com.tajmoti.commonutils.mapWith
+import com.tajmoti.commonutils.onLast
 import com.tajmoti.libtulip.dto.SearchResultDto
 import com.tajmoti.libtulip.facade.SearchFacade
 import com.tajmoti.libtulip.ui.search.SearchViewModel.Companion.DEBOUNCE_INTERVAL_MS
@@ -48,9 +49,14 @@ class SearchViewModelImpl(
         val flowOfStates = mappingSearchService.search(query)
             .map { result ->
                 result.fold(
-                    { LoadingState.Success(it) },
+                    { LoadingState.Success(it, false) },
                     { LoadingState.Error }
                 )
+            }
+            .onLast { last ->
+                (last as? LoadingState.Success)
+                    ?.copy(done = true)
+                    ?.let { it -> emit(it) }
             }
         emitAll(flowOfStates)
     }
@@ -58,14 +64,14 @@ class SearchViewModelImpl(
     sealed interface LoadingState {
         object Idle : LoadingState
         object Searching : LoadingState
-        data class Success(val results: List<SearchResultDto>) : LoadingState
+        data class Success(val results: List<SearchResultDto>, val done: Boolean) : LoadingState
         object Error : LoadingState
     }
 
 
     override val state = loadingState.mapWith(viewModelScope) {
         SearchViewModel.State(
-            loading = this is LoadingState.Searching,
+            loading = this is LoadingState.Searching || (this is LoadingState.Success && !this.done),
             results = (this as? LoadingState.Success)?.results ?: emptyList(),
             status = this.toStatusIcon(),
             canTryAgain = this is LoadingState.Error

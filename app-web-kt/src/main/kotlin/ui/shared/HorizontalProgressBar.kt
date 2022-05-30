@@ -1,12 +1,16 @@
-package ui.player
+package ui.shared
 
 import react.Props
 import react.dom.attrs
 import react.dom.div
 import react.fc
 
-internal val LinkLoadingProgressBar = fc<Props> {
-    div("mt-2 text-center") {
+internal external interface HorizontalProgressBarProps : Props {
+    var title: String
+}
+
+internal val HorizontalProgressBar = fc<HorizontalProgressBarProps> { (title) ->
+    div("my-3 text-center") {
         div("progress") {
             div("progress-bar progress-bar-striped progress-bar-animated progress-bar-done") {
                 attrs {
@@ -14,6 +18,8 @@ internal val LinkLoadingProgressBar = fc<Props> {
                 }
             }
         }
-        +"Links are being loaded"
+        +title
     }
 }
+
+private operator fun HorizontalProgressBarProps.component1() = title

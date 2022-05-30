@@ -3,6 +3,7 @@ package ui.player
 import com.tajmoti.libtulip.model.key.StreamableKey
 import com.tajmoti.libtulip.ui.player.VideoPlayerViewModel
 import react.*
+import ui.shared.HorizontalProgressBar
 import ui.shared.LoadingSpinner
 import ui.shared.SpinnerColor
 import ui.useViewModel
@@ -51,7 +52,7 @@ val VideoPlayerScreen = fc<VideoPlayerScreenProps> { (key) ->
         attrs.onLinkClicked = { vm.onStreamClicked(it, false) }
     }
     if (state.linkListState.showLinksStillLoadingProgress) {
-        LinkLoadingProgressBar {}
+        HorizontalProgressBar { attrs.title = "Links are being loaded" }
     }
 }
 
