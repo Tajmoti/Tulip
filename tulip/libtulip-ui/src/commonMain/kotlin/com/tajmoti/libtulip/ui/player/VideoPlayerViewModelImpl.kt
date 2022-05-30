@@ -644,7 +644,7 @@ class VideoPlayerViewModelImpl constructor(
 
     private fun deriveLinkListState(state: LinkListLoadingState): VideoPlayerViewModel.LinkListState {
         return VideoPlayerViewModel.LinkListState(
-            showNoLinksYetLoadingProgress = deriveFirstLinkStillLoading(state, finalSuccessState),
+            showNoLinksYetLoadingProgress = deriveFirstLinkStillLoading(state),
             showLinksStillLoadingProgress = deriveShowLinksStillLoadingProgress(state),
             linksResult = deriveLinksResult(state),
             linksAnyResult = deriveLinksAnyResult(state),
@@ -652,15 +652,14 @@ class VideoPlayerViewModelImpl constructor(
         )
     }
 
-    private fun deriveFirstLinkStillLoading(
-        current: LinkListLoadingState,
-        final: LinkListLoadingState.Success?
-    ): Boolean {
-        if (current is LinkListLoadingState.Loading)
+    private fun deriveFirstLinkStillLoading(state: LinkListLoadingState): Boolean {
+        if (state is LinkListLoadingState.Loading)
             return true
-        if (current !is LinkListLoadingState.Success)
+        if (state !is LinkListLoadingState.Success)
             return false
-        return current.streams.isEmpty() && !(final?.streams?.none() ?: false)
+        if (state.final)
+            return false
+        return state.streams.isEmpty()
     }
 
     private fun deriveShowLinksStillLoadingProgress(state: LinkListLoadingState): Boolean {
