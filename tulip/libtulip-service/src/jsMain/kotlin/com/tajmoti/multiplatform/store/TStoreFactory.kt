@@ -16,17 +16,13 @@ actual object TStoreFactory {
             override fun stream(key: Key, refresh: Boolean): Flow<NetworkResult<Output>> {
                 val fromMemory = reader
                     ?.invoke(key)
-                    ?.map(::wrapNullable)
+                    ?.filterNotNull()
+                    ?.mapNotNull { NetworkResult.Success(it) }
                     ?: emptyFlow()
                 val fromNetwork = source(key)
                     .map(::toNetworkResult)
                     .onEach { result -> result.data?.let { value -> writer?.invoke(key, value) } }
                 return merge(fromNetwork, fromMemory).distinctUntilChanged()
-            }
-
-            private fun wrapNullable(maybeOutput: Output?): NetworkResult<Output> {
-                return maybeOutput?.let { output -> NetworkResult.Success(output) }
-                    ?: NetworkResult.Error(NetworkResult.ErrorType.CONVERSION_FAILED)
             }
         }
     }
@@ -34,7 +30,7 @@ actual object TStoreFactory {
     private fun <Output : Any> toNetworkResult(it: Result<Output>): NetworkResult<Output> {
         return it.fold(
             { NetworkResult.Success(it) },
-            { NetworkResult.Error(NetworkResult.ErrorType.CONVERSION_FAILED) }
+            { NetworkResult.Error(NetworkResult.ErrorType.NO_CONNECTION) }
         )
     }
 }

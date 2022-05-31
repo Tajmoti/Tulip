@@ -1,3 +1,7 @@
+## [Unreleased]
+### Changed
+- Fix glitchy video player UI when loading a TV show episode for the first time
+
 ## [0.15.0] - 2022-05-31
 ### Changed
 - Use a single database instead of multiple
