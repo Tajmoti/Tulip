@@ -129,6 +129,7 @@
 - Support for primewire.ag
 
 [Unreleased]: https://github.com/Tajmoti/Tulip/tree/main
+[0.15.0]: https://github.com/Tajmoti/Tulip/tree/v0.15.0
 [0.14.1]: https://github.com/Tajmoti/Tulip/tree/v0.14.1
 [0.14.0]: https://github.com/Tajmoti/Tulip/tree/v0.14.0
 [0.13.1]: https://github.com/Tajmoti/Tulip/tree/v0.13.1
