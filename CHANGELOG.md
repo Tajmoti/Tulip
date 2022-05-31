@@ -1,4 +1,4 @@
-## [Unreleased]
+## [0.15.1] - 2022-05-31
 ### Changed
 - Fix glitchy video player UI when loading a TV show episode for the first time
 
@@ -133,6 +133,7 @@
 - Support for primewire.ag
 
 [Unreleased]: https://github.com/Tajmoti/Tulip/tree/main
+[0.15.1]: https://github.com/Tajmoti/Tulip/tree/v0.15.1
 [0.15.0]: https://github.com/Tajmoti/Tulip/tree/v0.15.0
 [0.14.1]: https://github.com/Tajmoti/Tulip/tree/v0.14.1
 [0.14.0]: https://github.com/Tajmoti/Tulip/tree/v0.14.0
