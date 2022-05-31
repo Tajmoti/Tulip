@@ -568,7 +568,7 @@ class VideoPlayerViewModelImpl constructor(
             tvShowData = tvShowData,
             streamableKey = streamableKey,
             streamableInfo = streamableInfo,
-            linkListState = deriveLinkListState(linkListLoadingState),
+            linkListState = deriveLinkListState(linkListLoadingState, linkLoadingState),
             selectedLinkState = deriveSelectedLinkState(linkLoadingState),
             playbackState = derivePlaybackState(playerState, subSyncState),
             subtitleState = deriveSubtitleState(loadingSubtitlesState, subtitleDownloadState)
@@ -642,9 +642,12 @@ class VideoPlayerViewModelImpl constructor(
             ?.let { SelectedLink(it.stream, it.download) }
     }
 
-    private fun deriveLinkListState(state: LinkListLoadingState): VideoPlayerViewModel.LinkListState {
+    private fun deriveLinkListState(
+        state: LinkListLoadingState,
+        linkState: LinkLoadingState,
+    ): VideoPlayerViewModel.LinkListState {
         return VideoPlayerViewModel.LinkListState(
-            showNoLinksYetLoadingProgress = deriveFirstLinkStillLoading(state),
+            showNoUsefulLinksYetLoadingProgress = deriveFirstLinkStillLoading(state, linkState),
             showLinksStillLoadingProgress = deriveShowLinksStillLoadingProgress(state),
             linksResult = deriveLinksResult(state),
             linksAnyResult = deriveLinksAnyResult(state),
@@ -652,14 +655,14 @@ class VideoPlayerViewModelImpl constructor(
         )
     }
 
-    private fun deriveFirstLinkStillLoading(state: LinkListLoadingState): Boolean {
+    private fun deriveFirstLinkStillLoading(state: LinkListLoadingState, linkState: LinkLoadingState): Boolean {
         if (state is LinkListLoadingState.Loading)
             return true
         if (state !is LinkListLoadingState.Success)
             return false
         if (state.final)
             return false
-        return state.streams.isEmpty()
+        return state.streams.isEmpty() || linkState is LinkLoadingState.Idle
     }
 
     private fun deriveShowLinksStillLoadingProgress(state: LinkListLoadingState): Boolean {

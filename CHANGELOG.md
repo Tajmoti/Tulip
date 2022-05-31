@@ -4,6 +4,8 @@
 - Fixed subtitle loading
 - Show a loading progress indicator until search is finished on the search screen
 - Show a loading progress indicator until link loading is finished
+- Fixed a bug where the loading progress indicator was not displayed if some video links unsuitable for auto-play were
+  found, but more links were still being loaded
 
 ## [0.14.1] - 2022-05-04
 ### Changed

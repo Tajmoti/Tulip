@@ -31,7 +31,7 @@ val VideoPlayerScreen = fc<VideoPlayerScreenProps> { (key) ->
     val link = state.selectedLinkState.videoLinkToPlay
     val linkError = state.selectedLinkState.linkLoadingError
     val nonDirectLink = state.selectedLinkState.directLoadingUnsupported
-    if (state.linkListState.showNoLinksYetLoadingProgress) {
+    if (state.linkListState.showNoUsefulLinksYetLoadingProgress) {
         LoadingSpinner { attrs.color = SpinnerColor.Info }
     } else if (state.selectedLinkState.showSelectedLinkLoadingProgress) {
         LoadingSpinner { attrs.color = SpinnerColor.Primary }
