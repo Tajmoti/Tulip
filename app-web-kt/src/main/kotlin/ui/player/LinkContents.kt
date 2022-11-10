@@ -1,7 +1,9 @@
 package ui.player
 
 import com.tajmoti.libtulip.dto.StreamingSiteLinkDto
+import kotlinx.browser.window
 import react.Props
+import react.dom.*
 import react.fc
 import ui.shared.BadgeType
 import ui.shared.LanguageBadge
@@ -13,19 +15,27 @@ internal external interface LinkContentsProps : Props {
 
 internal val LinkContents = fc<LinkContentsProps> { (ref) ->
     val (serviceName, _, extractable, lang) = ref
-    +serviceName
-    if (extractable) {
-        PillBadge {
-            attrs.color = BadgeType.Success
-            attrs.message = "Playable"
+    div("d-flex align-items-center justify-content-between ") {
+        span {
+            +serviceName
+            if (extractable) {
+                PillBadge {
+                    attrs.color = BadgeType.Success
+                    attrs.message = "Playable"
+                }
+            } else {
+                PillBadge {
+                    attrs.color = BadgeType.Danger
+                    attrs.message = "Playable externally"
+                }
+            }
+            LanguageBadge { attrs.language = lang }
         }
-    } else {
-        PillBadge {
-            attrs.color = BadgeType.Danger
-            attrs.message = "Playable externally"
+        button(classes = "btn btn-secondary float-right") {
+            attrs.onClick = { window.open(ref.url, "_blank") }
+            i("fa-solid fa-up-right-from-square") {}
         }
     }
-    LanguageBadge { attrs.language = lang }
 }
 
 
