@@ -7,6 +7,7 @@ import react.Props
 import react.dom.div
 import react.dom.span
 import react.fc
+import ui.player.EpisodeButtonDirection.*
 
 internal external interface VideoPlayerHeaderProps : Props {
     var name: StreamableInfoDto
@@ -15,11 +16,9 @@ internal external interface VideoPlayerHeaderProps : Props {
 
 internal val VideoPlayerHeader = fc<VideoPlayerHeaderProps> { (info, data) ->
     div("d-flex flex-row justify-content-between align-items-center py-2") {
-        renderEpisodeButton(data?.previousEpisode, "⏮ Previous episode")
-//        EpisodeButton { attrs.label = "⏮ Previous episode"; attrs.key = data?.previousEpisode  }
+        renderEpisodeButton(data?.previousEpisode, "Previous episode", Backward)
         span("text-center") { +VideoPlayerUtils.streamableToDisplayName(info) }
-        renderEpisodeButton(data?.nextEpisode, "Next episode ⏭")
-//        EpisodeButton { attrs.label = "Next episode ⏭"; attrs.key = data?.nextEpisode  }
+        renderEpisodeButton(data?.nextEpisode, "Next episode", Forward)
     }
 }
 
